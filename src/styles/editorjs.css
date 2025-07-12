@@ -1,0 +1,109 @@
+/**
+ * Custom styles for Editor.js
+ */
+
+/* Main editor styles */
+.ce-block__content,
+.ce-toolbar__content {
+  max-width: 850px;
+}
+
+/* Typography */
+.ce-header {
+  font-family: 'Inter', sans-serif;
+  padding: 0.5em 0;
+}
+.ce-header h1 {
+  font-size: 2em;
+}
+.ce-header h2 {
+  font-size: 1.5em;
+}
+.ce-header h3 {
+  font-size: 1.3em;
+}
+.ce-header h4 {
+  font-size: 1.2em;
+}
+.ce-header h5 {
+  font-size: 1.1em;
+}
+.ce-header h6 {
+  font-size: 1em;
+  font-weight: 600;
+}
+
+/* Paragraph styles */
+.ce-paragraph {
+  line-height: 1.6;
+}
+
+/* Quote block */
+.cdx-block.cdx-quote {
+  border-left: 3px solid rgb(248, 103, 172);
+  padding-left: 1em;
+  margin-left: 0.5em;
+  font-style: italic;
+}
+
+/* Table styles - improved */
+.tc-table {
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 0.5em;
+  border-collapse: collapse;
+  table-layout: auto;
+  width: 100%;
+}
+.tc-table__cell {
+  border: 1px solid #e2e8f0;
+  padding: 0.75em;
+}
+.tc-table__head {
+  background-color: #f8f9fa;
+}
+
+/* Image block */
+.cdx-block.image-tool {
+  margin-bottom: 1.5em;
+}
+.image-tool__image {
+  border-radius: 6px;
+  overflow: hidden;
+}
+.image-tool__caption {
+  font-size: 0.9em;
+  color: #64748b;
+  text-align: center;
+  margin-top: 0.5em;
+}
+
+/* Delimiter */
+.ce-delimiter {
+  line-height: 1;
+}
+
+/* List styles */
+.cdx-list__item {
+  padding: 0.2em 0;
+}
+.cdx-list--ordered {
+  counter-reset: item;
+}
+.cdx-list--ordered .cdx-list__item:before {
+  counter-increment: item;
+  content: counters(item, '.') '. ';
+}
+
+/* Nested list styles */
+.cdx-nested-list {
+  margin-left: 1em;
+}
+.cdx-nested-list__item {
+  padding: 0.2em 0;
+}
+
+/* Checklist styles */
+.cdx-checklist__item-checkbox {
+  cursor: pointer;
+}

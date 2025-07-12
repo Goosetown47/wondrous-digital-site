@@ -1,0 +1,56 @@
+/* Offset Background Button Styles */
+.offset-bg-primary,
+.offset-bg-secondary,
+.offset-bg-outline {
+  position: relative;
+  background: white;
+  overflow: visible;
+}
+
+.offset-bg-primary::before,
+.offset-bg-secondary::before,
+.offset-bg-outline::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transition: transform 200ms ease;
+  transform: translate(8px, 8px);
+}
+
+.offset-bg-primary::before {
+  background: var(--primary-button-background-color, #000000);
+}
+
+.offset-bg-secondary::before {
+  background: var(--secondary-button-background-color, #ffffff);
+}
+
+.offset-bg-outline::before {
+  background: var(--outline-hover-bg, #f3f4f6);
+}
+
+.offset-bg-primary:hover::before,
+.offset-bg-secondary:hover::before,
+.offset-bg-outline:hover::before {
+  transform: translate(0, 0);
+}
+
+/* Handle border radius for pseudo-elements */
+.offset-bg-primary.rounded-none::before,
+.offset-bg-secondary.rounded-none::before,
+.offset-bg-outline.rounded-none::before {
+  border-radius: 0;
+}
+
+.offset-bg-primary.rounded-lg::before,
+.offset-bg-secondary.rounded-lg::before,
+.offset-bg-outline.rounded-lg::before {
+  border-radius: 0.5rem;
+}
+
+.offset-bg-primary.rounded-full::before,
+.offset-bg-secondary.rounded-full::before,
+.offset-bg-outline.rounded-full::before {
+  border-radius: 9999px;
+}

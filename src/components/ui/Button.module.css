@@ -1,0 +1,40 @@
+/* CSS Module for Offset Background Button */
+.offsetButton {
+  position: relative;
+  background: white;
+  overflow: visible;
+}
+
+.offsetButton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transition: transform 200ms ease;
+  transform: translate(8px, 8px);
+}
+
+.offsetPrimary::before {
+  background-color: #facc15; /* yellow-400 */
+}
+
+.offsetSecondary::before {
+  background-color: #4ade80; /* green-400 */
+}
+
+.offsetOutline::before {
+  background-color: #60a5fa; /* blue-400 */
+}
+
+.offsetButton:hover::before {
+  transform: translate(0, 0);
+}
+
+/* Border radius support */
+.offsetButton.rounded::before {
+  border-radius: 0.5rem;
+}
+
+.offsetButton.roundedFull::before {
+  border-radius: 9999px;
+}

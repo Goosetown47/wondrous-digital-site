@@ -1,0 +1,14 @@
+/* Override styles for app pages to prevent marketing navigation from showing */
+body #root > div > nav {
+  display: none !important;
+}
+
+/* Remove footer from app pages */
+body #root > div > footer {
+  display: none !important;
+}
+
+/* Prevent double-scrollbar issues */
+body {
+  overflow-y: auto;
+}
