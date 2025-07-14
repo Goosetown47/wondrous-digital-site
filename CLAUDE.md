@@ -29,12 +29,22 @@ Routes are cleanly separated in `App.tsx` with marketing routes at root level an
 
 ### Page Builder System
 The core feature is a visual page builder (`PageBuilderPage.tsx`) that allows:
-- **Drag & Drop**: Section templates from sidebar library to canvas
+- **Type-Based Drag & Drop**: Section type cards from sidebar create default sections on canvas
 - **Live Editing**: In-place editing of text, buttons, images, and colors
 - **Section Management**: Reordering existing sections via drag & drop
-- **Template System**: Reusable section templates stored in database
+- **Enhanced Template System**: Visual template selection with preview grids
+
+#### Section Library Redesign (2025-01-14)
+- **2-Column Grid Layout**: Clean responsive grid without expanders
+- **Smart Availability**: Only section types with active templates are draggable (auto-detection)
+- **Visual Feedback**: Pink hover states, centered 6-dot drag icons
+- **Type-to-Template Flow**: Drag section types → creates default section → settings modal for template switching
 
 Key components:
+- `SectionLibrarySidebar`: Type-based section library with active/inactive states
+- `SectionTypeCard`: Individual draggable cards with hover states and icons
+- `SectionTemplateGrid`: Visual grid for template selection within section settings
+- `EnhancedSectionSettingsModal`: Tabbed interface (Design + Templates)
 - `EditModeContext`: Controls edit state and content updates
 - `SiteStylesContext`: Manages project-specific styling
 - Editable components (`EditableText`, `EditableButton`, etc.) with tooltip-based editors
@@ -49,6 +59,12 @@ Located in `supabase/migrations/` - use MCP Supabase tools to apply:
 ```typescript
 mcp__supabase-write__apply_migration(name, query)
 ```
+
+#### Section Templates Status Management
+- **Active sections**: `status = 'active'` - appear in user-facing interfaces
+- **Testing sections**: `status = 'testing'` - hidden from users, for development
+- **Inactive sections**: `status = 'inactive'` - archived/disabled
+- Section library auto-detects active templates per type for availability
 
 ### Context Providers
 Critical contexts that must wrap components requiring their functionality:

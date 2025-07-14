@@ -1,24 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../../utils/supabase';
 import { useProject } from '../../../contexts/ProjectContext';
 import { EditModeProvider, useEditMode } from '../../../contexts/EditModeContext';
 import { SiteStylesProvider } from '../../../contexts/SiteStylesContext';
-import { ArrowLeft, ArrowRight, Save, Eye, EyeOff, Smartphone, PanelTop, Loader, GripVertical, ChevronDown, ChevronUp, Trash2, Search, Plus, X, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { Save, Eye, EyeOff, Smartphone, PanelTop, Loader, GripVertical, ChevronDown, ChevronUp, Trash2, X, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import HeroSplitLayout from '../../../components/sections/HeroSplitLayout';
 import FourFeaturesGrid from '../../../components/sections/FourFeaturesGrid';
-import SectionSettingsModal from '../../../components/dashboard/SectionSettingsModal';
-
-// Define the available section categories for organizing templates
-const SECTION_CATEGORIES = [
-  'Hero',
-  'Features', 
-  'Content',
-  'Testimonials',
-  'Contact',
-  'Footer',
-  'Other'
-];
+import EnhancedSectionSettingsModal from '../../../components/admin/EnhancedSectionSettingsModal';
+import SectionLibrarySidebar from '../../../components/admin/SectionLibrarySidebar';
+import { SectionType } from '../../../components/admin/SectionTypeCard';
 
 // Define the type for a section in the page
 interface Section {
@@ -38,11 +29,6 @@ interface SectionTemplate {
   status: 'active' | 'inactive' | 'testing';
 }
 
-// Group section templates by category
-interface GroupedSections {
-  [category: string]: SectionTemplate[];
-}
-
 const PageBuilderPage: React.FC = () => {
   const { pageId } = useParams<{ pageId: string }>();
   const navigate = useNavigate();
@@ -52,8 +38,6 @@ const PageBuilderPage: React.FC = () => {
   // Page data state
   const [page, setPage] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([]);
-  const [sectionTemplates, setSectionTemplates] = useState<SectionTemplate[]>([]);
-  const [groupedTemplates, setGroupedTemplates] = useState<GroupedSections>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [siteColors, setSiteColors] = useState<Record<string, string>>({});
@@ -65,12 +49,9 @@ const PageBuilderPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [previewMode, setPreviewMode] = useState(false);
   const [mobileView, setMobileView] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentCategory, setCurrentCategory] = useState<string | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   
   // Drag and drop state
-  const [draggedSection, setDraggedSection] = useState<SectionTemplate | null>(null);
+  const [draggedSectionType, setDraggedSectionType] = useState<SectionType | null>(null);
   const [draggedSectionIndex, setDraggedSectionIndex] = useState<number | null>(null);
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const [dragOverSection, setDragOverSection] = useState<boolean>(false);
@@ -85,11 +66,10 @@ const PageBuilderPage: React.FC = () => {
   // Auto-save timer
   const autoSaveTimerRef = useRef<number | null>(null);
   
-  // Load page data and section templates when component mounts
+  // Load page data when component mounts
   useEffect(() => {
     if (pageId && selectedProject) {
       fetchPageData();
-      fetchSectionTemplates();
     }
     
     // Set up autosave
@@ -106,40 +86,6 @@ const PageBuilderPage: React.FC = () => {
       }
     };
   }, [pageId, selectedProject]);
-  
-  // When section templates change, group them by category
-  useEffect(() => {
-    const grouped: GroupedSections = {};
-    
-    // First pass - populate with ordered categories
-    
-    SECTION_CATEGORIES.forEach(type => {
-      grouped[type] = [];
-    });
-    
-    // Second pass - add templates to their categories
-    sectionTemplates.forEach(template => {
-      const category = template.section_type || 'Other';
-      if (!grouped[category]) {
-        grouped[category] = [];
-      }
-      grouped[category].push(template);
-    });
-    
-    // Remove empty categories
-    Object.keys(grouped).forEach(key => {
-      if (grouped[key].length === 0) {
-        delete grouped[key];
-      }
-    });
-    
-    setGroupedTemplates(grouped);
-    
-    // Initialize expanded categories
-    if (expandedCategories.length === 0 && Object.keys(grouped).length > 0) {
-      setExpandedCategories([Object.keys(grouped)[0]]);
-    }
-  }, [sectionTemplates]);
 
   // Fetch page data from the database
   const fetchPageData = async () => {
@@ -169,24 +115,25 @@ const PageBuilderPage: React.FC = () => {
     }
   };
   
-  // Fetch section templates from the database
-  const fetchSectionTemplates = async () => {
+
+  // Fetch the first active template for a given section type
+  const fetchDefaultTemplateForType = async (sectionType: SectionType): Promise<SectionTemplate | null> => {
     try {
-      // Only fetch active templates for regular users, admins can see all
-      const query = supabase
+      const { data, error } = await supabase
         .from('section_templates')
         .select('*')
-        .order('category')
-        .order('template_name');
-        
-      const { data, error } = await query;
+        .eq('section_type', sectionType)
+        .eq('status', 'active')
+        .order('template_name')
+        .limit(1)
+        .maybeSingle();
         
       if (error) throw error;
       
-      setSectionTemplates(data || []);
+      return data;
     } catch (err: any) {
-      console.error('Error fetching section templates:', err);
-      // Don't set error state here as this is not critical for page function
+      console.error('Error fetching default template for type:', sectionType, err);
+      return null;
     }
   };
   
@@ -259,26 +206,6 @@ const PageBuilderPage: React.FC = () => {
     }
   };
   
-  // Handle section template drag start
-  const handleDragStart = (template: SectionTemplate, event: React.DragEvent) => {
-    setDraggedSection(template);
-    
-    // Set a ghost image for the drag operation
-    if (event.dataTransfer) {
-      const ghostElement = document.createElement('div');
-      ghostElement.classList.add('bg-white', 'p-2', 'rounded', 'shadow');
-      ghostElement.textContent = template.template_name;
-      document.body.appendChild(ghostElement);
-      
-      event.dataTransfer.setDragImage(ghostElement, 0, 0);
-      event.dataTransfer.effectAllowed = 'move';
-      
-      // Remove the ghost element after it's no longer needed
-      setTimeout(() => {
-        document.body.removeChild(ghostElement);
-      }, 0);
-    }
-  };
   
   // Handle section drag start for reordering
   const handleSectionDragStart = (index: number, event: React.DragEvent) => {
@@ -306,28 +233,55 @@ const PageBuilderPage: React.FC = () => {
   };
   
   // Handle section drop for new sections or reordering
-  const handleDrop = (index: number, event: React.DragEvent) => {
+  const handleDrop = async (index: number, event: React.DragEvent) => {
     event.preventDefault();
     
     // Reset drag states
     setDropTargetIndex(null);
     
-    // Case 1: Adding a new section from the library
-    if (draggedSection) {
-      // Create a new section based on the template
-      const newSection: Section = {
-        id: Math.random().toString(36).substr(2, 9), // Generate unique ID
-        type: draggedSection.section_type,
-        content: draggedSection.customizable_fields || {}
-      };
+    // Extract section type from drag data
+    const droppedSectionType = event.dataTransfer.getData('text/plain') as SectionType;
+    
+    // Case 1: Adding a new section from the library by type
+    if (droppedSectionType || draggedSectionType) {
+      const sectionTypeToUse = droppedSectionType || draggedSectionType;
+      try {
+        // Fetch the default template for this section type
+        const defaultTemplate = await fetchDefaultTemplateForType(sectionTypeToUse);
+        
+        if (defaultTemplate) {
+          // Create a new section based on the default template
+          const newSection: Section = {
+            id: Math.random().toString(36).substr(2, 9), // Generate unique ID
+            type: defaultTemplate.section_type,
+            content: defaultTemplate.customizable_fields || {}
+          };
+          
+          // Insert the new section at the specified index
+          const newSections = [...sections];
+          newSections.splice(index, 0, newSection);
+          
+          setSections(newSections);
+          setHasChanges(true);
+        } else {
+          // Fallback: create a basic section if no template found
+          const newSection: Section = {
+            id: Math.random().toString(36).substr(2, 9),
+            type: sectionTypeToUse,
+            content: {}
+          };
+          
+          const newSections = [...sections];
+          newSections.splice(index, 0, newSection);
+          
+          setSections(newSections);
+          setHasChanges(true);
+        }
+      } catch (error) {
+        console.error('Error creating section from type:', error);
+      }
       
-      // Insert the new section at the specified index
-      const newSections = [...sections];
-      newSections.splice(index, 0, newSection);
-      
-      setSections(newSections);
-      setDraggedSection(null);
-      setHasChanges(true);
+      setDraggedSectionType(null);
       return;
     }
     
@@ -348,41 +302,13 @@ const PageBuilderPage: React.FC = () => {
   
   // Handle drag end for cleanup
   const handleDragEnd = () => {
-    setDraggedSection(null);
+    setDraggedSectionType(null);
     setDraggedSectionIndex(null);
     setDropTargetIndex(null);
     setDragOverSection(false);
   };
+
   
-  // Toggle category expansion
-  const toggleCategory = (category: string) => {
-    if (expandedCategories.includes(category)) {
-      setExpandedCategories([]);
-    } else {
-      // Auto-collapse behavior: When one category opens, others close
-      setExpandedCategories([category]);
-    }
-  };
-  
-  // Filter section templates based on search term
-  const filterTemplates = () => {
-    if (!searchTerm) return groupedTemplates;
-    
-    const filtered: GroupedSections = {};
-    
-    Object.entries(groupedTemplates).forEach(([category, templates]) => {
-      const matchingTemplates = templates.filter(template => 
-        template.template_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        template.section_type.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      
-      if (matchingTemplates.length > 0) {
-        filtered[category] = matchingTemplates;
-      }
-    });
-    
-    return filtered;
-  };
   
   // Handle content updates from editable components
   const handleContentUpdate = (sectionId: string, fieldName: string, value: any) => {
@@ -415,19 +341,44 @@ const PageBuilderPage: React.FC = () => {
   };
   
   // Handle saving section settings
-  const handleSaveSectionSettings = (sectionId: string, settings: { backgroundColor: string }) => {
-    const updatedSections = sections.map(section => {
+  const handleSaveSectionSettings = async (sectionId: string, settings: { backgroundColor: string; templateId?: string }) => {
+    const updatedSections = await Promise.all(sections.map(async section => {
       if (section.id === sectionId) {
+        let updatedContent = {
+          ...section.content,
+          backgroundColor: settings.backgroundColor
+        };
+
+        // If a new template is selected, fetch and apply its content
+        if (settings.templateId) {
+          try {
+            const { data: template, error } = await supabase
+              .from('section_templates')
+              .select('*')
+              .eq('id', settings.templateId)
+              .single();
+
+            if (error) throw error;
+
+            if (template) {
+              // Merge template fields with existing content, preserving background color
+              updatedContent = {
+                ...template.customizable_fields,
+                ...updatedContent, // This ensures backgroundColor is preserved
+              };
+            }
+          } catch (error) {
+            console.error('Error fetching template:', error);
+          }
+        }
+
         return {
           ...section,
-          content: {
-            ...section.content,
-            backgroundColor: settings.backgroundColor
-          }
+          content: updatedContent
         };
       }
       return section;
-    });
+    }));
     
     setSections(updatedSections);
     setHasChanges(true);
@@ -664,7 +615,6 @@ const PageBuilderPage: React.FC = () => {
     );
   }
   
-  const filteredTemplates = filterTemplates();
   
   return (
     <div className="flex flex-col flex-1 bg-gray-50 h-[calc(100vh-4rem)]">
@@ -742,101 +692,24 @@ const PageBuilderPage: React.FC = () => {
         )}
 
         {/* Left Sidebar - Section Library */}
-        <div className={`${sidebarOpen ? 'w-[300px]' : 'w-0'} bg-white border-r border-gray-200 transition-all duration-300 overflow-hidden flex flex-col z-10 flex-shrink-0 h-full`}>
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h2 className="font-semibold text-gray-900">Section Library</h2>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-              title={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="p-4 border-b border-gray-200">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search sections..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-pink focus:border-primary-pink"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            </div>
-          </div>
-          
+        <SectionLibrarySidebar
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+          className="h-full"
+        />
         
         {/* Section Settings Modal */}
-        {selectedSectionId && (
-          <SectionSettingsModal
+        {selectedSectionId && sections.find(s => s.id === selectedSectionId) && (
+          <EnhancedSectionSettingsModal
             isOpen={isSectionSettingsModalOpen}
             onClose={() => setIsSectionSettingsModalOpen(false)}
             sectionId={selectedSectionId}
+            sectionType={sections.find(s => s.id === selectedSectionId)!.type as SectionType}
             initialBgColor={sections.find(s => s.id === selectedSectionId)?.content?.backgroundColor || '#FFFFFF'}
             onSave={handleSaveSectionSettings}
             siteColors={siteColors}
           />
         )}
-          <div className="overflow-y-auto flex-grow grid grid-cols-2 gap-3 p-4">
-            {Object.keys(filteredTemplates).length === 0 ? (
-              <div className="col-span-2 text-center py-6 text-gray-500">
-                {searchTerm ? (
-                  <p>No matching sections found. Try a different search term.</p>
-                ) : (
-                  <p>No sections available. Add sections to your library.</p>
-                )}
-              </div>
-            ) : (
-              <div className="col-span-2 space-y-2">
-                {Object.entries(filteredTemplates).map(([category, templates]) => (
-                  <div key={category} className="overflow-hidden">
-                    <button
-                      onClick={() => toggleCategory(category)}
-                      className="w-full flex justify-between items-center text-left hover:text-primary-pink transition-colors duration-200"
-                    >
-                      <span className="font-medium text-gray-700 py-2">{category}</span>
-                      {expandedCategories.includes(category) ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </button>
-                    
-                    {expandedCategories.includes(category) && (
-                      <div className="grid grid-cols-2 gap-2">
-                        {templates.map(template => (
-                          <div
-                            key={template.id}
-                            className="group bg-white rounded border border-gray-200 hover:shadow-sm cursor-grab overflow-hidden transition-all duration-200"
-                            draggable
-                            onDragStart={(e) => handleDragStart(template, e)}
-                            onDragEnd={handleDragEnd}
-                          >
-                            <div className="relative w-full aspect-video bg-gray-100 overflow-hidden group-hover:ring-2 group-hover:ring-primary-pink">
-                              {template.preview_image_url ? (
-                                <img src={template.preview_image_url} alt={template.template_name} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                  <Plus className="h-4 w-4" />
-                                </div>
-                              )}
-                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200"></div>
-                              <GripVertical className="absolute top-1 right-1 h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-all duration-200" />
-                            </div>
-                            <div className="py-1 px-2 text-center">
-                              <div className="text-xs font-medium text-gray-900 truncate">{template.template_name}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Page Canvas with Sections - Full height, centered content */}
         <div className="flex-1 overflow-y-auto bg-gray-50 flex flex-col items-center h-full">
@@ -858,7 +731,7 @@ const PageBuilderPage: React.FC = () => {
               >
                 {!previewMode && (
                   <div className="text-xs text-gray-400">
-                    {dropTargetIndex === 0 && draggedSection 
+                    {dropTargetIndex === 0
                       ? 'Drop to add section here'
                       : 'Drag sections here'
                     }
@@ -978,7 +851,7 @@ const PageBuilderPage: React.FC = () => {
                         onDragLeave={() => setDropTargetIndex(null)}
                       >
                         <div className="text-xs text-gray-500">
-                          {dropTargetIndex === index + 1 && draggedSection 
+                          {dropTargetIndex === index + 1
                             ? 'Drop to add section here'
                             : 'Drag sections here'
                           }
