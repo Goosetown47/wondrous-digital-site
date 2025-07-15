@@ -16,8 +16,12 @@ interface Position {
 interface EditImageTooltipProps {
   src: string;
   alt: string;
+  imageScaling?: string;
+  containerMode?: string;
+  containerAspectRatio?: string;
+  containerSize?: string;
   position: Position;
-  onUpdate: (data: { src: string; alt: string }) => void;
+  onUpdate: (data: { src: string; alt: string; imageScaling?: string; containerMode?: string; containerAspectRatio?: string; containerSize?: string }) => void;
   onClose: () => void;
   bucketName?: string;
 }
@@ -25,6 +29,10 @@ interface EditImageTooltipProps {
 const EditImageTooltip: React.FC<EditImageTooltipProps> = ({
   src,
   alt,
+  imageScaling,
+  containerMode,
+  containerAspectRatio,
+  containerSize,
   position,
   onUpdate,
   onClose,
@@ -32,12 +40,46 @@ const EditImageTooltip: React.FC<EditImageTooltipProps> = ({
 }) => {
   const [editedSrc, setEditedSrc] = useState(src);
   const [editedAlt, setEditedAlt] = useState(alt);
+  const [editedImageScaling, setEditedImageScaling] = useState(imageScaling || 'fill-height');
+  const [editedContainerMode, setEditedContainerMode] = useState(containerMode || 'section-height');
+  const [editedContainerAspectRatio, setEditedContainerAspectRatio] = useState(containerAspectRatio || '16:9');
+  const [editedContainerSize, setEditedContainerSize] = useState(containerSize || 'medium');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
+
+  // Image scaling options
+  const IMAGE_SCALING_OPTIONS = [
+    { value: 'fill-height', label: 'Fill Height', description: 'Image fills container height, crops if needed' },
+    { value: 'fit-image', label: 'Fit Image', description: 'Shows entire image, may leave gaps' },
+    { value: 'center-crop', label: 'Center Crop', description: 'Fills height, keeps center visible' },
+    { value: 'auto-height', label: 'Auto Height', description: 'Image keeps natural proportions' }
+  ];
+
+  // Container mode options
+  const CONTAINER_MODE_OPTIONS = [
+    { value: 'section-height', label: 'Section Height', description: 'Image fills the entire section height' },
+    { value: 'fixed-shape', label: 'Fixed Shape', description: 'Image fits a specific sized container' }
+  ];
+
+  // Container aspect ratio options
+  const ASPECT_RATIO_OPTIONS = [
+    { value: '16:9', label: '16:9 (Widescreen)' },
+    { value: '4:3', label: '4:3 (Standard)' },
+    { value: '3:2', label: '3:2 (Photo)' },
+    { value: '1:1', label: '1:1 (Square)' },
+    { value: '9:16', label: '9:16 (Portrait)' }
+  ];
+
+  // Container size options
+  const CONTAINER_SIZE_OPTIONS = [
+    { value: 'small', label: 'Small (320px)' },
+    { value: 'medium', label: 'Medium (480px)' },
+    { value: 'large', label: 'Large (640px)' }
+  ];
   
   // Handle click outside to close
   useEffect(() => {
@@ -172,10 +214,37 @@ const EditImageTooltip: React.FC<EditImageTooltipProps> = ({
   
   // Handle save
   const handleSave = () => {
-    onUpdate({
+    const updates = {
       src: editedSrc,
       alt: editedAlt
-    });
+    };
+    
+    // Follow the same pattern as color and lineHeight
+    if (editedImageScaling && editedImageScaling.trim() !== '') {
+      updates.imageScaling = editedImageScaling;
+    } else if (imageScaling) {
+      updates.imageScaling = imageScaling; // Preserve original
+    }
+
+    if (editedContainerMode && editedContainerMode.trim() !== '') {
+      updates.containerMode = editedContainerMode;
+    } else if (containerMode) {
+      updates.containerMode = containerMode; // Preserve original
+    }
+
+    if (editedContainerAspectRatio && editedContainerAspectRatio.trim() !== '') {
+      updates.containerAspectRatio = editedContainerAspectRatio;
+    } else if (containerAspectRatio) {
+      updates.containerAspectRatio = containerAspectRatio; // Preserve original
+    }
+
+    if (editedContainerSize && editedContainerSize.trim() !== '') {
+      updates.containerSize = editedContainerSize;
+    } else if (containerSize) {
+      updates.containerSize = containerSize; // Preserve original
+    }
+    
+    onUpdate(updates);
   };
   
   return (
@@ -292,6 +361,93 @@ const EditImageTooltip: React.FC<EditImageTooltipProps> = ({
           Describe the image for accessibility
         </p>
       </div>
+
+      {/* Image Scaling */}
+      <div className="mb-4">
+        <label htmlFor="image-scaling" className="block text-sm font-medium text-gray-700 mb-1">
+          Image Scaling
+        </label>
+        <select
+          id="image-scaling"
+          value={editedImageScaling}
+          onChange={(e) => setEditedImageScaling(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary-pink focus:border-primary-pink"
+        >
+          {IMAGE_SCALING_OPTIONS.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 mt-1">
+          {IMAGE_SCALING_OPTIONS.find(opt => opt.value === editedImageScaling)?.description}
+        </p>
+      </div>
+
+      {/* Container Mode */}
+      <div className="mb-4">
+        <label htmlFor="container-mode" className="block text-sm font-medium text-gray-700 mb-1">
+          Container Mode
+        </label>
+        <select
+          id="container-mode"
+          value={editedContainerMode}
+          onChange={(e) => setEditedContainerMode(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary-pink focus:border-primary-pink"
+        >
+          {CONTAINER_MODE_OPTIONS.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 mt-1">
+          {CONTAINER_MODE_OPTIONS.find(opt => opt.value === editedContainerMode)?.description}
+        </p>
+      </div>
+
+      {/* Fixed Shape Options - Only show when container mode is fixed-shape */}
+      {editedContainerMode === 'fixed-shape' && (
+        <>
+          {/* Container Aspect Ratio */}
+          <div className="mb-4">
+            <label htmlFor="container-aspect-ratio" className="block text-sm font-medium text-gray-700 mb-1">
+              Aspect Ratio
+            </label>
+            <select
+              id="container-aspect-ratio"
+              value={editedContainerAspectRatio}
+              onChange={(e) => setEditedContainerAspectRatio(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary-pink focus:border-primary-pink"
+            >
+              {ASPECT_RATIO_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Container Size */}
+          <div className="mb-4">
+            <label htmlFor="container-size" className="block text-sm font-medium text-gray-700 mb-1">
+              Container Size
+            </label>
+            <select
+              id="container-size"
+              value={editedContainerSize}
+              onChange={(e) => setEditedContainerSize(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary-pink focus:border-primary-pink"
+            >
+              {CONTAINER_SIZE_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
+      )}
       
       {/* Action buttons */}
       <div className="flex justify-end space-x-2">

@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../../utils/supabase';
 import { useProject } from '../../../contexts/ProjectContext';
 import { EditModeProvider, useEditMode } from '../../../contexts/EditModeContext';
-import { SiteStylesProvider } from '../../../contexts/SiteStylesContext';
-import { Save, Eye, EyeOff, Smartphone, PanelTop, Loader, GripVertical, ChevronDown, ChevronUp, Trash2, X, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { CSSSiteStylesProvider } from '../../../contexts/SiteStylesContext';
+import { applySiteStyleVariables } from '../../../lib/utils';
+import { Save, Eye, EyeOff, Smartphone, PanelTop, Loader, GripVertical, ChevronDown, ChevronUp, Trash2, X, ChevronLeft, ChevronRight, Settings, ExternalLink } from 'lucide-react';
 import HeroSplitLayout from '../../../components/sections/HeroSplitLayout';
 import FourFeaturesGrid from '../../../components/sections/FourFeaturesGrid';
 import EnhancedSectionSettingsModal from '../../../components/admin/EnhancedSectionSettingsModal';
@@ -44,6 +45,7 @@ const PageBuilderPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [stylesLoaded, setStylesLoaded] = useState(false);
   
   // UI state
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -169,6 +171,14 @@ const PageBuilderPage: React.FC = () => {
       setSaving(false);
     }
   };
+
+  // Open page in new browser window for preview
+  const handleViewInBrowser = () => {
+    if (pageId) {
+      const previewUrl = `/preview/${pageId}`;
+      window.open(previewUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
   
   // Fetch site styles
   useEffect(() => {
@@ -188,8 +198,12 @@ const PageBuilderPage: React.FC = () => {
         
       if (error) throw error;
       
-      // Extract color properties from site styles
+      // Apply full site styles if available
       if (data) {
+        // Apply all CSS variables for buttons, typography, colors, etc.
+        applySiteStyleVariables(data);
+        
+        // Extract color properties for legacy setSiteColors
         const colorEntries = Object.entries(data)
           .filter(([key, value]) => 
             (key.includes('color') || key.includes('gradient')) && 
@@ -199,10 +213,18 @@ const PageBuilderPage: React.FC = () => {
           
         const colorObj = Object.fromEntries(colorEntries);
         setSiteColors(colorObj);
+      } else {
+        // No custom styles, apply defaults
+        applySiteStyleVariables({});
       }
+      
+      // Mark styles as loaded
+      setStylesLoaded(true);
     } catch (err) {
       console.error('Error fetching site styles:', err);
-      // Non-critical error, don't set error state
+      // Apply defaults on error and mark as loaded to prevent blocking
+      applySiteStyleVariables({});
+      setStylesLoaded(true);
     }
   };
   
@@ -341,12 +363,23 @@ const PageBuilderPage: React.FC = () => {
   };
   
   // Handle saving section settings
-  const handleSaveSectionSettings = async (sectionId: string, settings: { backgroundColor: string; templateId?: string }) => {
+  const handleSaveSectionSettings = async (sectionId: string, settings: { 
+    backgroundColor?: string;
+    backgroundImage?: string;
+    backgroundGradient?: string;
+    backgroundBlur?: number;
+    backgroundType: 'color' | 'image' | 'gradient';
+    templateId?: string;
+  }) => {
     const updatedSections = await Promise.all(sections.map(async section => {
       if (section.id === sectionId) {
         let updatedContent = {
           ...section.content,
-          backgroundColor: settings.backgroundColor
+          backgroundColor: settings.backgroundColor,
+          backgroundImage: settings.backgroundImage,
+          backgroundGradient: settings.backgroundGradient,
+          backgroundBlur: settings.backgroundBlur,
+          backgroundType: settings.backgroundType
         };
 
         // If a new template is selected, fetch and apply its content
@@ -361,10 +394,10 @@ const PageBuilderPage: React.FC = () => {
             if (error) throw error;
 
             if (template) {
-              // Merge template fields with existing content, preserving background color
+              // Merge template fields with existing content, preserving background settings
               updatedContent = {
                 ...template.customizable_fields,
-                ...updatedContent, // This ensures backgroundColor is preserved
+                ...updatedContent, // This ensures background settings are preserved
               };
             }
           } catch (error) {
@@ -419,11 +452,13 @@ const PageBuilderPage: React.FC = () => {
               content={{
                 headline: {
                   text: section.content?.headline?.text || "Medium length hero headline goes here",
-                  color: section.content?.headline?.color
+                  color: section.content?.headline?.color,
+                  lineHeight: section.content?.headline?.lineHeight
                 },
                 description: {
                   text: section.content?.description?.text || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla.",
-                  color: section.content?.description?.color
+                  color: section.content?.description?.color,
+                  lineHeight: section.content?.description?.lineHeight
                 },
                 primaryButton: {
                   text: section.content?.primaryButton?.text || "Primary Button",
@@ -439,9 +474,17 @@ const PageBuilderPage: React.FC = () => {
                 },
                 heroImage: {
                   src: section.content?.heroImage?.src || "",
-                  alt: section.content?.heroImage?.alt || "Hero image"
+                  alt: section.content?.heroImage?.alt || "Hero image",
+                  imageScaling: section.content?.heroImage?.imageScaling,
+                  containerMode: section.content?.heroImage?.containerMode,
+                  containerAspectRatio: section.content?.heroImage?.containerAspectRatio,
+                  containerSize: section.content?.heroImage?.containerSize
                 },
-                backgroundColor: section.content?.backgroundColor || "#FFFFFF"
+                backgroundColor: section.content?.backgroundColor || "#FFFFFF",
+                backgroundImage: section.content?.backgroundImage,
+                backgroundGradient: section.content?.backgroundGradient,
+                backgroundBlur: section.content?.backgroundBlur,
+                backgroundType: section.content?.backgroundType || 'color'
               }}
               isMobilePreview={mobileView}
             />
@@ -452,15 +495,18 @@ const PageBuilderPage: React.FC = () => {
             content={{
               tagline: {
                 text: section.content?.tagline?.text || "Tagline",
-                color: section.content?.tagline?.color
+                color: section.content?.tagline?.color,
+                lineHeight: section.content?.tagline?.lineHeight
               },
               mainHeading: {
                 text: section.content?.mainHeading?.text || "Medium length section heading goes here",
-                color: section.content?.mainHeading?.color
+                color: section.content?.mainHeading?.color,
+                lineHeight: section.content?.mainHeading?.lineHeight
               },
               description: {
                 text: section.content?.description?.text || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat.",
-                color: section.content?.description?.color
+                color: section.content?.description?.color,
+                lineHeight: section.content?.description?.lineHeight
               },
               feature1Icon: {
                 icon: typeof section.content?.feature1Icon?.icon === 'string' && 
@@ -471,11 +517,13 @@ const PageBuilderPage: React.FC = () => {
               },
               feature1Heading: {
                 text: section.content?.feature1Heading?.text || "Medium length section heading goes here",
-                color: section.content?.feature1Heading?.color
+                color: section.content?.feature1Heading?.color,
+                lineHeight: section.content?.feature1Heading?.lineHeight
               },
               feature1Description: {
                 text: section.content?.feature1Description?.text || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.",
-                color: section.content?.feature1Description?.color
+                color: section.content?.feature1Description?.color,
+                lineHeight: section.content?.feature1Description?.lineHeight
               },
               feature2Icon: {
                 icon: typeof section.content?.feature2Icon?.icon === 'string' && 
@@ -486,11 +534,13 @@ const PageBuilderPage: React.FC = () => {
               },
               feature2Heading: {
                 text: section.content?.feature2Heading?.text || "Medium length section heading goes here",
-                color: section.content?.feature2Heading?.color
+                color: section.content?.feature2Heading?.color,
+                lineHeight: section.content?.feature2Heading?.lineHeight
               },
               feature2Description: {
                 text: section.content?.feature2Description?.text || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.",
-                color: section.content?.feature2Description?.color
+                color: section.content?.feature2Description?.color,
+                lineHeight: section.content?.feature2Description?.lineHeight
               },
               feature3Icon: {
                 icon: typeof section.content?.feature3Icon?.icon === 'string' && 
@@ -501,11 +551,13 @@ const PageBuilderPage: React.FC = () => {
               },
               feature3Heading: {
                 text: section.content?.feature3Heading?.text || "Medium length section heading goes here",
-                color: section.content?.feature3Heading?.color
+                color: section.content?.feature3Heading?.color,
+                lineHeight: section.content?.feature3Heading?.lineHeight
               },
               feature3Description: {
                 text: section.content?.feature3Description?.text || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.",
-                color: section.content?.feature3Description?.color
+                color: section.content?.feature3Description?.color,
+                lineHeight: section.content?.feature3Description?.lineHeight
               },
               feature4Icon: {
                 icon: typeof section.content?.feature4Icon?.icon === 'string' && 
@@ -516,11 +568,13 @@ const PageBuilderPage: React.FC = () => {
               },
               feature4Heading: {
                 text: section.content?.feature4Heading?.text || "Medium length section heading goes here",
-                color: section.content?.feature4Heading?.color
+                color: section.content?.feature4Heading?.color,
+                lineHeight: section.content?.feature4Heading?.lineHeight
               },
               feature4Description: {
                 text: section.content?.feature4Description?.text || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique.",
-                color: section.content?.feature4Description?.color
+                color: section.content?.feature4Description?.color,
+                lineHeight: section.content?.feature4Description?.lineHeight
               },
               primaryButton: {
                 text: section.content?.primaryButton?.text || "Button",
@@ -534,7 +588,11 @@ const PageBuilderPage: React.FC = () => {
                 variant: section.content?.secondaryButton?.variant || "secondary",
                 icon: section.content?.secondaryButton?.icon
               },
-              backgroundColor: section.content?.backgroundColor || "#FFFFFF"
+              backgroundColor: section.content?.backgroundColor || "#FFFFFF",
+              backgroundImage: section.content?.backgroundImage,
+              backgroundGradient: section.content?.backgroundGradient,
+              backgroundBlur: section.content?.backgroundBlur,
+              backgroundType: section.content?.backgroundType || 'color'
             }}
             isMobilePreview={mobileView}
           />
@@ -576,11 +634,13 @@ const PageBuilderPage: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasChanges]);
   
-  if (loading) {
+  if (loading || !stylesLoaded) {
     return (
       <div className="flex items-center justify-center min-h-[600px]">
         <Loader className="h-6 w-6 text-primary-pink animate-spin mr-3" />
-        <span className="text-lg text-gray-600">Loading page builder...</span>
+        <span className="text-lg text-gray-600">
+          {!stylesLoaded ? 'Loading styles...' : 'Loading page builder...'}
+        </span>
       </div>
     );
   }
@@ -617,7 +677,8 @@ const PageBuilderPage: React.FC = () => {
   
   
   return (
-    <div className="flex flex-col flex-1 bg-gray-50 h-[calc(100vh-4rem)]">
+    <CSSSiteStylesProvider>
+      <div className="flex flex-col flex-1 bg-gray-50 h-[calc(100vh-4rem)]">
       {/* Top Toolbar */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between w-full sticky top-0 z-20">
           <div className="flex items-center">
@@ -656,6 +717,16 @@ const PageBuilderPage: React.FC = () => {
               title={previewMode ? "Exit preview" : "Preview"}
             >
               {previewMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+            
+            {/* View in Browser Button */}
+            <button
+              onClick={handleViewInBrowser}
+              className="flex items-center px-3 py-1.5 border border-gray-200 rounded-lg text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-colors duration-200 text-sm"
+              title="View in Browser"
+            >
+              <ExternalLink className="h-4 w-4 mr-1.5" />
+              View in Browser
             </button>
             
             {/* Save Button */}
@@ -706,6 +777,10 @@ const PageBuilderPage: React.FC = () => {
             sectionId={selectedSectionId}
             sectionType={sections.find(s => s.id === selectedSectionId)!.type as SectionType}
             initialBgColor={sections.find(s => s.id === selectedSectionId)?.content?.backgroundColor || '#FFFFFF'}
+            initialBackgroundType={sections.find(s => s.id === selectedSectionId)?.content?.backgroundType || 'color'}
+            initialBackgroundImage={sections.find(s => s.id === selectedSectionId)?.content?.backgroundImage || ''}
+            initialBackgroundGradient={sections.find(s => s.id === selectedSectionId)?.content?.backgroundGradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}
+            initialBackgroundBlur={sections.find(s => s.id === selectedSectionId)?.content?.backgroundBlur || 0}
             onSave={handleSaveSectionSettings}
             siteColors={siteColors}
           />
@@ -758,7 +833,8 @@ const PageBuilderPage: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                sections.map((section, index) => (
+                <div className="website-content">
+                  {sections.map((section, index) => (
                   <div key={section.id} className="relative">
                     {!previewMode && (
                       <div className="absolute -left-10 top-4 flex flex-col items-center space-y-1 z-10">
@@ -827,7 +903,6 @@ const PageBuilderPage: React.FC = () => {
                       
                       {/* Section selection outline - only visible when hovered or selected in edit mode */}
                       
-                      <SiteStylesProvider>
                       <EditModeProvider 
                         initialEditMode={!previewMode} 
                         onContentUpdate={(fieldName, value) => handleContentUpdate(section.id, fieldName, value)}
@@ -835,7 +910,6 @@ const PageBuilderPage: React.FC = () => {
                       >
                       {renderSection(section)}
                       </EditModeProvider>
-                      </SiteStylesProvider>
                     </div>
                     
                     {/* Drop zone below this section - Updated styling */}
@@ -859,7 +933,8 @@ const PageBuilderPage: React.FC = () => {
                       </div>
                     )}
                   </div>
-                ))
+                  ))}
+                </div>
               )}
             {activeEditField && (
               <div className="fixed inset-0 z-50 pointer-events-none">
@@ -870,6 +945,7 @@ const PageBuilderPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </CSSSiteStylesProvider>
   );
 };
 

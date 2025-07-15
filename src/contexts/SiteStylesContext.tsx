@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from '../utils/supabase';
 import { useProject } from './ProjectContext';
 import { applySiteStyleVariables } from '../lib/utils';
+import { fontPreloader } from '../utils/font-preloader';
 
 // Define the type for site styles
 export interface SiteStyles {
@@ -62,6 +63,15 @@ export interface SiteStyles {
   outline_hover_bg: string;
   text_link_color: string;
   text_link_hover_color: string;
+  
+  // Typography line height settings
+  h1_line_height: string;
+  h2_line_height: string;
+  h3_line_height: string;
+  h4_line_height: string;
+  h5_line_height: string;
+  h6_line_height: string;
+  p_line_height: string;
 }
 
 // Default styles
@@ -120,7 +130,16 @@ const DEFAULT_STYLES: Partial<SiteStyles> = {
   outline_border_color: '#000000',
   outline_hover_bg: '#F3F4F6',
   text_link_color: '#000000',
-  text_link_hover_color: '#374151'
+  text_link_hover_color: '#374151',
+  
+  // Typography line height defaults
+  h1_line_height: '1.2',
+  h2_line_height: '1.3',
+  h3_line_height: '1.4',
+  h4_line_height: '1.4',
+  h5_line_height: '1.4',
+  h6_line_height: '1.4',
+  p_line_height: '1.6'
 };
 
 // Define the context shape
@@ -139,7 +158,113 @@ const SiteStylesContext = createContext<SiteStylesContextType>({
   setCssVariables: () => {},
 });
 
-// Provider component
+// CSS Variable-based provider (for PageBuilder/Preview that already have styles applied)
+export const CSSSiteStylesProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
+  const [styles, setStyles] = useState<Partial<SiteStyles>>(DEFAULT_STYLES);
+  const [loading, setLoading] = useState(false); // No loading needed - read from CSS
+  const [loadedFonts, setLoadedFonts] = useState<Set<string>>(new Set());
+
+  // Performance-optimized font loading for CSS-based styles
+  const loadFontsFromCSSStyles = async (cssStyles: Partial<SiteStyles>) => {
+    const fontsToLoad: string[] = [];
+    
+    // Collect fonts that need to be loaded (comparing with previous state)
+    if (cssStyles.primary_font && cssStyles.primary_font !== DEFAULT_STYLES.primary_font && !loadedFonts.has(cssStyles.primary_font)) {
+      fontsToLoad.push(cssStyles.primary_font);
+    }
+    if (cssStyles.secondary_font && cssStyles.secondary_font !== DEFAULT_STYLES.secondary_font && !loadedFonts.has(cssStyles.secondary_font)) {
+      fontsToLoad.push(cssStyles.secondary_font);
+    }
+    
+    // Load fonts asynchronously in parallel for better performance
+    if (fontsToLoad.length > 0) {
+      try {
+        await Promise.all(
+          fontsToLoad.map(fontName => 
+            fontPreloader.loadFont(fontName).catch(error => {
+              console.warn(`CSSSiteStylesProvider: Failed to load font: ${fontName}`, error);
+            })
+          )
+        );
+        
+        // Update loaded fonts state
+        setLoadedFonts(prev => new Set([...prev, ...fontsToLoad]));
+      } catch (error) {
+        console.warn('CSSSiteStylesProvider: Some fonts failed to load:', error);
+      }
+    }
+  };
+
+  // Read styles from CSS variables that have already been applied
+  useEffect(() => {
+    const readCSSVariables = () => {
+      const getCSSVar = (name: string) => {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim().replace(/'/g, '');
+      };
+
+      const cssStyles: Partial<SiteStyles> = {
+        ...DEFAULT_STYLES,
+        // Read all the CSS variables that applySiteStyleVariables sets
+        primary_color: getCSSVar('--primary-color') || DEFAULT_STYLES.primary_color,
+        secondary_color: getCSSVar('--secondary-color') || DEFAULT_STYLES.secondary_color,
+        tertiary_color: getCSSVar('--tertiary-color') || DEFAULT_STYLES.tertiary_color,
+        dark_color: getCSSVar('--dark-color') || DEFAULT_STYLES.dark_color,
+        light_color: getCSSVar('--light-color') || DEFAULT_STYLES.light_color,
+        white_color: getCSSVar('--white-color') || DEFAULT_STYLES.white_color,
+        primary_font: getCSSVar('--primary-font') || DEFAULT_STYLES.primary_font,
+        secondary_font: getCSSVar('--secondary-font') || DEFAULT_STYLES.secondary_font,
+        button_style: getCSSVar('--button-style') as any || DEFAULT_STYLES.button_style,
+        button_radius: getCSSVar('--button-radius') as any || DEFAULT_STYLES.button_radius,
+        // Read line height CSS variables
+        h1_line_height: getCSSVar('--h1-line-height') || DEFAULT_STYLES.h1_line_height,
+        h2_line_height: getCSSVar('--h2-line-height') || DEFAULT_STYLES.h2_line_height,
+        h3_line_height: getCSSVar('--h3-line-height') || DEFAULT_STYLES.h3_line_height,
+        h4_line_height: getCSSVar('--h4-line-height') || DEFAULT_STYLES.h4_line_height,
+        h5_line_height: getCSSVar('--h5-line-height') || DEFAULT_STYLES.h5_line_height,
+        h6_line_height: getCSSVar('--h6-line-height') || DEFAULT_STYLES.h6_line_height,
+        p_line_height: getCSSVar('--p-line-height') || DEFAULT_STYLES.p_line_height,
+      };
+
+      setStyles(cssStyles);
+      
+      // Load fonts after updating styles (non-blocking)
+      loadFontsFromCSSStyles(cssStyles).catch(error => {
+        console.warn('CSSSiteStylesProvider: Font loading failed:', error);
+      });
+    };
+
+    // Initial read
+    readCSSVariables();
+
+    // Set up a mutation observer to watch for CSS variable changes
+    const observer = new MutationObserver(() => {
+      readCSSVariables();
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['style']
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const value = {
+    styles,
+    loading,
+    error: null,
+    updateStyles: () => {}, // No-op for CSS-based provider
+    refetchStyles: () => {}, // No-op for CSS-based provider
+  };
+
+  return (
+    <SiteStylesContext.Provider value={value}>
+      {children}
+    </SiteStylesContext.Provider>
+  );
+};
+
+// Original database-based provider component
 export const SiteStylesProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const { selectedProject } = useProject();
   const [styles, setStyles] = useState<Partial<SiteStyles>>(DEFAULT_STYLES);

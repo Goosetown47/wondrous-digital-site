@@ -1,0 +1,17 @@
+/* Simple modal font fix - override project fonts in modals only */
+
+/* Target only specific modal classes that need font override */
+/* Use more specific selectors to avoid catching font dropdowns */
+.edit-text-tooltip,
+.edit-text-tooltip *,
+.edit-button-tooltip,
+.edit-button-tooltip *,
+.color-picker-modal,
+.color-picker-modal *,
+.gradient-editor-modal,
+.gradient-editor-modal * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif !important;
+}
+

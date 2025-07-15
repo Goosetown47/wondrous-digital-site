@@ -1,0 +1,24 @@
+/* Global Typography Styles - Apply CSS Variables to Text Elements */
+
+/* Apply primary font to headings */
+h1, h2, h3, h4, h5, h6,
+.text-xl, .text-2xl, .text-3xl, .text-4xl, .text-5xl, .text-6xl, .text-7xl, .text-8xl, .text-9xl {
+  font-family: var(--primary-font);
+}
+
+/* Apply primary font to body text and paragraphs */
+body, p, div, span,
+.text-xs, .text-sm, .text-base, .text-lg {
+  font-family: var(--secondary-font);
+}
+
+/* Ensure proper fallbacks */
+* {
+  font-family: var(--secondary-font, 'Inter', sans-serif);
+}
+
+/* Override for specific heading elements that should use primary font */
+h1, h2, h3, h4, h5, h6,
+[class*="text-"]:not(.text-xs):not(.text-sm):not(.text-base):not(.text-lg) {
+  font-family: var(--primary-font, 'Inter', sans-serif) !important;
+}

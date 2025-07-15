@@ -9,6 +9,7 @@ interface EditableTextProps {
   className?: string;
   children?: React.ReactNode;
   color?: string;
+  lineHeight?: string;
 }
 
 const EditableText: React.FC<EditableTextProps> = ({
@@ -18,6 +19,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   className = '',
   children,
   color,
+  lineHeight,
   ...rest
 }) => {
   const { editMode, activeEditField, setActiveEditField, onContentUpdate } = useEditMode();
@@ -47,7 +49,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   };
   
   // Handle updates from the tooltip
-  const handleUpdate = (value: { text: string; color?: string }) => {
+  const handleUpdate = (value: { text: string; color?: string; lineHeight?: string }) => {
     if (onContentUpdate) {
       onContentUpdate(fieldName, value);
     }
@@ -62,7 +64,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   // If not in edit mode, just render the element normally
   if (!editMode) {
     return (
-      <Element className={className} style={{ color }} {...rest}>
+      <Element className={className} style={{ color, lineHeight }} {...rest}>
         {content}
       </Element>
     );
@@ -78,7 +80,7 @@ const EditableText: React.FC<EditableTextProps> = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleClick}
-        style={{ color }}
+        style={{ color, lineHeight }}
         {...rest}
       >
         {content}
@@ -89,9 +91,11 @@ const EditableText: React.FC<EditableTextProps> = ({
         <EditTextTooltip
           text={typeof content === 'string' ? content : defaultValue}
           color={color}
+          lineHeight={lineHeight}
           position={tooltipPosition}
           onUpdate={handleUpdate}
           onClose={handleClose}
+          elementType={as}
         />
       )}
     </>

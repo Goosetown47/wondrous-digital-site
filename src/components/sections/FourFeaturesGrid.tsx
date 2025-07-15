@@ -3,20 +3,24 @@ import { ArrowRight } from 'lucide-react';
 import EditableText from '../editable/EditableText';
 import EditableIcon from '../editable/EditableIcon';
 import EditableButton from '../editable/EditableButton';
+import '../../styles/section-typography.css';
 
 interface FourFeaturesGridProps {
   content: {
     tagline?: {
       text?: string;
       color?: string;
+      lineHeight?: string;
     };
     mainHeading?: {
       text?: string;
       color?: string;
+      lineHeight?: string;
     };
     description?: {
       text?: string;
       color?: string;
+      lineHeight?: string;
     };
     feature1Icon?: {
       icon?: string;
@@ -26,10 +30,12 @@ interface FourFeaturesGridProps {
     feature1Heading?: {
       text?: string;
       color?: string;
+      lineHeight?: string;
     };
     feature1Description?: {
       text?: string;
       color?: string;
+      lineHeight?: string;
     };
     feature2Icon?: {
       icon?: string;
@@ -39,10 +45,12 @@ interface FourFeaturesGridProps {
     feature2Heading?: {
       text?: string;
       color?: string;
+      lineHeight?: string;
     };
     feature2Description?: {
       text?: string;
       color?: string;
+      lineHeight?: string;
     };
     feature3Icon?: {
       icon?: string;
@@ -52,10 +60,12 @@ interface FourFeaturesGridProps {
     feature3Heading?: {
       text?: string;
       color?: string;
+      lineHeight?: string;
     };
     feature3Description?: {
       text?: string;
       color?: string;
+      lineHeight?: string;
     };
     feature4Icon?: {
       icon?: string;
@@ -65,10 +75,12 @@ interface FourFeaturesGridProps {
     feature4Heading?: {
       text?: string;
       color?: string;
+      lineHeight?: string;
     };
     feature4Description?: {
       text?: string;
       color?: string;
+      lineHeight?: string;
     };
     primaryButton?: {
       text?: string;
@@ -83,6 +95,10 @@ interface FourFeaturesGridProps {
       icon?: string;
     };
     backgroundColor?: string;
+    backgroundImage?: string;
+    backgroundGradient?: string;
+    backgroundBlur?: number;
+    backgroundType?: 'color' | 'image' | 'gradient';
   };
   isMobilePreview?: boolean;
 }
@@ -167,14 +183,50 @@ const FourFeaturesGrid: React.FC<FourFeaturesGridProps> = ({
   },
   isMobilePreview = false
 }) => {
-  // Define CSS variables for styling based on props and default values
+  // Define CSS variables and background styling based on props and default values
   const sectionStyle: React.CSSProperties = {
-    backgroundColor: content.backgroundColor || '#FFFFFF'
+    '--section-bg-image': content.backgroundImage ? `url(${content.backgroundImage})` : 'none',
+    '--section-bg-blur': content.backgroundBlur ? `${content.backgroundBlur}px` : '0px',
+    '--section-bg-type': content.backgroundType || 'color'
   };
 
+  // Determine if we need the blurred background class (move this up first)
+  const hasBlurredBg = content.backgroundType === 'image' && content.backgroundImage && content.backgroundBlur && content.backgroundBlur > 0;
+
+  // Apply background properties as inline styles (following the color/lineHeight pattern)
+  const backgroundType = content.backgroundType || 'color';
+  
+  switch (backgroundType) {
+    case 'color':
+      sectionStyle.backgroundColor = content.backgroundColor || '#FFFFFF';
+      break;
+    case 'gradient':
+      if (content.backgroundGradient) {
+        sectionStyle.background = content.backgroundGradient;
+      } else {
+        sectionStyle.backgroundColor = content.backgroundColor || '#FFFFFF';
+      }
+      break;
+    case 'image':
+      if (content.backgroundImage) {
+        sectionStyle.backgroundImage = `url(${content.backgroundImage})`;
+        sectionStyle.backgroundSize = 'cover';
+        sectionStyle.backgroundPosition = 'center';
+        sectionStyle.backgroundRepeat = 'no-repeat';
+        // Blur is handled by the pseudo-element, not the main element
+      } else {
+        sectionStyle.backgroundColor = content.backgroundColor || '#FFFFFF';
+      }
+      break;
+    default:
+      sectionStyle.backgroundColor = content.backgroundColor || '#FFFFFF';
+  }
+  const sectionClasses = `w-full website-section ${hasBlurredBg ? 'section-with-blurred-bg' : ''}`;
+
   return (
-    <section className="w-full" style={sectionStyle}>
-      <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
+    <section className={sectionClasses} style={sectionStyle}>
+      <div className="section-content-container">
+        <div className="section-content-cell">
         {/* Header Content */}
         <div className="text-left max-w-3xl mb-16">
           <EditableText
@@ -183,20 +235,23 @@ const FourFeaturesGrid: React.FC<FourFeaturesGridProps> = ({
             as="p"
             className="text-base font-medium mb-3"
             color={content.tagline?.color}
+            lineHeight={content.tagline?.lineHeight}
           />
           <EditableText
             fieldName="mainHeading"
             defaultValue={content.mainHeading?.text || "Medium length section heading goes here"}
             as="h2"
-            className="text-3xl md:text-4xl font-bold mb-6"
+            className="font-bold mb-6"
             color={content.mainHeading?.color}
+            lineHeight={content.mainHeading?.lineHeight}
           />
           <EditableText
             fieldName="description"
             defaultValue={content.description?.text || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare, eros dolor interdum nulla, ut commodo diam libero vitae erat."}
             as="p"
-            className="text-base md:text-lg"
+            className=""
             color={content.description?.color}
+            lineHeight={content.description?.lineHeight}
           />
         </div>
 
@@ -217,15 +272,17 @@ const FourFeaturesGrid: React.FC<FourFeaturesGridProps> = ({
               fieldName="feature1Heading"
               defaultValue={content.feature1Heading?.text || "Medium length section heading goes here"}
               as="h3"
-              className="text-xl font-bold mb-3"
+              className="font-bold mb-3"
               color={content.feature1Heading?.color}
+              lineHeight={content.feature1Heading?.lineHeight}
             />
             <EditableText
               fieldName="feature1Description"
               defaultValue={content.feature1Description?.text || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique."}
               as="p"
-              className="text-base"
+              className=""
               color={content.feature1Description?.color}
+              lineHeight={content.feature1Description?.lineHeight}
             />
           </div>
 
@@ -244,15 +301,17 @@ const FourFeaturesGrid: React.FC<FourFeaturesGridProps> = ({
               fieldName="feature2Heading"
               defaultValue={content.feature2Heading?.text || "Medium length section heading goes here"}
               as="h3"
-              className="text-xl font-bold mb-3"
+              className="font-bold mb-3"
               color={content.feature2Heading?.color}
+              lineHeight={content.feature2Heading?.lineHeight}
             />
             <EditableText
               fieldName="feature2Description"
               defaultValue={content.feature2Description?.text || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique."}
               as="p"
-              className="text-base"
+              className=""
               color={content.feature2Description?.color}
+              lineHeight={content.feature2Description?.lineHeight}
             />
           </div>
 
@@ -271,15 +330,17 @@ const FourFeaturesGrid: React.FC<FourFeaturesGridProps> = ({
               fieldName="feature3Heading"
               defaultValue={content.feature3Heading?.text || "Medium length section heading goes here"}
               as="h3"
-              className="text-xl font-bold mb-3"
+              className="font-bold mb-3"
               color={content.feature3Heading?.color}
+              lineHeight={content.feature3Heading?.lineHeight}
             />
             <EditableText
               fieldName="feature3Description"
               defaultValue={content.feature3Description?.text || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique."}
               as="p"
-              className="text-base"
+              className=""
               color={content.feature3Description?.color}
+              lineHeight={content.feature3Description?.lineHeight}
             />
           </div>
 
@@ -298,15 +359,17 @@ const FourFeaturesGrid: React.FC<FourFeaturesGridProps> = ({
               fieldName="feature4Heading"
               defaultValue={content.feature4Heading?.text || "Medium length section heading goes here"}
               as="h3"
-              className="text-xl font-bold mb-3"
+              className="font-bold mb-3"
               color={content.feature4Heading?.color}
+              lineHeight={content.feature4Heading?.lineHeight}
             />
             <EditableText
               fieldName="feature4Description"
               defaultValue={content.feature4Description?.text || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique."}
               as="p"
-              className="text-base"
+              className=""
               color={content.feature4Description?.color}
+              lineHeight={content.feature4Description?.lineHeight}
             />
           </div>
         </div>
@@ -332,6 +395,7 @@ const FourFeaturesGrid: React.FC<FourFeaturesGridProps> = ({
             {content.secondaryButton?.text || "Button"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </EditableButton>
+        </div>
         </div>
       </div>
     </section>

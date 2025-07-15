@@ -92,8 +92,14 @@ const EditableButton: React.FC<EditableButtonProps> = ({
         className={`${className} ${
           isHovered ? 'outline-2 outline-blue-500 outline-dashed' : ''
         }`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={(e) => {
+          e.stopPropagation();
+          setIsHovered(true);
+        }}
+        onMouseLeave={(e) => {
+          e.stopPropagation();
+          setIsHovered(false);
+        }}
         onClick={handleClick}
         {...rest}
       >

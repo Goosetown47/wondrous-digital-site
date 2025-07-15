@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
 // Common icons to display when no search is active

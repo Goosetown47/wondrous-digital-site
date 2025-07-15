@@ -99,6 +99,13 @@ interface SiteStyles {
   h5_font_weight: string | null;
   h6_font_weight: string | null;
   p_font_weight: string | null;
+  h1_line_height: string | null;
+  h2_line_height: string | null;
+  h3_line_height: string | null;
+  h4_line_height: string | null;
+  h5_line_height: string | null;
+  h6_line_height: string | null;
+  p_line_height: string | null;
 }
 
 // Google Fonts popular options
@@ -127,6 +134,11 @@ const FONT_SIZES = [
 // Font weight options
 const FONT_WEIGHTS = [
   '300', '400', '500', '600', '700', '800', '900'
+];
+
+// Line height options
+const LINE_HEIGHTS = [
+  '1.0', '1.1', '1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '2.0'
 ];
 
 // Default colors
@@ -181,7 +193,14 @@ const DEFAULT_STYLES = {
   h4_font_weight: '600',
   h5_font_weight: '600',
   h6_font_weight: '600',
-  p_font_weight: '400'
+  p_font_weight: '400',
+  h1_line_height: '1.2',
+  h2_line_height: '1.3',
+  h3_line_height: '1.4',
+  h4_line_height: '1.4',
+  h5_line_height: '1.4',
+  h6_line_height: '1.4',
+  p_line_height: '1.6'
 };
 
 const SiteStyles = () => {
@@ -192,6 +211,7 @@ const SiteStyles = () => {
   const [siteStyles, setSiteStyles] = useState<SiteStyles | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [addedFonts, setAddedFonts] = useState<Set<string>>(new Set());
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   
@@ -724,6 +744,8 @@ const SiteStyles = () => {
                       value={siteStyles.primary_font || 'Inter'}
                       onChange={(fontName) => handleStyleChange('primary_font', fontName)}
                       onFontLoad={loadFont}
+                      addedFonts={addedFonts}
+                      onAddedFontsChange={setAddedFonts}
                     />
                   </div>
                   
@@ -735,6 +757,8 @@ const SiteStyles = () => {
                       value={siteStyles.secondary_font || 'Playfair Display'}
                       onChange={(fontName) => handleStyleChange('secondary_font', fontName)}
                       onFontLoad={loadFont}
+                      addedFonts={addedFonts}
+                      onAddedFontsChange={setAddedFonts}
                     />
                   </div>
                 </div>
@@ -749,8 +773,12 @@ const SiteStyles = () => {
                   </p>
                   <FontSearch
                     onFontSelect={(fontName) => {
+                      // Add to added fonts
+                      setAddedFonts(prev => new Set([...prev, fontName]));
                       // Set as primary font - user can change it in the dropdown if needed
                       handleStyleChange('primary_font', fontName);
+                      // Load the font
+                      loadFont(fontName);
                     }}
                     onFontLoad={loadFont}
                     placeholder="Search Google Fonts like 'Ubuntu', 'Crimson Pro', 'Source Sans 3'..."
@@ -816,6 +844,16 @@ const SiteStyles = () => {
                             <option key={weight} value={weight}>{weight}</option>
                           ))}
                         </select>
+                        <select
+                          value={siteStyles.h1_line_height || '1.2'}
+                          onChange={(e) => handleStyleChange('h1_line_height', e.target.value)}
+                          className="text-xs px-2 py-1 border border-gray-300 rounded"
+                          title="Line Height"
+                        >
+                          {LINE_HEIGHTS.map(height => (
+                            <option key={height} value={height}>{height}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                     <h1 
@@ -825,10 +863,11 @@ const SiteStyles = () => {
                           ? siteStyles.primary_font || 'Inter'
                           : siteStyles.secondary_font || 'Playfair Display',
                         fontSize: siteStyles.h1_font_size || '2.5rem',
-                        fontWeight: siteStyles.h1_font_weight || '700'
+                        fontWeight: siteStyles.h1_font_weight || '700',
+                        lineHeight: siteStyles.h1_line_height || '1.2'
                       }}
                     >
-                      Sample Heading One
+                      Hic ad portas nostras mari ablutas, solis occasu occidentis stabunt
                     </h1>
                   </div>
                   
@@ -863,6 +902,16 @@ const SiteStyles = () => {
                             <option key={weight} value={weight}>{weight}</option>
                           ))}
                         </select>
+                        <select
+                          value={siteStyles.h2_line_height || '1.3'}
+                          onChange={(e) => handleStyleChange('h2_line_height', e.target.value)}
+                          className="text-xs px-2 py-1 border border-gray-300 rounded"
+                          title="Line Height"
+                        >
+                          {LINE_HEIGHTS.map(height => (
+                            <option key={height} value={height}>{height}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                     <h2 
@@ -872,10 +921,11 @@ const SiteStyles = () => {
                           ? siteStyles.primary_font || 'Inter'
                           : siteStyles.secondary_font || 'Playfair Display',
                         fontSize: siteStyles.h2_font_size || '2rem',
-                        fontWeight: siteStyles.h2_font_weight || '700'
+                        fontWeight: siteStyles.h2_font_weight || '700',
+                        lineHeight: siteStyles.h2_line_height || '1.3'
                       }}
                     >
-                      Sample Heading Two
+                      Hic ad portas nostras mari ablutas, solis occasu occidentis stabunt
                     </h2>
                   </div>
                   
@@ -910,6 +960,16 @@ const SiteStyles = () => {
                             <option key={weight} value={weight}>{weight}</option>
                           ))}
                         </select>
+                        <select
+                          value={siteStyles.h3_line_height || '1.4'}
+                          onChange={(e) => handleStyleChange('h3_line_height', e.target.value)}
+                          className="text-xs px-2 py-1 border border-gray-300 rounded"
+                          title="Line Height"
+                        >
+                          {LINE_HEIGHTS.map(height => (
+                            <option key={height} value={height}>{height}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                     <h3 
@@ -919,10 +979,11 @@ const SiteStyles = () => {
                           ? siteStyles.primary_font || 'Inter'
                           : siteStyles.secondary_font || 'Playfair Display',
                         fontSize: siteStyles.h3_font_size || '1.75rem',
-                        fontWeight: siteStyles.h3_font_weight || '600'
+                        fontWeight: siteStyles.h3_font_weight || '600',
+                        lineHeight: siteStyles.h3_line_height || '1.4'
                       }}
                     >
-                      Sample Heading Three
+                      Hic ad portas nostras mari ablutas, solis occasu occidentis stabunt
                     </h3>
                   </div>
                   
@@ -957,6 +1018,16 @@ const SiteStyles = () => {
                             <option key={weight} value={weight}>{weight}</option>
                           ))}
                         </select>
+                        <select
+                          value={siteStyles.h4_line_height || '1.4'}
+                          onChange={(e) => handleStyleChange('h4_line_height', e.target.value)}
+                          className="text-xs px-2 py-1 border border-gray-300 rounded"
+                          title="Line Height"
+                        >
+                          {LINE_HEIGHTS.map(height => (
+                            <option key={height} value={height}>{height}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                     <h4 
@@ -966,10 +1037,11 @@ const SiteStyles = () => {
                           ? siteStyles.primary_font || 'Inter'
                           : siteStyles.secondary_font || 'Playfair Display',
                         fontSize: siteStyles.h4_font_size || '1.5rem',
-                        fontWeight: siteStyles.h4_font_weight || '600'
+                        fontWeight: siteStyles.h4_font_weight || '600',
+                        lineHeight: siteStyles.h4_line_height || '1.4'
                       }}
                     >
-                      Sample Heading Four
+                      Hic ad portas nostras mari ablutas, solis occasu occidentis stabunt
                     </h4>
                   </div>
                   
@@ -1004,6 +1076,16 @@ const SiteStyles = () => {
                             <option key={weight} value={weight}>{weight}</option>
                           ))}
                         </select>
+                        <select
+                          value={siteStyles.h5_line_height || '1.4'}
+                          onChange={(e) => handleStyleChange('h5_line_height', e.target.value)}
+                          className="text-xs px-2 py-1 border border-gray-300 rounded"
+                          title="Line Height"
+                        >
+                          {LINE_HEIGHTS.map(height => (
+                            <option key={height} value={height}>{height}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                     <h5 
@@ -1013,10 +1095,11 @@ const SiteStyles = () => {
                           ? siteStyles.primary_font || 'Inter'
                           : siteStyles.secondary_font || 'Playfair Display',
                         fontSize: siteStyles.h5_font_size || '1.25rem',
-                        fontWeight: siteStyles.h5_font_weight || '600'
+                        fontWeight: siteStyles.h5_font_weight || '600',
+                        lineHeight: siteStyles.h5_line_height || '1.4'
                       }}
                     >
-                      Sample Heading Five
+                      Hic ad portas nostras mari ablutas, solis occasu occidentis stabunt
                     </h5>
                   </div>
                   
@@ -1051,6 +1134,16 @@ const SiteStyles = () => {
                             <option key={weight} value={weight}>{weight}</option>
                           ))}
                         </select>
+                        <select
+                          value={siteStyles.h6_line_height || '1.4'}
+                          onChange={(e) => handleStyleChange('h6_line_height', e.target.value)}
+                          className="text-xs px-2 py-1 border border-gray-300 rounded"
+                          title="Line Height"
+                        >
+                          {LINE_HEIGHTS.map(height => (
+                            <option key={height} value={height}>{height}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                     <h6 
@@ -1060,10 +1153,11 @@ const SiteStyles = () => {
                           ? siteStyles.primary_font || 'Inter'
                           : siteStyles.secondary_font || 'Playfair Display',
                         fontSize: siteStyles.h6_font_size || '1rem',
-                        fontWeight: siteStyles.h6_font_weight || '600'
+                        fontWeight: siteStyles.h6_font_weight || '600',
+                        lineHeight: siteStyles.h6_line_height || '1.4'
                       }}
                     >
-                      Sample Heading Six
+                      Hic ad portas nostras mari ablutas, solis occasu occidentis stabunt
                     </h6>
                   </div>
                   
@@ -1098,6 +1192,16 @@ const SiteStyles = () => {
                             <option key={weight} value={weight}>{weight}</option>
                           ))}
                         </select>
+                        <select
+                          value={siteStyles.p_line_height || '1.6'}
+                          onChange={(e) => handleStyleChange('p_line_height', e.target.value)}
+                          className="text-xs px-2 py-1 border border-gray-300 rounded"
+                          title="Line Height"
+                        >
+                          {LINE_HEIGHTS.map(height => (
+                            <option key={height} value={height}>{height}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                     <p 
@@ -1107,10 +1211,11 @@ const SiteStyles = () => {
                           ? siteStyles.secondary_font || 'Playfair Display'
                           : siteStyles.primary_font || 'Inter',
                         fontSize: siteStyles.p_font_size || '1rem',
-                        fontWeight: siteStyles.p_font_weight || '400'
+                        fontWeight: siteStyles.p_font_weight || '400',
+                        lineHeight: siteStyles.p_line_height || '1.6'
                       }}
                     >
-                      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec eget ex euismod, efficitur nisi eu, hendrerit odio. Ut dapibus turpis vitae metus pharetra commodo. Sed sed vestibulum orci. Nulla facilisi.
+                      Da mihi fessos, pauperes, Confertas turbas libere respirare cupientes, Miserabiles sordes litoris tui plenissimi. Mitte hos, vagos, tempestate iactos, ad me, Lucernam meam iuxta auream portam tollo!
                     </p>
                   </div>
                 </div>

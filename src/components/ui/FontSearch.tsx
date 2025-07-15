@@ -62,14 +62,16 @@ const FontSearch: React.FC<FontSearchProps> = ({
 
   // Load font preview
   const loadFontPreview = (fontName: string) => {
-    if (previewFont === fontName) return;
-
-    const formattedName = fontName.replace(/\s+/g, '+');
-    const link = document.createElement('link');
-    link.href = `https://fonts.googleapis.com/css2?family=${formattedName}:wght@400;700&display=swap`;
-    link.rel = 'stylesheet';
-    link.onload = () => setPreviewFont(fontName);
-    document.head.appendChild(link);
+    const linkId = `google-font-${fontName.replace(/\s+/g, '-').toLowerCase()}`;
+    
+    // Check if already loaded
+    if (!document.getElementById(linkId)) {
+      const link = document.createElement('link');
+      link.id = linkId;
+      link.rel = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;700&display=swap`;
+      document.head.appendChild(link);
+    }
   };
 
   // Handle font selection
@@ -108,7 +110,7 @@ const FontSearch: React.FC<FontSearchProps> = ({
 
       {/* Search results dropdown */}
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[300px] overflow-hidden">
+        <div className="absolute z-40 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[300px] overflow-hidden font-selector-dropdown">
           {searchResults.length === 0 ? (
             <div className="px-4 py-8 text-center">
               <div className="text-sm text-gray-500 mb-2">
@@ -133,18 +135,21 @@ const FontSearch: React.FC<FontSearchProps> = ({
                 💡 Found {searchResults.length} Google Fonts matching your search
               </div>
               {searchResults.map((font) => (
-                <div
-                  key={font.name}
-                  className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                  onMouseEnter={() => loadFontPreview(font.name)}
-                >
+                  <div
+                    key={font.name}
+                    className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                    onMouseEnter={() => {
+                      loadFontPreview(font.name);
+                      setPreviewFont(font.name);
+                    }}
+                  >
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 
-                          className="text-base font-medium text-gray-900 truncate"
+                          className="text-base font-medium text-gray-900 truncate font-preview-item"
                           style={{ 
-                            fontFamily: previewFont === font.name ? `'${font.name}', sans-serif` : 'inherit' 
+                            fontFamily: `"${font.name}", sans-serif` 
                           }}
                         >
                           {font.name}
@@ -158,14 +163,12 @@ const FontSearch: React.FC<FontSearchProps> = ({
                           </span>
                         )}
                       </div>
-                      {previewFont === font.name && (
-                        <p 
-                          className="text-sm text-gray-600 mb-2"
-                          style={{ fontFamily: `'${font.name}', ${font.category}` }}
-                        >
-                          The quick brown fox jumps over the lazy dog
-                        </p>
-                      )}
+                      <p 
+                        className="text-sm text-gray-600 mb-2 font-preview-item"
+                        style={{ fontFamily: `"${font.name}", ${font.category}` }}
+                      >
+                        The quick brown fox jumps over the lazy dog
+                      </p>
                       <div className="text-xs text-gray-500">
                         {font.weights.length} weight{font.weights.length !== 1 ? 's' : ''} available
                       </div>

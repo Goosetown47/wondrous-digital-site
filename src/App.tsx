@@ -63,6 +63,7 @@ import LoginPage from './pages/LoginPage';
 import BlogPostsPage from './pages/dashboard/content/BlogPostsPage';
 import PageBuilderPage from './pages/dashboard/content/PageBuilderPage';
 import PagesPage from './pages/dashboard/content/PagesPage';
+import PagePreview from './pages/PagePreview';
 import MarketingPage from './pages/dashboard/tools/MarketingPage';
 import SEOPage from './pages/dashboard/tools/SEOPage';
 import AccountPage from './pages/dashboard/settings/AccountPage';
@@ -73,6 +74,9 @@ function App() {
     <Routes>
       {/* App Routes - No marketing navigation/footer */}
       <Route path="/login" element={<LoginPage />} />
+      
+      {/* Page Preview Route - Standalone page viewing */}
+      <Route path="/preview/:pageId" element={<PagePreview />} />
 
       {/* Dashboard Routes - Nested under AppLayout */}
       <Route path="/dashboard" element={<AppLayout />}>

@@ -1,0 +1,73 @@
+/* CSS Custom Properties - Foundation for Site Styling */
+/* These variables provide defaults and can be overridden dynamically per project */
+
+:root {
+  /* Color Variables */
+  --primary-color: #000000;
+  --secondary-color: #374151;
+  --tertiary-color: #9CA3AF;
+  --dark-color: #000000;
+  --light-color: #F3F4F6;
+  --white-color: #FFFFFF;
+  
+  /* Font Variables */
+  --primary-font: 'Inter', sans-serif;
+  --secondary-font: 'Playfair Display', serif;
+  
+  /* Global Button Variables (Legacy) */
+  --button-radius: 'slightly-rounded';
+  --button-style: 'default';
+  
+  /* Per-Button-Type Radius Variables */
+  --primary-button-radius: 'slightly-rounded';
+  --secondary-button-radius: 'slightly-rounded';
+  --tertiary-button-radius: 'slightly-rounded';
+  --text-link-button-radius: 'squared';
+  
+  /* Per-Button-Type Size Variables */
+  --primary-button-size: 'medium';
+  --secondary-button-size: 'medium';
+  --tertiary-button-size: 'medium';
+  --text-link-button-size: 'medium';
+  
+  /* Per-Button-Type Icon Variables */
+  --primary-button-icon-enabled: 'false';
+  --primary-button-icon-position: 'right';
+  --secondary-button-icon-enabled: 'false';
+  --secondary-button-icon-position: 'right';
+  --tertiary-button-icon-enabled: 'false';
+  --tertiary-button-icon-position: 'right';
+  --text-link-button-icon-enabled: 'false';
+  --text-link-button-icon-position: 'right';
+  
+  /* Per-Button-Type Typography Variables */
+  --primary-button-font-family: var(--primary-font);
+  --primary-button-font-weight: '500';
+  --secondary-button-font-family: var(--primary-font);
+  --secondary-button-font-weight: '500';
+  --tertiary-button-font-family: var(--primary-font);
+  --tertiary-button-font-weight: '500';
+  --textlink-button-font-family: var(--primary-font);
+  --textlink-button-font-weight: '500';
+  
+  /* Button Color Variables */
+  --primary-button-background-color: #000000;
+  --secondary-button-background-color: #FFFFFF;
+  --primary-button-hover: #374151;
+  --secondary-button-hover: #F9FAFB;
+  --primary-button-text-color: #FFFFFF;
+  --primary-button-border-color: #000000;
+  --primary-button-shadow-color: #374151;
+  --secondary-button-text-color: #000000;
+  --secondary-button-border-color: #E5E7EB;
+  --secondary-button-shadow-color: #D1D5DB;
+  --outline-text-color: #000000;
+  --outline-border-color: #000000;
+  --outline-hover-bg: #F3F4F6;
+  --text-link-color: #000000;
+  --text-link-hover-color: #374151;
+  
+  /* Button Shadow Color Variables - Critical for Tailwind Shadows */
+  --primary-button-shadow-color: #374151;
+  --secondary-button-shadow-color: #D1D5DB;
+}

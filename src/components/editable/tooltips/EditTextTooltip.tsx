@@ -9,22 +9,51 @@ interface Position {
 interface EditTextTooltipProps {
   text: string;
   color?: string;
+  lineHeight?: string;
   position: Position;
-  onUpdate: (value: { text: string; color?: string }) => void;
+  onUpdate: (value: { text: string; color?: string; lineHeight?: string }) => void;
   onClose: () => void;
   siteColors?: Record<string, string>; // Site color palette
+  elementType?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'span'; // Element type for line height defaults
 }
 
 const EditTextTooltip: React.FC<EditTextTooltipProps> = ({
   text,
   color,
+  lineHeight,
   position,
   onUpdate,
   onClose,
-  siteColors
+  siteColors,
+  elementType
 }) => {
   const [editedText, setEditedText] = useState(text);
   const [editedColor, setEditedColor] = useState(color || '');
+  const [editedLineHeight, setEditedLineHeight] = useState(lineHeight || '');
+  
+  // Line height options
+  const LINE_HEIGHTS = [
+    '1.0', '1.1', '1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '2.0'
+  ];
+  
+  // Get computed line height from CSS variables based on element type
+  const getComputedLineHeight = () => {
+    const rootStyle = getComputedStyle(document.documentElement);
+    
+    switch (elementType) {
+      case 'h1': return rootStyle.getPropertyValue('--h1-line-height').trim() || '1.2';
+      case 'h2': return rootStyle.getPropertyValue('--h2-line-height').trim() || '1.3';
+      case 'h3': return rootStyle.getPropertyValue('--h3-line-height').trim() || '1.4';
+      case 'h4': return rootStyle.getPropertyValue('--h4-line-height').trim() || '1.4';
+      case 'h5': return rootStyle.getPropertyValue('--h5-line-height').trim() || '1.4';
+      case 'h6': return rootStyle.getPropertyValue('--h6-line-height').trim() || '1.4';
+      case 'p': return rootStyle.getPropertyValue('--p-line-height').trim() || '1.6';
+      default: return '1.4';
+    }
+  };
+  
+  // Show line height controls only for headings and paragraphs
+  const showLineHeightControl = elementType && ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p'].includes(elementType);
   
   // Default color palette if site colors aren't provided
   const colorSwatches = siteColors ? 
@@ -116,10 +145,25 @@ const EditTextTooltip: React.FC<EditTextTooltipProps> = ({
     
   // Handle save
   const handleSave = () => {
-    onUpdate({
-      text: editedText,
-      color: editedColor || undefined
-    });
+    const updates: { text: string; color?: string; lineHeight?: string } = {
+      text: editedText
+    };
+    
+    // Only include color if it has a value or if it was originally provided
+    if (editedColor && editedColor.trim() !== '') {
+      updates.color = editedColor;
+    } else if (color) {
+      updates.color = color; // Preserve original color
+    }
+    
+    // Only include lineHeight if it has a value or if it was originally provided
+    if (editedLineHeight && editedLineHeight.trim() !== '') {
+      updates.lineHeight = editedLineHeight;
+    } else if (lineHeight) {
+      updates.lineHeight = lineHeight; // Preserve original lineHeight
+    }
+    
+    onUpdate(updates);
   };
   
   return (
@@ -189,6 +233,27 @@ const EditTextTooltip: React.FC<EditTextTooltipProps> = ({
           </div>
         </div>
       </div>
+      
+      {/* Line Height Control - only show for headings and paragraphs */}
+      {showLineHeightControl && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Line Height
+          </label>
+          <select
+            value={editedLineHeight !== '' ? editedLineHeight : (lineHeight || getComputedLineHeight())}
+            onChange={(e) => setEditedLineHeight(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-pink focus:border-primary-pink"
+          >
+            {LINE_HEIGHTS.map(height => (
+              <option key={height} value={height}>{height}</option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            {lineHeight ? `Override: ${lineHeight}` : `Default: ${getComputedLineHeight()} (from site styles)`}
+          </p>
+        </div>
+      )}
       
       {/* Action buttons */}
       <div className="flex justify-end space-x-2">

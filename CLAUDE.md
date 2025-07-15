@@ -2,12 +2,27 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 📋 Essential Reading
+
+**IMPORTANT**: Before making any code changes, read [`PROJECT-GUIDELINES.md`](./PROJECT-GUIDELINES.md) for comprehensive development principles, security standards, and architectural requirements. These guidelines ensure code quality, customer data protection, and platform reliability.
+
 ## Development Commands
 
-- **Start development server**: `npm run dev` (runs on localhost with `--host` flag)
+### Development Server (PM2 Managed)
+- **Start dev server**: `npm run dev:start` (runs as background daemon with PM2)
+- **Stop dev server**: `npm run dev:stop`
+- **Restart dev server**: `npm run dev:restart`
+- **Check server status**: `npm run dev:status`
+- **View server logs**: `npm run dev:logs`
+- **Remove from PM2**: `npm run dev:delete`
+
+### Legacy/Direct Commands
+- **Start development server (direct)**: `npm run dev` (runs on localhost with `--host` flag)
 - **Build for production**: `npm run build`
 - **Lint code**: `npm run lint`
 - **Preview production build**: `npm run preview`
+
+**Recommended**: Use PM2 commands (`dev:start`, `dev:stop`, etc.) to prevent server shutdowns when tools timeout.
 
 No test runner is configured - tests would need to be added.
 
@@ -83,3 +98,23 @@ Critical contexts that must wrap components requiring their functionality:
 - Button character limit: 21 characters max
 - Section templates support customizable fields for dynamic content
 - CSS variables are set on `document.documentElement` and persist across navigation
+
+## Styling System Reference
+
+**IMPORTANT**: For comprehensive understanding of the styling architecture, read `STYLING-ARCHITECTURE.md` first. This document covers:
+- Complete styling system flow (Database → CSS Variables → React Context → Components)
+- Typography scoping (project styles vs builder interface)
+- Button system architecture with CSS variables
+- Provider patterns for PageBuilder vs PagePreview
+- Common issues and debugging steps
+- Future deployment context (Netlify, multi-tenant, templates)
+
+Key principle: Project styles should ONLY affect the website being built, never the builder interface itself.
+
+## 📚 How-to Guides
+
+Essential step-by-step guides for common development tasks:
+
+- **[How to Add New Style Options](./docs/HOW-TO-ADD-STYLE-OPTIONS.md)** - Comprehensive guide for adding CSS properties (text-align, spacing, etc.) to Site Styles and PageBuilder modals. Includes complete checklist to avoid common pitfalls and follows proven patterns.
+
+- **[How to Build New Sections](./docs/HOW-TO-BUILD-SECTIONS.md)** - Complete guide for creating new PageBuilder sections. Covers component architecture, image container patterns, database templates, staging workflow, and section library integration. Essential for scaling to 100-300+ sections efficiently.

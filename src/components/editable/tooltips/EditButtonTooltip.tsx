@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Check, Link as LinkIcon, Palette, Type, Image } from 'lucide-react';
+import { X, Check, Link as LinkIcon, Palette, Type, Image, LucideIcon } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { useSiteStyles } from '../../../contexts/SiteStylesContext';
 import Button from '../../ui/Button';
@@ -299,20 +299,25 @@ const EditButtonTooltip: React.FC<any> = ({
           <div className="mb-3 max-h-48 overflow-y-auto p-1">
             <div className="grid grid-cols-5 gap-2">
               {iconsToDisplay.length > 0 ? iconsToDisplay.map((name) => {
-                const IconComponent = LucideIcons[name as keyof typeof LucideIcons] as React.FC<LucideProps>;
-                if (!IconComponent) return null;
-                return (
-                  <div
-                    key={name}
-                    className={`flex items-center justify-center p-2 rounded-md cursor-pointer ${
-                      name === editedIcon ? 'bg-primary-pink bg-opacity-10' : 'hover:bg-gray-100'
-                    }`}
-                    onClick={() => setEditedIcon(name)}
-                    title={name}
-                  >
-                    <IconComponent size={18} color={name === editedIcon ? '#F867AC' : undefined} />
-                  </div>
-                );
+                try {
+                  const IconComponent = LucideIcons[name as keyof typeof LucideIcons] as LucideIcon;
+                  if (!IconComponent || typeof IconComponent !== 'function') return null;
+                  return (
+                    <div
+                      key={name}
+                      className={`flex items-center justify-center p-2 rounded-md cursor-pointer ${
+                        name === editedIcon ? 'bg-primary-pink bg-opacity-10' : 'hover:bg-gray-100'
+                      }`}
+                      onClick={() => setEditedIcon(name)}
+                      title={name}
+                    >
+                      <IconComponent size={18} color={name === editedIcon ? '#F867AC' : undefined} />
+                    </div>
+                  );
+                } catch (error) {
+                  console.warn(`Failed to render icon: ${name}`, error);
+                  return null;
+                }
               }) : (
                 <div className="col-span-5 text-center py-4 text-gray-500">
                   <span className="text-sm">No icons found. Try a different search term.</span>

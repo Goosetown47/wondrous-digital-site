@@ -35,12 +35,12 @@ export default {
       boxShadow: {
         'premium': '0px 24px 25px rgba(0, 0, 0, 0.1)',
         'card': '0px 4px 15px rgba(0, 0, 0, 0.08)',
-        'button-primary': '3px 3px 0 var(--primary-button-shadow-color)',
-        'button-primary-hover': '1px 1px 0 var(--primary-button-shadow-color)',
-        'button-secondary': '3px 3px 0 var(--secondary-button-shadow-color)',
-        'button-secondary-hover': '1px 1px 0 var(--secondary-button-shadow-color)',
-        'button-pink': '3px 3px 0 var(--primary-button-shadow-color)',
-        'button-pink-hover': '1px 1px 0 var(--primary-button-shadow-color)',
+        'button-primary': '3px 3px 0 var(--primary-button-shadow-color, #374151)',
+        'button-primary-hover': '1px 1px 0 var(--primary-button-shadow-color, #374151)',
+        'button-secondary': '3px 3px 0 var(--secondary-button-shadow-color, #D1D5DB)',
+        'button-secondary-hover': '1px 1px 0 var(--secondary-button-shadow-color, #D1D5DB)',
+        'button-pink': '3px 3px 0 var(--primary-button-shadow-color, #374151)',
+        'button-pink-hover': '1px 1px 0 var(--primary-button-shadow-color, #374151)',
       },
       animation: {
         'fade-in': 'fadeIn 0.6s ease-in-out',

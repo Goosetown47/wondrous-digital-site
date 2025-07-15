@@ -27,7 +27,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 const Button: React.FC<ButtonProps> = ({ 
   variant = 'primary', 
   radius, // Will be determined from CSS variables
-  style = 'default',
+  style, // Will be determined from CSS variables if not provided
   size, // Will be determined from CSS variables
   showIcon, // Will be determined from CSS variables
   iconPosition, // Will be determined from CSS variables
@@ -54,6 +54,7 @@ const Button: React.FC<ButtonProps> = ({
   // Get button-type-specific settings from CSS variables
   const getButtonSettings = () => {
     const settings = {
+      style: style || (getCSSVariableValue('--button-style').replace(/'/g, '') as ButtonStyle) || 'default',
       radius: radius || (getCSSVariableValue(`--${variant}-button-radius`) as ButtonRadius) || 'slightly-rounded',
       size: size || (getCSSVariableValue(`--${variant}-button-size`) as ButtonSize) || 'medium',
       iconEnabled: showIcon !== undefined ? showIcon : getCSSVariableValue(`--${variant}-button-icon-enabled`) === 'true',
@@ -65,7 +66,7 @@ const Button: React.FC<ButtonProps> = ({
   const buttonSettings = getButtonSettings();
 
   // Generate inline styles for gradients and typography
-  const getInlineStyles = (variant: ButtonVariant, style: ButtonStyle) => {
+  const getInlineStyles = (variant: ButtonVariant, buttonStyle: ButtonStyle) => {
     const styles: React.CSSProperties = {};
     
     // Add typography styling for all buttons
@@ -83,7 +84,7 @@ const Button: React.FC<ButtonProps> = ({
     }
     
     // For offset-background style, don't override background - let CSS classes handle it
-    if (style === 'offset-background') {
+    if (buttonStyle === 'offset-background') {
       return styles; // Return styles with typography only
     }
     
@@ -108,7 +109,7 @@ const Button: React.FC<ButtonProps> = ({
     return styles;
   };
   // Style classes based on variant
-  const getVariantClasses = (variant: ButtonVariant, style: ButtonStyle) => {
+  const getVariantClasses = (variant: ButtonVariant, buttonStyle: ButtonStyle) => {
     const baseClasses = "transition-all duration-200 inline-flex items-center justify-center flex-nowrap";
     
     // Check if we need to skip background classes due to gradients
@@ -116,7 +117,7 @@ const Button: React.FC<ButtonProps> = ({
     const secondaryIsGradient = variant === 'secondary' && isGradient(getCSSVariableValue('--secondary-button-background-color'));
     
     // Default style (formerly sleek) - minimal and clean
-    if (style === 'default') {
+    if (buttonStyle === 'default') {
       switch (variant) {
         case 'primary':
           return `${baseClasses} ${primaryIsGradient ? 'hover:opacity-90' : 'bg-[var(--primary-button-background-color)] hover:bg-[var(--primary-button-hover)]'} text-[var(--primary-button-text-color)] border border-[var(--primary-button-border-color)]`;
@@ -132,7 +133,7 @@ const Button: React.FC<ButtonProps> = ({
     }
     
     // Floating style - enhanced shadows and wider radius (formerly bubble)
-    if (style === 'floating') {
+    if (buttonStyle === 'floating') {
       switch (variant) {
         case 'primary':
           return `${baseClasses} ${primaryIsGradient ? 'hover:opacity-90' : 'bg-[var(--primary-button-background-color)] hover:bg-[var(--primary-button-hover)]'} text-[var(--primary-button-text-color)] border border-[var(--primary-button-border-color)] shadow-lg hover:shadow-2xl active:shadow-md transform hover:-translate-y-0.5 transition-all duration-200`;
@@ -148,7 +149,7 @@ const Button: React.FC<ButtonProps> = ({
     }
     
     // Brick style - bold with strong shadows (formerly default)
-    if (style === 'brick') {
+    if (buttonStyle === 'brick') {
       switch (variant) {
         case 'primary':
           return `${baseClasses} ${primaryIsGradient ? 'hover:opacity-90' : 'bg-[var(--primary-button-background-color)] hover:bg-[var(--primary-button-hover)]'} text-[var(--primary-button-text-color)] border-2 border-[var(--primary-button-border-color)] shadow-button-primary hover:shadow-button-primary-hover active:translate-x-0.5 active:translate-y-0.5 uppercase tracking-wide`;
@@ -164,7 +165,7 @@ const Button: React.FC<ButtonProps> = ({
     }
     
     // Modern style - sleek with tight shadow and sharp border
-    if (style === 'modern') {
+    if (buttonStyle === 'modern') {
       switch (variant) {
         case 'primary':
           return `${baseClasses} ${primaryIsGradient ? 'hover:opacity-90' : 'bg-[var(--primary-button-background-color)] hover:bg-[var(--primary-button-hover)]'} text-[var(--primary-button-text-color)] border border-[var(--primary-button-border-color)] shadow-[0_2px_4px_rgba(0,0,0,0.2)] hover:shadow-[0_4px_6px_rgba(0,0,0,0.25)] active:shadow-[0_1px_2px_rgba(0,0,0,0.2)] transition-all duration-200`;
@@ -180,7 +181,7 @@ const Button: React.FC<ButtonProps> = ({
     }
     
     // Offset Background style - Dual Element approach
-    if (style === 'offset-background') {
+    if (buttonStyle === 'offset-background') {
       // We'll handle this with a wrapper div in the JSX
       switch (variant) {
         case 'primary':
@@ -197,7 +198,7 @@ const Button: React.FC<ButtonProps> = ({
     }
     
     // Compact style - minimal and tight padding
-    if (style === 'compact') {
+    if (buttonStyle === 'compact') {
       switch (variant) {
         case 'primary':
           return `${baseClasses} ${primaryIsGradient ? 'hover:opacity-90' : 'bg-[var(--primary-button-background-color)] hover:bg-[var(--primary-button-hover)]'} text-[var(--primary-button-text-color)] border-0 text-sm px-2 py-1 font-medium`;
@@ -216,7 +217,7 @@ const Button: React.FC<ButtonProps> = ({
   };
   
   // Border radius classes based on the radius prop
-  const getRadiusClasses = (radius: ButtonRadius, style?: ButtonStyle) => {
+  const getRadiusClasses = (radius: ButtonRadius, buttonStyle?: ButtonStyle) => {
     const radiusClass = (() => {
       switch (radius) {
         case 'squared':
@@ -231,7 +232,7 @@ const Button: React.FC<ButtonProps> = ({
     })();
     
     // For offset background, we need to apply radius to the pseudo-element too
-    if (style === 'offset-background') {
+    if (buttonStyle === 'offset-background') {
       const pseudoRadius = radius === 'squared' ? 'before:rounded-none' : 
                           radius === 'fully-rounded' ? 'before:rounded-full' : 
                           'before:rounded-lg';
@@ -256,18 +257,18 @@ const Button: React.FC<ButtonProps> = ({
   };
   
   // Get appropriate size classes (compact style overrides, otherwise use button settings)
-  const sizeClasses = style === 'compact' ? "" : getSizeClasses(buttonSettings.size);
+  const sizeClasses = buttonSettings.style === 'compact' ? "" : getSizeClasses(buttonSettings.size);
 
   // Combine all classes
   const buttonClasses = cn(
-    getVariantClasses(variant, style),
-    getRadiusClasses(buttonSettings.radius, style),
+    getVariantClasses(variant, buttonSettings.style),
+    getRadiusClasses(buttonSettings.radius, buttonSettings.style),
     sizeClasses,
     className
   );
 
   // Get inline styles for gradients
-  const inlineStyles = getInlineStyles(variant, style);
+  const inlineStyles = getInlineStyles(variant, buttonSettings.style);
 
   // Get background style for offset style using CSS variables
   const getOffsetBackgroundStyle = () => {
@@ -311,21 +312,23 @@ const Button: React.FC<ButtonProps> = ({
   };
 
   // For offset background style, wrap with background element
-  if (style === 'offset-background' && variant !== 'text-link') {
+  if (buttonSettings.style === 'offset-background' && variant !== 'text-link') {
     const ButtonElement = href && !editMode ? 'a' : 'button';
     const elementProps = href && !editMode ? { href } : { type: 'button' as const, ...props };
     
     return (
-      <div className="relative inline-flex group">
+      <div className="relative inline-flex group/button">
         {/* Background element */}
         <div 
-          className={`absolute inset-0 transition-transform duration-200 transform translate-x-2 translate-y-2 group-hover:translate-x-0 group-hover:translate-y-0 ${getRadiusClasses(buttonSettings.radius)}`}
+          className={`absolute inset-0 transition-transform duration-200 transform translate-x-2 translate-y-2 group-hover/button:translate-x-0 group-hover/button:translate-y-0 ${getRadiusClasses(buttonSettings.radius)}`}
           style={getOffsetBackgroundStyle()}
         />
         {/* Button element */}
         <ButtonElement 
           className={buttonClasses}
           style={inlineStyles}
+          onMouseEnter={(e) => e.stopPropagation()}
+          onMouseLeave={(e) => e.stopPropagation()}
           {...elementProps}
         >
           {renderButtonContent()}
@@ -337,14 +340,27 @@ const Button: React.FC<ButtonProps> = ({
   // Regular rendering for other styles
   if (href && !editMode) {
     return (
-      <a href={href} className={buttonClasses} style={inlineStyles}>
+      <a 
+        href={href} 
+        className={buttonClasses} 
+        style={inlineStyles}
+        onMouseEnter={(e) => e.stopPropagation()}
+        onMouseLeave={(e) => e.stopPropagation()}
+      >
         {renderButtonContent()}
       </a>
     );
   }
 
   return (
-    <button type="button" className={buttonClasses} style={inlineStyles} {...props}>
+    <button 
+      type="button" 
+      className={buttonClasses} 
+      style={inlineStyles} 
+      onMouseEnter={(e) => e.stopPropagation()}
+      onMouseLeave={(e) => e.stopPropagation()}
+      {...props}
+    >
       {renderButtonContent()}
     </button>
   );

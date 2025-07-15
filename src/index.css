@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Preload most popular fonts for font selector */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Montserrat:wght@400;700&family=Poppins:wght@400;700&family=Lato:wght@400;700&family=Playfair+Display:wght@400;700&family=Merriweather:wght@400;700&family=Lora:wght@400;700&family=Raleway:wght@400;700&family=Nunito:wght@400;700&family=Source+Sans+Pro:wght@400;700&family=Work+Sans:wght@400;700&family=DM+Sans:wght@400;700&family=Plus+Jakarta+Sans:wght@400;700&display=swap');
+
+
 /* Custom Font Definitions */
 @font-face {
   font-family: 'Avenir';
@@ -248,4 +252,63 @@ a.offset-bg-primary:hover::before,
 a.offset-bg-secondary:hover::before,
 a.offset-bg-outline:hover::before {
   transform: translate(0, 0) !important;
+}
+
+/* Section Content Container - Standardized container for section content */
+.section-content-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  /* No padding - cells handle their own padding */
+}
+
+/* Section Content Cell - For text/button content that needs padding */
+.section-content-cell {
+  padding: 4rem 1.5rem; /* py-16 px-6 equivalent */
+}
+
+/* Section Image Cell - For images that should extend to edges */
+.section-image-cell {
+  padding: 0; /* No padding for full-height images */
+}
+
+/* Responsive padding for content cells */
+@media (min-width: 768px) {
+  .section-content-cell {
+    padding: 6rem 2rem; /* py-24 px-8 equivalent */
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-content-cell {
+    padding: 6rem 3rem; /* py-24 px-12 equivalent */
+  }
+}
+
+/* Background blur handling for sections */
+.section-with-blurred-bg {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate; /* Create new stacking context */
+}
+
+.section-with-blurred-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: var(--section-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(var(--section-bg-blur));
+  z-index: -1;
+  /* Extend beyond blur radius to prevent edge bleeding */
+  margin: calc(-1 * var(--section-bg-blur));
+}
+
+/* Make sure the main element's background doesn't interfere */
+.section-with-blurred-bg[style*="background-image"] {
+  background-image: none !important;
 }
