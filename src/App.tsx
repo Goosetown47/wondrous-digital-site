@@ -12,6 +12,7 @@ import AdminToolsLayout from './components/layout/AdminToolsLayout';
 import SectionLibraryPage from './pages/admin/SectionLibraryPage';
 import SectionPreviewPage from './pages/admin/SectionPreviewPage';
 import StagingPage from './pages/admin/StagingPage';
+import DatabaseSettings from './pages/admin/DatabaseSettings';
 import WebsitesOverview from './pages/features/categories/WebsitesOverview';
 import AIAutomationOverview from './pages/features/categories/AIAutomationOverview';
 import CustomerManagementOverview from './pages/features/categories/CustomerManagementOverview';
@@ -105,6 +106,7 @@ function App() {
               <SectionPreviewPage />
             </SiteStylesProvider>
           } />
+          <Route path="database-settings" element={<DatabaseSettings />} />
         </Route>
       </Route>
       

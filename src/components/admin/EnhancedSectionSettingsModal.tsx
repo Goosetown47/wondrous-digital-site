@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { X, Palette, Grid3X3, Check, Image, Layers, Upload } from 'lucide-react';
+import { X, Palette, Grid3X3, Check, Image, Layers, Upload, Navigation } from 'lucide-react';
 import { HexColorPicker } from 'react-colorful';
 import { SectionType } from './SectionTypeCard';
 import SectionTemplateGrid from './SectionTemplateGrid';
 import GradientEditor from './GradientEditor';
+import NavigationSettingsTab from './NavigationSettingsTab';
 
 
 interface EnhancedSectionSettingsModalProps {
@@ -28,7 +29,7 @@ interface EnhancedSectionSettingsModalProps {
   siteColors?: Record<string, string>;
 }
 
-type TabType = 'design' | 'templates';
+type TabType = 'design' | 'templates' | 'navigation';
 type BackgroundType = 'color' | 'image' | 'gradient';
 
 const EnhancedSectionSettingsModal: React.FC<EnhancedSectionSettingsModalProps> = ({
@@ -83,18 +84,6 @@ const EnhancedSectionSettingsModal: React.FC<EnhancedSectionSettingsModalProps> 
     e.stopPropagation();
   };
 
-  const getPreviewBackground = () => {
-    switch (backgroundType) {
-      case 'color':
-        return backgroundColor;
-      case 'gradient':
-        return backgroundGradient;
-      case 'image':
-        return backgroundImage ? `url(${backgroundImage})` : backgroundColor;
-      default:
-        return backgroundColor;
-    }
-  };
 
   const getBackgroundStyle = () => {
     const baseStyle: React.CSSProperties = { 
@@ -196,6 +185,20 @@ const EnhancedSectionSettingsModal: React.FC<EnhancedSectionSettingsModalProps> 
               <Grid3X3 className="h-4 w-4 mr-2 inline" />
               Templates
             </button>
+            {((typeof sectionType === 'string' && (sectionType.toLowerCase().includes('navigation') || sectionType.toLowerCase().includes('navbar') || sectionType.toLowerCase().includes('footer'))) ||
+             (typeof sectionType === 'object' && (sectionType.id.toLowerCase().includes('navigation') || sectionType.id.toLowerCase().includes('navbar') || sectionType.id.toLowerCase().includes('footer')))) && (
+              <button
+                onClick={() => setActiveTab('navigation')}
+                className={`py-3 px-4 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'navigation'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <Navigation className="h-4 w-4 mr-2 inline" />
+                Navigation
+              </button>
+            )}
           </nav>
         </div>
         
@@ -417,6 +420,13 @@ const EnhancedSectionSettingsModal: React.FC<EnhancedSectionSettingsModalProps> 
                 className="max-h-96"
               />
             </div>
+          )}
+
+          {activeTab === 'navigation' && (
+            <NavigationSettingsTab
+              sectionId={sectionId}
+              sectionType={typeof sectionType === 'string' ? sectionType : sectionType.id}
+            />
           )}
         </div>
         

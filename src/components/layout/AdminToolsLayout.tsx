@@ -8,7 +8,8 @@ const AdminToolsLayout = () => {
   // Navigation items for Admin Tools
   const adminNavItems = [
     { name: 'Section Library', path: '/dashboard/admin/section-library' },
-    { name: 'Staging', path: '/dashboard/admin/staging' }
+    { name: 'Staging', path: '/dashboard/admin/staging' },
+    { name: 'Database Settings', path: '/dashboard/admin/database-settings' }
   ];
 
   return (

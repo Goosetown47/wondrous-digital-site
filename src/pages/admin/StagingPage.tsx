@@ -4,7 +4,9 @@ import { PlusCircle, FileCode, Clock, ArrowRight, X, Loader, LampDesk as Desktop
 import { Link, useNavigate } from 'react-router-dom';
 import HeroSplitLayout from '../../components/sections/HeroSplitLayout';
 import FourFeaturesGrid from '../../components/sections/FourFeaturesGrid';
+import NavigationDesktop from '../../components/sections/NavigationDesktop';
 import AddSectionModal from '../../components/admin/AddSectionModal';
+import { EditModeProvider } from '../../contexts/EditModeContext';
 
 interface FileInfo {
   name: string;
@@ -30,6 +32,12 @@ const scanSectionsFolder = async (): Promise<FileInfo[]> => {
     path: '/src/components/sections/FourFeaturesGrid.tsx',
     lastModified: new Date().toISOString(),
     component: FourFeaturesGrid
+  },
+  {
+    name: 'NavigationDesktop',
+    path: '/src/components/sections/NavigationDesktop.tsx',
+    lastModified: new Date().toISOString(),
+    component: NavigationDesktop
   }];
 };
 
@@ -167,7 +175,27 @@ const StagingPage: React.FC = () => {
     };
     
     // Add component-specific props based on section type
-    if (currentSection.name === 'FourFeaturesGrid') {
+    if (currentSection.name === 'NavigationDesktop') {
+      componentProps.content = {
+        logo: {
+          type: 'text',
+          text: 'Logo',
+          href: '/'
+        },
+        backgroundColor: '#FFFFFF',
+        textColor: '#000000',
+        ctaButton1: {
+          text: 'Button',
+          href: '#',
+          variant: 'secondary'
+        },
+        ctaButton2: {
+          text: 'Button',
+          href: '#',
+          variant: 'primary'
+        }
+      };
+    } else if (currentSection.name === 'FourFeaturesGrid') {
       componentProps.content = {
         tagline: {
           text: "Tagline",
@@ -247,10 +275,17 @@ const StagingPage: React.FC = () => {
       };
     }
     
-    return <Component 
-      content={componentProps.content}
-      isMobilePreview={viewportMode === 'mobile'} 
-    />;
+    return (
+      <EditModeProvider 
+        initialEditMode={false}
+        isMobilePreview={viewportMode === 'mobile'}
+      >
+        <Component 
+          content={componentProps.content}
+          isMobilePreview={viewportMode === 'mobile'} 
+        />
+      </EditModeProvider>
+    );
   };
   
   if (loading) {
@@ -454,7 +489,7 @@ const StagingPage: React.FC = () => {
         }}
         editingTemplate={{
           id: '',
-          section_type: 'hero',
+          section_type: selectedSection?.name === 'NavigationDesktop' ? 'navigation' : 'hero',
           template_name: selectedSection ? formatComponentName(selectedSection.name) : '',
           component_code: `import React from 'react';\n\nconst ${selectedSection?.name} = () => {\n  return <div>Component code will be extracted here</div>;\n};\n\nexport default ${selectedSection?.name};`,
           preview_image_url: null,

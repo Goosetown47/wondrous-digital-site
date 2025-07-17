@@ -1,52 +1,31 @@
 import React from 'react';
-import { 
-  Crown, // Hero
-  Menu, // Header  
-  Grid3X3, // Features
-  Briefcase, // Careers
-  Images, // Gallery
-  Phone, // Contact
-  HelpCircle, // FAQ
-  DollarSign, // Pricing
-  MessageSquare, // Testimonials
-  Users, // Team
-  FileText, // Blog Landing
-  Newspaper, // Blog Article
-  AlertCircle, // Banners
-  BarChart3, // Product Compare
-  LayoutGrid, // Card Grid
-  Calendar, // Events
-  TrendingUp, // Stats
-  Link, // Links
-  ClipboardList, // Forms
-  List, // Lists
-  Navigation as NavigationIcon, // Navigation
-  GripVertical 
-} from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 
 // Define the section type to icon mapping
 const SECTION_TYPE_ICONS = {
-  'hero': Crown,
-  'header': Menu,
-  'features': Grid3X3,
-  'careers': Briefcase,
-  'gallery': Images,
-  'contact': Phone,
-  'faq': HelpCircle,
-  'pricing': DollarSign,
-  'testimonials': MessageSquare,
-  'team': Users,
-  'blog-landing': FileText,
-  'blog-article': Newspaper,
-  'banners': AlertCircle,
-  'product-compare': BarChart3,
-  'card-grid': LayoutGrid,
-  'events': Calendar,
-  'stats': TrendingUp,
-  'links': Link,
-  'forms': ClipboardList,
-  'lists': List,
-  'navigation': NavigationIcon,
+  'hero': LucideIcons.Crown,
+  'header': LucideIcons.Menu,
+  'features': LucideIcons.Grid3X3,
+  'careers': LucideIcons.Briefcase,
+  'gallery': LucideIcons.Images,
+  'contact': LucideIcons.Phone,
+  'faq': LucideIcons.HelpCircle,
+  'pricing': LucideIcons.DollarSign,
+  'testimonials': LucideIcons.MessageSquare,
+  'team': LucideIcons.Users,
+  'blog-landing': LucideIcons.FileText,
+  'blog-article': LucideIcons.Newspaper,
+  'banners': LucideIcons.AlertCircle,
+  'product-compare': LucideIcons.BarChart3,
+  'card-grid': LucideIcons.LayoutGrid,
+  'events': LucideIcons.Calendar,
+  'stats': LucideIcons.TrendingUp,
+  'links': LucideIcons.Link,
+  'forms': LucideIcons.ClipboardList,
+  'lists': LucideIcons.List,
+  'navigation': LucideIcons.Navigation,
+  'other': LucideIcons.MoreHorizontal,
 } as const;
 
 // Define the display names for section types
@@ -78,7 +57,10 @@ export type SectionType = keyof typeof SECTION_TYPE_ICONS;
 
 interface SectionTypeCardProps {
   sectionType: SectionType;
-  onDragStart: (sectionType: SectionType) => void;
+  displayName?: string;
+  iconName?: string;
+  description?: string | null;
+  onDragStart: (sectionType: SectionType | string) => void;
   onDragEnd: () => void;
   isHovered?: boolean;
   onMouseEnter?: () => void;
@@ -89,6 +71,9 @@ interface SectionTypeCardProps {
 
 const SectionTypeCard: React.FC<SectionTypeCardProps> = ({
   sectionType,
+  displayName,
+  iconName,
+  description,
   onDragStart,
   onDragEnd,
   isHovered = false,
@@ -97,8 +82,16 @@ const SectionTypeCard: React.FC<SectionTypeCardProps> = ({
   isActive = true,
   className = ''
 }) => {
-  const IconComponent = SECTION_TYPE_ICONS[sectionType];
-  const displayName = SECTION_TYPE_NAMES[sectionType];
+  // Try to get icon dynamically from LucideIcons
+  let IconComponent = LucideIcons.MoreHorizontal; // Default icon
+  
+  if (iconName && iconName in LucideIcons) {
+    IconComponent = LucideIcons[iconName as keyof typeof LucideIcons] as React.ComponentType<any>;
+  } else if (sectionType in SECTION_TYPE_ICONS) {
+    IconComponent = SECTION_TYPE_ICONS[sectionType as keyof typeof SECTION_TYPE_ICONS];
+  }
+  
+  const finalDisplayName = displayName || SECTION_TYPE_NAMES[sectionType as SectionType] || sectionType;
 
   const handleDragStart = (e: React.DragEvent) => {
     if (!isActive) {
@@ -161,7 +154,7 @@ const SectionTypeCard: React.FC<SectionTypeCardProps> = ({
       <span className={`text-sm font-medium text-center leading-tight ${
         isActive ? 'text-gray-800' : 'text-gray-400'
       }`}>
-        {displayName}
+        {finalDisplayName}
       </span>
 
       {/* Drag feedback overlay (only if active) */}

@@ -38,6 +38,11 @@ export const EditModeProvider: React.FC<EditModeProviderProps> = ({
   const [editMode, setEditMode] = useState(initialEditMode);
   const [activeEditField, setActiveEditField] = useState<string | null>(null);
 
+  // Update editMode when initialEditMode prop changes
+  React.useEffect(() => {
+    setEditMode(initialEditMode);
+  }, [initialEditMode]);
+
   return (
     <EditModeContext.Provider 
       value={{ 

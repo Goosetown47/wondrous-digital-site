@@ -8,7 +8,17 @@ Our page builder uses a **type-based drag & drop system** where:
 1. **Section Types** are draggable cards in the sidebar
 2. **Section Templates** are variations of each type with different layouts/styles
 3. **Section Components** render the actual content on the page
-4. **Database Templates** store configuration and determine availability
+4. **Staging System** allows testing before publishing
+5. **Database Templates** store configuration when admin publishes
+
+## Development Workflow
+
+1. **Create** the component in `/src/components/sections/`
+2. **Add to Staging** in `StagingPage.tsx` for testing
+3. **Integrate** with PageBuilder in `renderSection` method
+4. **Test** in staging area (Admin > Staging)
+5. **Use** the unpublished section (appears grayed out in library)
+6. **Publish** manually by admin when ready (adds to database)
 
 ---
 
@@ -17,9 +27,9 @@ Our page builder uses a **type-based drag & drop system** where:
 ### Required Components for Each Section Type:
 
 1. **React Component** (`/src/components/sections/[SectionName].tsx`)
-2. **Database Templates** (stored in `section_templates` table)
-3. **Type Definition** (added to SectionTypeCard configurations)
-4. **PageBuilder Integration** (renderSection method)
+2. **Staging Integration** (add to StagingPage.tsx)
+3. **PageBuilder Integration** (add to renderSection method)
+4. **Manual Publishing** (admin adds to `section_templates` table when ready)
 
 ---
 
@@ -376,7 +386,13 @@ case '[section-type]':
 
 ---
 
-## Step 6: Database Templates and Staging
+## Step 6: Staging and Publishing Process
+
+### Development Workflow:
+1. **Create Component**: Build new section in `/src/components/sections/`
+2. **Automatic Staging**: System detects unpublished components and shows them in staging area
+3. **Test in Staging**: Use and refine the component
+4. **Manual Publishing**: Admin manually adds to `section_templates` table when ready
 
 ### Section Templates Table Structure:
 ```sql
@@ -387,18 +403,16 @@ CREATE TABLE section_templates (
   preview_image_url TEXT,            -- Preview image for template selection
   customizable_fields JSONB,         -- Field configuration
   category VARCHAR,                  -- e.g., 'hero', 'content', 'social-proof'
-  status VARCHAR DEFAULT 'testing'   -- 'active', 'testing', 'inactive'
+  status VARCHAR DEFAULT 'active'    -- 'active', 'inactive'
 );
 ```
 
-### Status Management:
-- **`status = 'testing'`**: Section available only to developers, hidden from users
-- **`status = 'active'`**: Section appears in user-facing section library
-- **`status = 'inactive'`**: Section archived/disabled
+### Publishing Process:
+**DO NOT add database entries during development!** Sections are automatically detected in staging.
 
-### Creating Templates:
+When ready to publish (manual admin process):
 ```sql
--- 1. Create initial testing template
+-- Admin manually publishes section after testing
 INSERT INTO section_templates (
   section_type, 
   template_name, 
@@ -412,13 +426,8 @@ INSERT INTO section_templates (
   '/path/to/preview.jpg',
   '{"headline": {"text": "Default headline"}, "description": {"text": "Default description"}}',
   'content',
-  'testing'
+  'active' -- Published sections are 'active'
 );
-
--- 2. After testing, activate for users
-UPDATE section_templates 
-SET status = 'active' 
-WHERE section_type = 'new-section-type' AND template_name = 'Default Layout';
 ```
 
 ---
@@ -446,8 +455,40 @@ export interface SectionType {
 }
 ```
 
-### Section Library Auto-Detection:
-The section library automatically detects which section types have active templates and makes only those draggable. No additional configuration needed.
+### Add to Staging System:
+When creating a new section, you MUST add it to the staging system:
+
+**File**: `/src/pages/admin/StagingPage.tsx`
+
+1. Import your component:
+```typescript
+import NavigationDesktop from '../../components/sections/NavigationDesktop';
+```
+
+2. Add to `scanSectionsFolder` function:
+```typescript
+{
+  name: 'NavigationDesktop',
+  path: '/src/components/sections/NavigationDesktop.tsx',
+  lastModified: new Date().toISOString(),
+  component: NavigationDesktop
+}
+```
+
+3. Add component-specific props in `renderSectionComponent`:
+```typescript
+if (currentSection.name === 'NavigationDesktop') {
+  componentProps.content = {
+    // Your component's default props
+  };
+}
+```
+
+### Section Library Behavior:
+- **Unpublished sections** appear grayed out (inactive) in the section library
+- Users can still drag and test unpublished sections
+- The library automatically detects active templates from the database
+- No manual configuration needed for the library itself
 
 ---
 
@@ -475,6 +516,12 @@ className={`flex ${isActuallyMobile ? 'flex-col space-y-4' : 'flex-row space-x-8
 
 ## Step 9: Testing Checklist
 
+### ✅ **Staging Testing:**
+1. Section appears in Admin > Staging area
+2. Preview works in both desktop and mobile viewports
+3. Component renders with default props correctly
+4. No console errors in staging preview
+
 ### ✅ **Component Testing:**
 1. Component renders without errors
 2. All default values display correctly
@@ -483,11 +530,12 @@ className={`flex ${isActuallyMobile ? 'flex-col space-y-4' : 'flex-row space-x-8
 5. All props flow through properly
 
 ### ✅ **PageBuilder Integration Testing:**
-1. Section appears in library when status = 'active'
-2. Drag and drop creates section successfully
-3. Content updates save and persist
-4. Section settings modal works
-5. Template switching works (if multiple templates)
+1. Section appears in library as inactive (grayed out)
+2. Can still drag inactive section to canvas for testing
+3. Drag and drop creates section successfully
+4. Content updates save and persist
+5. Section settings modal works
+6. After publishing: Section appears as active in library
 
 ### ✅ **Image Testing (Critical):**
 1. Test all 4 image scaling modes: fill-height, fit-image, center-crop, auto-height
@@ -536,15 +584,18 @@ className={`flex ${isActuallyMobile ? 'flex-col space-y-4' : 'flex-row space-x-8
 ├── HeroSplitLayout.tsx        # Example reference
 └── FourFeaturesGrid.tsx       # Example reference
 
-/src/pages/dashboard/content/
-└── PageBuilderPage.tsx        # Add to renderSection method
+/src/pages/
+├── admin/
+│   └── StagingPage.tsx        # Add component for staging preview
+└── dashboard/content/
+    └── PageBuilderPage.tsx    # Add to renderSection method
 
 /docs/
 ├── HOW-TO-BUILD-SECTIONS.md   # This guide
 └── HOW-TO-ADD-STYLE-OPTIONS.md # Style customization guide
 
 Database:
-└── section_templates table    # Template storage and status management
+└── section_templates table    # Template storage (populated on publish)
 ```
 
 ---
@@ -568,6 +619,428 @@ Database:
 
 ### Success Pattern:
 Follow HeroSplitLayout.tsx as the gold standard - it demonstrates all patterns correctly and has been thoroughly tested.
+
+---
+
+## Navigation Sections Guide
+
+Navigation sections (navbars and footers) require special architecture to support advanced features like drag & drop link management, global navigation settings, and responsive behavior.
+
+### Navigation Section Architecture
+
+#### Core Features:
+1. **Database-driven links** with parent-child relationships
+2. **Drag & drop reordering** with smooth animations
+3. **Link configuration** via tooltip editor
+4. **Global navigation settings** (navbar/footer designation)
+5. **Responsive mobile menu** with hamburger
+6. **Dropdown support** with sub-navigation
+
+#### Required Props Interface:
+```typescript
+interface NavigationSectionProps {
+  sectionId?: string; // CRITICAL: Required for database link management
+  content: {
+    // Logo configuration
+    logo?: {
+      type?: 'image' | 'text';
+      src?: string;
+      alt?: string;
+      text?: string;
+      href?: string;
+    };
+    
+    // Styling
+    backgroundColor?: string;
+    textColor?: string;
+    
+    // CTA Buttons (optional)
+    ctaButton1?: {
+      text?: string;
+      href?: string;
+      variant?: ButtonVariant;
+      icon?: string;
+    };
+    ctaButton2?: {
+      text?: string;
+      href?: string;
+      variant?: ButtonVariant;
+      icon?: string;
+    };
+  };
+  navigationLinks?: NavigationLink[]; // Optional fallback links
+  isGlobal?: boolean; // Whether this is a global nav/footer
+  isMobilePreview?: boolean;
+}
+```
+
+#### Navigation Link Database Schema:
+```sql
+CREATE TABLE navigation_links (
+  id UUID PRIMARY KEY,
+  section_id UUID REFERENCES sections(id),
+  link_text VARCHAR NOT NULL,
+  link_type VARCHAR CHECK (link_type IN ('page', 'external', 'dropdown')),
+  link_url VARCHAR,
+  page_id UUID REFERENCES pages(id),
+  parent_link_id UUID REFERENCES navigation_links(id),
+  position INTEGER DEFAULT 0,
+  external_new_tab BOOLEAN DEFAULT false,
+  show_external_icon BOOLEAN DEFAULT true,
+  external_icon_color VARCHAR,
+  dropdown_behavior VARCHAR CHECK (dropdown_behavior IN ('link', 'passthrough'))
+);
+```
+
+### Implementation Steps for New Navigation Sections
+
+#### 1. Create the Navigation Component:
+
+```typescript
+import React, { useState, useEffect } from 'react';
+import { useEditMode } from '../../contexts/EditModeContext';
+import { useNavigationLinks, NavigationLink } from '../../hooks/useNavigationLinks';
+import EditableNavLink from '../editable/EditableNavLink';
+import EditableNavLinkSlot from '../editable/EditableNavLinkSlot';
+import LinkConfigTooltip from '../editable/LinkConfigTooltip';
+import EditableLogo from '../editable/EditableLogo';
+import DraggableNavLink from '../navigation/DraggableNavLink';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  defaultDropAnimation,
+  pointerWithin,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  horizontalListSortingStrategy,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import '../../styles/drag-drop.css';
+
+const NavigationFooter: React.FC<NavigationSectionProps> = ({
+  sectionId,
+  content = { /* defaults */ },
+  navigationLinks = [],
+  isGlobal = false,
+  isMobilePreview = false
+}) => {
+  // Essential state management
+  const { editMode } = useEditMode();
+  const [activeId, setActiveId] = useState<string | null>(null);
+  
+  // Link tooltip state
+  const [isLinkTooltipOpen, setIsLinkTooltipOpen] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
+  
+  // Use navigation links hook for database integration
+  const { 
+    links: dbLinks, 
+    loading: linksLoading, 
+    createNavigationLink, 
+    updateNavigationLink, 
+    deleteNavigationLink, 
+    reorderNavigationLinks 
+  } = useNavigationLinks(sectionId);
+  
+  // DnD sensors configuration
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 3,
+        delay: 150,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+  
+  // ... implement drag handlers, link management, etc.
+};
+```
+
+#### 2. Key Implementation Patterns:
+
+**Link Management:**
+```typescript
+const handleAddLink = (slotIndex: number, parentId?: string, event?: React.MouseEvent) => {
+  // Position tooltip near the clicked element
+  if (event) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setTooltipPosition({ x: rect.left, y: rect.bottom + 5 });
+  }
+  
+  setEditingSlotIndex(slotIndex);
+  setEditingParentId(parentId || null);
+  setEditingLinkId(null);
+  setIsLinkTooltipOpen(true);
+};
+
+const handleSaveLink = async (linkData: Partial<NavigationLink>) => {
+  if (!sectionId) {
+    console.error('Cannot save link: sectionId is missing');
+    return;
+  }
+  
+  if (editingLinkId) {
+    await updateNavigationLink(editingLinkId, linkData);
+  } else {
+    await createNavigationLink({
+      ...linkData,
+      section_id: sectionId,
+      position: editingSlotIndex,
+      parent_link_id: editingParentId || null,
+    });
+  }
+};
+```
+
+**Drag & Drop Configuration:**
+```typescript
+const handleDragEnd = async (event: DragEndEvent) => {
+  const { active, over } = event;
+  
+  if (over && active.id !== over.id) {
+    // Reorder logic for parent and child links
+    const activeLink = findLinkById(displayLinks, active.id as string);
+    const overLink = findLinkById(displayLinks, over.id as string);
+    
+    if (activeLink && overLink) {
+      // Handle reordering...
+      await reorderNavigationLinks(reorderedLinks);
+    }
+  }
+  
+  setActiveId(null);
+};
+```
+
+#### 3. Footer-Specific Patterns:
+
+**Multi-Column Footer Layout:**
+```typescript
+// Footer with link columns
+<div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+  {/* Company Info Column */}
+  <div className="space-y-4">
+    <EditableLogo ... />
+    <EditableText ... />
+  </div>
+  
+  {/* Link Columns with Dropdowns as Categories */}
+  {displayLinks.filter(link => !link.parent_link_id).map((categoryLink) => (
+    <div key={categoryLink.id} className="space-y-4">
+      <h3 className="font-semibold">{categoryLink.link_text}</h3>
+      <ul className="space-y-2">
+        {categoryLink.children?.map((childLink) => (
+          <li key={childLink.id}>
+            <EditableNavLink ... />
+          </li>
+        ))}
+      </ul>
+    </div>
+  ))}
+</div>
+```
+
+**Card-Based Footer:**
+```typescript
+// Footer with card sections
+<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+  {displayLinks.map((link) => (
+    <div key={link.id} className="bg-white p-6 rounded-lg shadow">
+      <EditableIcon fieldName={`icon-${link.id}`} ... />
+      <h3>{link.link_text}</h3>
+      <p>{link.description}</p>
+      <EditableNavLink ... />
+    </div>
+  ))}
+</div>
+```
+
+#### 4. Navigation Tab Settings:
+
+Ensure navigation sections can be set as global:
+
+```typescript
+// In EnhancedSectionSettingsModal.tsx
+{((typeof sectionType === 'string' && 
+  (sectionType.toLowerCase().includes('navigation') || 
+   sectionType.toLowerCase().includes('navbar') || 
+   sectionType.toLowerCase().includes('footer'))) ||
+  (typeof sectionType === 'object' && 
+   (sectionType.id.toLowerCase().includes('navigation') || 
+    sectionType.id.toLowerCase().includes('navbar') || 
+    sectionType.id.toLowerCase().includes('footer')))) && (
+  <NavigationSettingsTab
+    sectionId={sectionId}
+    sectionType={typeof sectionType === 'string' ? sectionType : sectionType.id}
+  />
+)}
+```
+
+#### 5. Critical Integration Points:
+
+**PageBuilder Integration:**
+```typescript
+case 'navigation-footer':
+  return (
+    <NavigationFooter
+      sectionId={section.id} // CRITICAL: Pass section ID
+      content={{
+        logo: section.content?.logo || { type: 'text', text: 'Logo' },
+        backgroundColor: section.content?.backgroundColor,
+        textColor: section.content?.textColor,
+        // ... other content
+      }}
+      isGlobal={isGlobalNavSection || isGlobalFooterSection}
+      isMobilePreview={mobileView}
+    />
+  );
+```
+
+**Global Navigation Rendering:**
+```typescript
+// In PageBuilderPage.tsx and PagePreview.tsx
+{globalNavSection && (
+  <div className="sticky top-0 z-50">
+    {renderSection(globalNavSection, true)}
+  </div>
+)}
+
+{/* Page sections */}
+
+{globalFooterSection && (
+  <div className="mt-auto">
+    {renderSection(globalFooterSection, false, true)}
+  </div>
+)}
+```
+
+### Navigation Testing Checklist:
+
+#### ✅ **Link Management:**
+1. Can add links via plus icon
+2. Can edit existing links
+3. Can delete links (direct deletion, no modal)
+4. Link data persists after refresh
+5. Dropdown links show children properly
+
+#### ✅ **Drag & Drop:**
+1. Main navigation items reorder smoothly
+2. Sub-navigation items reorder within parent
+3. No duplicate plus icons after drag
+4. Visual feedback during drag (shadow, scale)
+5. Smooth animations throughout
+
+#### ✅ **Global Settings:**
+1. Navigation tab appears in section settings
+2. Can set as global navbar
+3. Can set as global footer
+4. Global sections appear on all pages
+5. Only one global nav/footer allowed
+
+#### ✅ **Responsive:**
+1. Mobile hamburger menu works
+2. Mobile navigation displays correctly
+3. Dropdowns work on mobile
+4. Desktop layout maintains proper spacing
+
+### Common Navigation Patterns:
+
+#### 1. **Simple Navbar:**
+- Logo + 4-6 navigation links + 1-2 CTA buttons
+- Horizontal layout with dropdowns
+- Sticky positioning
+
+#### 2. **Mega Menu Navbar:**
+- Dropdowns contain multi-column layouts
+- Include images, descriptions, or cards
+- Rich content in dropdown areas
+
+#### 3. **Minimal Footer:**
+- Logo + copyright + social links
+- Single row layout
+- Centered or left-aligned
+
+#### 4. **Enterprise Footer:**
+- 4-6 columns of categorized links
+- Newsletter signup
+- Social media icons
+- Legal links row
+
+#### 5. **Card-Based Footer:**
+- Feature cards with icons
+- Contact information cards
+- Location/office cards
+
+### Navigation-Specific CSS:
+
+```css
+/* Smooth dropdown animations */
+.dropdown-menu {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Mobile menu transitions */
+.mobile-menu {
+  transition: transform 0.3s ease;
+}
+
+/* Hover states for navigation */
+.nav-link:hover {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+/* Drag handle visibility */
+.drag-handle {
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.drag-handle:hover {
+  opacity: 1;
+}
+```
+
+### Key Differences from Content Sections:
+
+1. **Database Integration**: Navigation sections MUST integrate with navigation_links table
+2. **Section ID Required**: Always pass sectionId for link management
+3. **Drag & Drop**: Built-in support for reordering
+4. **Global Settings**: Can be designated as site-wide navigation
+5. **Complex State**: Manages tooltips, dropdowns, and drag state
+6. **No Image Management**: Focus on links and text, not images
+
+### Troubleshooting:
+
+**Links not saving:**
+- Verify sectionId is passed to component
+- Check useNavigationLinks hook is imported
+- Ensure database connection is active
+
+**Drag not working:**
+- Import drag-drop.css styles
+- Check @dnd-kit packages are installed
+- Verify DndContext wraps draggable area
+
+**Global nav not appearing:**
+- Check NavigationSettingsTab integration
+- Verify global_nav_section_id in projects table
+- Ensure renderSection handles global sections
 
 ---
 

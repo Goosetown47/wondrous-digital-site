@@ -8,6 +8,7 @@ import { applySiteStyleVariables } from '../../../lib/utils';
 import { Save, Eye, EyeOff, Smartphone, PanelTop, Loader, GripVertical, ChevronDown, ChevronUp, Trash2, X, ChevronLeft, ChevronRight, Settings, ExternalLink } from 'lucide-react';
 import HeroSplitLayout from '../../../components/sections/HeroSplitLayout';
 import FourFeaturesGrid from '../../../components/sections/FourFeaturesGrid';
+import NavigationDesktop from '../../../components/sections/NavigationDesktop';
 import EnhancedSectionSettingsModal from '../../../components/admin/EnhancedSectionSettingsModal';
 import SectionLibrarySidebar from '../../../components/admin/SectionLibrarySidebar';
 import { SectionType } from '../../../components/admin/SectionTypeCard';
@@ -39,6 +40,8 @@ const PageBuilderPage: React.FC = () => {
   // Page data state
   const [page, setPage] = useState<any>(null);
   const [sections, setSections] = useState<Section[]>([]);
+  const [globalNavSection, setGlobalNavSection] = useState<Section | null>(null);
+  const [globalFooterSection, setGlobalFooterSection] = useState<Section | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [siteColors, setSiteColors] = useState<Record<string, string>>({});
@@ -72,6 +75,7 @@ const PageBuilderPage: React.FC = () => {
   useEffect(() => {
     if (pageId && selectedProject) {
       fetchPageData();
+      fetchGlobalSections();
     }
     
     // Set up autosave
@@ -225,6 +229,49 @@ const PageBuilderPage: React.FC = () => {
       // Apply defaults on error and mark as loaded to prevent blocking
       applySiteStyleVariables({});
       setStylesLoaded(true);
+    }
+  };
+  
+  // Fetch global sections (nav and footer)
+  const fetchGlobalSections = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      // Fetch global nav section if set
+      if (selectedProject.global_nav_section_id) {
+        const { data: navData, error: navError } = await supabase
+          .from('page_sections')
+          .select('*')
+          .eq('id', selectedProject.global_nav_section_id)
+          .single();
+          
+        if (!navError && navData) {
+          setGlobalNavSection({
+            id: navData.id,
+            type: navData.section_type,
+            content: navData.content || {}
+          });
+        }
+      }
+      
+      // Fetch global footer section if set
+      if (selectedProject.global_footer_section_id) {
+        const { data: footerData, error: footerError } = await supabase
+          .from('page_sections')
+          .select('*')
+          .eq('id', selectedProject.global_footer_section_id)
+          .single();
+          
+        if (!footerError && footerData) {
+          setGlobalFooterSection({
+            id: footerData.id,
+            type: footerData.section_type,
+            content: footerData.content || {}
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching global sections:', error);
     }
   };
   
@@ -597,6 +644,38 @@ const PageBuilderPage: React.FC = () => {
             isMobilePreview={mobileView}
           />
         );
+      case 'navigation-desktop':
+      case 'navigation':
+        return (
+          <NavigationDesktop
+            sectionId={section.id} // Pass the section ID to fetch navigation links
+            content={{
+              logo: {
+                type: section.content?.logo?.type || 'text',
+                src: section.content?.logo?.src || '',
+                alt: section.content?.logo?.alt || 'Logo',
+                text: section.content?.logo?.text || 'Logo',
+                href: section.content?.logo?.href || '/'
+              },
+              backgroundColor: section.content?.backgroundColor || '#FFFFFF',
+              textColor: section.content?.textColor || '#000000',
+              ctaButton1: {
+                text: section.content?.ctaButton1?.text || 'Button',
+                href: section.content?.ctaButton1?.href || '#',
+                variant: section.content?.ctaButton1?.variant || 'secondary',
+                icon: section.content?.ctaButton1?.icon
+              },
+              ctaButton2: {
+                text: section.content?.ctaButton2?.text || 'Button',
+                href: section.content?.ctaButton2?.href || '#',
+                variant: section.content?.ctaButton2?.variant || 'primary',
+                icon: section.content?.ctaButton2?.icon
+              }
+            }}
+            isGlobal={false} // TODO: Check if this is the global nav
+            isMobilePreview={mobileView}
+          />
+        );
       default:
         return (
           <div className="p-12 bg-gray-100 text-center">
@@ -793,6 +872,30 @@ const PageBuilderPage: React.FC = () => {
             width: mobileView ? '375px' : '100%',
             boxShadow: '0px 0px 20px rgba(0, 0, 0, 0.08)'
           }}>
+              {/* Global Navigation */}
+              {globalNavSection && (
+                <div className="sticky top-0 z-40">
+                  <EditModeProvider 
+                    initialEditMode={!previewMode} 
+                    onContentUpdate={(fieldName, value) => {
+                      // Update global nav content
+                      const updatedSection = {
+                        ...globalNavSection,
+                        content: {
+                          ...globalNavSection.content,
+                          [fieldName]: value
+                        }
+                      };
+                      setGlobalNavSection(updatedSection);
+                      setHasChanges(true);
+                    }}
+                    isMobilePreview={mobileView}
+                  >
+                    {renderSection(globalNavSection)}
+                  </EditModeProvider>
+                </div>
+              )}
+              
               {/* First drop zone at the top of the page */}
               <div 
                 className={`h-12 w-full flex items-center justify-center transition-all ${
@@ -936,6 +1039,31 @@ const PageBuilderPage: React.FC = () => {
                   ))}
                 </div>
               )}
+            
+            {/* Global Footer */}
+            {globalFooterSection && (
+              <div>
+                <EditModeProvider 
+                  initialEditMode={!previewMode} 
+                  onContentUpdate={(fieldName, value) => {
+                    // Update global footer content
+                    const updatedSection = {
+                      ...globalFooterSection,
+                      content: {
+                        ...globalFooterSection.content,
+                        [fieldName]: value
+                      }
+                    };
+                    setGlobalFooterSection(updatedSection);
+                    setHasChanges(true);
+                  }}
+                  isMobilePreview={mobileView}
+                >
+                  {renderSection(globalFooterSection)}
+                </EditModeProvider>
+              </div>
+            )}
+            
             {activeEditField && (
               <div className="fixed inset-0 z-50 pointer-events-none">
                 {/* Invisible overlay to help with tooltip positioning */}

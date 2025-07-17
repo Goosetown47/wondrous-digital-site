@@ -1,49 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X } from 'lucide-react';
-import SectionTypeCard, { SectionType, SECTION_TYPE_NAMES } from './SectionTypeCard';
+import { Search, X, Loader } from 'lucide-react';
+import SectionTypeCard from './SectionTypeCard';
 import { supabase } from '../../utils/supabase';
-
-// Define all available section types in the order they should appear
-const ALL_SECTION_TYPES: SectionType[] = [
-  'hero',
-  'header', 
-  'features',
-  'careers',
-  'gallery',
-  'contact',
-  'faq',
-  'pricing',
-  'testimonials',
-  'team',
-  'blog-landing',
-  'blog-article',
-  'banners',
-  'product-compare',
-  'card-grid',
-  'events',
-  'stats',
-  'links',
-  'forms',
-  'lists',
-  'navigation'
-];
+import { useSectionTypes } from '../../hooks/useSectionTypes';
 
 interface SectionLibrarySidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-  availableSectionTypes?: SectionType[]; // Filter which section types are available
   className?: string;
 }
 
 const SectionLibrarySidebar: React.FC<SectionLibrarySidebarProps> = ({
   isOpen,
   onToggle,
-  availableSectionTypes = ALL_SECTION_TYPES,
   className = ''
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [hoveredSectionType, setHoveredSectionType] = useState<SectionType | null>(null);
-  const [activeSectionTypes, setActiveSectionTypes] = useState<Set<SectionType>>(new Set());
+  const [hoveredSectionType, setHoveredSectionType] = useState<string | null>(null);
+  const [activeSectionTypes, setActiveSectionTypes] = useState<Set<string>>(new Set());
+  const { sectionTypes, loading: typesLoading, error: typesError } = useSectionTypes();
 
   // Fetch which section types have active templates
   useEffect(() => {
@@ -65,29 +40,31 @@ const SectionLibrarySidebar: React.FC<SectionLibrarySidebarProps> = ({
         
       if (error) throw error;
       
-      const activeTypes = new Set(data?.map(item => item.section_type as SectionType) || []);
+      const activeTypes = new Set(data?.map(item => item.section_type) || []);
       setActiveSectionTypes(activeTypes);
     } catch (err) {
       console.error('Error fetching active section types:', err);
     }
   };
 
-  // Filter section types based on search term and availability
-  const filteredSectionTypes = availableSectionTypes.filter(sectionType => {
+  // Filter section types based on search term
+  const filteredSectionTypes = sectionTypes.filter(sectionType => {
     if (!searchTerm) return true;
-    const displayName = SECTION_TYPE_NAMES[sectionType].toLowerCase();
-    return displayName.includes(searchTerm.toLowerCase());
+    const displayName = sectionType.display_name.toLowerCase();
+    const description = sectionType.description?.toLowerCase() || '';
+    const searchLower = searchTerm.toLowerCase();
+    return displayName.includes(searchLower) || description.includes(searchLower);
   });
 
-  const handleSectionTypeDragStart = (sectionType: SectionType) => {
-    setDraggedSectionType(sectionType);
+  const handleSectionTypeDragStart = (sectionType: string) => {
+    // No need for setDraggedSectionType as it's not defined in this component
   };
 
   const handleSectionTypeDragEnd = () => {
-    setDraggedSectionType(null);
+    // No need for setDraggedSectionType as it's not defined in this component
   };
 
-  const handleSectionTypeMouseEnter = (sectionType: SectionType) => {
+  const handleSectionTypeMouseEnter = (sectionType: string) => {
     setHoveredSectionType(sectionType);
   };
 
@@ -144,34 +121,48 @@ const SectionLibrarySidebar: React.FC<SectionLibrarySidebarProps> = ({
 
       {/* Section Type Cards */}
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="grid grid-cols-2 gap-4">
-          {filteredSectionTypes.length === 0 ? (
-            <div className="col-span-2 text-center py-8 text-gray-500">
-              <p className="text-sm">No section types found</p>
-              {searchTerm && (
-                <button
-                  onClick={clearSearch}
-                  className="text-blue-600 hover:text-blue-800 text-sm mt-2"
-                >
-                  Clear search
-                </button>
-              )}
-            </div>
-          ) : (
-            filteredSectionTypes.map((sectionType) => (
-              <SectionTypeCard
-                key={sectionType}
-                sectionType={sectionType}
-                onDragStart={handleSectionTypeDragStart}
-                onDragEnd={handleSectionTypeDragEnd}
-                isHovered={hoveredSectionType === sectionType}
-                onMouseEnter={() => handleSectionTypeMouseEnter(sectionType)}
-                onMouseLeave={handleSectionTypeMouseLeave}
-                isActive={activeSectionTypes.has(sectionType)}
-              />
-            ))
-          )}
-        </div>
+        {typesLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader className="h-6 w-6 animate-spin text-gray-400" />
+          </div>
+        ) : typesError ? (
+          <div className="text-center py-8 text-red-500">
+            <p className="text-sm">Error loading section types</p>
+            <p className="text-xs mt-1">{typesError}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4">
+            {filteredSectionTypes.length === 0 ? (
+              <div className="col-span-2 text-center py-8 text-gray-500">
+                <p className="text-sm">No section types found</p>
+                {searchTerm && (
+                  <button
+                    onClick={clearSearch}
+                    className="text-blue-600 hover:text-blue-800 text-sm mt-2"
+                  >
+                    Clear search
+                  </button>
+                )}
+              </div>
+            ) : (
+              filteredSectionTypes.map((sectionType) => (
+                <SectionTypeCard
+                  key={sectionType.id}
+                  sectionType={sectionType.type_key}
+                  displayName={sectionType.display_name}
+                  iconName={sectionType.icon_name}
+                  description={sectionType.description}
+                  onDragStart={handleSectionTypeDragStart}
+                  onDragEnd={handleSectionTypeDragEnd}
+                  isHovered={hoveredSectionType === sectionType.type_key}
+                  onMouseEnter={() => handleSectionTypeMouseEnter(sectionType.type_key)}
+                  onMouseLeave={handleSectionTypeMouseLeave}
+                  isActive={activeSectionTypes.has(sectionType.type_key)}
+                />
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Help Text */}
@@ -185,5 +176,4 @@ const SectionLibrarySidebar: React.FC<SectionLibrarySidebarProps> = ({
 };
 
 export default SectionLibrarySidebar;
-export { ALL_SECTION_TYPES };
 export type { SectionLibrarySidebarProps };

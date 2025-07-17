@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, AlertCircle } from 'lucide-react';
+import { X, Save, AlertCircle, Loader } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
 import SectionImageUpload from './SectionImageUpload';
+import { useSectionTypes } from '../../hooks/useSectionTypes';
+import { useSectionCategories } from '../../hooks/useSectionCategories';
 
 interface SectionTemplate {
   id: string;
@@ -23,41 +25,6 @@ interface AddSectionModalProps {
   sourceFileNameFromStaging?: string; // New prop for the original file name
 }
 
-const SECTION_TYPES = [
-  'hero',
-  'features',
-  'testimonials',
-  'pricing',
-  'contact',
-  'faq',
-  'cta',
-  'about',
-  'services',
-  'portfolio',
-  'team',
-  'blog',
-  'stats',
-  'newsletter',
-  'gallery',
-  'header',
-  'footer',
-  'other'
-];
-
-const CATEGORIES = [
-  'Basic',
-  'Professional',
-  'Creative',
-  'Minimalist',
-  'Bold',
-  'Restaurant',
-  'Legal',
-  'Healthcare',
-  'E-commerce',
-  'Service Business',
-  'Real Estate',
-  'Technology'
-];
 
 const AddSectionModal: React.FC<AddSectionModalProps> = ({
   isOpen,
@@ -66,6 +33,10 @@ const AddSectionModal: React.FC<AddSectionModalProps> = ({
   editingTemplate,
   sourceFileNameFromStaging
 }) => {
+  // Get dynamic data from hooks
+  const { sectionTypes, loading: typesLoading } = useSectionTypes();
+  const { categories, loading: categoriesLoading } = useSectionCategories();
+  
   // Form state
   const [section, setSection] = useState<{
     section_type: string;
@@ -74,13 +45,14 @@ const AddSectionModal: React.FC<AddSectionModalProps> = ({
     preview_image_url: string;
     customizable_fields: string;
     category: string;
+    status: 'active' | 'inactive' | 'testing';
   }>({
-    section_type: 'hero',
+    section_type: '',
     template_name: '',
     component_code: '',
     preview_image_url: '',
     customizable_fields: '{}',
-    category: 'Basic',
+    category: '',
     status: 'testing'
   });
   
@@ -93,7 +65,7 @@ const AddSectionModal: React.FC<AddSectionModalProps> = ({
   useEffect(() => {
     if (editingTemplate) {
       setSection({
-        section_type: editingTemplate.section_type || 'hero',
+        section_type: editingTemplate.section_type || '',
         template_name: editingTemplate.template_name || '',
         component_code: editingTemplate.component_code || '',
         preview_image_url: editingTemplate.preview_image_url || '',
@@ -101,17 +73,17 @@ const AddSectionModal: React.FC<AddSectionModalProps> = ({
         customizable_fields: editingTemplate.customizable_fields ? 
           JSON.stringify(editingTemplate.customizable_fields, null, 2) : 
           '{}',
-        category: editingTemplate.category || 'Basic'
+        category: editingTemplate.category || ''
       });
     } else {
-      // Reset form for new template
+      // Reset form for new template with first available type and category
       setSection({
-        section_type: 'hero',
+        section_type: sectionTypes.length > 0 ? sectionTypes[0].type_key : '',
         template_name: '',
         component_code: '',
         preview_image_url: '',
         customizable_fields: '{}',
-        category: 'Basic',
+        category: categories.length > 0 ? categories[0].category_key : '',
         status: 'testing'
       });
     }
@@ -119,7 +91,7 @@ const AddSectionModal: React.FC<AddSectionModalProps> = ({
     // Reset errors
     setError(null);
     setFormErrors({});
-  }, [editingTemplate, isOpen]);
+  }, [editingTemplate, isOpen, sectionTypes, categories]);
   
   // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -290,19 +262,25 @@ const AddSectionModal: React.FC<AddSectionModalProps> = ({
                 <label htmlFor="section_type" className="block text-sm font-medium text-gray-700 mb-1">
                   Section Type <span className="text-red-500">*</span>
                 </label>
-                <select
-                  id="section_type"
-                  name="section_type"
-                  value={section.section_type}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-pink focus:border-primary-pink"
-                >
-                  {SECTION_TYPES.map(type => (
-                    <option key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </option>
-                  ))}
-                </select>
+                {typesLoading ? (
+                  <div className="flex items-center justify-center py-2">
+                    <Loader className="h-5 w-5 animate-spin text-gray-400" />
+                  </div>
+                ) : (
+                  <select
+                    id="section_type"
+                    name="section_type"
+                    value={section.section_type}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-pink focus:border-primary-pink"
+                  >
+                    {sectionTypes.map(type => (
+                      <option key={type.id} value={type.type_key}>
+                        {type.display_name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
               
               {/* Category */}
@@ -310,19 +288,25 @@ const AddSectionModal: React.FC<AddSectionModalProps> = ({
                 <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
                   Category
                 </label>
-                <select
-                  id="category"
-                  name="category"
-                  value={section.category}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-pink focus:border-primary-pink"
-                >
-                  {CATEGORIES.map(category => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
+                {categoriesLoading ? (
+                  <div className="flex items-center justify-center py-2">
+                    <Loader className="h-5 w-5 animate-spin text-gray-400" />
+                  </div>
+                ) : (
+                  <select
+                    id="category"
+                    name="category"
+                    value={section.category}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-pink focus:border-primary-pink"
+                  >
+                    {categories.map(category => (
+                      <option key={category.id} value={category.category_key}>
+                        {category.display_name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
               
               {/* Status */}

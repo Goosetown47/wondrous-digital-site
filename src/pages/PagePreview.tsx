@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, createContext } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../utils/supabase';
 import { applySiteStyleVariables } from '../lib/utils';
 import { EditModeProvider } from '../contexts/EditModeContext';
 import { CSSSiteStylesProvider } from '../contexts/SiteStylesContext';
+import { ProjectContext, Project } from '../contexts/ProjectContext';
 import { fontPreloader } from '../utils/font-preloader';
 import HeroSplitLayout from '../components/sections/HeroSplitLayout';
 import FourFeaturesGrid from '../components/sections/FourFeaturesGrid';
+import NavigationDesktop from '../components/sections/NavigationDesktop';
 import '../styles/section-typography.css';
 
 interface Section {
@@ -27,6 +29,9 @@ interface Page {
 const PagePreview: React.FC = () => {
   const { pageId } = useParams<{ pageId: string }>();
   const [page, setPage] = useState<Page | null>(null);
+  const [globalNavSection, setGlobalNavSection] = useState<Section | null>(null);
+  const [globalFooterSection, setGlobalFooterSection] = useState<Section | null>(null);
+  const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stylesLoaded, setStylesLoaded] = useState(false);
@@ -56,6 +61,7 @@ const PagePreview: React.FC = () => {
       // Fetch and apply site styles after page data is loaded
       if (page?.project_id) {
         await fetchAndApplySiteStyles(page.project_id);
+        await fetchGlobalSections(page.project_id);
       }
     } catch (err) {
       console.error('Error fetching page data:', err);
@@ -141,6 +147,59 @@ const PagePreview: React.FC = () => {
       setStylesLoaded(true);
     }
   };
+  
+  // Fetch global sections
+  const fetchGlobalSections = async (projectId: string) => {
+    try {
+      // First fetch the project to get global section IDs
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .select('*, global_nav_section_id, global_footer_section_id')
+        .eq('id', projectId)
+        .single();
+        
+      if (projectError) throw projectError;
+      if (!project) return;
+      
+      setCurrentProject(project);
+      
+      // Fetch global nav section if set
+      if (project.global_nav_section_id) {
+        const { data: navData, error: navError } = await supabase
+          .from('page_sections')
+          .select('*')
+          .eq('id', project.global_nav_section_id)
+          .single();
+          
+        if (!navError && navData) {
+          setGlobalNavSection({
+            id: navData.id,
+            type: navData.section_type,
+            content: navData.content || {}
+          });
+        }
+      }
+      
+      // Fetch global footer section if set
+      if (project.global_footer_section_id) {
+        const { data: footerData, error: footerError } = await supabase
+          .from('page_sections')
+          .select('*')
+          .eq('id', project.global_footer_section_id)
+          .single();
+          
+        if (!footerError && footerData) {
+          setGlobalFooterSection({
+            id: footerData.id,
+            type: footerData.section_type,
+            content: footerData.content || {}
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching global sections:', error);
+    }
+  };
 
   useEffect(() => {
     if (pageId) {
@@ -155,6 +214,36 @@ const PagePreview: React.FC = () => {
           return <HeroSplitLayout sectionId={section.id} content={section.content} />;
         case 'features':
           return <FourFeaturesGrid sectionId={section.id} content={section.content} />;
+        case 'navigation':
+        case 'navigation-desktop':
+          // Provide minimal project context for navigation links to load
+          const mockProject: Project = currentProject || {
+            id: page?.project_id || '',
+            project_name: page?.page_name || '',
+            domain: null,
+            project_type: 'customer_site',
+            customer_id: null,
+            niche: null,
+            global_nav_section_id: null,
+            global_footer_section_id: null
+          };
+          
+          return (
+            <ProjectContext.Provider value={{
+              userProfile: null,
+              accounts: [],
+              projects: [mockProject],
+              filteredProjects: [mockProject],
+              selectedAccount: null,
+              selectedProject: mockProject,
+              loading: false,
+              projectSwitching: false,
+              setSelectedAccount: async () => {},
+              setSelectedProject: async () => {}
+            }}>
+              <NavigationDesktop sectionId={section.id} content={section.content} />
+            </ProjectContext.Provider>
+          );
         default:
           return (
             <div className="py-8 text-center text-gray-500">
@@ -221,7 +310,18 @@ const PagePreview: React.FC = () => {
         
         {/* Full-width container for sections with individual content constraints */}
         <div className="website-content bg-white min-h-screen">
+          {/* Global Navigation */}
+          {globalNavSection && (
+            <div className="sticky top-0 z-40">
+              {renderSection(globalNavSection)}
+            </div>
+          )}
+          
+          {/* Page Sections */}
           {page.sections?.map(renderSection)}
+          
+          {/* Global Footer */}
+          {globalFooterSection && renderSection(globalFooterSection)}
         </div>
       </div>
     </CSSSiteStylesProvider>
