@@ -1,18 +1,21 @@
 # Admin Management System
 
-Status: In Progress - Phase 1
+Status: Phase 1 Complete - Phase 2 Ready
 Assignee: Tyler LaHaie
 Priority: High
 Created: July 13, 2025 4:37 PM
-Updated: July 17, 2025
+Updated: January 18, 2025
 EPIC: Wondrous Digital Application
 Global Tags: Wondrous Digital (https://www.notion.so/Wondrous-Digital-21dcc315289f802188d7e2024ce78342?pvs=21)
-Sub-task: Accounts Management Page Created (https://www.notion.so/Accounts-Management-Page-Created-22fcc315289f80008bd0c661716cee46?pvs=21), Set status of project status in bulk from one page, which contains tabs for projects and the ability to set the project status within the project cell. Three tabs: draft, active, archive. (https://www.notion.so/Set-status-of-project-status-in-bulk-from-one-page-which-contains-tabs-for-projects-and-the-ability-22fcc315289f80aaa694f1dd6b5f8897?pvs=21), Project mapping to different actions (https://www.notion.so/Project-mapping-to-different-actions-22fcc315289f80bda94ce1fe1ec09989?pvs=21), I can create a new project (https://www.notion.so/I-can-create-a-new-project-22fcc315289f80588d35e426e3a852cf?pvs=21), I can choose an account to assign that project to (https://www.notion.so/I-can-choose-an-account-to-assign-that-project-to-22fcc315289f80ad945ae545cff89a46?pvs=21), I can remove projects from accounts (https://www.notion.so/I-can-remove-projects-from-accounts-22fcc315289f80098dbeebcefed2e0b4?pvs=21), Our admin tools must be able to automate the process of creating the subdomain and pushing a project to the subdomain so it can be viewed live. This should happen when the “deploy” button is pressed. Which may open a modal with some information that needs to be filled out or set, before it propagates to Netlify. (https://www.notion.so/Our-admin-tools-must-be-able-to-automate-the-process-of-creating-the-subdomain-and-pushing-a-project-22fcc315289f80c19095d89d11c8f646?pvs=21), I can import a template into the new project (https://www.notion.so/I-can-import-a-template-into-the-new-project-22fcc315289f806a8548cb662e0fe56d?pvs=21), I can delete drafts or projects set to archive status (https://www.notion.so/I-can-delete-drafts-or-projects-set-to-archive-status-22fcc315289f80878714e7054c8a75fb?pvs=21), I must set a template or staging site to archive before I can delete it (https://www.notion.so/I-must-set-a-template-or-staging-site-to-archive-before-I-can-delete-it-22fcc315289f806db525ef25b2c9faa0?pvs=21), I must set a live customer site to paused/maintenance and then archive before I can delete it (2 step process) (https://www.notion.so/I-must-set-a-live-customer-site-to-paused-maintenance-and-then-archive-before-I-can-delete-it-2-ste-22fcc315289f802ea88ffc0114866372?pvs=21), I can bulk delete archived projects (but I see a modal anytime I delete asking me to confirm the action, be it single or multiple) (https://www.notion.so/I-can-bulk-delete-archived-projects-but-I-see-a-modal-anytime-I-delete-asking-me-to-confirm-the-act-22fcc315289f800ab4e6f6974dd1edf8?pvs=21), I can set the project status in the project cell, within the list (https://www.notion.so/I-can-set-the-project-status-in-the-project-cell-within-the-list-22fcc315289f80348489ea2c9f8a88c5?pvs=21), I can perform bulk actions on projects in the list (https://www.notion.so/I-can-perform-bulk-actions-on-projects-in-the-list-22fcc315289f80e5bbbddf2c5302e373?pvs=21), I can see a list of all the projects in each tab (draft, active, archive) with their corresponding feature buttons. (https://www.notion.so/I-can-see-a-list-of-all-the-projects-in-each-tab-draft-active-archive-with-their-corresponding-f-22fcc315289f80a9a283d71baaee1004?pvs=21), We have a maintenance page which draws customer data/info to populate its fields. Simple things like “Customer Business Name, Phone Number, Email” to populate a “We’ll be right back” page that looks simple, clean and professional. (https://www.notion.so/We-have-a-maintenance-page-which-draws-customer-data-info-to-populate-its-fields-Simple-things-like-22fcc315289f80c7a9dfd5686f02c81d?pvs=21), We can version projects and be able to revert to a previous version if need be. (https://www.notion.so/We-can-version-projects-and-be-able-to-revert-to-a-previous-version-if-need-be-22fcc315289f8092added3d3b760c588?pvs=21)
+Sub-task: Accounts Management Page Created (https://www.notion.so/Accounts-Management-Page-Created-22fcc315289f80008bd0c661716cee46?pvs=21), Set status of project status in bulk from one page, which contains tabs for projects and the ability to set the project status within the project cell. Three tabs: draft, active, archive. (https://www.notion.so/Set-status-of-project-status-in-bulk-from-one-page-which-contains-tabs-for-projects-and-the-ability-22fcc315289f80aaa694f1dd6b5f8897?pvs=21), Project mapping to different actions (https://www.notion.so/Project-mapping-to-different-actions-22fcc315289f80bda94ce1fe1ec09989?pvs=21), I can create a new project (https://www.notion.so/I-can-create-a-new-project-22fcc315289f80588d35e426e3a852cf?pvs=21), I can choose an account to assign that project to (https://www.notion.so/I-can-choose-an-account-to-assign-that-project-to-22fcc315289f80ad945ae545cff89a46?pvs=21), I can remove projects from accounts (https://www.notion.so/I-can-remove-projects-from-accounts-22fcc315289f80098dbeebcefed2e0b4?pvs=21), Our admin tools must be able to automate the process of creating the subdomain and pushing a project to the subdomain so it can be viewed live. This should happen when the "deploy" button is pressed. Which may open a modal with some information that needs to be filled out or set, before it propagates to Netlify. (https://www.notion.so/Our-admin-tools-must-be-able-to-automate-the-process-of-creating-the-subdomain-and-pushing-a-project-22fcc315289f80c19095d89d11c8f646?pvs=21), I can import a template into the new project (https://www.notion.so/I-can-import-a-template-into-the-new-project-22fcc315289f806a8548cb662e0fe56d?pvs=21), I can delete drafts or projects set to archive status (https://www.notion.so/I-can-delete-drafts-or-projects-set-to-archive-status-22fcc315289f80878714e7054c8a75fb?pvs=21), I must set a template or staging site to archive before I can delete it (https://www.notion.so/I-must-set-a-template-or-staging-site-to-archive-before-I-can-delete-it-22fcc315289f806db525ef25b2c9faa0?pvs=21), I must set a live customer site to paused/maintenance and then archive before I can delete it (2 step process) (https://www.notion.so/I-must-set-a-live-customer-site-to-paused-maintenance-and-then-archive-before-I-can-delete-it-2-ste-22fcc315289f802ea88ffc0114866372?pvs=21), I can bulk delete archived projects (but I see a modal anytime I delete asking me to confirm the action, be it single or multiple) (https://www.notion.so/I-can-bulk-delete-archived-projects-but-I-see-a-modal-anytime-I-delete-asking-me-to-confirm-the-act-22fcc315289f800ab4e6f6974dd1edf8?pvs=21), I can set the project status in the project cell, within the list (https://www.notion.so/I-can-set-the-project-status-in-the-project-cell-within-the-list-22fcc315289f80348489ea2c9f8a88c5?pvs=21), I can perform bulk actions on projects in the list (https://www.notion.so/I-can-perform-bulk-actions-on-projects-in-the-list-22fcc315289f80e5bbbddf2c5302e373?pvs=21), I can see a list of all the projects in each tab (draft, active, archive) with their corresponding feature buttons. (https://www.notion.so/I-can-see-a-list-of-all-the-projects-in-each-tab-draft-active-archive-with-their-corresponding-f-22fcc315289f80a9a283d71baaee1004?pvs=21), We have a maintenance page which draws customer data/info to populate its fields. Simple things like "Customer Business Name, Phone Number, Email" to populate a "We'll be right back" page that looks simple, clean and professional. (https://www.notion.so/We-have-a-maintenance-page-which-draws-customer-data-info-to-populate-its-fields-Simple-things-like-22fcc315289f80c7a9dfd5686f02c81d?pvs=21), We can version projects and be able to revert to a previous version if need be. (https://www.notion.so/We-can-version-projects-and-be-able-to-revert-to-a-previous-version-if-need-be-22fcc315289f8092added3d3b760c588?pvs=21)
 Type: Feature
 
-# Current Implementation Status (July 17, 2025)
+## 📝 Documentation Policy
+**IMPORTANT**: This PRD is the single source of truth for the Admin Management System. All updates, progress tracking, and planning should be documented HERE only. Do not create separate progress documents.
 
-## Phase 1: Foundation - IN PROGRESS
+# Current Implementation Status (January 18, 2025)
+
+## Phase 1: Foundation - ✅ COMPLETE
 
 ### ✅ Completed Items:
 - **Accounts Dashboard**: Enhanced page with tabbed view (Prospects, Customers, Inactive)
@@ -65,15 +68,109 @@ Type: Feature
   - Fixed maintenance button availability for prospect-staging projects
   - Maintenance mode now accessible for both prospect-staging and live-customer statuses
   - Improved administrative flexibility for project lifecycle management
+- **Customer Account Management**: (January 17, 2025)
+  - Delete customer functionality with double confirmation modal
+  - Type-in business name requirement for deletion
+  - Only inactive accounts with no projects can be deleted
+  - Comprehensive validation and error handling
 
-### 🔄 In Progress:
-- Template designation system (backend ready, UI needs completion)
+### ✅ Phase 1 Completion Items (January 18, 2025):
+- **View/Edit Project Navigation**:
+  - Created ProjectPage component for project overview
+  - Lists all pages within a project with edit/preview options
+  - Added route `/dashboard/content/project` with sidebar navigation
+  - Fixed "Failed to open project editor" error
+- **Clone Project Functionality**:
+  - Created CloneProjectModal with full form validation
+  - Clones project settings, site styles, and all pages
+  - Assigns cloned project to selected customer
+  - Sets cloned project to 'draft' status automatically
+- **Deploy Placeholder Modal**:
+  - Created DeployPlaceholderModal for Phase 3 preparation
+  - Shows "Coming Soon" message with feature preview
+  - Lists upcoming Netlify integration features
+- **Navigation Dropdown Updates**:
+  - Added refreshData function to ProjectContext
+  - Auto-refreshes after creating projects/accounts
+  - Ensures new projects/accounts appear in navigation immediately
+- **UI Clean-up**:
+  - Removed redundant purple "Template" badge from project list
+  - Status column already shows template status clearly
 
-### ❌ Not Started:
-- Clone project functionality
-- Deploy to Netlify integration
-- Maintenance page system
-- Project versioning
+### ✅ Final Phase 1 Adjustments (January 18, 2025):
+- **Navigation Improvements**:
+  - Increased project dropdown width from 16rem to 22rem for better readability
+  - Prevents cramped appearance with longer project names
+- **Separated View/Edit Actions**:
+  - Split single "View/Edit" button into two distinct actions
+  - "View Project" - Navigate to customer's project view (/dashboard/content/project)
+  - "Edit Project" - Open admin-only settings modal
+- **EditProjectModal Component**:
+  - Admin can edit project name
+  - Admin can reassign project to different customer
+  - Admin can set/change domain and subdomain (for future Netlify integration)
+  - Form validation and audit logging
+  - Auto-refresh navigation after updates
+
+## Phase 1 Status: ✅ COMPLETE
+
+All Phase 1 foundation items have been successfully implemented. The system now provides:
+- Complete account and project management capabilities
+- Full CRUD operations with business rule enforcement
+- Bulk operations with proper safeguards
+- Status management with audit trails
+- Admin-specific tools and customer view separation
+
+### ❌ Deferred to Later Phases:
+- Deploy to Netlify integration (Phase 3)
+- Maintenance page system (Phase 5)
+- Project versioning (Phase 5)
+
+## Phase 2: Template System - 🔄 IN PROGRESS (January 18, 2025)
+
+### ✅ Completed Items:
+- **Template Library Page** (`/dashboard/admin/templates`):
+  - Grid and list view modes with toggle
+  - Search functionality for templates
+  - Filter by status (Internal/Public) and business niche
+  - Template cards showing name, description, niche, status
+  - Action buttons: View, Edit, Clone, Toggle Status, Delete
+  - Responsive design with loading states
+
+- **Database Schema Updates**:
+  - Added template-specific fields to projects table
+  - `template_description` - Template description text
+  - `template_niche` - Business category (veterinarian, chiropractor, etc.)
+  - `template_version` - Version tracking (default 1)
+  - `template_preview_image` - Placeholder for future preview images
+  - Created indexes for performance optimization
+  - Updated project_management_view to include template fields
+
+- **Convert to Template Modal**:
+  - Select any non-template project from dropdown
+  - Choose between Internal (admin-only) or Public visibility
+  - Add description (required, 500 char limit)
+  - Select business niche from predefined list
+  - Form validation and error handling
+  - Automatic version 1 assignment
+
+- **Integration with Projects Page**:
+  - Added "Convert to Template" action button
+  - Only shows for non-template projects
+  - Opens modal with project pre-selected
+  - Templates continue to show in Templates tab
+
+- **Template Operations**:
+  - Toggle between internal/public status
+  - Delete templates with confirmation
+  - Clone template navigates to Projects page
+  - View template opens project page
+
+### ⏳ In Progress / Pending:
+- Template preview component for detailed view
+- Edit template metadata functionality
+- Template preview image upload/generation
+- Connect "Create Template" button to conversion modal
 
 # Overview of business process:
 
@@ -206,12 +303,12 @@ Live Deployment → Ongoing Management`
 
 ## Development Phases
 
-### **Phase 1: Foundation** (CURRENT PHASE)
+### **Phase 1: Foundation** ✅ COMPLETE
 
 - ✅ Update database schema for new status system
 - ✅ Build basic account and project dashboard/pages with listings in Admin Tools
 - ✅ Implement project status management
-- 🔄 Create template designation system (backend complete, UI in progress)
+- ✅ Create template designation system (backend complete, templates shown in dedicated tab)
 
 **Additional completed items not in original plan:**
 - ✅ Enhanced tab system with Templates and Paused/Maintenance tabs
@@ -220,27 +317,60 @@ Live Deployment → Ongoing Management`
 - ✅ Real-time tab counts
 - ✅ Status history tracking
 
-**Next steps in Phase 1:**
-- Complete bulk selection and actions
-- Implement create new project modal
-- Add delete functionality with confirmation modals
-- Complete template designation UI
+### **Phase 2: Template System** 🔄 IN PROGRESS
 
-### **Phase 2: Template System**
+- ✅ Build template library page interface for managing templates in Admin Tools
+- ✅ Implement template cloning functionality (via existing clone modal)
+- ✅ Add project-to-template conversion
+- ⏳ Create template preview system
+- ⏳ Create full CRUD functionality for templates (Create/Read done, Update/Delete pending)
 
-- Build template library page interface for managing templates in Admin Tools
-- Implement template cloning functionality
-- Add template-to-project conversion
-- Create template preview system
-- Create CRUD functionality for templates
+### **Phase 3: Netlify Integration** - 🔄 IN PROGRESS (January 18, 2025)
 
-### **Phase 3: Netlify Integration**
+### ✅ Completed Items:
+- **Environment Setup**:
+  - Added Netlify API token configuration
+  - Created netlify configuration file with naming conventions
+  - Set up environment variable management
 
-- Build Netlify API integration
-- Implement subdomain automation
-    - Must be able to “name” subdomains and assign projects to them
-- Create deployment pipeline
-- Add domain migration functionality
+- **Netlify Service Layer**:
+  - Built comprehensive API service for Netlify operations
+  - Created site management functions (create, update, delete)
+  - Implemented subdomain availability checking
+  - Added error handling and retry logic
+
+- **Deploy Project Modal**:
+  - Replaced placeholder with functional deployment interface
+  - Automatic subdomain generation based on project type
+  - Real-time URL preview before deployment
+  - Deployment progress indicators
+  - Success/failure status handling
+
+- **Database Schema Updates**:
+  - Added `netlify_site_id` field to projects table
+  - Added `subdomain` field with unique constraint
+  - Created `deployment_history` table for tracking
+  - Added RLS policies for deployment data
+
+- **Flexible Domain Management** (User-requested enhancement):
+  - Added `deployment_domain` field to projects table
+  - Added `custom_domains` array to customers table
+  - Created domain selection dropdown in deploy modal
+  - Support for custom domain input (not just wondrousdigital.com)
+  - Updated EditProjectModal with deployment configuration
+  - Created `get_deployment_url` database function for URL computation
+  - Updated project list to show deployment status with clickable links
+
+- **Subdomain Synchronization Fix**:
+  - Deploy modal now pulls existing subdomain from project data
+  - Auto-generation only happens if no subdomain exists
+  - Consistent subdomain/domain data across all modals
+
+### ⏳ In Progress / Pending:
+- Actual file deployment to Netlify (build pipeline)
+- Re-deploy functionality for already deployed sites
+- Domain migration from subdomain to custom domain
+- Netlify team ID configuration
 
 ### **Phase 4: Bulk Operations**
 
@@ -304,13 +434,23 @@ Live Deployment → Ongoing Management`
 
 ## **Success Criteria**
 
-### **MVP Completion**
+### **Phase 1 Completion** ✅
 
 - [x]  All 8 project statuses implemented with proper actions
-- [ ]  Template system fully functional (partially complete)
-- [ ]  Netlify integration for all deployment types
+- [x]  Account and project dashboards with full CRUD operations
 - [x]  Bulk operations for project management (implemented with confirmations)
 - [x]  Multi-tenant security verified (RLS policies in place)
+- [x]  Admin tools separated from customer views
+- [x]  Create new projects and accounts functionality
+- [x]  Delete functionality with business rule enforcement
+- [x]  Clone project capability
+- [x]  Project settings management (name, customer, domain)
+
+### **MVP Completion** (Phases 1-3)
+
+- [x]  Phase 1: Foundation - COMPLETE
+- [~]  Phase 2: Template system (Core functionality complete, polish pending)
+- [~]  Phase 3: Netlify integration (Domain management complete, build pipeline pending)
 
 ### **Production Readiness**
 
@@ -605,18 +745,124 @@ Live Deployment → Ongoing Management`
 
 ---
 
-## Recommended Next Steps (January 17, 2025)
+## Recommended Next Steps (January 18, 2025)
 
-Based on current progress, here are the prioritized next steps to complete Phase 1:
+**Phase 1 is now COMPLETE!** All foundation items have been successfully implemented.
 
-### 1. **Wire Up Action Buttons** (High Priority - Next)
-- Implement View/Edit navigation to PageBuilder
-- Complete Clone functionality (without template system)
-- Placeholder for Deploy button (for Phase 3)
+### Phase 2: Template System (Ready to Start)
+1. **Template Library Page Interface**
+   - Browse available templates
+   - Template preview functionality
+   - Template metadata and versioning
 
-### 2. **Complete Template UI** (Low Priority - bridges to Phase 2)
-- Add template badge/indicator in project list
-- Ensure template status changes work properly
-- Prepare for Phase 2 template library
+2. **Template Management**
+   - Convert projects to templates
+   - Template cloning with customization
+   - Template deployment to public subdomains
 
-This approach ensures we complete all Phase 1 foundation items before moving to Phase 2 (Template System), keeping development focused and preventing scope creep.
+3. **CRUD Operations**
+   - Create new templates
+   - Edit template metadata
+   - Archive/delete templates
+   - Template categorization by niche
+
+### Phase 3: Netlify Integration (IN PROGRESS)
+1. **Netlify API Integration** ✅ COMPLETE
+   - Authentication setup ✅
+   - Site creation/deletion ✅
+   - Environment variable management ✅
+
+2. **Subdomain Automation** ✅ COMPLETE
+   - Automatic subdomain creation ✅
+   - Flexible domain management ✅
+   - Custom domain support ✅
+
+3. **Deployment Pipeline** ⏳ PENDING
+   - Build process integration
+   - Actual file deployment to Netlify
+   - Re-deploy functionality for existing sites
+   - Domain migration (subdomain to custom)
+   - Deployment status tracking
+   - Rollback capabilities
+
+### Website Preview System (Foundation for Deployment Pipeline)
+
+#### Customer-Facing Preview Feature
+- **Purpose**: Allow customers to preview their entire website project with functional navigation before deployment
+- **Access**: "Preview in Browser" button on Project page (customer view at `/dashboard/content/project`)
+- **Route**: `/preview/project/:projectId` - Full project preview with multi-page navigation
+
+#### Key Components:
+
+1. **ProjectPreview Component** (`src/pages/ProjectPreview.tsx`)
+   - Fetches all pages for a project from Supabase
+   - Loads global navigation and footer sections
+   - Displays homepage by default (or first page if no homepage designated)
+   - Handles inter-page navigation using navigation links
+   - Applies site styles consistently across all pages
+   - Shows preview header with "Exit Preview" option
+
+2. **Navigation Implementation**
+   - Uses existing `navigation_links` table for functional navigation
+   - Supports internal page links, dropdown menus, and external links
+   - Maintains active page state for proper styling
+   - Client-side routing for smooth page transitions
+   - Handles navigation link types: 'page', 'external', 'dropdown'
+
+3. **Preview Features**
+   - Multi-page navigation without full page reload
+   - Site styles (colors, fonts, buttons) applied across all pages
+   - Responsive design testing capability
+   - 404 handling for missing or unpublished pages
+   - Preview works for all project statuses (draft, staging, live)
+
+#### Technical Foundation:
+- Reuses existing PagePreview rendering logic for individual pages
+- React Router for client-side navigation within preview
+- Caches project data and pages for performance
+- Foundation for future static site generation needed for Netlify deployment
+- Shares section rendering logic with PageBuilder
+
+#### Known Issues to Fix Before Implementation:
+- **Global Navigation Setting Bug**: Checkbox to set navigation as global fails with "Failed to update global navigation setting"
+  - Location: PageBuilder > Navigation section > Navigation tab
+  - Must be fixed to enable proper global nav/footer in preview
+
+#### Benefits:
+- Complete website flow testing before deployment
+- Customer can experience their site as end-users would
+- Better understanding of site structure and navigation
+- Identifies issues before going live
+- Foundation for the build/export system needed for Netlify
+
+#### Implementation Priority:
+1. Fix global navigation checkbox issue
+2. Create ProjectPreview component
+3. Add Preview button to ProjectPage
+4. Test with multi-page projects with complex navigation
+
+### Current Status Summary (January 18, 2025):
+- ✅ **Phase 1: Foundation** - COMPLETE
+  - All admin dashboards and project management features implemented
+  - Full CRUD operations with business rules
+  - Bulk operations and safeguards
+  - Admin/customer separation
+  - Project settings management
+- 🔄 **Phase 2: Template System** - IN PROGRESS
+  - ✅ Template Library page with grid/list views
+  - ✅ Convert projects to templates functionality
+  - ✅ Template metadata (description, niche, version)
+  - ✅ Toggle between internal/public status
+  - ✅ Database migration for template fields
+  - ⏳ Template preview system (pending)
+  - ⏳ Edit template metadata (pending)
+- 🔄 **Phase 3: Netlify Integration** - IN PROGRESS
+  - ✅ Netlify API service layer complete
+  - ✅ Deploy modal with domain management
+  - ✅ Database schema for deployments
+  - ✅ Flexible domain support (custom domains)
+  - ⏳ Website Preview System (documented, pending implementation)
+  - ⏳ Build pipeline integration (pending)
+  - ⏳ Static HTML generation from preview system
+- ❌ **Phase 4: Bulk Operations Enhancement** - After MVP
+- ❌ **Phase 5: Advanced Features** - Final phase

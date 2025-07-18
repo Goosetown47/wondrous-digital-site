@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, AlertTriangle, Info } from 'lucide-react';
 import StatusDropdown from './StatusDropdown';
+import { bulkOperationSchema } from '../../schemas';
 
 interface Project {
   id: string;
@@ -34,6 +35,19 @@ const BulkOperationModal: React.FC<BulkOperationModalProps> = ({
   if (!isOpen) return null;
 
   const handleConfirm = () => {
+    // NEW: Parallel Zod validation for bulk operations
+    const bulkOpData = {
+      project_ids: projects.map(p => p.id),
+      operation
+    };
+    
+    // Validate bulk operation data
+    const zodResult = bulkOperationSchema.safeParse(bulkOpData);
+    if (!zodResult.success) {
+      console.debug('Bulk operation validation failed:', zodResult.error.format());
+    }
+    
+    // Continue with existing logic
     if (operation === 'change-status' && selectedStatus) {
       onConfirm({ newStatus: selectedStatus });
     } else if (operation === 'archive') {

@@ -56,6 +56,7 @@ const AppLayout: React.FC = () => {
       icon: FileText, 
       path: '/dashboard/content',
       subItems: [
+        { name: 'Project', path: '/dashboard/content/project' },
         { name: 'Blog Posts', path: '/dashboard/content/blog' },
         { name: 'Pages', path: '/dashboard/content/pages' },
         { name: 'Site Styles', path: '/dashboard/content/site-styles' }

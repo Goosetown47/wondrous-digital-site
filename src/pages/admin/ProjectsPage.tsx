@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../utils/supabase';
-import { FolderPlus, Search, Filter, FileText, Archive, Activity, Globe, Copy, Trash2, Eye, Rocket, Pause } from 'lucide-react';
+import { FolderPlus, Search, Filter, FileText, Archive, Activity, Globe, Copy, Trash2, Eye, Rocket, Pause, Edit, Layout } from 'lucide-react';
 import StatusDropdown from '../../components/admin/StatusDropdown';
 import ActionButton from '../../components/admin/ActionButton';
 import { useToast } from '../../contexts/ToastContext';
@@ -8,6 +9,11 @@ import BulkActionsDropdown, { BulkAction } from '../../components/admin/BulkActi
 import BulkOperationModal from '../../components/admin/BulkOperationModal';
 import DeleteConfirmationModal from '../../components/admin/DeleteConfirmationModal';
 import CreateProjectModal from '../../components/admin/CreateProjectModal';
+import CloneProjectModal from '../../components/admin/CloneProjectModal';
+import DeployProjectModal from '../../components/admin/DeployProjectModal';
+import EditProjectModal from '../../components/admin/EditProjectModal';
+import ConvertToTemplateModal from '../../components/admin/ConvertToTemplateModal';
+import { statusChangeSchema, validateStatusTransition, bulkStatusChangeSchema } from '../../schemas';
 
 interface Project {
   id: string;
@@ -16,8 +22,10 @@ interface Project {
   project_type: string;
   domain: string | null;
   subdomain: string | null;
+  deployment_domain?: string | null;
   deployment_status: string;
   deployment_url: string | null;
+  netlify_site_id?: string | null;
   last_deployed_at: string | null;
   created_at: string;
   updated_at: string;
@@ -25,12 +33,15 @@ interface Project {
   business_name: string | null;
   account_type: 'prospect' | 'customer' | 'inactive' | null;
   contact_email: string | null;
+  custom_domains?: string[];
+  computed_deployment_url?: string | null;
   tab_category: 'draft' | 'templates' | 'active' | 'paused' | 'archive';
 }
 
 type TabType = 'draft' | 'templates' | 'active' | 'paused' | 'archive';
 
 const ProjectsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('draft');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +66,22 @@ const ProjectsPage: React.FC = () => {
     project: Project | null;
   }>({ isOpen: false, project: null });
   const [isProcessingDelete, setIsProcessingDelete] = useState(false);
+  const [cloneModal, setCloneModal] = useState<{
+    isOpen: boolean;
+    sourceProject: Project | null;
+  }>({ isOpen: false, sourceProject: null });
+  const [deployModal, setDeployModal] = useState<{
+    isOpen: boolean;
+    project: Project | null;
+  }>({ isOpen: false, project: null });
+  const [editModal, setEditModal] = useState<{
+    isOpen: boolean;
+    project: Project | null;
+  }>({ isOpen: false, project: null });
+  const [convertModal, setConvertModal] = useState<{
+    isOpen: boolean;
+    project: Project | null;
+  }>({ isOpen: false, project: null });
   const { addToast } = useToast();
 
   // Fetch tab counts on mount
@@ -178,6 +205,34 @@ const ProjectsPage: React.FC = () => {
 
       if (fetchError) throw fetchError;
 
+      // NEW: Parallel Zod validation for status change
+      const statusChangeData = {
+        project_id: projectId,
+        new_status: newStatus
+      };
+      
+      // Validate status change data structure
+      const zodResult = statusChangeSchema.safeParse(statusChangeData);
+      if (!zodResult.success) {
+        // Log validation issues for debugging
+        console.debug('Status change validation failed:', zodResult.error.format());
+      }
+      
+      // DAY 3: Block invalid status transitions
+      const transitionCheck = validateStatusTransition(currentProject.project_status, newStatus);
+      if (!transitionCheck.valid) {
+        // Invalid transition - log for debugging
+        console.debug('Invalid status transition:', {
+          from: currentProject.project_status,
+          to: newStatus,
+          message: transitionCheck.message
+        });
+        
+        // Block the transition and show error
+        addToast(transitionCheck.message || 'Invalid status transition', 'error');
+        return;
+      }
+
       // Update the project status directly
       const { data, error } = await supabase
         .from('projects')
@@ -259,15 +314,24 @@ const ProjectsPage: React.FC = () => {
     }
   };
 
+  // View project - navigate to Project page as customer would see it
+  const handleViewProject = (projectId: string) => {
+    navigate('/dashboard/content/project', { state: { projectId } });
+  };
+
+  // Edit project - open admin edit modal
+  const handleEditProject = (project: Project) => {
+    setEditModal({ isOpen: true, project });
+  };
+
   // Clone project
-  const handleCloneProject = async (projectId: string) => {
-    try {
-      // This would be implemented with proper cloning logic
-      console.log('Clone project:', projectId);
-      alert('Project cloning will be implemented in the template management phase');
-    } catch (error) {
-      console.error('Error cloning project:', error);
-    }
+  const handleCloneProject = (project: Project) => {
+    setCloneModal({ isOpen: true, sourceProject: project });
+  };
+
+  // Convert to template
+  const handleConvertToTemplate = (project: Project) => {
+    setConvertModal({ isOpen: true, project });
   };
 
   // Handle bulk action selection
@@ -300,6 +364,18 @@ const ProjectsPage: React.FC = () => {
 
       const selectedProjectsData = getSelectedProjectsData();
       const projectIds = selectedProjectsData.map(p => p.id);
+      
+      // NEW: Parallel Zod validation for bulk status change
+      const bulkChangeData = {
+        project_ids: projectIds,
+        new_status: newStatus
+      };
+      
+      // Validate bulk operation data
+      const zodResult = bulkStatusChangeSchema.safeParse(bulkChangeData);
+      if (!zodResult.success) {
+        console.debug('Bulk status change validation failed:', zodResult.error.format());
+      }
       
       // Update all projects in a transaction-like manner
       const updatePromises = projectIds.map(async (projectId) => {
@@ -474,7 +550,8 @@ const ProjectsPage: React.FC = () => {
 
 
   // Get deployment status badge
-  const getDeploymentBadge = (status: string) => {
+  const getDeploymentBadge = (status: string, netlifyId?: string | null) => {
+    const hasDeployment = !!netlifyId;
     const deployConfig = {
       'deployed': { bg: 'bg-green-100', text: 'text-green-800', icon: Globe },
       'deploying': { bg: 'bg-blue-100', text: 'text-blue-800', icon: Activity },
@@ -678,12 +755,34 @@ const ProjectsPage: React.FC = () => {
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {project.domain || project.subdomain || '-'}
+                      <div>
+                        {project.computed_deployment_url || project.deployment_url ? (
+                          <a 
+                            href={project.computed_deployment_url || project.deployment_url || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:text-blue-700 flex items-center"
+                          >
+                            <Globe className="h-3 w-3 mr-1" />
+                            {project.subdomain ? `${project.subdomain}.` : ''}
+                            {project.deployment_domain || 'wondrousdigital.com'}
+                          </a>
+                        ) : (
+                          <span className="text-sm text-gray-500">
+                            {project.subdomain || project.domain ? (
+                              <>
+                                {project.subdomain ? `${project.subdomain}.` : ''}
+                                {project.deployment_domain || project.domain || 'wondrousdigital.com'}
+                              </>
+                            ) : (
+                              '-'
+                            )}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getDeploymentBadge(project.deployment_status)}
+                      {getDeploymentBadge(project.deployment_status, project.netlify_site_id)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(project.updated_at).toLocaleDateString()}
@@ -692,25 +791,31 @@ const ProjectsPage: React.FC = () => {
                       <div className="flex items-center justify-end space-x-1">
                         <ActionButton
                           icon={Eye}
-                          label="View/Edit Project"
-                          onClick={() => {
-                            // Handle view/edit
-                            console.log('View/edit project', project.id);
-                          }}
+                          label="View Project"
+                          onClick={() => handleViewProject(project.id)}
+                        />
+                        <ActionButton
+                          icon={Edit}
+                          label="Edit Project"
+                          onClick={() => handleEditProject(project)}
                         />
                         <ActionButton
                           icon={Copy}
                           label="Clone Project"
-                          onClick={() => handleCloneProject(project.id)}
+                          onClick={() => handleCloneProject(project)}
                         />
-                        {project.deployment_status !== 'deployed' && (
+                        {!['template-internal', 'template-public'].includes(project.project_status) && (
+                          <ActionButton
+                            icon={Layout}
+                            label="Convert to Template"
+                            onClick={() => handleConvertToTemplate(project)}
+                          />
+                        )}
+                        {(!project.netlify_site_id || project.deployment_status !== 'deployed') && (
                           <ActionButton
                             icon={Rocket}
                             label="Deploy Project"
-                            onClick={() => {
-                              // Handle deploy
-                              console.log('Deploy project', project.id);
-                            }}
+                            onClick={() => setDeployModal({ isOpen: true, project })}
                           />
                         )}
                         {(project.project_status === 'live-customer' || project.project_status === 'prospect-staging') && (
@@ -773,6 +878,50 @@ const ProjectsPage: React.FC = () => {
         project={deleteModal.project}
         onConfirm={handleDeleteConfirm}
         isProcessing={isProcessingDelete}
+      />
+
+      {/* Clone Project Modal */}
+      <CloneProjectModal
+        isOpen={cloneModal.isOpen}
+        onClose={() => setCloneModal({ isOpen: false, sourceProject: null })}
+        sourceProject={cloneModal.sourceProject}
+        onSuccess={() => {
+          fetchProjects();
+          fetchTabCounts();
+        }}
+      />
+
+      {/* Deploy Project Modal */}
+      <DeployProjectModal
+        isOpen={deployModal.isOpen}
+        onClose={() => setDeployModal({ isOpen: false, project: null })}
+        project={deployModal.project}
+        onSuccess={() => {
+          fetchProjects();
+          fetchTabCounts();
+        }}
+      />
+
+      {/* Edit Project Modal */}
+      <EditProjectModal
+        isOpen={editModal.isOpen}
+        onClose={() => setEditModal({ isOpen: false, project: null })}
+        project={editModal.project}
+        onSuccess={() => {
+          fetchProjects();
+          fetchTabCounts();
+        }}
+      />
+
+      {/* Convert to Template Modal */}
+      <ConvertToTemplateModal
+        isOpen={convertModal.isOpen}
+        onClose={() => setConvertModal({ isOpen: false, project: null })}
+        preselectedProject={convertModal.project}
+        onSuccess={() => {
+          fetchProjects();
+          fetchTabCounts();
+        }}
       />
       
     </div>

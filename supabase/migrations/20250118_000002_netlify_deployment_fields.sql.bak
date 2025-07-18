@@ -1,0 +1,102 @@
+-- Add Netlify deployment fields to projects table
+ALTER TABLE public.projects
+ADD COLUMN IF NOT EXISTS netlify_site_id VARCHAR(255),
+ADD COLUMN IF NOT EXISTS subdomain VARCHAR(63);
+
+-- Create deployment history table
+CREATE TABLE IF NOT EXISTS public.deployment_history (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  netlify_site_id VARCHAR(255),
+  deployment_status VARCHAR(50) NOT NULL,
+  deployment_url TEXT,
+  subdomain VARCHAR(63),
+  error_message TEXT,
+  deployed_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Indexes
+  CONSTRAINT deployment_history_project_id_idx FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
+
+-- Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_projects_netlify_site_id ON public.projects(netlify_site_id);
+CREATE INDEX IF NOT EXISTS idx_projects_subdomain ON public.projects(subdomain);
+CREATE INDEX IF NOT EXISTS idx_deployment_history_project_id ON public.deployment_history(project_id);
+CREATE INDEX IF NOT EXISTS idx_deployment_history_created_at ON public.deployment_history(created_at DESC);
+
+-- Add unique constraint to subdomain (only for non-null values)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_projects_subdomain_unique 
+ON public.projects(subdomain) 
+WHERE subdomain IS NOT NULL;
+
+-- Update project_management_view to include Netlify fields
+CREATE OR REPLACE VIEW project_management_view AS
+SELECT 
+    p.id,
+    p.project_name,
+    p.project_type,
+    p.project_status,
+    p.domain,
+    p.subdomain,
+    p.netlify_site_id,
+    p.deployment_status,
+    p.deployment_url,
+    p.last_deployed_at,
+    p.created_at,
+    p.updated_at,
+    p.customer_id,
+    p.template_description,
+    p.template_niche,
+    p.template_version,
+    p.template_preview_image,
+    c.business_name,
+    c.account_type,
+    c.contact_email,
+    -- Categorize projects into tabs based on status
+    CASE 
+        WHEN p.project_status = 'draft' THEN 'draft'
+        WHEN p.project_status IN ('template-internal', 'template-public') THEN 'templates'
+        WHEN p.project_status IN ('prospect-staging', 'live-customer') THEN 'active'
+        WHEN p.project_status = 'paused-maintenance' THEN 'paused'
+        WHEN p.project_status = 'archived' THEN 'archive'
+        ELSE 'draft'
+    END AS tab_category
+FROM projects p
+LEFT JOIN customers c ON p.customer_id = c.id;
+
+-- Grant permissions
+GRANT SELECT, INSERT ON public.deployment_history TO authenticated;
+GRANT SELECT ON project_management_view TO authenticated;
+
+-- Add RLS policies for deployment_history
+ALTER TABLE public.deployment_history ENABLE ROW LEVEL SECURITY;
+
+-- Admin users can see all deployment history
+CREATE POLICY "Admin users can view all deployment history" ON public.deployment_history
+    FOR SELECT
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM user_profiles
+            WHERE user_profiles.id = auth.uid()
+            AND user_profiles.role = 'admin'
+        )
+    );
+
+-- Admin users can create deployment history
+CREATE POLICY "Admin users can create deployment history" ON public.deployment_history
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM user_profiles
+            WHERE user_profiles.id = auth.uid()
+            AND user_profiles.role = 'admin'
+        )
+    );
+
+-- Add comments for documentation
+COMMENT ON COLUMN public.projects.netlify_site_id IS 'Netlify site ID for deployed projects';
+COMMENT ON COLUMN public.projects.subdomain IS 'Subdomain for project deployment (e.g., my-project in my-project.wondrousdigital.com)';
+COMMENT ON TABLE public.deployment_history IS 'History of all project deployments to Netlify';

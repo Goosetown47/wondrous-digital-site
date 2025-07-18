@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
+import { createAccountSchema } from '../../schemas';
+import { useToast } from '../../contexts/ToastContext';
+import { useProject } from '../../contexts/ProjectContext';
 
 interface CreateAccountModalProps {
   isOpen: boolean;
@@ -10,6 +13,9 @@ interface CreateAccountModalProps {
 
 const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { addToast } = useToast();
+  const { refreshData } = useProject();
   const [formData, setFormData] = useState({
     business_name: '',
     contact_email: '',
@@ -18,8 +24,54 @@ const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose
     notes: ''
   });
 
+  // Reset form and errors when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        business_name: '',
+        contact_email: '',
+        domain: '',
+        account_type: 'prospect',
+        notes: ''
+      });
+      setErrors({});
+    }
+  }, [isOpen]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // DAY 4: Full Zod validation integration
+    const zodResult = createAccountSchema.safeParse(formData);
+    if (!zodResult.success) {
+      const zodErrors = zodResult.error.format();
+      const newErrors: Record<string, string> = {};
+      
+      // Map Zod errors to form fields
+      if (zodErrors.business_name?._errors?.length > 0) {
+        newErrors.business_name = zodErrors.business_name._errors[0];
+      }
+      
+      if (zodErrors.contact_email?._errors?.length > 0) {
+        newErrors.contact_email = zodErrors.contact_email._errors[0];
+      }
+      
+      if (zodErrors.domain?._errors?.length > 0 && formData.domain) {
+        newErrors.domain = zodErrors.domain._errors[0];
+      }
+      
+      if (zodErrors.account_type?._errors?.length > 0) {
+        newErrors.account_type = zodErrors.account_type._errors[0];
+      }
+      
+      setErrors(newErrors);
+      addToast('Please fix the validation errors', 'error');
+      return;
+    }
+    
+    // Validation passed - clear any previous errors
+    setErrors({});
+    
     setLoading(true);
 
     try {
@@ -67,6 +119,7 @@ const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose
       });
       
       onSuccess();
+      await refreshData();
       onClose();
     } catch (error) {
       console.error('Error creating account:', error);
@@ -111,10 +164,14 @@ const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose
               name="business_name"
               value={formData.business_name}
               onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full px-3 py-2 border ${errors.business_name ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
               placeholder="Acme Corporation"
+              aria-invalid={!!errors.business_name}
+              aria-describedby={errors.business_name ? 'business_name-error' : undefined}
             />
+            {errors.business_name && (
+              <p id="business_name-error" className="mt-1 text-sm text-red-600">{errors.business_name}</p>
+            )}
           </div>
 
           {/* Contact Email */}
@@ -127,10 +184,14 @@ const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose
               name="contact_email"
               value={formData.contact_email}
               onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full px-3 py-2 border ${errors.contact_email ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
               placeholder="contact@example.com"
+              aria-invalid={!!errors.contact_email}
+              aria-describedby={errors.contact_email ? 'contact_email-error' : undefined}
             />
+            {errors.contact_email && (
+              <p id="contact_email-error" className="mt-1 text-sm text-red-600">{errors.contact_email}</p>
+            )}
           </div>
 
           {/* Domain */}
@@ -143,12 +204,16 @@ const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose
               name="domain"
               value={formData.domain}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full px-3 py-2 border ${errors.domain ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
               placeholder="example.com"
             />
-            <p className="mt-1 text-xs text-gray-500">
-              The customer's existing domain (if they have one)
-            </p>
+            {errors.domain ? (
+              <p className="mt-1 text-sm text-red-600">{errors.domain}</p>
+            ) : (
+              <p className="mt-1 text-xs text-gray-500">
+                The customer's existing domain (if they have one)
+              </p>
+            )}
           </div>
 
           {/* Account Type */}

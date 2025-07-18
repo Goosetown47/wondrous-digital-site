@@ -31,21 +31,45 @@ const NavigationSettingsTab: React.FC<NavigationSettingsTabProps> = ({
     setLoading(true);
     setError(null);
 
-    try {
-      const { error: updateError } = await supabase
-        .from('projects')
-        .update({ 
-          global_nav_section_id: checked ? sectionId : null 
-        })
-        .eq('id', selectedProject.id);
+    // Debug logging
+    console.log('🔍 Global Nav Update Debug Info:');
+    console.log('  - sectionId:', sectionId);
+    console.log('  - sectionType:', sectionType);
+    console.log('  - selectedProject.id:', selectedProject.id);
+    console.log('  - checked:', checked);
+    console.log('  - selectedProject:', selectedProject);
 
-      if (updateError) throw updateError;
+    try {
+      const updateData = { 
+        global_nav_section_id: checked ? sectionId : null 
+      };
+      console.log('  - updateData:', updateData);
+
+      const { data, error: updateError } = await supabase
+        .from('projects')
+        .update(updateData)
+        .eq('id', selectedProject.id)
+        .select();
+
+      console.log('  - Supabase response data:', data);
+      console.log('  - Supabase response error:', updateError);
+
+      if (updateError) {
+        console.error('❌ Supabase error details:', {
+          message: updateError.message,
+          details: updateError.details,
+          hint: updateError.hint,
+          code: updateError.code
+        });
+        throw updateError;
+      }
 
       setIsGlobalNav(checked);
       await refetchProject();
+      console.log('✅ Global navigation updated successfully');
     } catch (err) {
-      console.error('Error updating global navigation:', err);
-      setError('Failed to update global navigation setting');
+      console.error('❌ Full error object:', err);
+      setError(`Failed to update global navigation setting: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -83,6 +107,15 @@ const NavigationSettingsTab: React.FC<NavigationSettingsTabProps> = ({
     sectionType.toLowerCase().includes('navbar') || 
     sectionType.toLowerCase().includes('footer')
   );
+
+  // Debug logging for section type detection
+  console.log('🔍 Navigation Section Detection:');
+  console.log('  - sectionType:', sectionType);
+  console.log('  - sectionType (lowercase):', sectionType?.toLowerCase());
+  console.log('  - isNavigationSection:', isNavigationSection);
+  console.log('  - includes "navigation":', sectionType?.toLowerCase().includes('navigation'));
+  console.log('  - includes "navbar":', sectionType?.toLowerCase().includes('navbar'));
+  console.log('  - includes "footer":', sectionType?.toLowerCase().includes('footer'));
   
   if (!isNavigationSection) {
     return (

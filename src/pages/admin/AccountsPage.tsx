@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
 import { Users, UserPlus, Search, Filter, CheckCircle, XCircle, Eye, Edit, Trash2, ArrowRight } from 'lucide-react';
 import CreateAccountModal from '../../components/admin/CreateAccountModal';
+import DeleteCustomerModal from '../../components/admin/DeleteCustomerModal';
 import StatusDropdown from '../../components/admin/StatusDropdown';
 import ActionButton from '../../components/admin/ActionButton';
 import { useToast } from '../../contexts/ToastContext';
 import BulkActionsDropdown, { BulkAction } from '../../components/admin/BulkActionsDropdown';
 import BulkOperationModal from '../../components/admin/BulkOperationModal';
+import { accountStatusChangeSchema, validateAccountTransition, deleteAccountSchema, validateAccountDeletion } from '../../schemas';
 
 interface Customer {
   id: string;
@@ -41,6 +43,11 @@ const AccountsPage: React.FC = () => {
     operation: BulkAction | null;
   }>({ isOpen: false, operation: null });
   const [isProcessingBulk, setIsProcessingBulk] = useState(false);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    customer: Customer | null;
+  }>({ isOpen: false, customer: null });
+  const [isDeleting, setIsDeleting] = useState(false);
   const { addToast } = useToast();
 
   // Fetch tab counts on mount
@@ -144,6 +151,37 @@ const AccountsPage: React.FC = () => {
   // Handle account status transitions
   const handleStatusChange = async (accountId: string, newType: 'prospect' | 'customer' | 'inactive') => {
     try {
+      // Get current account for validation
+      const currentAccount = accounts.find(a => a.id === accountId);
+      if (!currentAccount) return;
+      
+      // NEW: Parallel Zod validation for account status change
+      const statusChangeData = {
+        account_id: accountId,
+        new_type: newType
+      };
+      
+      // Validate status change data
+      const zodResult = accountStatusChangeSchema.safeParse(statusChangeData);
+      if (!zodResult.success) {
+        console.debug('Account status change validation failed:', zodResult.error.format());
+      }
+      
+      // DAY 3: Block invalid account transitions
+      const transitionCheck = validateAccountTransition(currentAccount.account_type, newType);
+      if (!transitionCheck.valid) {
+        // Invalid transition - log for debugging
+        console.debug('Invalid account transition:', {
+          from: currentAccount.account_type,
+          to: newType,
+          message: transitionCheck.message
+        });
+        
+        // Block the transition and show error
+        addToast(transitionCheck.message || 'Invalid account status transition', 'error');
+        return;
+      }
+      
       const updateData: { account_type: Customer['account_type']; converted_at?: string } = { account_type: newType };
       
       // Set converted_at timestamp when converting to customer
@@ -319,6 +357,62 @@ const AccountsPage: React.FC = () => {
   // Get tab counts
   const getTabCount = (tabType: TabType) => {
     return tabCounts[tabType] || 0;
+  };
+
+  // Handle delete customer
+  const handleDeleteCustomer = async () => {
+    if (!deleteModal.customer) return;
+    
+    setIsDeleting(true);
+    try {
+      // Validate deletion with Zod
+      const deleteData = {
+        account_id: deleteModal.customer.id,
+        confirmation_text: deleteModal.customer.business_name
+      };
+      
+      const zodResult = deleteAccountSchema.safeParse(deleteData);
+      if (!zodResult.success) {
+        console.debug('Delete validation failed:', zodResult.error.format());
+      }
+      
+      // Check business rules
+      const deletionCheck = validateAccountDeletion({
+        account_type: deleteModal.customer.account_type,
+        project_count: deleteModal.customer.project_count
+      });
+      
+      if (!deletionCheck.canDelete) {
+        addToast(deletionCheck.message || 'Cannot delete this account', 'error');
+        setDeleteModal({ isOpen: false, customer: null });
+        return;
+      }
+      
+      // Delete the account
+      const { error } = await supabase
+        .from('customers')
+        .delete()
+        .eq('id', deleteModal.customer.id);
+
+      if (error) throw error;
+
+      addToast(`Successfully deleted account: ${deleteModal.customer.business_name}`, 'success');
+      
+      // Refresh the list and counts
+      await fetchAccounts();
+      await fetchTabCounts();
+      
+      // Close the modal
+      setDeleteModal({ isOpen: false, customer: null });
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      addToast(
+        'Failed to delete account: ' + (error as Error).message,
+        'error'
+      );
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Tab configuration
@@ -537,12 +631,7 @@ const AccountsPage: React.FC = () => {
                           icon={Trash2}
                           label="Delete Account"
                           variant="danger"
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this account?')) {
-                              // Handle delete
-                              console.log('Delete account', account.id);
-                            }
-                          }}
+                          onClick={() => setDeleteModal({ isOpen: true, customer: account })}
                         />
                       </div>
                     </td>
@@ -585,6 +674,15 @@ const AccountsPage: React.FC = () => {
           ]}
         />
       )}
+
+      {/* Delete Customer Modal */}
+      <DeleteCustomerModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, customer: null })}
+        customer={deleteModal.customer}
+        onConfirm={handleDeleteCustomer}
+        isProcessing={isDeleting}
+      />
       
     </div>
   );

@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 📋 Essential Reading
 
-**IMPORTANT**: Before making any code changes, read [`PROJECT-GUIDELINES.md`](./PROJECT-GUIDELINES.md) for comprehensive development principles, security standards, and architectural requirements. These guidelines ensure code quality, customer data protection, and platform reliability.
+**IMPORTANT**: Before making any code changes, read:
+- [`PROJECT-GUIDELINES.md`](./PROJECT-GUIDELINES.md) - Development principles and architectural requirements
+- [`GUIDELINES_Testing_Security.md`](./GUIDELINES_Testing_Security.md) - Comprehensive testing and security standards for all features
+
+These guidelines ensure code quality, security, customer data protection, and platform reliability.
 
 ## Development Commands
 
@@ -25,6 +29,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Recommended**: Use PM2 commands (`dev:start`, `dev:stop`, etc.) to prevent server shutdowns when tools timeout.
 
 No test runner is configured - tests would need to be added.
+
+## Database Migrations
+
+### IMPORTANT: Migration Naming Convention
+All migrations MUST use this format to prevent conflicts:
+```
+YYYYMMDD_HHMMSS_descriptive_name.sql
+```
+Example: `20250118_143022_add_user_preferences.sql`
+
+### Before Creating a Migration
+1. Check existing migrations: `ls supabase/migrations/ | grep "$(date +%Y%m%d)"`
+2. Use full timestamp: `mv migration.sql "supabase/migrations/$(date +%Y%m%d_%H%M%S)_description.sql"`
+
+### Applying Migrations
+```bash
+# Set up environment
+export SUPABASE_ACCESS_TOKEN=sbp_1348b275ff67f7aa2bc4426fd498ea44504bf612
+
+# Check status first
+npx supabase migration list --password 'aTR9dv8Q7J2emyMD'
+
+# Push migrations
+npx supabase db push --password 'aTR9dv8Q7J2emyMD'
+```
+
+### Migration Tracking
+- All migrations are tracked in [`MIGRATIONS.md`](./MIGRATIONS.md)
+- Document any migrations applied outside normal CLI flow
+- See [`docs/HOW-TO-USE-SUPABASE.md`](./docs/HOW-TO-USE-SUPABASE.md) for detailed commands
 
 ## Application Architecture
 

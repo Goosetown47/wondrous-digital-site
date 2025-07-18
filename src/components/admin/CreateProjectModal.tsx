@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, FolderPlus } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
+import { useProject } from '../../contexts/ProjectContext';
+import { createProjectSchema } from '../../schemas';
 
 interface Customer {
   id: string;
@@ -20,6 +22,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   onClose,
   onSuccess
 }) => {
+  const { refreshData } = useProject();
   const [formData, setFormData] = useState({
     project_name: '',
     project_type: 'main_site' as const,
@@ -89,27 +92,46 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     }
   };
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.project_name.trim()) {
-      newErrors.project_name = 'Project name is required';
-    }
-
-    if (!formData.customer_id && formData.project_type !== 'template') {
-      newErrors.customer_id = 'Customer is required for non-template projects';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // Removed validateForm - now using Zod validation in handleSubmit
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    // DAY 4: Full Zod validation integration
+    const zodResult = createProjectSchema.safeParse(formData);
+    if (!zodResult.success) {
+      const zodErrors = zodResult.error.format();
+      const newErrors: Record<string, string> = {};
+      
+      // Map Zod errors to form fields
+      if (zodErrors.project_name?._errors?.length > 0) {
+        newErrors.project_name = zodErrors.project_name._errors[0];
+      }
+      
+      if (zodErrors.customer_id?._errors?.length > 0 && formData.customer_id) {
+        newErrors.customer_id = 'Invalid customer selection';
+      }
+      
+      if (zodErrors.project_type?._errors?.length > 0) {
+        newErrors.project_type = zodErrors.project_type._errors[0];
+      }
+      
+      if (zodErrors.niche?._errors?.length > 0) {
+        newErrors.niche = zodErrors.niche._errors[0];
+      }
+      
+      // Handle top-level business rule errors
+      if (zodErrors._errors?.length > 0) {
+        newErrors.customer_id = zodErrors._errors[0];
+      }
+      
+      setErrors(newErrors);
+      addToast('Please fix the validation errors', 'error');
       return;
     }
+    
+    // Validation passed - clear any previous errors
+    setErrors({});
 
     setIsSubmitting(true);
     try {
@@ -136,6 +158,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
       // Success - close modal and refresh parent
       onSuccess();
+      await refreshData();
       onClose();
     } catch (error) {
       console.error('Error creating project:', error);
@@ -199,9 +222,11 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               }`}
               placeholder="Enter project name"
               disabled={isSubmitting}
+              aria-invalid={!!errors.project_name}
+              aria-describedby={errors.project_name ? 'project_name-error' : undefined}
             />
             {errors.project_name && (
-              <p className="mt-1 text-sm text-red-600">{errors.project_name}</p>
+              <p id="project_name-error" className="mt-1 text-sm text-red-600">{errors.project_name}</p>
             )}
           </div>
 

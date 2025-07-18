@@ -14,6 +14,8 @@ export interface Project {
   project_type: 'template' | 'customer_site' | 'main_site' | 'landing_page';
   customer_id: string | null;
   niche: string | null;
+  global_nav_section_id?: string | null;
+  global_footer_section_id?: string | null;
 }
 
 export interface UserProfile {
@@ -44,6 +46,8 @@ interface ProjectContextType {
   // Actions
   setSelectedAccount: (account: Customer) => Promise<void>;
   setSelectedProject: (project: Project) => Promise<void>;
+  refreshData: () => Promise<void>;
+  refetchProject: () => Promise<void>;
 }
 
 // Create the context with default values
@@ -67,6 +71,8 @@ export const ProjectContext = createContext<ProjectContextType>({
   // Actions (empty implementations)
   setSelectedAccount: async () => {},
   setSelectedProject: async () => {},
+  refreshData: async () => {},
+  refetchProject: async () => {},
 });
 
 // Create a hook for using the context
@@ -159,7 +165,7 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Fetch all projects
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
-        .select('id, project_name, customer_id, domain, project_type, niche')
+        .select('id, project_name, customer_id, domain, project_type, niche, global_nav_section_id, global_footer_section_id')
         .order('project_name');
         
       if (projectsError) throw projectsError;
@@ -254,6 +260,45 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  // Refresh data function
+  const refreshData = async () => {
+    if (userProfile) {
+      await fetchAccountsAndProjects(userProfile);
+    }
+  };
+
+  // Refetch current project function
+  const refetchProject = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const { data: updatedProject, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', selectedProject.id)
+        .single();
+      
+      if (error) throw error;
+      
+      if (updatedProject) {
+        // Update the selected project with fresh data
+        setSelectedProject(updatedProject);
+        
+        // Also update it in the projects array
+        setProjects(prevProjects => 
+          prevProjects.map(p => p.id === updatedProject.id ? updatedProject : p)
+        );
+        
+        // Update filtered projects if necessary
+        setFilteredProjects(prevFiltered =>
+          prevFiltered.map(p => p.id === updatedProject.id ? updatedProject : p)
+        );
+      }
+    } catch (error) {
+      console.error('Error refetching project:', error);
+    }
+  };
+
   // Context value
   const contextValue: ProjectContextType = {
     // User profile
@@ -275,6 +320,8 @@ export const ProjectProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Actions
     setSelectedAccount: handleAccountChange,
     setSelectedProject: handleProjectChange,
+    refreshData,
+    refetchProject,
   };
 
   return (

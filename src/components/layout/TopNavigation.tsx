@@ -175,7 +175,7 @@ const TopNavigation: React.FC<TopNavigationProps> = ({
               </button>
               
               {projectDropdownOpen && !loading && filteredProjects.length > 0 && (
-                <div className="absolute left-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 py-1 animate-in fade-in">
+                <div className="absolute left-0 mt-2 w-[22rem] rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 py-1 animate-in fade-in">
                   <div className="py-1">
                     {filteredProjects.map(project => (
                         <button

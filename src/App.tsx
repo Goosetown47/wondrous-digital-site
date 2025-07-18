@@ -17,6 +17,7 @@ import StagingPage from './pages/admin/StagingPage';
 import DatabaseSettings from './pages/admin/DatabaseSettings';
 import AccountsPage from './pages/admin/AccountsPage';
 import ProjectsPage from './pages/admin/ProjectsPage';
+import TemplatesPage from './pages/admin/TemplatesPage';
 import WebsitesOverview from './pages/features/categories/WebsitesOverview';
 import AIAutomationOverview from './pages/features/categories/AIAutomationOverview';
 import CustomerManagementOverview from './pages/features/categories/CustomerManagementOverview';
@@ -68,6 +69,7 @@ import LoginPage from './pages/LoginPage';
 import BlogPostsPage from './pages/dashboard/content/BlogPostsPage';
 import PageBuilderPage from './pages/dashboard/content/PageBuilderPage';
 import PagesPage from './pages/dashboard/content/PagesPage';
+import ProjectPage from './pages/dashboard/content/ProjectPage';
 import PagePreview from './pages/PagePreview';
 import MarketingPage from './pages/dashboard/tools/MarketingPage';
 import SEOPage from './pages/dashboard/tools/SEOPage';
@@ -88,6 +90,7 @@ function App() {
       {/* Dashboard Routes - Nested under AppLayout */}
       <Route path="/dashboard" element={<AppLayout />}>
         <Route index element={<DashboardPage />} />
+        <Route path="content/project" element={<ProjectPage />} />
         <Route path="content/blog" element={<BlogPostsPage />} />
         <Route path="content/blog/new" element={<NewBlogPostPage />} />
         <Route path="content/blog/edit/:postId" element={<EditBlogPostPage />} />
@@ -103,6 +106,7 @@ function App() {
         <Route path="admin" element={<AdminToolsLayout />}>
           <Route path="accounts" element={<AccountsPage />} />
           <Route path="projects" element={<ProjectsPage />} />
+          <Route path="templates" element={<TemplatesPage />} />
           <Route path="section-library" element={<SectionLibraryPage />} />
           <Route path="staging" element={
             <SiteStylesProvider>
