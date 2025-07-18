@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import HomePage from './pages/HomePage';
 import { SiteStylesProvider } from './contexts/SiteStylesContext';
+import { ToastProvider } from './contexts/ToastContext';
+import ToastContainer from './components/ui/ToastContainer';
 import EditBlogPostPage from './pages/dashboard/content/EditBlogPostPage';
 import FeaturesLayout from './components/features/FeaturesLayout';
 import NewBlogPostPage from './pages/dashboard/content/NewBlogPostPage';
@@ -13,6 +15,8 @@ import SectionLibraryPage from './pages/admin/SectionLibraryPage';
 import SectionPreviewPage from './pages/admin/SectionPreviewPage';
 import StagingPage from './pages/admin/StagingPage';
 import DatabaseSettings from './pages/admin/DatabaseSettings';
+import AccountsPage from './pages/admin/AccountsPage';
+import ProjectsPage from './pages/admin/ProjectsPage';
 import WebsitesOverview from './pages/features/categories/WebsitesOverview';
 import AIAutomationOverview from './pages/features/categories/AIAutomationOverview';
 import CustomerManagementOverview from './pages/features/categories/CustomerManagementOverview';
@@ -72,7 +76,9 @@ import BillingPage from './pages/dashboard/settings/BillingPage';
 
 function App() {
   return (
-    <Routes>
+    <ToastProvider>
+      <ToastContainer />
+      <Routes>
       {/* App Routes - No marketing navigation/footer */}
       <Route path="/login" element={<LoginPage />} />
       
@@ -95,6 +101,8 @@ function App() {
         
         {/* Admin Routes - Only visible to admin users */}
         <Route path="admin" element={<AdminToolsLayout />}>
+          <Route path="accounts" element={<AccountsPage />} />
+          <Route path="projects" element={<ProjectsPage />} />
           <Route path="section-library" element={<SectionLibraryPage />} />
           <Route path="staging" element={
             <SiteStylesProvider>
@@ -172,7 +180,8 @@ function App() {
       
       {/* 404 Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </ToastProvider>
   );
 }
 

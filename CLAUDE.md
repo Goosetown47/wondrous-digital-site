@@ -118,3 +118,5 @@ Essential step-by-step guides for common development tasks:
 - **[How to Add New Style Options](./docs/HOW-TO-ADD-STYLE-OPTIONS.md)** - Comprehensive guide for adding CSS properties (text-align, spacing, etc.) to Site Styles and PageBuilder modals. Includes complete checklist to avoid common pitfalls and follows proven patterns.
 
 - **[How to Build New Sections](./docs/HOW-TO-BUILD-SECTIONS.md)** - Complete guide for creating new PageBuilder sections. Covers component architecture, image container patterns, database templates, staging workflow, and section library integration. Essential for scaling to 100-300+ sections efficiently.
+
+- **[How to Use Supabase](./docs/HOW-TO-USE-SUPABASE.md)** - Complete reference for Supabase database operations. Includes connection details, CLI commands, migration management, troubleshooting, and MCP configuration. Essential when working with database schema, pushing migrations, or debugging connection issues.

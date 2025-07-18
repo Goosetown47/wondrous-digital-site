@@ -200,7 +200,7 @@ const AppLayout: React.FC = () => {
           location.pathname.includes('/dashboard/content/pages/builder/') ? 'h-full' : ''
         }`}>
         {/* Sub-navigation and Content */}
-        <div className={`flex flex-1 overflow-hidden ${
+        <div className={`flex flex-1 overflow-visible ${
           location.pathname.includes('/dashboard/content/pages/builder/') ? 'h-full' : ''
         }`}>
           {/* Sub-navigation sidebar */}

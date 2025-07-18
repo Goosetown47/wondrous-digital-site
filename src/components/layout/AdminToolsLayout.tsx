@@ -7,13 +7,16 @@ const AdminToolsLayout = () => {
 
   // Navigation items for Admin Tools
   const adminNavItems = [
+    { name: 'Accounts Management', path: '/dashboard/admin/accounts' },
+    { name: 'Projects', path: '/dashboard/admin/projects' },
+    { name: 'Templates', path: '/dashboard/admin/templates' },
     { name: 'Section Library', path: '/dashboard/admin/section-library' },
     { name: 'Staging', path: '/dashboard/admin/staging' },
     { name: 'Database Settings', path: '/dashboard/admin/database-settings' }
   ];
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex flex-1 h-full">
       {/* Secondary sidebar for Admin Tools */}
       <div className="hidden lg:block w-48 bg-gray-50 border-r border-gray-200 overflow-y-auto">
         <div className="py-4">
@@ -44,8 +47,8 @@ const AdminToolsLayout = () => {
       </div>
 
       {/* Main content area */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="py-6 px-4 sm:px-6 lg:px-8">
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 py-6 px-4 sm:px-6 lg:px-8 overflow-visible">
           <Outlet />
         </div>
       </div>
