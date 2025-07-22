@@ -2,16 +2,27 @@
 
 import { HeroSection } from '@/components/sections/HeroSection';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useBuilderStore } from '@/stores/builderStore';
 import type { HeroContent } from '@/schemas/section';
+import { usePage, useProject } from '@/hooks/useProjects';
 
 export default function PreviewPage() {
   const params = useParams();
   const projectId = params.projectId as string;
-  const { sections } = useBuilderStore();
+  const { data: project } = useProject(projectId);
+  const { data: page, isLoading } = usePage(projectId);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const sections = page?.sections || [];
 
   return (
     <div className="min-h-screen">
@@ -25,16 +36,23 @@ export default function PreviewPage() {
                 Back to Builder
               </Link>
             </Button>
-            <span className="text-sm opacity-75">Preview Mode</span>
+            <span className="text-sm opacity-75">
+              Preview Mode - {project?.name || 'Loading...'}
+            </span>
           </div>
-          <Button variant="secondary" size="sm">
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Deploy
-          </Button>
+          
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/sites/${projectId}`} target="_blank">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                View Live
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Render sections from store */}
+      {/* Render sections from database */}
       {sections.length === 0 ? (
         <div className="flex items-center justify-center h-96">
           <div className="text-center">

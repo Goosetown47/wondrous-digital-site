@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
-import { ArrowRight, Layers, Eye, Rocket } from 'lucide-react';
+import { ArrowRight, Layers, Eye, Rocket, Database } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -9,11 +9,10 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Next.js PageBuilder
+            Next.js Multi-Tenant PageBuilder
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Visual website builder with drag-and-drop editing, live preview, and
-            one-click deployment to Netlify.
+            Visual website builder with multi-tenant architecture. One app serving thousands of customer sites.
           </p>
         </div>
 
@@ -27,40 +26,42 @@ export default function Home() {
           </Card>
 
           <Card className="p-6">
-            <Eye className="w-12 h-12 text-blue-600 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Live Preview</h3>
+            <Database className="w-12 h-12 text-blue-600 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Database Backed</h3>
             <p className="text-gray-600 text-sm">
-              See your changes in real-time with server-side rendering
+              All content saved to Supabase for multi-tenant support
             </p>
           </Card>
 
           <Card className="p-6">
             <Rocket className="w-12 h-12 text-blue-600 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Deploy Instantly</h3>
+            <h3 className="text-lg font-semibold mb-2">Instant Sites</h3>
             <p className="text-gray-600 text-sm">
-              One-click deployment to Netlify with static site generation
+              Each project gets its own URL with custom domain support
             </p>
           </Card>
         </div>
 
-        <div className="text-center">
-          <Button size="lg" asChild>
-            <Link href="/builder/test-project">
-              Start Building
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Link>
-          </Button>
-          <p className="text-sm text-gray-500 mt-4">
-            No signup required. Start with a test project.
-          </p>
+        <div className="text-center space-y-4">
+          <div>
+            <Button size="lg" asChild>
+              <Link href="/setup">
+                Get Started
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </Button>
+            <p className="text-sm text-gray-500 mt-4">
+              Create projects and start building websites
+            </p>
+          </div>
         </div>
 
         <div className="mt-16 border-t pt-8">
-          <h2 className="text-2xl font-semibold mb-4">Core Functionality Status</h2>
+          <h2 className="text-2xl font-semibold mb-4">Architecture Status</h2>
           <div className="space-y-2">
             <div className="flex items-center">
               <span className="w-4 h-4 bg-green-500 rounded-full mr-3"></span>
-              <span>✓ Basic drag-and-drop sections</span>
+              <span>✓ Core PageBuilder with drag-and-drop</span>
             </div>
             <div className="flex items-center">
               <span className="w-4 h-4 bg-green-500 rounded-full mr-3"></span>
@@ -68,21 +69,35 @@ export default function Home() {
             </div>
             <div className="flex items-center">
               <span className="w-4 h-4 bg-green-500 rounded-full mr-3"></span>
-              <span>✓ State management with Zustand</span>
+              <span>✓ Supabase integration with auto-save</span>
+            </div>
+            <div className="flex items-center">
+              <span className="w-4 h-4 bg-green-500 rounded-full mr-3"></span>
+              <span>✓ Dynamic site rendering</span>
             </div>
             <div className="flex items-center">
               <span className="w-4 h-4 bg-yellow-500 rounded-full mr-3"></span>
-              <span>⚡ Preview system (basic implementation)</span>
+              <span>⚡ Multi-project support (testing)</span>
             </div>
             <div className="flex items-center">
               <span className="w-4 h-4 bg-gray-300 rounded-full mr-3"></span>
-              <span>○ Netlify deployment (coming next)</span>
+              <span>○ Domain-based routing (coming next)</span>
             </div>
             <div className="flex items-center">
               <span className="w-4 h-4 bg-gray-300 rounded-full mr-3"></span>
-              <span>○ Supabase integration (coming next)</span>
+              <span>○ Custom domain support (coming next)</span>
             </div>
           </div>
+        </div>
+
+        <div className="mt-8 p-6 bg-blue-50 rounded-lg">
+          <h3 className="font-semibold mb-2">Test the Multi-Tenant System</h3>
+          <ol className="space-y-2 text-sm">
+            <li>1. Go to <Link href="/setup" className="text-blue-600 underline">Setup</Link> and create multiple projects</li>
+            <li>2. Build different content in each project</li>
+            <li>3. View each project at <code className="bg-white px-2 py-1 rounded">/sites/[project-id]</code></li>
+            <li>4. All served from this single Next.js app!</li>
+          </ol>
         </div>
       </div>
     </main>

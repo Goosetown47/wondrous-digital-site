@@ -1,142 +1,197 @@
-# Next.js PageBuilder Migration Plan
+# Next.js PageBuilder Migration Plan - Multi-Tenant Architecture
 
 ## Overview
-This document outlines our approach to gradually migrating the PageBuilder to Next.js, focusing on proving the core functionality first: allowing customers to build, preview, and deploy custom websites.
+This document outlines our approach to building a scalable, multi-tenant PageBuilder platform using Next.js. Instead of deploying individual sites for each customer, we'll use a single Next.js application that serves all customer websites through domain-based routing - the same architecture used by Webflow, Shopify, and other successful platforms.
 
-## Core Principle
-**Prove the core first**: PageBuilder → Preview → Deploy must work flawlessly before adding any other features. If this pipeline doesn't work, nothing else matters.
+## Core Architecture Decision
+**Multi-Tenant SaaS Platform**: One Next.js app serving thousands of customer sites via custom domains, not individual deployments per customer.
 
-## Migration Strategy: Gradual with Isolated Development
-- Start in a new branch (`nextjs-pagebuilder-core`)
-- Build the minimal viable pagebuilder in Next.js
-- Prove the core functionality works
-- Then gradually migrate other features
+## Why Multi-Tenant?
+- **Industry Standard**: Webflow, Squarespace, Shopify all use this approach
+- **Scalable**: Handles thousands of customers without deployment complexity
+- **Cost Effective**: One infrastructure serves everyone
+- **Instant Updates**: Fix a bug once, all sites benefit
+- **Easier Maintenance**: One codebase to manage
 
-## Why shadcn/ui?
-- **Copy-paste architecture**: We own the code, perfect for multi-tenant customization
-- **CSS Variables**: Aligns with our existing theming approach
-- **Next.js native**: Built for SSR/SSG, no hydration issues
-- **Quality components**: Accessible, responsive, professional
+## Phase 1: Core PageBuilder with Database Integration ✅
+**Status**: Completed
+**Goal**: Build the foundational PageBuilder with drag-and-drop and inline editing
 
-## Phase 1: Setup New Next.js Project Structure
-**Goal**: Create isolated Next.js environment for pagebuilder development
+### Completed:
+- Next.js app with TypeScript, Tailwind, shadcn/ui
+- Drag-and-drop section management with Framer Motion
+- Inline editing capabilities
+- Hero section component
+- Zustand for state management
+- Basic preview functionality
 
-1. Create new branch `nextjs-pagebuilder-core`
-2. Set up fresh Next.js app with:
-   - TypeScript
-   - Tailwind CSS
-   - shadcn/ui for base components
-   - Supabase client for data
+### Tech Stack:
+- **Next.js 15** with App Router
+- **TypeScript** with strict mode
+- **Tailwind CSS** + **shadcn/ui**
+- **Zustand** for state management
+- **React Query** for data fetching
+- **Zod** for validation
+- **Framer Motion** for animations
 
-## Phase 2: Build Core PageBuilder Architecture
-**Goal**: Minimal pagebuilder that can create and edit one section type
+## Phase 2: Supabase Integration & Persistence
+**Goal**: Save all PageBuilder data to Supabase for multi-tenant support
 
-### File Structure
+### Implementation:
+1. **Save sections to Supabase**
+   ```typescript
+   // When user edits, save to database
+   await supabase.from('pages').upsert({
+     project_id: projectId,
+     sections: sections,
+     updated_at: new Date()
+   });
+   ```
+
+2. **Database Schema**
+   ```sql
+   projects (id, name, customer_id, created_at)
+   pages (id, project_id, path, sections, metadata)
+   project_domains (id, project_id, domain, is_primary, verified)
+   site_styles (id, project_id, theme_config)
+   ```
+
+3. **Real-time sync**
+   - Save on edit with debouncing
+   - Optimistic updates with React Query
+   - Conflict resolution for collaborative editing
+
+## Phase 3: Multi-Tenant Routing System
+**Goal**: Single app serves all customer sites based on domain
+
+### Implementation:
+
+1. **Middleware for Domain Routing**
+   ```typescript
+   // middleware.ts
+   export async function middleware(request: NextRequest) {
+     const hostname = request.headers.get('host');
+     
+     // Lookup project by domain
+     const project = await getProjectByDomain(hostname);
+     
+     if (project) {
+       // Rewrite to project-specific route
+       return NextResponse.rewrite(
+         new URL(`/sites/${project.id}${request.nextUrl.pathname}`, request.url)
+       );
+     }
+   }
+   ```
+
+2. **Dynamic Site Rendering Route**
+   ```
+   /app/sites/[projectId]/[[...slug]]/page.tsx
+   ```
+   - Fetches project data from Supabase
+   - Renders appropriate page based on slug
+   - Applies project-specific styling
+   - Handles 404s gracefully
+
+3. **Development Testing**
+   - Use subdomains: `project1.localhost:3000`
+   - Map domains to projects in database
+   - Test multiple sites from one app
+
+## Phase 4: Production Deployment on Vercel
+**Goal**: Deploy the multi-tenant platform with automatic SSL and custom domains
+
+### Why Vercel?
+- **Automatic SSL**: For all custom domains
+- **Edge Network**: Global performance
+- **Domain Management**: Built-in custom domain support
+- **Next.js Optimization**: Best platform for Next.js apps
+
+### Implementation:
+1. **Deploy to Vercel**
+   ```bash
+   vercel --prod
+   ```
+
+2. **Configure Domain Routing**
+   - Wildcard domain: `*.wondrousdigital.com`
+   - Custom domain API integration
+   - Automatic SSL provisioning
+
+3. **Customer Domain Flow**
+   - Customer adds domain in settings
+   - Show: "Point your domain to cname.wondrousdigital.com"
+   - Verify DNS propagation
+   - Enable SSL automatically
+
+## Phase 5: Advanced Features
+**Goal**: Build on the solid multi-tenant foundation
+
+1. **Performance Optimization**
+   - ISR (Incremental Static Regeneration)
+   - Edge caching strategies
+   - Image optimization with Next.js Image
+
+2. **Advanced Builder Features**
+   - More section types
+   - Global styles management
+   - Template library
+   - Version history
+
+3. **Enterprise Features**
+   - Team collaboration
+   - White-label options
+   - API access
+   - Custom code injection
+
+## Architecture Benefits
+
+### Scalability
 ```
-/app
-  /builder
-    /[projectId]
-      page.tsx          # 'use client' - The PageBuilder interface
-  /preview
-    /[projectId]
-      page.tsx          # Server component - Preview rendering
-  /api
-    /sections
-      route.ts          # CRUD for sections
-    /deploy
-      route.ts          # Trigger Netlify deployment
-
-/components
-  /builder
-    Canvas.tsx          # Drag-drop surface
-    SectionLibrary.tsx  # Available section types (just Hero)
-    EditableWrapper.tsx # Makes sections editable
-  /sections
-    HeroSection.tsx     # First section component
-  /ui                   # shadcn components
+Single Next.js App on Vercel
+├── customer1.com → Project 1
+├── shop.customer1.com → Project 2
+├── customer2.com → Project 3
+└── ... thousands more
 ```
 
-### Minimal First Section (Hero)
-- Editable headline
-- Editable subtitle  
-- Editable button (with our theming)
-- Background color picker
+### Cost Comparison
+- **Multi-tenant**: ~$20-100/month for thousands of sites
+- **Individual deployments**: ~$7-20/month per site
 
-### Key Implementation Details
-1. **Same component, three modes**:
-   - Builder: Wrapped with `EditableWrapper` for inline editing
-   - Preview: Server-rendered without edit capabilities
-   - Production: Static HTML export
+### Performance
+- **Edge rendering**: Content served from nearest location
+- **Shared caching**: Popular assets cached once
+- **Optimized builds**: One build serves all
 
-2. **Minimal drag-drop**:
-   - Section library with just Hero section
-   - Drop zone that adds section to page
-   - Save to Supabase on change
+## Migration Path from Current System
 
-3. **Inline editing** (reuse existing patterns):
-   - EditableText for text content
-   - Color picker for backgrounds
-   - Button editor with theme integration
+Your existing deployment queue system becomes valuable for:
+1. **Scheduled publishing**: Queue content updates
+2. **Bulk operations**: Update multiple sites
+3. **Export feature**: Premium "export to Netlify" option
+4. **Backup system**: Regular snapshots
 
-## Phase 3: Preview System
-**Goal**: Server-side preview that shows exactly what will be deployed
-
-1. Server component at `/preview/[projectId]`
-2. Fetches page data from Supabase
-3. Renders sections without edit wrappers
-4. Applies project theme via CSS variables
-5. No JavaScript required for basic sections
-
-## Phase 4: Deploy to Netlify
-**Goal**: One-click deploy from preview to live site
-
-1. API route to trigger static export
-2. Use Next.js static generation
-3. Deploy to Netlify via API
-4. Return live URL to user
-
-## Success Criteria for Core Functionality
-- [ ] Can create a hero section with editable text
-- [ ] Can see live preview at `/preview/[projectId]`
-- [ ] Can deploy to Netlify and access live URL
-- [ ] Same component code works in all three modes
-- [ ] CSS variables/theming works consistently
-
-## Future Phases (After Core is Proven)
-1. **Add more section types** (one at a time)
-2. **Migrate drag-and-drop system** from existing app
-3. **Add authentication** and project management
-4. **Migrate dashboard** and admin features
-5. **Full feature parity** with existing app
-
-## Technical Decisions
-
-### Why Server Components for Preview?
-- True static generation
-- No hydration issues
-- Exactly what gets deployed
-- Better performance
-
-### Why Client Components for Builder?
-- Needed for drag-drop
-- Inline editing requires interactivity
-- Real-time updates
-
-### Styling Approach
-- shadcn/ui components as base
-- CSS variables for theming (continues our approach)
-- Tailwind for utility classes
-- No CSS-in-JS to avoid SSR issues
+## Success Metrics
+- [ ] Single Next.js app serves multiple projects
+- [ ] Custom domains working with SSL
+- [ ] Sub-second page loads globally
+- [ ] 99.9% uptime for all sites
+- [ ] Instant updates across all sites
 
 ## Current Status
-- Decision made to proceed with gradual migration
-- Focus on core pagebuilder functionality first
-- Plan created and documented
-- Ready to begin implementation
+- ✅ Core PageBuilder built and working
+- ✅ Drag-and-drop with inline editing
+- ✅ Basic preview functionality
+- 🚧 Need to integrate Supabase persistence
+- 📋 Ready to implement multi-tenant architecture
 
 ## Next Steps
-1. Create branch
-2. Initialize Next.js with our stack
-3. Build minimal Hero section
-4. Implement preview
-5. Deploy to Netlify
+1. Connect PageBuilder to save to Supabase
+2. Implement domain-based routing middleware
+3. Create dynamic site rendering
+4. Deploy to Vercel with custom domain
+5. Test with multiple projects/domains
+
+## Long-term Vision
+Build a platform that can serve millions of websites from a single, maintainable codebase - following the proven path of Webflow, Squarespace, and other successful website builders.

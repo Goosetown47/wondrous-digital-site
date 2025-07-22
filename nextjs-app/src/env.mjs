@@ -4,7 +4,7 @@ import { z } from "zod";
 export const env = createEnv({
   server: {
     SUPABASE_SERVICE_KEY: z.string().optional(),
-    NETLIFY_AUTH_TOKEN: z.string().optional(),
+    NETLIFY_AUTH_TOKEN: z.string().min(1),
     DATABASE_URL: z.string().optional(),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   },
