@@ -1,0 +1,13 @@
+-- Add global navigation columns to projects table
+-- This migration adds the missing columns that are referenced by global navigation functionality
+
+-- Add global navigation columns to projects table
+ALTER TABLE projects 
+ADD COLUMN IF NOT EXISTS global_nav_section_id UUID,
+ADD COLUMN IF NOT EXISTS global_footer_section_id UUID;
+
+-- Add indexes for performance on these foreign key columns
+CREATE INDEX IF NOT EXISTS projects_global_nav_section_id_idx ON projects(global_nav_section_id);
+CREATE INDEX IF NOT EXISTS projects_global_footer_section_id_idx ON projects(global_footer_section_id);
+
+-- Note: Foreign key constraints will be added in a separate migration after page_sections table is created

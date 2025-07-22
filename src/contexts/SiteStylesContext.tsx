@@ -161,7 +161,7 @@ const SiteStylesContext = createContext<SiteStylesContextType>({
 // CSS Variable-based provider (for PageBuilder/Preview that already have styles applied)
 export const CSSSiteStylesProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [styles, setStyles] = useState<Partial<SiteStyles>>(DEFAULT_STYLES);
-  const [loading, setLoading] = useState(false); // No loading needed - read from CSS
+  const [loading, setLoading] = useState(true); // Start as loading until we read CSS variables
   const [loadedFonts, setLoadedFonts] = useState<Set<string>>(new Set());
 
   // Performance-optimized font loading for CSS-based styles
@@ -227,14 +227,14 @@ export const CSSSiteStylesProvider: React.FC<{children: React.ReactNode}> = ({ c
 
       setStyles(cssStyles);
       
+      // Always mark as loaded after attempting to read, even if we got defaults
+      setLoading(false);
+      
       // Load fonts after updating styles (non-blocking)
       loadFontsFromCSSStyles(cssStyles).catch(error => {
         console.warn('CSSSiteStylesProvider: Font loading failed:', error);
       });
     };
-
-    // Initial read
-    readCSSVariables();
 
     // Set up a mutation observer to watch for CSS variable changes
     const observer = new MutationObserver(() => {
@@ -246,7 +246,15 @@ export const CSSSiteStylesProvider: React.FC<{children: React.ReactNode}> = ({ c
       attributeFilter: ['style']
     });
 
-    return () => observer.disconnect();
+    // Initial read with a small delay to allow parent components to set CSS variables
+    const timeoutId = setTimeout(() => {
+      readCSSVariables();
+    }, 50);
+
+    return () => {
+      clearTimeout(timeoutId);
+      observer.disconnect();
+    };
   }, []);
 
   const value = {

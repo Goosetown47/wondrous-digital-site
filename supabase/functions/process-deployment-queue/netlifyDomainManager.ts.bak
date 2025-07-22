@@ -1,0 +1,400 @@
+interface DomainInfo {
+  primaryDomain: string;      // e.g., "raleigh-dentist.com" or "wondrousdigital.com"
+  fullDomain: string;         // e.g., "holiday.raleigh-dentist.com"
+  subdomain: string | null;   // e.g., "holiday" or null for apex
+  isApexDomain: boolean;      // true if no subdomain
+  isWondrousDigital: boolean; // true if wondrousdigital.com
+}
+
+interface NetlifySiteCache {
+  id: string;
+  primary_domain: string;
+  netlify_site_id: string;
+  site_name: string;
+  domain_aliases: string[];
+  ssl_url: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface NetlifySiteResponse {
+  id: string;
+  name: string;
+  custom_domain?: string;
+  domain_aliases?: string[];
+  ssl_url?: string;
+  url?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+import { RateLimiter } from './rateLimiter.ts'
+
+export class NetlifyDomainManager {
+  private rateLimiter: RateLimiter;
+  
+  constructor(
+    private supabase: any,
+    private netlifyToken: string,
+    private netlifyTeamId?: string,
+    rateLimiter?: RateLimiter
+  ) {
+    this.rateLimiter = rateLimiter || new RateLimiter(500, 1);
+  }
+
+  /**
+   * Parse deployment domain into components
+   */
+  parseDeploymentDomain(subdomain: string | null, baseDomain: string): DomainInfo {
+    const isWondrousDigital = baseDomain === 'wondrousdigital.com';
+    const isApexDomain = !subdomain || subdomain === '';
+    
+    const primaryDomain = baseDomain;
+    const fullDomain = subdomain ? `${subdomain}.${baseDomain}` : baseDomain;
+    
+    return {
+      primaryDomain,
+      fullDomain,
+      subdomain,
+      isApexDomain,
+      isWondrousDigital
+    };
+  }
+
+  /**
+   * Find cached site by primary domain
+   */
+  async findCachedSite(primaryDomain: string): Promise<NetlifySiteCache | null> {
+    const { data, error } = await this.supabase
+      .from('netlify_site_cache')
+      .select('*')
+      .eq('primary_domain', primaryDomain)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') { // Not found is ok
+      console.error('Error finding cached site:', error);
+    }
+    
+    return data;
+  }
+
+  /**
+   * Cache site information
+   */
+  async cacheSite(
+    primaryDomain: string,
+    site: NetlifySiteResponse,
+    domainAliases: string[] = []
+  ): Promise<void> {
+    const cacheData = {
+      primary_domain: primaryDomain,
+      netlify_site_id: site.id,
+      site_name: site.name,
+      domain_aliases: domainAliases,
+      ssl_url: site.ssl_url || site.url || null
+    };
+
+    const { error } = await this.supabase
+      .from('netlify_site_cache')
+      .upsert(cacheData, { onConflict: 'primary_domain' });
+    
+    if (error) {
+      console.error('Error caching site:', error);
+    }
+  }
+
+  /**
+   * Find site by domain using Netlify API
+   */
+  async findSiteByDomainViaAPI(domain: string): Promise<NetlifySiteResponse | null> {
+    return this.rateLimiter.execute(async () => {
+      try {
+        // List all sites
+        let url = 'https://api.netlify.com/api/v1/sites';
+        if (this.netlifyTeamId) {
+          url += `?account_slug=${this.netlifyTeamId}`;
+        }
+
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${this.netlifyToken}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to list sites');
+        }
+
+        const sites: NetlifySiteResponse[] = await response.json();
+        
+        // Find site with matching custom domain or domain alias
+        for (const site of sites) {
+          if (site.custom_domain === domain) {
+            return site;
+          }
+          
+          if (site.domain_aliases && site.domain_aliases.includes(domain)) {
+            return site;
+          }
+        }
+        
+        return null;
+      } catch (error) {
+        console.error('Error finding site by domain:', error);
+        return null;
+      }
+    });
+  }
+
+  /**
+   * Create a new Netlify site
+   */
+  async createNetlifySite(
+    siteName: string,
+    customDomain: string
+  ): Promise<NetlifySiteResponse> {
+    return this.rateLimiter.execute(async () => {
+      const body: any = {
+        name: siteName,
+        custom_domain: customDomain,
+        processing_settings: {
+          skip: true
+        }
+      };
+      
+      if (this.netlifyTeamId) {
+        body.account_slug = this.netlifyTeamId;
+      }
+
+      const response = await fetch('https://api.netlify.com/api/v1/sites', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.netlifyToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        let errorMessage = 'Failed to create Netlify site';
+        try {
+          const error = await response.json();
+          errorMessage = error.message || error.error || JSON.stringify(error);
+        } catch (e) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      return response.json();
+    });
+  }
+
+  /**
+   * Add domain alias to existing site
+   */
+  async addDomainAlias(siteId: string, alias: string): Promise<void> {
+    // First get current site details
+    const siteResponse = await this.rateLimiter.execute(async () => {
+      const response = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}`, {
+        headers: {
+          'Authorization': `Bearer ${this.netlifyToken}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get site details');
+      }
+
+      return response.json();
+    });
+
+    const site: NetlifySiteResponse = siteResponse;
+    
+    // Check if alias already exists
+    const currentAliases = site.domain_aliases || [];
+    if (currentAliases.includes(alias)) {
+      console.log(`Domain alias ${alias} already exists for site ${siteId}`);
+      return;
+    }
+
+    // Add new alias
+    const updatedAliases = [...currentAliases, alias];
+    
+    // Update site with new aliases
+    await this.rateLimiter.execute(async () => {
+      const updateResponse = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${this.netlifyToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          domain_aliases: updatedAliases
+        })
+      });
+
+      if (!updateResponse.ok) {
+        let errorMessage = 'Failed to add domain alias';
+        try {
+          const error = await updateResponse.json();
+          errorMessage = error.message || error.error || JSON.stringify(error);
+        } catch (e) {
+          errorMessage = `HTTP ${updateResponse.status}: ${updateResponse.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+    });
+  }
+
+  /**
+   * Invalidate cache for a domain
+   */
+  async invalidateCache(primaryDomain: string): Promise<void> {
+    const { error } = await this.supabase
+      .from('netlify_site_cache')
+      .delete()
+      .eq('primary_domain', primaryDomain);
+    
+    if (error) {
+      console.error('Error invalidating cache:', error);
+    }
+  }
+
+  /**
+   * Invalidate cache by site ID
+   */
+  async invalidateCacheBySiteId(siteId: string): Promise<void> {
+    const { error } = await this.supabase
+      .from('netlify_site_cache')
+      .delete()
+      .eq('netlify_site_id', siteId);
+    
+    if (error) {
+      console.error('Error invalidating cache by site ID:', error);
+    }
+  }
+
+  /**
+   * Refresh cache entry
+   */
+  async refreshCache(primaryDomain: string): Promise<void> {
+    // Find the site via API
+    const site = await this.findSiteByDomainViaAPI(primaryDomain);
+    
+    if (site) {
+      // Update cache with fresh data
+      await this.cacheSite(primaryDomain, site, site.domain_aliases || []);
+    } else {
+      // Remove from cache if site no longer exists
+      await this.invalidateCache(primaryDomain);
+    }
+  }
+
+  /**
+   * Get or create site for deployment
+   */
+  async prepareDeployment(
+    subdomain: string | null,
+    deploymentDomain: string,
+    existingSiteId?: string
+  ): Promise<{
+    siteId: string;
+    siteUrl: string;
+    primaryDomain: string;
+    isNewSite: boolean;
+  }> {
+    const domainInfo = this.parseDeploymentDomain(subdomain, deploymentDomain);
+    
+    // If we already have a site ID, just return it
+    if (existingSiteId) {
+      // Still need to add domain alias if it's a subdomain
+      if (!domainInfo.isApexDomain) {
+        await this.addDomainAlias(existingSiteId, domainInfo.fullDomain);
+      }
+      
+      return {
+        siteId: existingSiteId,
+        siteUrl: `https://${domainInfo.fullDomain}`,
+        primaryDomain: domainInfo.primaryDomain,
+        isNewSite: false
+      };
+    }
+
+    // Check cache first
+    let cachedSite = await this.findCachedSite(domainInfo.primaryDomain);
+    
+    if (cachedSite) {
+      // Add subdomain alias if needed
+      if (!domainInfo.isApexDomain) {
+        await this.addDomainAlias(cachedSite.netlify_site_id, domainInfo.fullDomain);
+        
+        // Update cache with new alias
+        const updatedAliases = cachedSite.domain_aliases || [];
+        if (!updatedAliases.includes(domainInfo.fullDomain)) {
+          updatedAliases.push(domainInfo.fullDomain);
+          await this.cacheSite(domainInfo.primaryDomain, {
+            id: cachedSite.netlify_site_id,
+            name: cachedSite.site_name,
+            ssl_url: cachedSite.ssl_url
+          } as NetlifySiteResponse, updatedAliases);
+        }
+      }
+      
+      return {
+        siteId: cachedSite.netlify_site_id,
+        siteUrl: cachedSite.ssl_url || `https://${domainInfo.fullDomain}`,
+        primaryDomain: domainInfo.primaryDomain,
+        isNewSite: false
+      };
+    }
+
+    // Not in cache, check Netlify API
+    const existingSite = await this.findSiteByDomainViaAPI(domainInfo.primaryDomain);
+    
+    if (existingSite) {
+      // Cache it
+      await this.cacheSite(domainInfo.primaryDomain, existingSite, existingSite.domain_aliases || []);
+      
+      // Add subdomain alias if needed
+      if (!domainInfo.isApexDomain) {
+        await this.addDomainAlias(existingSite.id, domainInfo.fullDomain);
+      }
+      
+      return {
+        siteId: existingSite.id,
+        siteUrl: existingSite.ssl_url || `https://${domainInfo.fullDomain}`,
+        primaryDomain: domainInfo.primaryDomain,
+        isNewSite: false
+      };
+    }
+
+    // Need to create new site
+    const timestamp = Date.now().toString(36);
+    const siteName = domainInfo.isWondrousDigital 
+      ? `wd-site-${timestamp}`
+      : `${domainInfo.primaryDomain.replace(/\./g, '-')}-${timestamp}`;
+    
+    // For subdomain deployments, don't set custom_domain on creation
+    // We'll add it as a domain alias instead
+    const customDomain = domainInfo.isApexDomain ? domainInfo.primaryDomain : null;
+    const newSite = await this.createNetlifySite(siteName, customDomain);
+    
+    // If we have a subdomain, add it as an alias
+    const aliases: string[] = [];
+    if (!domainInfo.isApexDomain) {
+      await this.addDomainAlias(newSite.id, domainInfo.fullDomain);
+      aliases.push(domainInfo.fullDomain);
+    }
+    
+    // Cache the new site
+    await this.cacheSite(domainInfo.primaryDomain, newSite, aliases);
+    
+    return {
+      siteId: newSite.id,
+      siteUrl: newSite.ssl_url || newSite.url || `https://${domainInfo.fullDomain}`,
+      primaryDomain: domainInfo.primaryDomain,
+      isNewSite: true
+    };
+  }
+}

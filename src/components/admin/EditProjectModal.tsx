@@ -8,6 +8,7 @@ interface Customer {
   id: string;
   business_name: string;
   account_type: 'prospect' | 'customer' | 'inactive';
+  custom_domains?: string[];
 }
 
 interface Project {
@@ -66,7 +67,7 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ isOpen, onClose, pr
     try {
       const { data, error } = await supabase
         .from('customers')
-        .select('id, business_name, account_type')
+        .select('id, business_name, account_type, custom_domains')
         .order('business_name');
 
       if (error) throw error;
@@ -109,17 +110,29 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ isOpen, onClose, pr
     setLoading(true);
 
     try {
+      // Check if subdomain + deployment_domain combination is changing
+      const subdomainChanged = (formData.subdomain.trim() || null) !== project.subdomain;
+      const deploymentDomainChanged = formData.deployment_domain !== project.deployment_domain;
+      
+      // If both subdomain and deployment_domain are changing, we need to handle the unique constraint
+      const updateData: any = {
+        project_name: formData.project_name.trim(),
+        customer_id: formData.customer_id,
+        domain: formData.domain.trim() || null,
+        deployment_domain: formData.deployment_domain,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Only update subdomain if it's actually changing or deployment_domain is changing
+      // This avoids unique constraint violations
+      if (subdomainChanged || deploymentDomainChanged) {
+        updateData.subdomain = formData.subdomain.trim() || null;
+      }
+      
       // Update project details
       const { error } = await supabase
         .from('projects')
-        .update({
-          project_name: formData.project_name.trim(),
-          customer_id: formData.customer_id,
-          domain: formData.domain.trim() || null,
-          subdomain: formData.subdomain.trim() || null,
-          deployment_domain: formData.deployment_domain,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', project.id);
 
       if (error) throw error;
@@ -138,13 +151,15 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ isOpen, onClose, pr
               project_name: project.project_name,
               customer_id: project.customer_id,
               domain: project.domain,
-              subdomain: project.subdomain
+              subdomain: project.subdomain,
+              deployment_domain: project.deployment_domain
             },
             new_data: {
               project_name: formData.project_name,
               customer_id: formData.customer_id,
               domain: formData.domain || null,
-              subdomain: formData.subdomain || null
+              subdomain: formData.subdomain || null,
+              deployment_domain: formData.deployment_domain
             }
           });
       }
@@ -243,8 +258,13 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ isOpen, onClose, pr
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="wondrousdigital.com">wondrousdigital.com</option>
-                {/* TODO: Add customer custom domains here */}
-                <option value="custom" disabled>Custom domain (coming soon)</option>
+                {/* Add customer's custom domains */}
+                {(() => {
+                  const selectedCustomer = customers.find(c => c.id === formData.customer_id);
+                  return selectedCustomer?.custom_domains?.map(domain => (
+                    <option key={domain} value={domain}>{domain}</option>
+                  ));
+                })()}
               </select>
               <p className="mt-1 text-xs text-gray-500">
                 The base domain for deployment

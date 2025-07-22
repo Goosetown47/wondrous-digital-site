@@ -6,6 +6,7 @@ import { EditModeProvider } from '../contexts/EditModeContext';
 import { CSSSiteStylesProvider } from '../contexts/SiteStylesContext';
 import { ProjectContext, Project } from '../contexts/ProjectContext';
 import { fontPreloader } from '../utils/font-preloader';
+import { renderSection } from '../utils/sectionComponentFactory';
 import HeroSplitLayout from '../components/sections/HeroSplitLayout';
 import FourFeaturesGrid from '../components/sections/FourFeaturesGrid';
 import NavigationDesktop from '../components/sections/NavigationDesktop';
@@ -26,8 +27,21 @@ interface Page {
   project_id: string;
 }
 
-const PagePreview: React.FC = () => {
-  const { pageId } = useParams<{ pageId: string }>();
+interface PagePreviewProps {
+  pageId?: string;
+  projectId?: string;
+  isEmbedded?: boolean;
+  hideGlobalSections?: boolean;
+}
+
+const PagePreview: React.FC<PagePreviewProps> = ({ 
+  pageId: propPageId, 
+  projectId: propProjectId, 
+  isEmbedded = false, 
+  hideGlobalSections = false 
+}) => {
+  const { pageId: urlPageId } = useParams<{ pageId: string }>();
+  const pageId = propPageId || urlPageId;
   const [page, setPage] = useState<Page | null>(null);
   const [globalNavSection, setGlobalNavSection] = useState<Section | null>(null);
   const [globalFooterSection, setGlobalFooterSection] = useState<Section | null>(null);
@@ -60,8 +74,17 @@ const PagePreview: React.FC = () => {
       
       // Fetch and apply site styles after page data is loaded
       if (page?.project_id) {
-        await fetchAndApplySiteStyles(page.project_id);
-        await fetchGlobalSections(page.project_id);
+        // Only apply styles if not embedded (parent component handles styles)
+        if (!isEmbedded) {
+          await fetchAndApplySiteStyles(page.project_id);
+        } else {
+          // If embedded, just mark styles as loaded
+          setStylesLoaded(true);
+        }
+        
+        if (!hideGlobalSections) {
+          await fetchGlobalSections(page.project_id);
+        }
       }
     } catch (err) {
       console.error('Error fetching page data:', err);
@@ -69,7 +92,7 @@ const PagePreview: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [pageId]);
+  }, [pageId, hideGlobalSections, isEmbedded]);
 
   // Performance-optimized font loading from site styles
   const loadFontsFromStyles = async (styles: Record<string, any>) => {
@@ -207,7 +230,7 @@ const PagePreview: React.FC = () => {
     }
   }, [pageId, fetchPageData]);
 
-  const renderSection = (section: Section) => {
+  const renderSectionComponent = (section: Section) => {
     const getSectionComponent = () => {
       switch (section.type) {
         case 'hero':
@@ -311,17 +334,17 @@ const PagePreview: React.FC = () => {
         {/* Full-width container for sections with individual content constraints */}
         <div className="website-content bg-white min-h-screen">
           {/* Global Navigation */}
-          {globalNavSection && (
+          {!hideGlobalSections && globalNavSection && (
             <div className="sticky top-0 z-40">
-              {renderSection(globalNavSection)}
+              {renderSectionComponent(globalNavSection)}
             </div>
           )}
           
           {/* Page Sections */}
-          {page.sections?.map(renderSection)}
+          {page.sections?.map(renderSectionComponent)}
           
           {/* Global Footer */}
-          {globalFooterSection && renderSection(globalFooterSection)}
+          {!hideGlobalSections && globalFooterSection && renderSectionComponent(globalFooterSection)}
         </div>
       </div>
     </CSSSiteStylesProvider>

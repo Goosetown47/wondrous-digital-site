@@ -13,6 +13,8 @@ import CloneProjectModal from '../../components/admin/CloneProjectModal';
 import DeployProjectModal from '../../components/admin/DeployProjectModal';
 import EditProjectModal from '../../components/admin/EditProjectModal';
 import ConvertToTemplateModal from '../../components/admin/ConvertToTemplateModal';
+import DeploymentQueueStatus from '../../components/admin/DeploymentQueueStatus';
+import DeploymentStatusBadge from '../../components/admin/DeploymentStatusBadge';
 import { statusChangeSchema, validateStatusTransition, bulkStatusChangeSchema } from '../../schemas';
 
 interface Project {
@@ -591,13 +593,16 @@ const ProjectsPage: React.FC = () => {
               Manage all projects across their lifecycle stages
             </p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <FolderPlus className="h-4 w-4 mr-2" />
-            New Project
-          </button>
+          <div className="flex items-center space-x-4">
+            <DeploymentQueueStatus compact className="text-sm" />
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <FolderPlus className="h-4 w-4 mr-2" />
+              New Project
+            </button>
+          </div>
         </div>
       </div>
 
@@ -782,7 +787,12 @@ const ProjectsPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getDeploymentBadge(project.deployment_status, project.netlify_site_id)}
+                      <DeploymentStatusBadge
+                        projectId={project.id}
+                        netlifyId={project.netlify_site_id}
+                        deploymentStatus={project.deployment_status}
+                        deploymentUrl={project.deployment_url}
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(project.updated_at).toLocaleDateString()}
@@ -811,10 +821,16 @@ const ProjectsPage: React.FC = () => {
                             onClick={() => handleConvertToTemplate(project)}
                           />
                         )}
-                        {(!project.netlify_site_id || project.deployment_status !== 'deployed') && (
+                        {(!project.netlify_site_id || project.deployment_status !== 'deployed') ? (
                           <ActionButton
                             icon={Rocket}
                             label="Deploy Project"
+                            onClick={() => setDeployModal({ isOpen: true, project })}
+                          />
+                        ) : (
+                          <ActionButton
+                            icon={Rocket}
+                            label="Re-deploy"
                             onClick={() => setDeployModal({ isOpen: true, project })}
                           />
                         )}

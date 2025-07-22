@@ -1,0 +1,19 @@
+/*
+  # Add default_content column to section_templates
+
+  1. New Columns
+    - `default_content` (jsonb) - Stores the complete default content structure for each template
+    
+  2. Purpose
+    - Allows templates to define their default content in the database
+    - Removes hardcoded defaults from React components
+    - Enables different templates of the same type to have different defaults
+    - Supports the template publishing workflow
+*/
+
+-- Add default_content column to section_templates table
+ALTER TABLE section_templates 
+ADD COLUMN IF NOT EXISTS default_content jsonb DEFAULT '{}';
+
+-- Add comment explaining the column
+COMMENT ON COLUMN section_templates.default_content IS 'Complete default content structure for this template, used when creating new sections';

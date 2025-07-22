@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, FolderPlus } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
 import { useProject } from '../../contexts/ProjectContext';
+import { useToast } from '../../contexts/ToastContext';
 import { createProjectSchema } from '../../schemas';
 
 interface Customer {
@@ -9,6 +10,7 @@ interface Customer {
   business_name: string;
   contact_email: string;
   account_type: 'prospect' | 'customer' | 'inactive';
+  custom_domains?: string[];
 }
 
 interface CreateProjectModalProps {
@@ -23,11 +25,14 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   onSuccess
 }) => {
   const { refreshData } = useProject();
+  const { addToast } = useToast();
   const [formData, setFormData] = useState({
     project_name: '',
     project_type: 'main_site' as const,
     customer_id: '',
-    niche: ''
+    niche: '',
+    subdomain: '',
+    deployment_domain: 'wondrousdigital.com'
   });
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
@@ -67,7 +72,9 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         project_name: '',
         project_type: 'main_site',
         customer_id: '',
-        niche: ''
+        niche: '',
+        subdomain: '',
+        deployment_domain: 'wondrousdigital.com'
       });
       setErrors({});
     }
@@ -78,7 +85,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     try {
       const { data, error } = await supabase
         .from('customers')
-        .select('id, business_name, contact_email, account_type')
+        .select('id, business_name, contact_email, account_type, custom_domains')
         .in('account_type', ['prospect', 'customer'])
         .order('business_name');
 
@@ -125,9 +132,16 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         newErrors.customer_id = zodErrors._errors[0];
       }
       
+      // Validate subdomain if provided
+      if (formData.subdomain && !/^[a-z0-9]+(-[a-z0-9]+)*$/i.test(formData.subdomain)) {
+        newErrors.subdomain = 'Invalid subdomain format (e.g., my-subdomain)';
+      }
+      
       setErrors(newErrors);
-      addToast('Please fix the validation errors', 'error');
-      return;
+      if (Object.keys(newErrors).length > 0) {
+        addToast('Please fix the validation errors', 'error');
+        return;
+      }
     }
     
     // Validation passed - clear any previous errors
@@ -143,7 +157,9 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         customer_id: formData.customer_id || null,
         niche: formData.niche || null,
         deployment_status: 'none',
-        is_active: true
+        is_active: true,
+        subdomain: formData.subdomain.trim() || null,
+        deployment_domain: formData.deployment_domain
       };
 
       const { error } = await supabase
@@ -303,6 +319,75 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Deployment Configuration */}
+          <div className="space-y-4 border-t pt-4">
+            <h3 className="text-sm font-medium text-gray-900">Deployment Settings (Optional)</h3>
+            
+            {/* Deployment Domain */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Deployment Domain
+              </label>
+              <select
+                value={formData.deployment_domain}
+                onChange={(e) => handleInputChange('deployment_domain', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                disabled={isSubmitting || !formData.customer_id}
+              >
+                <option value="wondrousdigital.com">wondrousdigital.com</option>
+                {/* Add customer's custom domains */}
+                {(() => {
+                  const selectedCustomer = customers.find(c => c.id === formData.customer_id);
+                  return selectedCustomer?.custom_domains?.map(domain => (
+                    <option key={domain} value={domain}>{domain}</option>
+                  ));
+                })()}
+              </select>
+              {!formData.customer_id && (
+                <p className="mt-1 text-xs text-gray-500">
+                  Select a customer to see their custom domains
+                </p>
+              )}
+            </div>
+
+            {/* Subdomain */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Subdomain <span className="text-sm text-gray-500">(optional)</span>
+              </label>
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  value={formData.subdomain}
+                  onChange={(e) => handleInputChange('subdomain', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  className={`flex-1 px-3 py-2 border ${errors.subdomain ? 'border-red-500' : 'border-gray-300'} rounded-l-md focus:ring-blue-500 focus:border-blue-500`}
+                  placeholder="www or leave empty"
+                  disabled={isSubmitting}
+                />
+                <span className="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-sm text-gray-600">
+                  .{formData.deployment_domain}
+                </span>
+              </div>
+              {errors.subdomain ? (
+                <p className="mt-1 text-sm text-red-600">{errors.subdomain}</p>
+              ) : (
+                <p className="mt-1 text-xs text-gray-500">
+                  Leave empty for root domain, or use 'www', 'staging', etc.
+                </p>
+              )}
+            </div>
+
+            {/* Deployment URL Preview */}
+            {(formData.subdomain || formData.deployment_domain) && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-xs text-blue-800 mb-1">Deployment URL:</p>
+                <p className="text-sm font-medium text-blue-900 break-all">
+                  https://{formData.subdomain ? `${formData.subdomain}.` : ''}{formData.deployment_domain}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Info Box */}

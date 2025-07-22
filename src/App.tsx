@@ -18,6 +18,7 @@ import DatabaseSettings from './pages/admin/DatabaseSettings';
 import AccountsPage from './pages/admin/AccountsPage';
 import ProjectsPage from './pages/admin/ProjectsPage';
 import TemplatesPage from './pages/admin/TemplatesPage';
+import DeploymentQueuePage from './pages/admin/DeploymentQueuePage';
 import WebsitesOverview from './pages/features/categories/WebsitesOverview';
 import AIAutomationOverview from './pages/features/categories/AIAutomationOverview';
 import CustomerManagementOverview from './pages/features/categories/CustomerManagementOverview';
@@ -71,6 +72,7 @@ import PageBuilderPage from './pages/dashboard/content/PageBuilderPage';
 import PagesPage from './pages/dashboard/content/PagesPage';
 import ProjectPage from './pages/dashboard/content/ProjectPage';
 import PagePreview from './pages/PagePreview';
+import ProjectPreview from './pages/ProjectPreview';
 import MarketingPage from './pages/dashboard/tools/MarketingPage';
 import SEOPage from './pages/dashboard/tools/SEOPage';
 import AccountPage from './pages/dashboard/settings/AccountPage';
@@ -86,6 +88,9 @@ function App() {
       
       {/* Page Preview Route - Standalone page viewing */}
       <Route path="/preview/:pageId" element={<PagePreview />} />
+      
+      {/* Project Preview Route - Standalone project viewing with navigation */}
+      <Route path="/preview/project/:projectId" element={<ProjectPreview />} />
 
       {/* Dashboard Routes - Nested under AppLayout */}
       <Route path="/dashboard" element={<AppLayout />}>
@@ -107,6 +112,7 @@ function App() {
           <Route path="accounts" element={<AccountsPage />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="templates" element={<TemplatesPage />} />
+          <Route path="deployment-queue" element={<DeploymentQueuePage />} />
           <Route path="section-library" element={<SectionLibraryPage />} />
           <Route path="staging" element={
             <SiteStylesProvider>

@@ -15,13 +15,15 @@ interface EditableLogoProps {
   };
   textColor?: string;
   className?: string;
+  onLogoClick?: (logo: { href?: string }) => void;
 }
 
 const EditableLogo: React.FC<EditableLogoProps> = ({
   fieldName,
   logo = { type: 'text', text: 'Logo', href: '/' },
   textColor = '#000000',
-  className = ''
+  className = '',
+  onLogoClick
 }) => {
   const { editMode, activeEditField, setActiveEditField, onContentUpdate } = useEditMode();
   const [isHovered, setIsHovered] = useState(false);
@@ -75,8 +77,19 @@ const EditableLogo: React.FC<EditableLogoProps> = ({
   
   // If not in edit mode, just render the logo normally
   if (!editMode) {
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (onLogoClick) {
+        e.preventDefault();
+        onLogoClick(logo);
+      }
+    };
+    
     return (
-      <a href={logo.href || '/'} className={`inline-block ${className}`}>
+      <a 
+        href={logo.href || '/'} 
+        className={`inline-block ${className}`}
+        onClick={handleClick}
+      >
         {logoContent}
       </a>
     );

@@ -27,6 +27,10 @@ interface EnhancedSectionSettingsModalProps {
     templateId?: string;
   }) => Promise<void>;
   siteColors?: Record<string, string>;
+  sectionData?: any; // Pass through section data for NavigationSettingsTab
+  pageId?: string; // Pass through page ID for NavigationSettingsTab
+  onSectionPromoted?: () => void; // Callback when section is promoted
+  onSectionDemoted?: () => void; // Callback when section is demoted
 }
 
 type TabType = 'design' | 'templates' | 'navigation';
@@ -44,7 +48,11 @@ const EnhancedSectionSettingsModal: React.FC<EnhancedSectionSettingsModalProps> 
   initialBackgroundGradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
   initialBackgroundBlur = 0,
   onSave,
-  siteColors
+  siteColors,
+  sectionData,
+  pageId,
+  onSectionPromoted,
+  onSectionDemoted
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('design');
   const [backgroundType, setBackgroundType] = useState<BackgroundType>(initialBackgroundType);
@@ -426,6 +434,10 @@ const EnhancedSectionSettingsModal: React.FC<EnhancedSectionSettingsModalProps> 
             <NavigationSettingsTab
               sectionId={sectionId}
               sectionType={typeof sectionType === 'string' ? sectionType : sectionType.id}
+              sectionData={sectionData}
+              pageId={pageId}
+              onSectionPromoted={onSectionPromoted}
+              onSectionDemoted={onSectionDemoted}
             />
           )}
         </div>

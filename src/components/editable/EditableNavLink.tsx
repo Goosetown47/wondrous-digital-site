@@ -107,6 +107,7 @@ const EditableNavLink: React.FC<EditableNavLinkProps> = ({
         onDropdownToggle(link.id);
       }
     } else if (onLinkClick) {
+      e.preventDefault();
       onLinkClick();
     }
   };
@@ -233,6 +234,8 @@ const EditableNavLink: React.FC<EditableNavLinkProps> = ({
       onClick={(e) => {
         if (editMode) {
           e.preventDefault(); // Prevent navigation in edit mode
+        } else if (onLinkClick) {
+          e.preventDefault(); // Prevent default navigation when using custom handler
         }
         handleClick(e);
       }}

@@ -1,0 +1,330 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Toast animation */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* Preload most popular fonts for font selector */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Montserrat:wght@400;700&family=Poppins:wght@400;700&family=Lato:wght@400;700&family=Playfair+Display:wght@400;700&family=Merriweather:wght@400;700&family=Lora:wght@400;700&family=Raleway:wght@400;700&family=Nunito:wght@400;700&family=Source+Sans+Pro:wght@400;700&family=Work+Sans:wght@400;700&family=DM+Sans:wght@400;700&family=Plus+Jakarta+Sans:wght@400;700&display=swap');
+
+
+/* Custom Font Definitions */
+@font-face {
+  font-family: 'Avenir';
+  src: url('/fonts/AvenirLTStd-Roman.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Avenir';
+  src: url('/fonts/AvenirLTStd-Black.woff') format('woff');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Canastra';
+  src: url('/fonts/Canastra-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Canastra';
+  src: url('/fonts/Canastra-Italic.woff') format('woff');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Global Heading Font Weights */
+h1, h2, h3 {
+  font-weight: 500;
+}
+
+/* Custom CSS Overrides */
+.max-w-4xl {
+    max-width: 48rem;
+}
+
+@media (min-width: 1024px) {
+    .lg\:text-7xl {
+        font-size: 6rem;
+        line-height: 1;
+    }
+}
+
+@media (min-width: 640px) {
+    .sm\:text-2xl {
+        font-size: 1.2rem;
+        line-height: 1.75rem;
+    }
+}
+
+.mb-6 {
+    margin-bottom: 1.5rem;
+}
+
+.mb-8 {
+    margin-bottom: 4rem;
+}
+
+@media (min-width: 1024px) {
+    .lg\:text-5xl {
+        font-size: 4rem;
+        line-height: 1;
+    }
+}
+
+.text-xl {
+    font-size: 1.2rem;
+    line-height: 1.75rem;
+}
+
+/* Line spacing defaults for better readability */
+.leading-relaxed {
+    line-height: 1.75;
+}
+
+/* Custom bullet list styling for proper text alignment */
+.custom-bullet-list {
+  list-style-type: disc;
+  list-style-position: outside !important;
+  margin-left: 0;
+  padding-left: 1.5rem; /* 24px - provides space for bullets */
+}
+
+.custom-bullet-list li {
+  margin-bottom: 0.75rem; /* 12px - consistent spacing between items */
+  line-height: 1.625;
+  padding-left: 0;
+  text-indent: 0;
+}
+
+.custom-bullet-list li:last-child {
+  margin-bottom: 0; /* Remove margin from last item */
+}
+
+/* Nested list styling */
+.custom-bullet-list ul, 
+.custom-bullet-list ol {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem; /* Additional indentation for nested lists */
+  list-style-position: outside !important;
+}
+
+/* Make sure nested list items have proper spacing */
+.custom-bullet-list ul li,
+.custom-bullet-list ol li {
+  margin-bottom: 0.5rem;
+}
+
+/* Ensure deepest level lists still maintain proper formatting */
+.custom-bullet-list ul ul,
+.custom-bullet-list ol ol,
+.custom-bullet-list ul ol,
+.custom-bullet-list ol ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+/* Alternative using Tailwind classes only */
+.tailwind-bullet-list {
+  @apply list-disc list-outside pl-6 space-y-3 text-gray-700;
+}
+
+.tailwind-bullet-list li {
+  @apply leading-relaxed;
+}
+
+/* Line clamp utility for blog excerpts */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Prose table customization for Tailwind Typography */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+.prose thead {
+  background-color: rgb(248 250 252);
+}
+
+.prose th {
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem;
+  border: 1px solid rgb(229 231 235);
+}
+
+.prose td {
+  padding: 0.75rem;
+  border: 1px solid rgb(229 231 235);
+}
+
+.prose tbody tr:hover {
+  background-color: rgb(248 250 252);
+}
+
+.py-20 {
+    padding-top: 7rem;
+    padding-bottom: 7rem;
+}
+
+.bg-primary-dark-purple {
+    --tw-bg-opacity: 1;
+    background-color: #1c1429;
+}
+
+/* Hero headline responsive styles */
+.hero-headline {
+  /* Mobile styles (default) */
+  color: rgb(31 10 66);
+  line-height: 1;
+  font-size: 4rem;
+}
+
+/* Desktop styles */
+@media (min-width: 640px) {
+  .hero-headline {
+    color: rgb(31 10 66);
+    font-size: 7rem;
+    line-height: 100%;
+  }
+}
+
+/* Offset Background Button Styles - Higher specificity */
+button.offset-bg-primary,
+button.offset-bg-secondary, 
+button.offset-bg-outline,
+a.offset-bg-primary,
+a.offset-bg-secondary,
+a.offset-bg-outline {
+  position: relative !important;
+  background: white !important;
+  overflow: visible !important;
+  border-radius: 0 !important;
+}
+
+button.offset-bg-primary::before,
+button.offset-bg-secondary::before,
+button.offset-bg-outline::before,
+a.offset-bg-primary::before,
+a.offset-bg-secondary::before,
+a.offset-bg-outline::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  transition: transform 200ms ease !important;
+  transform: translate(8px, 8px) !important;
+  border-radius: 0 !important;
+}
+
+button.offset-bg-primary::before,
+a.offset-bg-primary::before {
+  background: yellow !important; /* FORCE yellow to test */
+}
+
+button.offset-bg-secondary::before,
+a.offset-bg-secondary::before {
+  background: green !important; /* FORCE green to test */
+}
+
+button.offset-bg-outline::before,
+a.offset-bg-outline::before {
+  background: blue !important; /* FORCE blue to test */
+}
+
+button.offset-bg-primary:hover::before,
+button.offset-bg-secondary:hover::before,
+button.offset-bg-outline:hover::before,
+a.offset-bg-primary:hover::before,
+a.offset-bg-secondary:hover::before,
+a.offset-bg-outline:hover::before {
+  transform: translate(0, 0) !important;
+}
+
+/* Section Content Container - Standardized container for section content */
+.section-content-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  /* No padding - cells handle their own padding */
+}
+
+/* Section Content Cell - For text/button content that needs padding */
+.section-content-cell {
+  padding: 4rem 1.5rem; /* py-16 px-6 equivalent */
+}
+
+/* Section Image Cell - For images that should extend to edges */
+.section-image-cell {
+  padding: 0; /* No padding for full-height images */
+}
+
+/* Responsive padding for content cells */
+@media (min-width: 768px) {
+  .section-content-cell {
+    padding: 6rem 2rem; /* py-24 px-8 equivalent */
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-content-cell {
+    padding: 6rem 3rem; /* py-24 px-12 equivalent */
+  }
+}
+
+/* Background blur handling for sections */
+.section-with-blurred-bg {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate; /* Create new stacking context */
+}
+
+.section-with-blurred-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: var(--section-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(var(--section-bg-blur));
+  z-index: -1;
+  /* Extend beyond blur radius to prevent edge bleeding */
+  margin: calc(-1 * var(--section-bg-blur));
+}
+
+/* Make sure the main element's background doesn't interfere */
+.section-with-blurred-bg[style*="background-image"] {
+  background-image: none !important;
+}

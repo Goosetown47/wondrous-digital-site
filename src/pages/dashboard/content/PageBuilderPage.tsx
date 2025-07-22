@@ -9,6 +9,9 @@ import { Save, Eye, EyeOff, Smartphone, PanelTop, Loader, GripVertical, ChevronD
 import HeroSplitLayout from '../../../components/sections/HeroSplitLayout';
 import FourFeaturesGrid from '../../../components/sections/FourFeaturesGrid';
 import NavigationDesktop from '../../../components/sections/NavigationDesktop';
+import TemplateSectionPlaceholder from '../../../components/template/TemplateSectionPlaceholder';
+import { TemplatePreview } from '../../../components/template/TemplatePreview';
+import { fetchSectionTemplate } from '../../../services/templateService';
 import EnhancedSectionSettingsModal from '../../../components/admin/EnhancedSectionSettingsModal';
 import SectionLibrarySidebar from '../../../components/admin/SectionLibrarySidebar';
 import { SectionType } from '../../../components/admin/SectionTypeCard';
@@ -27,6 +30,7 @@ interface SectionTemplate {
   template_name: string;
   preview_image_url: string | null;
   customizable_fields: any;
+  default_content?: any;
   category: string | null;
   status: 'active' | 'inactive' | 'testing';
 }
@@ -34,7 +38,7 @@ interface SectionTemplate {
 const PageBuilderPage: React.FC = () => {
   const { pageId } = useParams<{ pageId: string }>();
   const navigate = useNavigate();
-  const { selectedProject } = useProject();
+  const { selectedProject, refetchProject } = useProject();
   const { activeEditField } = useEditMode();
   
   // Page data state
@@ -64,9 +68,12 @@ const PageBuilderPage: React.FC = () => {
   // Editing state
   const [editingFieldName, setEditingFieldName] = useState<string | null>(null);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  
+  // Template state
   const [hoveredSectionId, setHoveredSectionId] = useState<string | null>(null);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [isSectionSettingsModalOpen, setIsSectionSettingsModalOpen] = useState<boolean>(false);
+  const [sectionTemplates, setSectionTemplates] = useState<Map<string, any>>(new Map());
   
   // Auto-save timer
   const autoSaveTimerRef = useRef<number | null>(null);
@@ -92,6 +99,14 @@ const PageBuilderPage: React.FC = () => {
       }
     };
   }, [pageId, selectedProject]);
+
+  // Re-fetch global sections when project global settings change
+  useEffect(() => {
+    if (selectedProject) {
+      console.log('🔄 Project global section IDs changed, re-fetching global sections');
+      fetchGlobalSections();
+    }
+  }, [selectedProject?.global_nav_section_id, selectedProject?.global_footer_section_id]);
 
   // Fetch page data from the database
   const fetchPageData = async () => {
@@ -236,22 +251,34 @@ const PageBuilderPage: React.FC = () => {
   const fetchGlobalSections = async () => {
     if (!selectedProject) return;
     
+    console.log('🔍 fetchGlobalSections - selectedProject:', selectedProject);
+    console.log('🔍 fetchGlobalSections - global_nav_section_id:', selectedProject.global_nav_section_id);
+    console.log('🔍 fetchGlobalSections - global_footer_section_id:', selectedProject.global_footer_section_id);
+    
     try {
       // Fetch global nav section if set
       if (selectedProject.global_nav_section_id) {
+        console.log('🔍 Fetching global nav section...');
         const { data: navData, error: navError } = await supabase
           .from('page_sections')
           .select('*')
           .eq('id', selectedProject.global_nav_section_id)
           .single();
           
+        console.log('🔍 Nav section query result:', { navData, navError });
+          
         if (!navError && navData) {
-          setGlobalNavSection({
+          const globalNavSectionData = {
             id: navData.id,
             type: navData.section_type,
             content: navData.content || {}
-          });
+          };
+          console.log('🔍 Setting globalNavSection to:', globalNavSectionData);
+          setGlobalNavSection(globalNavSectionData);
         }
+      } else {
+        console.log('🔍 No global nav section ID, clearing globalNavSection');
+        setGlobalNavSection(null);
       }
       
       // Fetch global footer section if set
@@ -323,7 +350,8 @@ const PageBuilderPage: React.FC = () => {
           const newSection: Section = {
             id: Math.random().toString(36).substr(2, 9), // Generate unique ID
             type: defaultTemplate.section_type,
-            content: defaultTemplate.customizable_fields || {}
+            // Use default_content if available, fallback to customizable_fields or empty object
+            content: defaultTemplate.default_content || defaultTemplate.customizable_fields || {}
           };
           
           // Insert the new section at the specified index
@@ -464,6 +492,136 @@ const PageBuilderPage: React.FC = () => {
     setHasChanges(true);
     setIsSectionSettingsModalOpen(false);
   };
+
+  // Handle saving global navigation section settings
+  const handleSaveGlobalNavSettings = async (sectionId: string, settings: { 
+    backgroundColor?: string;
+    backgroundImage?: string;
+    backgroundGradient?: string;
+    backgroundBlur?: number;
+    backgroundType: 'color' | 'image' | 'gradient';
+    templateId?: string;
+  }) => {
+    if (!globalNavSection) return;
+
+    let updatedContent = {
+      ...globalNavSection.content,
+      backgroundColor: settings.backgroundColor,
+      backgroundImage: settings.backgroundImage,
+      backgroundGradient: settings.backgroundGradient,
+      backgroundBlur: settings.backgroundBlur,
+      backgroundType: settings.backgroundType
+    };
+
+    // If a new template is selected, fetch and apply its content
+    if (settings.templateId) {
+      try {
+        const { data: template, error } = await supabase
+          .from('section_templates')
+          .select('*')
+          .eq('id', settings.templateId)
+          .single();
+
+        if (error) throw error;
+
+        if (template) {
+          updatedContent = {
+            ...template.customizable_fields,
+            ...updatedContent,
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching template:', error);
+      }
+    }
+
+    // Update local state
+    const updatedGlobalNavSection = {
+      ...globalNavSection,
+      content: updatedContent
+    };
+    setGlobalNavSection(updatedGlobalNavSection);
+
+    // Save to database
+    try {
+      const { error } = await supabase
+        .from('page_sections')
+        .update({ content: updatedContent })
+        .eq('id', globalNavSection.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving global navigation section:', error);
+    }
+
+    setHasChanges(true);
+    setIsSectionSettingsModalOpen(false);
+  };
+
+  // Handle saving global footer section settings
+  const handleSaveGlobalFooterSettings = async (sectionId: string, settings: { 
+    backgroundColor?: string;
+    backgroundImage?: string;
+    backgroundGradient?: string;
+    backgroundBlur?: number;
+    backgroundType: 'color' | 'image' | 'gradient';
+    templateId?: string;
+  }) => {
+    if (!globalFooterSection) return;
+
+    let updatedContent = {
+      ...globalFooterSection.content,
+      backgroundColor: settings.backgroundColor,
+      backgroundImage: settings.backgroundImage,
+      backgroundGradient: settings.backgroundGradient,
+      backgroundBlur: settings.backgroundBlur,
+      backgroundType: settings.backgroundType
+    };
+
+    // If a new template is selected, fetch and apply its content
+    if (settings.templateId) {
+      try {
+        const { data: template, error } = await supabase
+          .from('section_templates')
+          .select('*')
+          .eq('id', settings.templateId)
+          .single();
+
+        if (error) throw error;
+
+        if (template) {
+          updatedContent = {
+            ...template.customizable_fields,
+            ...updatedContent,
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching template:', error);
+      }
+    }
+
+    // Update local state
+    const updatedGlobalFooterSection = {
+      ...globalFooterSection,
+      content: updatedContent
+    };
+    setGlobalFooterSection(updatedGlobalFooterSection);
+
+    // Save to database
+    try {
+      const { error } = await supabase
+        .from('page_sections')
+        .update({ content: updatedContent })
+        .eq('id', globalFooterSection.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving global footer section:', error);
+    }
+
+    setHasChanges(true);
+    setIsSectionSettingsModalOpen(false);
+  };
   
   // Remove a section from the page
   const removeSection = (index: number) => {
@@ -490,8 +648,63 @@ const PageBuilderPage: React.FC = () => {
     setHasChanges(true);
   };
   
+  // Fetch templates when preview mode is activated
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      if (!previewMode || sections.length === 0) {
+        return;
+      }
+      
+      const templatesNeeded = new Set<string>();
+      
+      // Collect all section types that need templates
+      sections.forEach(section => {
+        if (!sectionTemplates.has(section.id)) {
+          templatesNeeded.add(section.type);
+        }
+      });
+      
+      // Fetch templates for each type
+      for (const sectionType of templatesNeeded) {
+        try {
+          const template = await fetchSectionTemplate(sectionType);
+          if (template) {
+            // Store template for each section of this type
+            sections.forEach(section => {
+              if (section.type === sectionType) {
+                setSectionTemplates(prev => new Map(prev).set(section.id, template));
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching template for type:', sectionType, error);
+        }
+      }
+    };
+    
+    fetchTemplates();
+  }, [previewMode, sections]);
+  
   // Render a specific section based on its type
   const renderSection = (section: Section) => {
+    // In preview mode, use TemplatePreview for sections that have templates
+    if (previewMode) {
+      const template = sectionTemplates.get(section.id);
+      if (template && template.html_template) {
+        return (
+          <TemplatePreview
+            template={template.html_template}
+            content={section.content}
+            sectionType={section.type}
+            sectionId={section.id}
+            isMobilePreview={mobileView}
+            isPreviewMode={true}
+          />
+        );
+      }
+    }
+    
+    // In edit mode (or if no template in preview), use React components
     switch (section.type) {
       case 'hero':
         return (
@@ -677,10 +890,12 @@ const PageBuilderPage: React.FC = () => {
           />
         );
       default:
+        // For any section type that doesn't have a React component, show placeholder
         return (
-          <div className="p-12 bg-gray-100 text-center">
-            <p className="text-gray-500">Unknown section type: {section.type}</p>
-          </div>
+          <TemplateSectionPlaceholder
+            sectionType={section.type}
+            sectionId={section.id}
+          />
         );
     }
   };
@@ -848,7 +1063,7 @@ const PageBuilderPage: React.FC = () => {
           className="h-full"
         />
         
-        {/* Section Settings Modal */}
+        {/* Section Settings Modal - Regular Sections */}
         {selectedSectionId && sections.find(s => s.id === selectedSectionId) && (
           <EnhancedSectionSettingsModal
             isOpen={isSectionSettingsModalOpen}
@@ -862,6 +1077,78 @@ const PageBuilderPage: React.FC = () => {
             initialBackgroundBlur={sections.find(s => s.id === selectedSectionId)?.content?.backgroundBlur || 0}
             onSave={handleSaveSectionSettings}
             siteColors={siteColors}
+            sectionData={sections.find(s => s.id === selectedSectionId)}
+            pageId={pageId}
+            onSectionPromoted={() => {
+              // Refresh page data after promotion
+              fetchPageData();
+              fetchGlobalSections();
+              setIsSectionSettingsModalOpen(false);
+            }}
+            onSectionDemoted={() => {
+              // Refresh page data after demotion
+              fetchPageData();
+              fetchGlobalSections();
+              setIsSectionSettingsModalOpen(false);
+            }}
+          />
+        )}
+
+        {/* Section Settings Modal - Global Navigation */}
+        {selectedSectionId && globalNavSection && selectedSectionId === globalNavSection.id && (
+          <EnhancedSectionSettingsModal
+            isOpen={isSectionSettingsModalOpen}
+            onClose={() => setIsSectionSettingsModalOpen(false)}
+            sectionId={globalNavSection.content?.pageBuilderSectionId || selectedSectionId}
+            sectionType={globalNavSection.type as SectionType}
+            initialBgColor={globalNavSection.content?.backgroundColor || '#FFFFFF'}
+            initialBackgroundType={globalNavSection.content?.backgroundType || 'color'}
+            initialBackgroundImage={globalNavSection.content?.backgroundImage || ''}
+            initialBackgroundGradient={globalNavSection.content?.backgroundGradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}
+            initialBackgroundBlur={globalNavSection.content?.backgroundBlur || 0}
+            onSave={handleSaveGlobalNavSettings}
+            siteColors={siteColors}
+            sectionData={globalNavSection}
+            pageId={pageId}
+            onSectionPromoted={() => {
+              // Already promoted, shouldn't happen
+              setIsSectionSettingsModalOpen(false);
+            }}
+            onSectionDemoted={() => {
+              // Refresh page data after demotion
+              fetchPageData();
+              fetchGlobalSections();
+              setIsSectionSettingsModalOpen(false);
+            }}
+          />
+        )}
+
+        {/* Section Settings Modal - Global Footer */}
+        {selectedSectionId && globalFooterSection && selectedSectionId === globalFooterSection.id && (
+          <EnhancedSectionSettingsModal
+            isOpen={isSectionSettingsModalOpen}
+            onClose={() => setIsSectionSettingsModalOpen(false)}
+            sectionId={globalFooterSection.content?.pageBuilderSectionId || selectedSectionId}
+            sectionType={globalFooterSection.type as SectionType}
+            initialBgColor={globalFooterSection.content?.backgroundColor || '#FFFFFF'}
+            initialBackgroundType={globalFooterSection.content?.backgroundType || 'color'}
+            initialBackgroundImage={globalFooterSection.content?.backgroundImage || ''}
+            initialBackgroundGradient={globalFooterSection.content?.backgroundGradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}
+            initialBackgroundBlur={globalFooterSection.content?.backgroundBlur || 0}
+            onSave={handleSaveGlobalFooterSettings}
+            siteColors={siteColors}
+            sectionData={globalFooterSection}
+            pageId={pageId}
+            onSectionPromoted={() => {
+              // Already promoted, shouldn't happen
+              setIsSectionSettingsModalOpen(false);
+            }}
+            onSectionDemoted={() => {
+              // Refresh page data after demotion
+              fetchPageData();
+              fetchGlobalSections();
+              setIsSectionSettingsModalOpen(false);
+            }}
           />
         )}
 
@@ -874,7 +1161,64 @@ const PageBuilderPage: React.FC = () => {
           }}>
               {/* Global Navigation */}
               {globalNavSection && (
-                <div className="sticky top-0 z-40">
+                <div className="sticky top-0 z-40 relative">
+                  {!previewMode && (
+                    <div className="absolute -left-10 top-4 flex flex-col items-center space-y-1 z-10">
+                      {/* Settings button for global navigation */}
+                      <button 
+                        onClick={() => openSectionSettings(globalNavSection.id)}
+                        className="p-1 rounded-full bg-white border border-gray-200 shadow-sm text-gray-600 hover:text-gray-900"
+                        title="Global navigation settings"
+                      >
+                        <Settings className="h-4 w-4" />
+                      </button>
+                      {/* Delete button for global navigation */}
+                      <button 
+                        onClick={async () => {
+                          // Delete the global navigation section completely
+                          if (selectedProject && selectedProject.global_nav_section_id) {
+                            try {
+                              console.log('🗑️ Deleting global navigation section');
+                              
+                              // First, clear the global nav reference
+                              const { error: updateError } = await supabase
+                                .from('projects')
+                                .update({ global_nav_section_id: null })
+                                .eq('id', selectedProject.id);
+                                
+                              if (updateError) {
+                                console.error('Error clearing global nav reference:', updateError);
+                                return;
+                              }
+                              
+                              // Then delete the page_sections record
+                              const { error: deleteError } = await supabase
+                                .from('page_sections')
+                                .delete()
+                                .eq('id', selectedProject.global_nav_section_id);
+                                
+                              if (deleteError) {
+                                console.error('Error deleting page_sections record:', deleteError);
+                              }
+                              
+                              // Update local state
+                              setGlobalNavSection(null);
+                              await refetchProject();
+                              setHasChanges(true);
+                              
+                              console.log('✅ Global navigation deleted successfully');
+                            } catch (error) {
+                              console.error('Error deleting global navigation:', error);
+                            }
+                          }
+                        }}
+                        className="p-1 rounded-full bg-white border border-gray-200 shadow-sm text-red-500 hover:text-red-700"
+                        title="Delete global navigation"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
                   <EditModeProvider 
                     initialEditMode={!previewMode} 
                     onContentUpdate={(fieldName, value) => {
@@ -937,14 +1281,29 @@ const PageBuilderPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="website-content">
-                  {sections.map((section, index) => (
+                  {sections
+                    .map((section, originalIndex) => {
+                      // Filter out sections that are currently set as global navigation or footer
+                      // Check both pageBuilderSectionId and the section's original id in content
+                      const isGlobalNav = globalNavSection?.content?.pageBuilderSectionId === section.id || 
+                                        globalNavSection?.content?.id === section.id;
+                      const isGlobalFooter = globalFooterSection?.content?.pageBuilderSectionId === section.id ||
+                                           globalFooterSection?.content?.id === section.id;
+                      
+                      if (isGlobalNav || isGlobalFooter) {
+                        // Debug log only when filtering happens
+                        console.log('🔍 Filtering out global section:', section.id, isGlobalNav ? '(global nav)' : '(global footer)');
+                        return null; // Don't render global sections in the main content
+                      }
+                      
+                      return (
                   <div key={section.id} className="relative">
                     {!previewMode && (
                       <div className="absolute -left-10 top-4 flex flex-col items-center space-y-1 z-10">
                         <button 
-                          onClick={() => moveSection(index, 'up')}
-                          disabled={index === 0}
-                          className={`p-1 rounded-full bg-white border border-gray-200 shadow-sm ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:text-gray-900'}`}
+                          onClick={() => moveSection(originalIndex, 'up')}
+                          disabled={originalIndex === 0}
+                          className={`p-1 rounded-full bg-white border border-gray-200 shadow-sm ${originalIndex === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:text-gray-900'}`}
                           title="Move up"
                         >
                           <ChevronUp className="h-4 w-4" />
@@ -952,15 +1311,15 @@ const PageBuilderPage: React.FC = () => {
                         <div 
                           className="p-1 rounded-full bg-white border border-gray-200 shadow-sm text-gray-600 hover:text-gray-900 cursor-grab"
                           draggable
-                          onDragStart={(e) => handleSectionDragStart(index, e)}
+                          onDragStart={(e) => handleSectionDragStart(originalIndex, e)}
                           onDragEnd={handleDragEnd}
                         >
                           <GripVertical className="h-4 w-4" />
                         </div>
                         <button 
-                          onClick={() => moveSection(index, 'down')}
-                          disabled={index === sections.length - 1}
-                          className={`p-1 rounded-full bg-white border border-gray-200 shadow-sm ${index === sections.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:text-gray-900'}`}
+                          onClick={() => moveSection(originalIndex, 'down')}
+                          disabled={originalIndex === sections.length - 1}
+                          className={`p-1 rounded-full bg-white border border-gray-200 shadow-sm ${originalIndex === sections.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:text-gray-900'}`}
                           title="Move down"
                         >
                           <ChevronDown className="h-4 w-4" />
@@ -973,7 +1332,7 @@ const PageBuilderPage: React.FC = () => {
                          <Settings className="h-4 w-4" />
                        </button>
                         <button 
-                          onClick={() => removeSection(index)}
+                          onClick={() => removeSection(originalIndex)}
                           className="p-1 rounded-full bg-white border border-gray-200 shadow-sm text-red-500 hover:text-red-700"
                           title="Delete section"
                         >
@@ -985,7 +1344,7 @@ const PageBuilderPage: React.FC = () => {
                     {/* Section content */}
                     <div 
                       className={`relative transition-all duration-300 ${!previewMode ? 'group' : ''} ${
-                        !previewMode && dragOverSection && draggedSectionIndex === index 
+                        !previewMode && dragOverSection && draggedSectionIndex === originalIndex 
                           ? 'opacity-50' 
                           : 'opacity-100'
                       }`}
@@ -1019,16 +1378,16 @@ const PageBuilderPage: React.FC = () => {
                     {!previewMode && (
                       <div 
                         className={`h-12 w-full flex items-center justify-center transition-all ${
-                          dropTargetIndex === index + 1
+                          dropTargetIndex === originalIndex + 1
                             ? 'bg-primary-pink/10 border-2 border-primary-pink border-dashed'
                             : 'bg-gray-100 border-2 border-gray-300 border-dashed'
                         }`}
-                        onDragOver={(e) => handleDragOver(index + 1, e)}
-                        onDrop={(e) => handleDrop(index + 1, e)}
+                        onDragOver={(e) => handleDragOver(originalIndex + 1, e)}
+                        onDrop={(e) => handleDrop(originalIndex + 1, e)}
                         onDragLeave={() => setDropTargetIndex(null)}
                       >
                         <div className="text-xs text-gray-500">
-                          {dropTargetIndex === index + 1
+                          {dropTargetIndex === originalIndex + 1
                             ? 'Drop to add section here'
                             : 'Drag sections here'
                           }
@@ -1036,13 +1395,72 @@ const PageBuilderPage: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  ))}
+                      ); // End of return statement
+                    }) // End of map function
+                    .filter(Boolean)} {/* Remove null values from global sections */}
                 </div>
               )}
             
             {/* Global Footer */}
             {globalFooterSection && (
-              <div>
+              <div className="relative">
+                {!previewMode && (
+                  <div className="absolute -left-10 top-4 flex flex-col items-center space-y-1 z-10">
+                    {/* Settings button for global footer */}
+                    <button 
+                      onClick={() => openSectionSettings(globalFooterSection.id)}
+                      className="p-1 rounded-full bg-white border border-gray-200 shadow-sm text-gray-600 hover:text-gray-900"
+                      title="Global footer settings"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </button>
+                    {/* Delete button for global footer */}
+                    <button 
+                      onClick={async () => {
+                        // Delete the global footer section completely
+                        if (selectedProject && selectedProject.global_footer_section_id) {
+                          try {
+                            console.log('🗑️ Deleting global footer section');
+                            
+                            // First, clear the global footer reference
+                            const { error: updateError } = await supabase
+                              .from('projects')
+                              .update({ global_footer_section_id: null })
+                              .eq('id', selectedProject.id);
+                              
+                            if (updateError) {
+                              console.error('Error clearing global footer reference:', updateError);
+                              return;
+                            }
+                            
+                            // Then delete the page_sections record
+                            const { error: deleteError } = await supabase
+                              .from('page_sections')
+                              .delete()
+                              .eq('id', selectedProject.global_footer_section_id);
+                              
+                            if (deleteError) {
+                              console.error('Error deleting page_sections record:', deleteError);
+                            }
+                            
+                            // Update local state
+                            setGlobalFooterSection(null);
+                            await refetchProject();
+                            setHasChanges(true);
+                            
+                            console.log('✅ Global footer deleted successfully');
+                          } catch (error) {
+                            console.error('Error deleting global footer:', error);
+                          }
+                        }
+                      }}
+                      className="p-1 rounded-full bg-white border border-gray-200 shadow-sm text-red-500 hover:text-red-700"
+                      title="Delete global footer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
                 <EditModeProvider 
                   initialEditMode={!previewMode} 
                   onContentUpdate={(fieldName, value) => {

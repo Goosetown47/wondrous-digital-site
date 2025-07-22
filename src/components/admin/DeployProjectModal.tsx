@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, Globe, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, Globe, Loader2, AlertCircle, CheckCircle, FileText, Package, Clock } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
 import { useToast } from '../../contexts/ToastContext';
 import { netlifyConfig, getSubdomainUrl } from '../../config/netlify';
 import { netlifyService } from '../../services/netlifyService';
+import { staticExportService } from '../../services/staticExportService';
+import { deploymentQueueService } from '../../services/deploymentQueueService';
+import DeploymentStatusIndicator from './DeploymentStatusIndicator';
 
 interface Project {
   id: string;
@@ -30,7 +33,7 @@ interface DeployProjectModalProps {
   onSuccess: () => void;
 }
 
-type DeploymentStep = 'configure' | 'deploying' | 'success' | 'error';
+type DeploymentStep = 'configure' | 'building' | 'deploying' | 'queued' | 'success' | 'error';
 
 const DeployProjectModal: React.FC<DeployProjectModalProps> = ({ 
   isOpen, 
@@ -46,6 +49,11 @@ const DeployProjectModal: React.FC<DeployProjectModalProps> = ({
   const [showCustomDomain, setShowCustomDomain] = useState(false);
   const [deploymentUrl, setDeploymentUrl] = useState('');
   const [error, setError] = useState('');
+  const [buildProgress, setBuildProgress] = useState('Initializing...');
+  const [deploymentId, setDeploymentId] = useState<string | null>(null);
+  const [queuePosition, setQueuePosition] = useState<number>(-1);
+  const [unsubscribe, setUnsubscribe] = useState<(() => void) | null>(null);
+  const [positionInterval, setPositionInterval] = useState<NodeJS.Timeout | null>(null);
   const { addToast } = useToast();
 
   // Initialize form with existing data or generate defaults
@@ -75,25 +83,48 @@ const DeployProjectModal: React.FC<DeployProjectModalProps> = ({
         setSubdomain(generatedSubdomain);
       }
       
-      // Set domain - use existing or default
+      // Set domain - use existing deployment_domain or default
+      console.log('DeployProjectModal - Project data:', {
+        deployment_domain: project.deployment_domain,
+        domain: project.domain,
+        custom_domains: project.custom_domains,
+        subdomain: project.subdomain
+      });
+      
+      // Get customer's custom domains from the project data
+      const customerDomains = project.custom_domains || [];
+      
       if (project.deployment_domain) {
-        setSelectedDomain(project.deployment_domain);
+        // Check if deployment_domain is a known domain or custom
+        if (project.deployment_domain === 'wondrousdigital.com' || 
+            customerDomains.includes(project.deployment_domain)) {
+          console.log('Setting selected domain to:', project.deployment_domain);
+          setSelectedDomain(project.deployment_domain);
+          setShowCustomDomain(false);
+        } else {
+          // It's a custom domain not in the customer's custom_domains list
+          console.log('Setting custom domain to:', project.deployment_domain);
+          setSelectedDomain('custom');
+          setCustomDomain(project.deployment_domain);
+          setShowCustomDomain(true);
+        }
       } else if (project.domain) {
-        // If they have a custom domain in the domain field
+        // Legacy: If they have a custom domain in the domain field
         setSelectedDomain('custom');
         setCustomDomain(project.domain);
         setShowCustomDomain(true);
       } else {
         // Default to wondrousdigital.com
         setSelectedDomain('wondrousdigital.com');
+        setShowCustomDomain(false);
       }
     }
   }, [project, isOpen]);
 
   const validateSubdomain = (): boolean => {
+    // Allow empty subdomain for root domain
     if (!subdomain) {
-      setError('Subdomain is required');
-      return false;
+      return true;
     }
 
     if (subdomain.length < 3) {
@@ -132,73 +163,89 @@ const DeployProjectModal: React.FC<DeployProjectModalProps> = ({
       // Construct full site name/URL
       const siteName = subdomain ? `${subdomain}.${deploymentDomain}` : deploymentDomain;
       
-      // Only check availability for wondrousdigital.com subdomains
-      if (deploymentDomain === 'wondrousdigital.com' && !project.netlify_site_id) {
-        const isAvailable = await netlifyService.checkSubdomainAvailability(subdomain);
+      // Only check availability for new deployments (not re-deployments)
+      if (subdomain && !project.netlify_site_id) {
+        const isAvailable = await netlifyService.checkSubdomainAvailability(subdomain, deploymentDomain);
         if (!isAvailable) {
-          throw new Error('This subdomain is already taken. Please choose another.');
+          throw new Error(`The domain ${subdomain}.${deploymentDomain} is already in use. Please choose another subdomain.`);
         }
       }
 
-      // Step 2: Create or update Netlify site
-      let siteId = project.netlify_site_id;
-      let siteUrl = '';
-
-      if (!siteId) {
-        // Create new site
-        const site = await netlifyService.createSite(subdomain);
-        siteId = site.id;
-        siteUrl = site.ssl_url || site.url;
-      } else {
-        // Update existing site
-        const site = await netlifyService.updateSite(siteId, {
-          name: subdomain
-        });
-        siteUrl = site.ssl_url || site.url;
-      }
-
-      // Step 3: Update project in database
-      const { error: updateError } = await supabase
-        .from('projects')
-        .update({
-          subdomain: subdomain || null,
-          deployment_domain: deploymentDomain,
-          netlify_site_id: siteId,
-          deployment_status: 'deployed',
-          deployment_url: siteUrl,
-          last_deployed_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', project.id);
-
-      if (updateError) throw updateError;
-
-      // Step 4: Log deployment
-      const user = await supabase.auth.getUser();
-      if (user.data.user) {
-        await supabase
-          .from('audit_logs')
-          .insert({
-            user_id: user.data.user.id,
-            action_type: 'deploy',
-            entity_type: 'project',
-            entity_id: project.id,
-            new_data: {
-              subdomain: subdomain || null,
-              deployment_domain: deploymentDomain,
-              netlify_site_id: siteId,
-              deployment_url: siteUrl
-            }
-          });
-      }
-
-      // Success!
-      setDeploymentUrl(siteUrl);
-      setStep('success');
-      addToast('Project deployed successfully!', 'success');
+      // Step 2: Build static HTML
+      setStep('building');
+      setBuildProgress('Generating static HTML...');
+      const exportResult = await staticExportService.exportProject(project.id);
       
-      // Note: Actual file deployment would happen here in production
-      // For now, this creates the Netlify site and reserves the subdomain
+      setBuildProgress(`Generated ${exportResult.pages.length} pages`);
+      
+      // Step 3: Queue deployment
+      setBuildProgress('Queueing deployment...');
+      
+      // Prepare deployment payload
+      const deploymentPayload = {
+        subdomain,
+        deployment_domain: deploymentDomain,
+        exportResult,
+        netlify_site_id: project.netlify_site_id
+      };
+      
+      // Queue the deployment with higher priority for re-deployments
+      const priority = project.netlify_site_id ? 5 : 0;
+      const queuedDeployment = await deploymentQueueService.queueDeployment(
+        project.id,
+        project.customer_id || null,
+        deploymentPayload,
+        priority
+      );
+      
+      setDeploymentId(queuedDeployment.id);
+      setStep('queued');
+      
+      // Get initial queue position
+      const position = await deploymentQueueService.getQueuePosition(queuedDeployment.id);
+      setQueuePosition(position);
+      
+      // Subscribe to deployment updates
+      const unsub = deploymentQueueService.subscribeToDeployment(
+        queuedDeployment.id,
+        async (event) => {
+          if (event.deployment) {
+            if (event.deployment.status === 'processing') {
+              setStep('deploying');
+              setBuildProgress('Edge Function is processing your deployment...');
+              // Clear position polling when processing starts
+              if (positionInterval) {
+                clearInterval(positionInterval);
+                setPositionInterval(null);
+              }
+            } else if (event.deployment.status === 'completed') {
+              // Extract the deployment URL from the payload
+              const result = event.deployment.payload.deploymentResult;
+              if (result?.deployment_url) {
+                setDeploymentUrl(result.deployment_url);
+                setStep('success');
+                addToast('Project deployed successfully!', 'success');
+              }
+            } else if (event.deployment.status === 'failed') {
+              setError(event.deployment.error_message || 'Deployment failed');
+              setStep('error');
+              addToast('Deployment failed', 'error');
+            }
+          }
+        }
+      );
+      
+      setUnsubscribe(() => unsub);
+      
+      // Poll queue position while queued
+      const interval = setInterval(async () => {
+        if (step === 'queued' && queuedDeployment.id) {
+          const pos = await deploymentQueueService.getQueuePosition(queuedDeployment.id);
+          setQueuePosition(pos);
+        }
+      }, 5000); // Update every 5 seconds
+      
+      setPositionInterval(interval);
       
     } catch (error: any) {
       console.error('Deployment error:', error);
@@ -211,9 +258,26 @@ const DeployProjectModal: React.FC<DeployProjectModalProps> = ({
   };
 
   const handleClose = () => {
+    // Clean up subscriptions and intervals
+    if (unsubscribe) {
+      unsubscribe();
+      setUnsubscribe(null);
+    }
+    if (positionInterval) {
+      clearInterval(positionInterval);
+      setPositionInterval(null);
+    }
+    
     if (step === 'success') {
       onSuccess();
     }
+    
+    // Reset state
+    setDeploymentId(null);
+    setQueuePosition(-1);
+    setStep('configure');
+    setError('');
+    
     onClose();
   };
 
@@ -267,7 +331,8 @@ const DeployProjectModal: React.FC<DeployProjectModalProps> = ({
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="wondrousdigital.com">wondrousdigital.com</option>
-                    {project.custom_domains?.map(domain => (
+                    {/* Use customer's custom domains from project data */}
+                    {(project.custom_domains || []).map(domain => (
                       <option key={domain} value={domain}>{domain}</option>
                     ))}
                     <option value="custom">Custom domain...</option>
@@ -339,15 +404,64 @@ const DeployProjectModal: React.FC<DeployProjectModalProps> = ({
             </div>
           )}
 
+          {step === 'building' && (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 text-blue-600 mx-auto mb-4 animate-pulse" />
+              <p className="text-lg font-medium text-gray-900 mb-2">
+                Building your website...
+              </p>
+              <p className="text-sm text-gray-600 mb-4">
+                {buildProgress}
+              </p>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+              </div>
+            </div>
+          )}
+
           {step === 'deploying' && (
             <div className="text-center py-8">
               <Loader2 className="h-12 w-12 text-blue-600 animate-spin mx-auto mb-4" />
               <p className="text-lg font-medium text-gray-900 mb-2">
-                Deploying your project...
+                Deploying to Netlify...
               </p>
-              <p className="text-sm text-gray-600">
-                This may take a few moments
+              <p className="text-sm text-gray-600 mb-4">
+                {buildProgress}
               </p>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full" style={{ width: '90%' }}></div>
+              </div>
+            </div>
+          )}
+
+          {step === 'queued' && deploymentId && (
+            <div className="py-6">
+              <div className="text-center mb-6">
+                <Clock className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+                <p className="text-lg font-medium text-gray-900 mb-2">
+                  Deployment Queued
+                </p>
+                <p className="text-sm text-gray-600">
+                  Your deployment has been queued and will be processed shortly.
+                </p>
+                {queuePosition > 0 && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    Position in queue: {queuePosition}
+                  </p>
+                )}
+              </div>
+              
+              <DeploymentStatusIndicator
+                deploymentId={deploymentId}
+                showLogs={true}
+                className="max-w-md mx-auto"
+              />
+              
+              <div className="mt-4 text-center">
+                <p className="text-xs text-gray-500">
+                  You can close this window. The deployment will continue in the background.
+                </p>
+              </div>
             </div>
           )}
 
@@ -355,7 +469,7 @@ const DeployProjectModal: React.FC<DeployProjectModalProps> = ({
             <div className="text-center py-8">
               <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
               <p className="text-lg font-medium text-gray-900 mb-2">
-                Deployment Successful!
+                {project?.netlify_site_id ? 'Re-deployment Successful!' : 'Deployment Successful!'}
               </p>
               <p className="text-sm text-gray-600 mb-4">
                 Your project is now live at:
@@ -417,7 +531,7 @@ const DeployProjectModal: React.FC<DeployProjectModalProps> = ({
             </>
           )}
 
-          {(step === 'success' || step === 'error') && (
+          {(step === 'success' || step === 'error' || step === 'queued') && (
             <button
               onClick={handleClose}
               className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"

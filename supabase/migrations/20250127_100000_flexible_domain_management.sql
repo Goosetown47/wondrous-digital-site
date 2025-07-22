@@ -48,7 +48,8 @@ END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
 -- Update project_management_view to include new fields and computed URL
-CREATE OR REPLACE VIEW project_management_view AS
+DROP VIEW IF EXISTS project_management_view CASCADE;
+CREATE VIEW project_management_view AS
 SELECT 
     p.id,
     p.project_name,
@@ -65,10 +66,6 @@ SELECT
     p.created_at,
     p.updated_at,
     p.customer_id,
-    p.template_description,
-    p.template_niche,
-    p.template_version,
-    p.template_preview_image,
     c.business_name,
     c.account_type,
     c.contact_email,
@@ -88,9 +85,7 @@ LEFT JOIN customers c ON p.customer_id = c.id;
 -- Grant permissions
 GRANT SELECT ON project_management_view TO authenticated;
 
--- Update deployment_history to track domain changes
-ALTER TABLE public.deployment_history
-ADD COLUMN IF NOT EXISTS deployment_domain VARCHAR(255);
+-- Skip deployment_history table update as it doesn't exist yet
 
 -- Function to validate domain format
 CREATE OR REPLACE FUNCTION is_valid_domain(domain_name TEXT) RETURNS BOOLEAN AS $$
@@ -104,18 +99,6 @@ $$ LANGUAGE plpgsql IMMUTABLE;
 ALTER TABLE public.projects
 ADD CONSTRAINT check_deployment_domain_format 
 CHECK (deployment_domain IS NULL OR is_valid_domain(deployment_domain));
-
--- Add check constraint for customer domains
-ALTER TABLE public.customers
-ADD CONSTRAINT check_custom_domains_format
-CHECK (
-    custom_domains IS NULL OR 
-    custom_domains = '{}' OR
-    NOT EXISTS (
-        SELECT 1 FROM unnest(custom_domains) AS d 
-        WHERE NOT is_valid_domain(d)
-    )
-);
 
 -- Add comments for documentation
 COMMENT ON COLUMN public.projects.deployment_domain IS 'The base domain for deployment (e.g., wondrousdigital.com or customer domain)';

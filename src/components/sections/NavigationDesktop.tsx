@@ -68,6 +68,7 @@ interface NavigationDesktopProps {
     };
   };
   navigationLinks?: NavigationLink[];
+  onLinkClick?: (link: NavigationLink | { href?: string }) => void;
   isGlobal?: boolean;
   isMobilePreview?: boolean;
 }
@@ -94,6 +95,7 @@ const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
     }
   },
   navigationLinks = [],
+  onLinkClick,
   isGlobal = false,
   isMobilePreview = false
 }) => {
@@ -453,6 +455,7 @@ const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
                 fieldName="logo"
                 logo={content.logo || { type: 'text', text: 'Logo', href: '/' }}
                 textColor={content.textColor}
+                onLogoClick={onLinkClick}
               />
             </div>
 
@@ -552,7 +555,7 @@ const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
                         <EditableNavLink
                           link={link}
                           textColor={content.textColor}
-                          onLinkClick={() => {}}
+                          onLinkClick={() => onLinkClick?.(link)}
                         />
                       </div>
                     ))
@@ -605,6 +608,7 @@ const NavigationDesktop: React.FC<NavigationDesktopProps> = ({
                     fieldName="logo"
                     logo={content.logo || { type: 'text', text: 'Logo', href: '/' }}
                     textColor={content.textColor}
+                    onLogoClick={onLinkClick}
                   />
                 </div>
                 <button

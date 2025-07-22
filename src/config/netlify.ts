@@ -56,6 +56,8 @@ export const validateNetlifyConfig = (): boolean => {
   
   if (!netlifyConfig.teamId) {
     console.warn('Netlify team ID is not configured. Sites will be created in personal account.');
+  } else {
+    console.log('Netlify configured for team:', netlifyConfig.teamId);
   }
   
   return true;

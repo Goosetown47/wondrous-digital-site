@@ -1,4 +1,5 @@
 import { netlifyConfig, validateNetlifyConfig, isSubdomainAvailable } from '../config/netlify';
+import { netlifyRateLimiter } from './netlifyRateLimiter';
 
 interface NetlifySite {
   id: string;
@@ -63,63 +64,69 @@ class NetlifyService {
       body.account_slug = this.teamId;
     }
 
-    try {
-      const response = await fetch(`${this.baseUrl}/sites`, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify(body)
-      });
+    return netlifyRateLimiter.executeRequest(async () => {
+      try {
+        const response = await fetch(`${this.baseUrl}/sites`, {
+          method: 'POST',
+          headers: this.getHeaders(),
+          body: JSON.stringify(body)
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to create site');
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to create site');
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('Error creating Netlify site:', error);
+        throw error;
       }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error creating Netlify site:', error);
-      throw error;
-    }
+    }, 1, 10); // Higher priority for site creation
   }
 
   // Get site details
   async getSite(siteId: string): Promise<NetlifySite> {
-    try {
-      const response = await fetch(`${this.baseUrl}/sites/${siteId}`, {
-        headers: this.getHeaders()
-      });
+    return netlifyRateLimiter.executeRequest(async () => {
+      try {
+        const response = await fetch(`${this.baseUrl}/sites/${siteId}`, {
+          headers: this.getHeaders()
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to get site details');
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to get site details');
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('Error getting Netlify site:', error);
+        throw error;
       }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error getting Netlify site:', error);
-      throw error;
-    }
+    });
   }
 
   // Update site settings
   async updateSite(siteId: string, updates: Partial<NetlifySite>): Promise<NetlifySite> {
-    try {
-      const response = await fetch(`${this.baseUrl}/sites/${siteId}`, {
-        method: 'PATCH',
-        headers: this.getHeaders(),
-        body: JSON.stringify(updates)
-      });
+    return netlifyRateLimiter.executeRequest(async () => {
+      try {
+        const response = await fetch(`${this.baseUrl}/sites/${siteId}`, {
+          method: 'PATCH',
+          headers: this.getHeaders(),
+          body: JSON.stringify(updates)
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update site');
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to update site');
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('Error updating Netlify site:', error);
+        throw error;
       }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error updating Netlify site:', error);
-      throw error;
-    }
+    });
   }
 
   // Delete a site
@@ -140,69 +147,58 @@ class NetlifyService {
     }
   }
 
-  // Deploy site files (simplified version - in production, use deploy API)
-  async deploySite(siteId: string, files: Record<string, string>): Promise<DeploymentStatus> {
-    // Note: This is a simplified implementation
-    // In production, you would:
-    // 1. Create a deploy
-    // 2. Upload files
-    // 3. Finalize deploy
-    
-    try {
-      // For now, we'll trigger a build if the site has a repo connected
-      const response = await fetch(`${this.baseUrl}/sites/${siteId}/builds`, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify({
-          clear_cache: false
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to trigger deployment');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error deploying to Netlify:', error);
-      throw error;
-    }
-  }
 
   // Get deployment status
   async getDeploymentStatus(siteId: string, deployId: string): Promise<DeploymentStatus> {
-    try {
-      const response = await fetch(`${this.baseUrl}/sites/${siteId}/deploys/${deployId}`, {
-        headers: this.getHeaders()
-      });
+    return netlifyRateLimiter.executeRequest(async () => {
+      try {
+        const response = await fetch(`${this.baseUrl}/sites/${siteId}/deploys/${deployId}`, {
+          headers: this.getHeaders()
+        });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to get deployment status');
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to get deployment status');
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('Error getting deployment status:', error);
+        throw error;
       }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error getting deployment status:', error);
-      throw error;
-    }
+    });
   }
 
-  // Check if a subdomain is already taken
-  async checkSubdomainAvailability(subdomain: string): Promise<boolean> {
-    try {
-      // Try to get the site - if it 404s, the subdomain is available
-      const response = await fetch(`${this.baseUrl}/sites/${subdomain}.netlify.app`, {
-        headers: this.getHeaders()
-      });
-
-      return response.status === 404;
-    } catch (error) {
-      // If we get an error, assume the subdomain might be taken
-      console.error('Error checking subdomain availability:', error);
-      return false;
-    }
+  // Check if a subdomain is already taken on a specific deployment domain
+  async checkSubdomainAvailability(subdomain: string, deploymentDomain: string): Promise<boolean> {
+    return netlifyRateLimiter.executeRequest(async () => {
+      try {
+        // Construct the full domain to check
+        const fullDomain = `${subdomain}.${deploymentDomain}`;
+        
+        // Get all sites to check their custom domains and aliases
+        const sites = await this.listSites();
+        
+        // Check if this domain is already in use
+        for (const site of sites) {
+          // Check if it's the primary custom domain
+          if (site.custom_domain === fullDomain) {
+            return false; // Domain is taken
+          }
+          
+          // Check if it's in the domain aliases
+          if (site.domain_aliases && site.domain_aliases.includes(fullDomain)) {
+            return false; // Domain is taken as an alias
+          }
+        }
+        
+        return true; // Domain is available
+      } catch (error) {
+        // If we get an error, assume the subdomain might be taken
+        console.error('Error checking subdomain availability:', error);
+        return false;
+      }
+    });
   }
 
   // List all sites (useful for checking existing deployments)
@@ -227,6 +223,32 @@ class NetlifyService {
       console.error('Error listing Netlify sites:', error);
       throw error;
     }
+  }
+  
+  // Deploy a site by uploading a ZIP file
+  async deploySite(siteId: string, zipBlob: Blob): Promise<DeploymentStatus> {
+    return netlifyRateLimiter.executeRequest(async () => {
+      try {
+        const response = await fetch(`${this.baseUrl}/sites/${siteId}/deploys`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.apiToken}`,
+            'Content-Type': 'application/zip'
+          },
+          body: zipBlob
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to deploy site');
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('Error deploying to Netlify:', error);
+        throw error;
+      }
+    }, 5, 5); // Deploy takes more API resources
   }
 }
 

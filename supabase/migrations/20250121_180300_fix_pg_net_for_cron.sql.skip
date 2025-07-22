@@ -1,0 +1,113 @@
+-- Fix pg_net for cron job execution context
+-- The issue is that pg_cron might run in a different security context
+
+-- First, ensure pg_net is installed (let it choose its own schema)
+CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- Find where pg_net functions are located and grant permissions
+DO $$
+DECLARE
+    net_schema text;
+BEGIN
+    -- Find the schema where net.http_post exists
+    SELECT n.nspname INTO net_schema
+    FROM pg_proc p
+    JOIN pg_namespace n ON p.pronamespace = n.oid
+    WHERE p.proname = 'http_post'
+    AND n.nspname IN ('net', 'extensions', 'public')
+    LIMIT 1;
+    
+    IF net_schema IS NOT NULL THEN
+        -- Grant usage on the schema
+        EXECUTE format('GRANT USAGE ON SCHEMA %I TO postgres', net_schema);
+        
+        -- Grant execute on all functions in that schema
+        EXECUTE format('GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA %I TO postgres', net_schema);
+        
+        RAISE NOTICE 'Found pg_net functions in schema: %', net_schema;
+    ELSE
+        RAISE NOTICE 'Could not find pg_net http_post function in any schema';
+    END IF;
+END $$;
+
+-- Create a wrapper function in public schema that cron can use
+CREATE OR REPLACE FUNCTION public.http_post_wrapper(
+    url text,
+    headers jsonb DEFAULT '{}'::jsonb,
+    body jsonb DEFAULT '{}'::jsonb
+)
+RETURNS BIGINT
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    result BIGINT;
+BEGIN
+    -- Try net schema first
+    BEGIN
+        result := net.http_post(
+            url := url,
+            headers := headers,
+            body := body,
+            timeout_milliseconds := 5000
+        );
+        RETURN result;
+    EXCEPTION
+        WHEN undefined_function THEN
+            -- Try extensions schema
+            BEGIN
+                result := extensions.http_post(
+                    url := url,
+                    headers := headers,
+                    body := body,
+                    timeout_milliseconds := 5000
+                );
+                RETURN result;
+            EXCEPTION
+                WHEN undefined_function THEN
+                    RAISE EXCEPTION 'pg_net http_post function not found in net or extensions schema';
+            END;
+    END;
+END;
+$$;
+
+-- Grant execute on the wrapper
+GRANT EXECUTE ON FUNCTION public.http_post_wrapper TO postgres;
+
+-- Note: The cron job command needs to be updated manually in Supabase dashboard
+-- to use: SELECT public.http_post_wrapper(...) instead of SELECT net.http_post(...)
+
+-- Verify the setup
+DO $$
+DECLARE
+    ext_exists boolean;
+    func_schema text;
+    wrapper_exists boolean;
+BEGIN
+    -- Check if extension exists
+    SELECT EXISTS (
+        SELECT 1 FROM pg_extension 
+        WHERE extname = 'pg_net'
+    ) INTO ext_exists;
+    
+    -- Find which schema has http_post function
+    SELECT n.nspname INTO func_schema
+    FROM pg_proc p
+    JOIN pg_namespace n ON p.pronamespace = n.oid
+    WHERE p.proname = 'http_post'
+    LIMIT 1;
+    
+    -- Check if wrapper exists
+    SELECT EXISTS (
+        SELECT 1 FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public' AND p.proname = 'http_post_wrapper'
+    ) INTO wrapper_exists;
+    
+    IF ext_exists AND func_schema IS NOT NULL AND wrapper_exists THEN
+        RAISE NOTICE 'pg_net setup complete: extension exists, http_post found in % schema, wrapper created', func_schema;
+    ELSE
+        RAISE NOTICE 'pg_net setup status: extension=%, http_post in schema=%, wrapper=%', 
+            ext_exists, func_schema, wrapper_exists;
+    END IF;
+END $$;

@@ -10,6 +10,7 @@ const AdminToolsLayout = () => {
     { name: 'Accounts Management', path: '/dashboard/admin/accounts' },
     { name: 'Projects', path: '/dashboard/admin/projects' },
     { name: 'Templates', path: '/dashboard/admin/templates' },
+    { name: 'Deployment Queue', path: '/dashboard/admin/deployment-queue' },
     { name: 'Section Library', path: '/dashboard/admin/section-library' },
     { name: 'Staging', path: '/dashboard/admin/staging' },
     { name: 'Database Settings', path: '/dashboard/admin/database-settings' }

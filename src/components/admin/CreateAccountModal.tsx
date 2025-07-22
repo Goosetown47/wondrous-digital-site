@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '../../utils/supabase';
 import { createAccountSchema } from '../../schemas';
 import { useToast } from '../../contexts/ToastContext';
@@ -23,6 +23,8 @@ const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose
     account_type: 'prospect' as 'prospect' | 'customer',
     notes: ''
   });
+  const [customDomains, setCustomDomains] = useState<string[]>([]);
+  const [newDomain, setNewDomain] = useState('');
 
   // Reset form and errors when modal opens
   React.useEffect(() => {
@@ -34,6 +36,8 @@ const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose
         account_type: 'prospect',
         notes: ''
       });
+      setCustomDomains([]);
+      setNewDomain('');
       setErrors({});
     }
   }, [isOpen]);
@@ -85,7 +89,8 @@ const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose
           account_type: formData.account_type,
           notes: formData.notes || null,
           subscription_status: 'none',
-          is_active: true
+          is_active: true,
+          custom_domains: customDomains
         })
         .select()
         .single();
@@ -117,6 +122,8 @@ const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose
         account_type: 'prospect',
         notes: ''
       });
+      setCustomDomains([]);
+      setNewDomain('');
       
       onSuccess();
       await refreshData();
@@ -134,6 +141,37 @@ const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const validateDomain = (domain: string): boolean => {
+    return /^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i.test(domain);
+  };
+
+  const handleAddDomain = () => {
+    const domain = newDomain.trim().toLowerCase();
+    
+    if (!domain) {
+      setErrors({ ...errors, newDomain: 'Domain cannot be empty' });
+      return;
+    }
+    
+    if (!validateDomain(domain)) {
+      setErrors({ ...errors, newDomain: 'Invalid domain format (e.g., example.com)' });
+      return;
+    }
+    
+    if (customDomains.includes(domain)) {
+      setErrors({ ...errors, newDomain: 'Domain already added' });
+      return;
+    }
+    
+    setCustomDomains([...customDomains, domain]);
+    setNewDomain('');
+    setErrors({ ...errors, newDomain: '' });
+  };
+
+  const handleRemoveDomain = (domain: string) => {
+    setCustomDomains(customDomains.filter(d => d !== domain));
   };
 
   if (!isOpen) return null;
@@ -214,6 +252,57 @@ const CreateAccountModal: React.FC<CreateAccountModalProps> = ({ isOpen, onClose
                 The customer's existing domain (if they have one)
               </p>
             )}
+          </div>
+
+          {/* Custom Domains */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Custom Domains <span className="text-sm text-gray-500">(optional)</span>
+            </label>
+            
+            {/* Input for adding new domains */}
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={newDomain}
+                onChange={(e) => setNewDomain(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddDomain())}
+                className={`flex-1 px-3 py-2 border ${errors.newDomain ? 'border-red-500' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                placeholder="customerdomain.com"
+              />
+              <button
+                type="button"
+                onClick={handleAddDomain}
+                className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+            {errors.newDomain && (
+              <p className="mt-1 text-sm text-red-600">{errors.newDomain}</p>
+            )}
+            
+            {/* List of added domains */}
+            {customDomains.length > 0 && (
+              <div className="space-y-1">
+                {customDomains.map((domain) => (
+                  <div key={domain} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700">{domain}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveDomain(domain)}
+                      className="text-red-600 hover:text-red-700 focus:outline-none"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <p className="mt-1 text-xs text-gray-500">
+              Additional domains that can be used for project deployments
+            </p>
           </div>
 
           {/* Account Type */}

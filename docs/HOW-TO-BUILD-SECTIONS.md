@@ -624,17 +624,32 @@ Follow HeroSplitLayout.tsx as the gold standard - it demonstrates all patterns c
 
 ## Navigation Sections Guide
 
-Navigation sections (navbars and footers) require special architecture to support advanced features like drag & drop link management, global navigation settings, and responsive behavior.
+Navigation sections are a special category that includes navbars, footers, and other navigation components. Understanding the architecture is crucial for building new navigation sections.
+
+### Key Concepts for Navigation
+
+#### Section Type vs Components:
+- **Section Type**: "navigation" - This is what users drag from the sidebar
+- **Section Components**: Individual navigation designs (NavigationDesktop, NavigationMinimal, FooterSimple, etc.)
+- **Template System**: Users select which navigation component to use via Settings → Templates tab
+- **Global Usage**: ANY navigation section can be set as either global navbar OR global footer
+
+#### Architecture Overview:
+1. **Single Section Type**: All navigation components use section type "navigation"
+2. **Multiple Components**: Each visual design is a separate .tsx file in `/src/components/sections/`
+3. **Database Storage**: The selected component is stored in `section_type` (e.g., 'navigation-desktop')
+4. **Flexible Usage**: A "footer-style" component can be used as a navbar and vice versa
 
 ### Navigation Section Architecture
 
 #### Core Features:
 1. **Database-driven links** with parent-child relationships
-2. **Drag & drop reordering** with smooth animations
+2. **Drag & drop reordering** with smooth animations  
 3. **Link configuration** via tooltip editor
 4. **Global navigation settings** (navbar/footer designation)
 5. **Responsive mobile menu** with hamburger
 6. **Dropdown support** with sub-navigation
+7. **Multi-page navigation** when used globally
 
 #### Required Props Interface:
 ```typescript
@@ -1025,6 +1040,80 @@ case 'navigation-footer':
 5. **Complex State**: Manages tooltips, dropdowns, and drag state
 6. **No Image Management**: Focus on links and text, not images
 
+### Building New Navigation Components - Step by Step
+
+#### 1. **Choose Component Name**
+Follow naming conventions that describe the style:
+- Navbars: `NavigationMinimal`, `NavigationModern`, `NavigationFloating`, `NavigationMega`
+- Footers: `FooterSimple`, `FooterMultiColumn`, `FooterMinimal`, `FooterEnterprise`
+- Special: `NavigationSidebar`, `NavigationSticky`, etc.
+
+#### 2. **Create Component File**
+Create `/src/components/sections/[ComponentName].tsx` following the NavigationDesktop pattern.
+
+#### 3. **Update PageBuilder Integration**
+In `/src/pages/dashboard/content/PageBuilderPage.tsx`, add to renderSection:
+```typescript
+case 'navigation-minimal':  // Match the section_type in database
+  return <NavigationMinimal {...commonNavigationProps} />;
+```
+
+#### 4. **Update ProjectPreview Integration**
+In `/src/pages/ProjectPreview.tsx`, add to renderNavigationSection:
+```typescript
+case 'navigation-minimal':
+  return <NavigationMinimal {...sectionProps} />;
+```
+
+#### 5. **Add to Staging System**
+Update `/src/pages/admin/StagingPage.tsx` to include your component for testing.
+
+#### 6. **Database Entry (Manual Admin Task)**
+After testing, admin creates section_templates entry:
+```sql
+INSERT INTO section_templates (section_type, template_name, category, status)
+VALUES ('navigation-minimal', 'Minimal Navigation', 'navigation', 'active');
+```
+
+### Common Navigation Patterns
+
+#### Navbar Variations:
+1. **Minimal**: Logo + essential links + CTA
+2. **Desktop Standard**: Logo + main nav + dropdowns + 2 CTAs
+3. **Floating**: Transparent background, changes on scroll
+4. **Mega Menu**: Large dropdown areas with columns
+5. **Centered**: Logo in center, links on sides
+6. **Sidebar**: Vertical navigation for dashboards
+
+#### Footer Variations:
+1. **Simple**: Copyright + social links
+2. **Multi-Column**: 3-5 columns of categorized links
+3. **Newsletter**: Includes email signup
+4. **Enterprise**: Multiple sections, awards, certifications
+5. **Minimal**: Single line with essentials
+
+### Testing Navigation Sections
+
+#### Essential Tests:
+1. **Link Management**: Add, edit, delete, reorder links
+2. **Global Settings**: Test as both navbar and footer
+3. **Multi-Page Navigation**: Links work across pages
+4. **Mobile Menu**: Hamburger menu functions correctly
+5. **Dropdowns**: Parent-child relationships work
+6. **ProjectPreview**: Navigation renders in full project preview
+
+### Important Context for Claude Chats
+
+When building navigation sections, remember:
+
+1. **Section Type**: Always use "navigation" as the base type
+2. **Component Naming**: The database stores specific types like 'navigation-minimal'
+3. **Two Integration Points**: Must update both PageBuilder AND ProjectPreview
+4. **Global Functionality**: NavigationSettingsTab handles global nav/footer settings
+5. **Link Management**: useNavigationLinks hook provides all CRUD operations
+6. **Responsive Design**: Each component must handle desktop and mobile views internally
+7. **Future Scale**: System designed for 20+ navbar and 20+ footer variations
+
 ### Troubleshooting:
 
 **Links not saving:**
@@ -1041,6 +1130,11 @@ case 'navigation-footer':
 - Check NavigationSettingsTab integration
 - Verify global_nav_section_id in projects table
 - Ensure renderSection handles global sections
+
+**Navigation not showing in ProjectPreview:**
+- Ensure component is imported in ProjectPreview.tsx
+- Add case to renderNavigationSection switch statement
+- Check section_type matches between database and code
 
 ---
 

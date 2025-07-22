@@ -21,6 +21,34 @@ export interface NavigationLink {
   children?: NavigationLink[];
 }
 
+export const organizeLinksHierarchy = (flatLinks: NavigationLink[]): NavigationLink[] => {
+  const linkMap = new Map<string, NavigationLink>();
+  const rootLinks: NavigationLink[] = [];
+
+  // First pass: create map of all links
+  flatLinks.forEach(link => {
+    linkMap.set(link.id, { ...link, children: [] });
+  });
+
+  // Second pass: organize hierarchy
+  flatLinks.forEach(link => {
+    const linkWithChildren = linkMap.get(link.id)!;
+    
+    if (link.parent_link_id) {
+      // This is a child link
+      const parent = linkMap.get(link.parent_link_id);
+      if (parent) {
+        parent.children!.push(linkWithChildren);
+      }
+    } else {
+      // This is a root link
+      rootLinks.push(linkWithChildren);
+    }
+  });
+
+  return rootLinks;
+};
+
 export function useNavigationLinks(sectionId?: string) {
   const { selectedProject } = useProject();
   const [links, setLinks] = useState<NavigationLink[]>([]);
@@ -60,34 +88,6 @@ export function useNavigationLinks(sectionId?: string) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const organizeLinksHierarchy = (flatLinks: NavigationLink[]): NavigationLink[] => {
-    const linkMap = new Map<string, NavigationLink>();
-    const rootLinks: NavigationLink[] = [];
-
-    // First pass: create map of all links
-    flatLinks.forEach(link => {
-      linkMap.set(link.id, { ...link, children: [] });
-    });
-
-    // Second pass: organize hierarchy
-    flatLinks.forEach(link => {
-      const linkWithChildren = linkMap.get(link.id)!;
-      
-      if (link.parent_link_id) {
-        // This is a child link
-        const parent = linkMap.get(link.parent_link_id);
-        if (parent) {
-          parent.children!.push(linkWithChildren);
-        }
-      } else {
-        // This is a root link
-        rootLinks.push(linkWithChildren);
-      }
-    });
-
-    return rootLinks;
   };
 
   const createNavigationLink = async (newLink: Omit<NavigationLink, 'id' | 'created_at' | 'updated_at'>) => {

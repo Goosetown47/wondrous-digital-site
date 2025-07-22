@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
 import { Users, UserPlus, Search, Filter, CheckCircle, XCircle, Eye, Edit, Trash2, ArrowRight } from 'lucide-react';
 import CreateAccountModal from '../../components/admin/CreateAccountModal';
+import EditAccountModal from '../../components/admin/EditAccountModal';
 import DeleteCustomerModal from '../../components/admin/DeleteCustomerModal';
 import StatusDropdown from '../../components/admin/StatusDropdown';
 import ActionButton from '../../components/admin/ActionButton';
@@ -22,6 +23,7 @@ interface Customer {
   updated_at: string;
   notes: string | null;
   project_count?: number;
+  custom_domains?: string[];
 }
 
 type TabType = 'prospects' | 'customers' | 'inactive';
@@ -44,6 +46,10 @@ const AccountsPage: React.FC = () => {
   }>({ isOpen: false, operation: null });
   const [isProcessingBulk, setIsProcessingBulk] = useState(false);
   const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    customer: Customer | null;
+  }>({ isOpen: false, customer: null });
+  const [editModal, setEditModal] = useState<{
     isOpen: boolean;
     customer: Customer | null;
   }>({ isOpen: false, customer: null });
@@ -541,6 +547,9 @@ const AccountsPage: React.FC = () => {
                     Domain
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Custom Domains
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Projects
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -582,6 +591,17 @@ const AccountsPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">
+                        {account.custom_domains && account.custom_domains.length > 0 ? (
+                          <span title={account.custom_domains.join(', ')}>
+                            {account.custom_domains.length} domain{account.custom_domains.length !== 1 ? 's' : ''}
+                          </span>
+                        ) : (
+                          '-'
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">
                         {account.project_count || 0}
                       </div>
                     </td>
@@ -615,10 +635,7 @@ const AccountsPage: React.FC = () => {
                         <ActionButton
                           icon={Edit}
                           label="Edit Account"
-                          onClick={() => {
-                            // Handle edit
-                            console.log('Edit account', account.id);
-                          }}
+                          onClick={() => setEditModal({ isOpen: true, customer: account })}
                         />
                         {activeTab === 'prospects' && (
                           <ActionButton
@@ -682,6 +699,17 @@ const AccountsPage: React.FC = () => {
         customer={deleteModal.customer}
         onConfirm={handleDeleteCustomer}
         isProcessing={isDeleting}
+      />
+
+      {/* Edit Account Modal */}
+      <EditAccountModal
+        isOpen={editModal.isOpen}
+        onClose={() => setEditModal({ isOpen: false, customer: null })}
+        customer={editModal.customer}
+        onSuccess={() => {
+          fetchAccounts();
+          fetchTabCounts();
+        }}
       />
       
     </div>

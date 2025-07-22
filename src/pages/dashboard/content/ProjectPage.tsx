@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../../utils/supabase';
-import { FileText, Plus, Edit3, Eye, ArrowLeft, Layers, Globe, Calendar } from 'lucide-react';
+import { FileText, Plus, Edit3, Eye, ArrowLeft, Layers, Globe, Calendar, Home } from 'lucide-react';
 import { useProject } from '../../../contexts/ProjectContext';
 import { useToast } from '../../../contexts/ToastContext';
+import DeploymentHistory from '../../../components/admin/DeploymentHistory';
 
 interface Page {
   id: string;
   page_name: string;
   slug: string;
-  is_published: boolean;
+  status: 'draft' | 'published';
+  is_homepage: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -41,6 +43,9 @@ const ProjectPage: React.FC = () => {
 
   // Get project ID from location state or selected project
   const projectId = location.state?.projectId || selectedProject?.id;
+  
+  // Calculate published pages count
+  const publishedPagesCount = pages.filter(page => page.status === 'published').length;
 
   useEffect(() => {
     if (projectId) {
@@ -84,10 +89,22 @@ const ProjectPage: React.FC = () => {
         .from('pages')
         .select('*')
         .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
+        .order('order_index', { ascending: true });
 
       if (error) throw error;
-      setPages(data || []);
+      
+      const pages = data || [];
+      setPages(pages);
+      
+      // Ensure at least one page is marked as homepage
+      const hasHomepage = pages.some(page => page.is_homepage);
+      if (pages.length > 0 && !hasHomepage) {
+        // Set the first page as homepage
+        const firstPage = pages[0];
+        await toggleHomepage(firstPage.id, true);
+        // Re-fetch to get updated data
+        await fetchPages();
+      }
     } catch (error) {
       console.error('Error fetching pages:', error);
       addToast('Failed to load pages', 'error');
@@ -96,11 +113,42 @@ const ProjectPage: React.FC = () => {
     }
   };
 
+  const toggleHomepage = async (pageId: string, skipRefetch = false) => {
+    try {
+      // First, unset any existing homepage
+      const { error: unsetError } = await supabase
+        .from('pages')
+        .update({ is_homepage: false })
+        .eq('project_id', projectId)
+        .eq('is_homepage', true);
+
+      if (unsetError) throw unsetError;
+
+      // Then set the new homepage
+      const { error: setError } = await supabase
+        .from('pages')
+        .update({ is_homepage: true })
+        .eq('id', pageId);
+
+      if (setError) throw setError;
+
+      addToast('Homepage updated successfully', 'success');
+      
+      if (!skipRefetch) {
+        fetchPages();
+      }
+    } catch (error) {
+      console.error('Error updating homepage:', error);
+      addToast('Failed to update homepage', 'error');
+    }
+  };
+
   const createNewPage = async () => {
     setCreating(true);
     try {
       const pageName = `Page ${pages.length + 1}`;
       const slug = `page-${pages.length + 1}`;
+      const isFirstPage = pages.length === 0;
 
       const { data, error } = await supabase
         .from('pages')
@@ -108,7 +156,9 @@ const ProjectPage: React.FC = () => {
           project_id: projectId,
           page_name: pageName,
           slug: slug,
-          is_published: false,
+          status: 'draft',
+          is_homepage: isFirstPage,
+          order_index: pages.length,
           sections: []
         })
         .select()
@@ -195,23 +245,45 @@ const ProjectPage: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                onClick={createNewPage}
-                disabled={creating}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {creating ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Page
-                  </>
-                )}
-              </button>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => {
+                    if (!projectId || projectId === 'undefined') {
+                      addToast('No project selected', 'error');
+                      return;
+                    }
+                    window.open(`/preview/project/${projectId}`, '_blank');
+                  }}
+                  disabled={publishedPagesCount === 0}
+                  className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                    publishedPagesCount === 0 
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+                      : 'bg-gray-600 text-white hover:bg-gray-700'
+                  }`}
+                  title={publishedPagesCount === 0 ? 'No published pages to preview' : 'Preview website in browser'}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview in Browser
+                  {publishedPagesCount === 0 && <span className="ml-1 text-xs">(No published pages)</span>}
+                </button>
+                <button
+                  onClick={createNewPage}
+                  disabled={creating}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {creating ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Page
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -256,15 +328,31 @@ const ProjectPage: React.FC = () => {
                     <div className="mt-1 flex items-center space-x-4 text-xs text-gray-500">
                       <span>/{page.slug}</span>
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                        page.is_published ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        page.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {page.is_published ? 'Published' : 'Draft'}
+                        {page.status === 'published' ? 'Published' : 'Draft'}
                       </span>
+                      {page.is_homepage && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                          Homepage
+                        </span>
+                      )}
                       <span>Updated {new Date(page.updated_at).toLocaleDateString()}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => toggleHomepage(page.id)}
+                      className={`inline-flex items-center px-3 py-1.5 text-sm rounded-md transition-colors ${
+                        page.is_homepage 
+                          ? 'text-blue-700 bg-blue-50 border border-blue-300 hover:bg-blue-100' 
+                          : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                      }`}
+                      title={page.is_homepage ? 'Current Homepage' : 'Set as Homepage'}
+                    >
+                      <Home className={`h-4 w-4 ${page.is_homepage ? 'fill-current' : ''}`} />
+                    </button>
                     <button
                       onClick={() => navigateToPageBuilder(page.id)}
                       className="inline-flex items-center px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
@@ -286,6 +374,13 @@ const ProjectPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Deployment History */}
+      {projectId && (
+        <div className="mt-6">
+          <DeploymentHistory projectId={projectId} limit={5} />
+        </div>
+      )}
     </div>
   );
 };
