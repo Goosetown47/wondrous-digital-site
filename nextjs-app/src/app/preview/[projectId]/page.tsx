@@ -7,12 +7,17 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import type { HeroContent } from '@/schemas/section';
 import { usePage, useProject } from '@/hooks/useProjects';
+import { useDomains } from '@/hooks/useDomains';
 
 export default function PreviewPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const { data: project } = useProject(projectId);
   const { data: page, isLoading } = usePage(projectId);
+  const { data: domains } = useDomains(projectId);
+  
+  // Get the primary domain or first available domain
+  const primaryDomain = domains?.find(d => d.is_primary) || domains?.[0];
 
   if (isLoading) {
     return (
@@ -42,12 +47,16 @@ export default function PreviewPage() {
           </div>
           
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/sites/${projectId}`} target="_blank">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View Live
-              </Link>
-            </Button>
+            {primaryDomain ? (
+              <Button variant="outline" size="sm" asChild>
+                <a href={`https://${primaryDomain.domain}`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Live
+                </a>
+              </Button>
+            ) : (
+              <span className="text-sm text-gray-500">No domain configured</span>
+            )}
           </div>
         </div>
       </div>

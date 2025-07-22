@@ -2,15 +2,20 @@
 
 import { useParams } from 'next/navigation';
 import { useProject } from '@/hooks/useProjects';
+import { useDomains } from '@/hooks/useDomains';
 import { DomainSettings } from '@/components/DomainSettings';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings } from 'lucide-react';
+import { ArrowLeft, Settings, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProjectSettingsPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const { data: project } = useProject(projectId);
+  const { data: domains } = useDomains(projectId);
+  
+  // Get the primary domain or first available domain
+  const primaryDomain = domains?.find(d => d.is_primary) || domains?.[0];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -61,11 +66,16 @@ export default function ProjectSettingsPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Live Site</span>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/sites/${projectId}`} target="_blank">
-                    View Live
-                  </Link>
-                </Button>
+                {primaryDomain ? (
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={`https://${primaryDomain.domain}`} target="_blank" rel="noopener noreferrer">
+                      View Live
+                      <ExternalLink className="w-3 h-3 ml-1" />
+                    </a>
+                  </Button>
+                ) : (
+                  <span className="text-sm text-gray-500">No domain configured</span>
+                )}
               </div>
             </div>
           </div>

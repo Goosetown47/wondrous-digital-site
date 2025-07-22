@@ -5,7 +5,6 @@ import { createClient } from '@supabase/supabase-js';
 const RESERVED_DOMAINS = [
   'localhost', // Only plain localhost, not subdomains
   'app.wondrousdigital.com', // Your main app domain
-  'wondrousdigital.com',
   'vercel.app',
 ];
 
