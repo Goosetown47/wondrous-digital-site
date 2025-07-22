@@ -9,42 +9,29 @@ import { Eye, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useProject, usePage, useSavePage } from '@/hooks/useProjects';
-import { useEffect } from 'react';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useEffect, useState } from 'react';
 
 export default function BuilderPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const { addSection, sections, clearAll } = useBuilderStore();
+  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
   
   // Fetch project and page data
   const { data: project } = useProject(projectId);
   const { data: page, isLoading: isLoadingPage } = usePage(projectId);
   const savePage = useSavePage();
 
-  // Debounce sections for auto-save
-  const debouncedSections = useDebounce(sections, 1000);
-
   // Load page sections when data arrives
   useEffect(() => {
-    if (page && page.sections) {
+    if (page && page.sections && !hasLoadedInitialData) {
       clearAll();
       page.sections.forEach(section => {
         addSection(section);
       });
+      setHasLoadedInitialData(true);
     }
-  }, [page, clearAll, addSection]);
-
-  // Auto-save when sections change
-  useEffect(() => {
-    if (projectId && debouncedSections.length > 0) {
-      savePage.mutate({
-        projectId,
-        sections: debouncedSections,
-        title: project?.name || 'Untitled Page',
-      });
-    }
-  }, [debouncedSections, projectId, project?.name, savePage]);
+  }, [page, clearAll, addSection, hasLoadedInitialData]);
 
   const handleDragStart = (sectionType: string) => {
     if (typeof window !== 'undefined') {
@@ -108,17 +95,6 @@ export default function BuilderPage() {
               <span className="text-sm text-gray-500">
                 {sections.length} section{sections.length !== 1 ? 's' : ''}
               </span>
-              {savePage.isPending && (
-                <span className="text-sm text-gray-500 flex items-center">
-                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                  Saving...
-                </span>
-              )}
-              {savePage.isSuccess && !savePage.isPending && (
-                <span className="text-sm text-green-600">
-                  Saved
-                </span>
-              )}
             </div>
             <div className="flex items-center space-x-2">
               <Button variant="outline" size="sm" asChild>
@@ -132,9 +108,28 @@ export default function BuilderPage() {
                 onClick={handleManualSave}
                 disabled={savePage.isPending}
               >
-                <Save className="w-4 h-4 mr-2" />
-                Save
+                {savePage.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </>
+                )}
               </Button>
+              {savePage.isSuccess && !savePage.isPending && (
+                <span className="text-sm text-green-600">
+                  Saved!
+                </span>
+              )}
+              {savePage.isError && (
+                <span className="text-sm text-red-600">
+                  Failed
+                </span>
+              )}
             </div>
           </div>
         </div>

@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useProjects, useCreateProject } from '@/hooks/useProjects';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Loader2, Plus, ExternalLink } from 'lucide-react';
+import { Loader2, Plus, ExternalLink, Settings } from 'lucide-react';
 
 export default function SetupPage() {
   const [projectName, setProjectName] = useState('');
@@ -93,6 +93,11 @@ export default function SetupPage() {
                     <Button size="sm" variant="outline" asChild>
                       <Link href={`/sites/${project.id}`} target="_blank">
                         <ExternalLink className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                    <Button size="sm" variant="ghost" asChild>
+                      <Link href={`/project/${project.id}/settings`}>
+                        <Settings className="w-4 h-4" />
                       </Link>
                     </Button>
                   </div>

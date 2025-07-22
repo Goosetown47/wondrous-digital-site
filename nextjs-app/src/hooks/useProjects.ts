@@ -45,13 +45,13 @@ export function useCreateProject() {
 
   return useMutation({
     mutationFn: async (name: string) => {
-      // For now, we'll use a dummy user ID since auth isn't set up
+      // For now, we'll omit customer_id since auth isn't set up
       // In production, this would come from auth.uid()
       const { data, error } = await supabase
         .from('projects')
         .insert({
           name,
-          customer_id: 'dummy-user-id', // Replace with auth.uid() when auth is set up
+          // customer_id will be null for now
         })
         .select()
         .single();
@@ -113,17 +113,22 @@ export function useSavePage() {
       sections: Section[];
       title?: string;
     }) => {
+      // Use upsert for better performance (single database call)
       const { data, error } = await supabase
         .from('pages')
-        .upsert({
-          project_id: projectId,
-          path,
-          sections,
-          title,
-          metadata: {},
-        }, {
-          onConflict: 'project_id,path',
-        })
+        .upsert(
+          {
+            project_id: projectId,
+            path,
+            sections,
+            title,
+            metadata: {},
+          },
+          {
+            onConflict: 'project_id,path',
+            ignoreDuplicates: false
+          }
+        )
         .select()
         .single();
 
@@ -134,6 +139,9 @@ export function useSavePage() {
       queryClient.invalidateQueries({ 
         queryKey: ['page', data.project_id, data.path] 
       });
+    },
+    onError: (error) => {
+      console.error('Failed to save page:', error);
     },
   });
 }

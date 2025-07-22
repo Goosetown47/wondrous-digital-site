@@ -5,7 +5,7 @@ import { useBuilderStore } from '@/stores/builderStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { heroContentSchema, type HeroContent } from '@/schemas/section';
+import { type HeroContent } from '@/schemas/section';
 
 export function Canvas() {
   const { sections, selectedSectionId, setSelectedSection, removeSection, updateSection } = 

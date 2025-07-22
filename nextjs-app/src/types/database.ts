@@ -14,7 +14,7 @@ export interface Page {
   path: string;
   title?: string;
   sections: Section[];
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }

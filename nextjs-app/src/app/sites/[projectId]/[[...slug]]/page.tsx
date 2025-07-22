@@ -5,10 +5,10 @@ import type { HeroContent } from '@/schemas/section';
 import { notFound } from 'next/navigation';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     projectId: string;
     slug?: string[];
-  };
+  }>;
 }
 
 async function getPageData(projectId: string, path: string): Promise<Page | null> {
@@ -27,8 +27,9 @@ async function getPageData(projectId: string, path: string): Promise<Page | null
 }
 
 export default async function SitePage({ params }: PageProps) {
-  const path = params.slug ? `/${params.slug.join('/')}` : '/';
-  const page = await getPageData(params.projectId, path);
+  const { projectId, slug } = await params;
+  const path = slug ? `/${slug.join('/')}` : '/';
+  const page = await getPageData(projectId, path);
 
   if (!page) {
     notFound();

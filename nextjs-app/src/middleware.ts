@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
   }
   
   // Check if this is a reserved domain
-  // For localhost, only exact match (to allow subdomains like coffee-shop.localhost)
+  // For localhost, only exact match (to allow subdomains like veterinary-one.localhost)
   const isReservedDomain = domain === 'localhost' || 
     RESERVED_DOMAINS.filter(r => r !== 'localhost').some(reserved => 
       domain === reserved || domain.endsWith(`.${reserved}`)

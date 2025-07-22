@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
-import { ArrowRight, Layers, Eye, Rocket, Database } from 'lucide-react';
+import { ArrowRight, Layers, Rocket, Database } from 'lucide-react';
 
 export default function Home() {
   return (

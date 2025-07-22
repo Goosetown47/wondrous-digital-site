@@ -1,0 +1,33 @@
+# Environment files
+.env.local
+.env*.local
+
+# Documentation
+*.md
+docs/
+
+# Test files
+test-*
+*.test.*
+*.spec.*
+
+# Development files
+.vscode/
+.idea/
+
+# Git files
+.git/
+.gitignore
+
+# Build files that Vercel handles
+.next/
+out/
+
+# Other
+*.log
+.DS_Store
+node_modules/
+
+# Unused legacy files (old individual deployment system)
+src/lib/netlifyDeploy.ts
+src/app/api/deploy/

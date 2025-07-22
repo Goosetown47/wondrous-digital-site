@@ -1,5 +1,12 @@
--- Create projects table
-CREATE TABLE IF NOT EXISTS projects (
+-- Drop existing tables if they exist (careful in production!)
+DROP TABLE IF EXISTS project_domains CASCADE;
+DROP TABLE IF EXISTS pages CASCADE;
+DROP TABLE IF EXISTS projects CASCADE;
+
+-- Create new schema for Next.js multi-tenant PageBuilder
+
+-- Projects table for multi-tenant support
+CREATE TABLE projects (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   customer_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -7,8 +14,8 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create pages table with JSONB for sections
-CREATE TABLE IF NOT EXISTS pages (
+-- Pages table with path-based routing
+CREATE TABLE pages (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
   path TEXT NOT NULL DEFAULT '/',
@@ -20,8 +27,8 @@ CREATE TABLE IF NOT EXISTS pages (
   UNIQUE(project_id, path)
 );
 
--- Create project_domains table
-CREATE TABLE IF NOT EXISTS project_domains (
+-- Project domains for custom domain support
+CREATE TABLE project_domains (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
   domain TEXT NOT NULL UNIQUE,
@@ -39,7 +46,7 @@ CREATE INDEX idx_pages_project_path ON pages(project_id, path);
 CREATE INDEX idx_project_domains_project_id ON project_domains(project_id);
 CREATE INDEX idx_project_domains_domain ON project_domains(domain);
 
--- Row Level Security (RLS)
+-- Enable Row Level Security
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE project_domains ENABLE ROW LEVEL SECURITY;
@@ -141,7 +148,7 @@ CREATE POLICY "Public can view pages by domain" ON pages
     )
   );
 
--- Updated at trigger
+-- Updated at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -150,8 +157,14 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Create triggers
 CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON projects
   FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
 
 CREATE TRIGGER update_pages_updated_at BEFORE UPDATE ON pages
   FOR EACH ROW EXECUTE PROCEDURE update_updated_at_column();
+
+-- Temporarily disable RLS for testing (remove in production!)
+ALTER TABLE projects DISABLE ROW LEVEL SECURITY;
+ALTER TABLE pages DISABLE ROW LEVEL SECURITY;
+ALTER TABLE project_domains DISABLE ROW LEVEL SECURITY;

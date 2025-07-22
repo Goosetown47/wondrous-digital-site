@@ -4,7 +4,7 @@ import { devtools, persist } from 'zustand/middleware';
 export interface Section {
   id: string;
   type: 'hero' | 'features' | 'navigation' | 'footer';
-  content: Record<string, any>;
+  content: Record<string, unknown>;
   order: number;
   templateId?: string;
 }
