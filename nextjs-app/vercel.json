@@ -4,9 +4,6 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "regions": ["iad1"],
-  "env": {
-    "NEXT_PUBLIC_CUSTOM_CNAME": "domains.wondrousdigital.com"
-  },
   "headers": [
     {
       "source": "/(.*)",
@@ -24,6 +21,12 @@
           "value": "1; mode=block"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/email/process-queue",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

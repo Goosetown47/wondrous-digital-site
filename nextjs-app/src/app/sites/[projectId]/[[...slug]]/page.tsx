@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { HeroSection } from '@/components/sections/HeroSection';
 import type { Page } from '@/types/database';
 import type { HeroContent } from '@/schemas/section';
@@ -12,6 +12,7 @@ interface PageProps {
 }
 
 async function getPageData(projectId: string, path: string): Promise<Page | null> {
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from('pages')
     .select('*')

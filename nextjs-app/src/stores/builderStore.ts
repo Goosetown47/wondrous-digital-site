@@ -3,7 +3,9 @@ import { devtools, persist } from 'zustand/middleware';
 
 export interface Section {
   id: string;
-  type: 'hero' | 'features' | 'navigation' | 'footer';
+  type: string; // Made flexible to support any type
+  type_id?: string; // Reference to types table
+  component_name?: string; // React component name from library item
   content: Record<string, unknown>;
   order: number;
   templateId?: string;

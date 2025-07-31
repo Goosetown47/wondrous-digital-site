@@ -1,26 +1,17 @@
 'use client';
 
-import { HeroSection } from '@/components/sections/HeroSection';
+import { getSectionComponent, type BaseSectionProps } from '@/components/sections/index';
 import { useBuilderStore } from '@/stores/builderStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { type HeroContent } from '@/schemas/section';
 
 export function Canvas() {
   const { sections, selectedSectionId, setSelectedSection, removeSection, updateSection } = 
     useBuilderStore();
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    // Drop handling will be implemented in the parent component
-  };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleSectionContentChange = (sectionId: string, updates: Partial<HeroContent>) => {
+  const handleSectionContentChange = (sectionId: string, updates: any) => {
     const section = sections.find(s => s.id === sectionId);
     if (section) {
       updateSection(sectionId, {
@@ -29,11 +20,26 @@ export function Canvas() {
     }
   };
 
+  const renderSection = (section: any) => {
+    // Get the appropriate component using component_name from the section
+    const SectionComponent = getSectionComponent(section.component_name);
+
+    // Prepare the content, handling both old and new formats
+    const content = section.content || {};
+    
+    return (
+      <SectionComponent
+        content={content}
+        isEditing={selectedSectionId === section.id}
+        onContentChange={(updates) => handleSectionContentChange(section.id, updates)}
+      />
+    );
+  };
+
   return (
     <div 
-      className="min-h-screen bg-gray-50"
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
+      className="min-h-screen bg-gray-50 @container"
+      style={{ containerType: 'inline-size' }}
     >
       {sections.length === 0 ? (
         <div className="h-screen flex items-center justify-center">
@@ -71,16 +77,8 @@ export function Canvas() {
                 </Button>
               </div>
 
-              {/* Render section based on type */}
-              {section.type === 'hero' && (
-                <HeroSection 
-                  content={section.content as HeroContent}
-                  isEditing={selectedSectionId === section.id}
-                  onContentChange={(updates) => 
-                    handleSectionContentChange(section.id, updates)
-                  }
-                />
-              )}
+              {/* Render the section */}
+              {renderSection(section)}
             </motion.div>
           ))}
         </AnimatePresence>

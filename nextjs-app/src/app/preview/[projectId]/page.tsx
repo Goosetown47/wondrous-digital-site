@@ -1,12 +1,12 @@
 'use client';
 
-import { HeroSection } from '@/components/sections/HeroSection';
+import { getSectionComponent } from '@/components/sections/index';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ExternalLink, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import type { HeroContent } from '@/schemas/section';
-import { usePage, useProject } from '@/hooks/useProjects';
+import { useProject } from '@/hooks/useProjects';
+import { usePage } from '@/hooks/usePages';
 import { useDomains } from '@/hooks/useDomains';
 
 export default function PreviewPage() {
@@ -75,16 +75,15 @@ export default function PreviewPage() {
         </div>
       ) : (
         sections.map((section) => {
-          if (section.type === 'hero') {
-            return (
-              <HeroSection
-                key={section.id}
-                content={section.content as HeroContent}
-                isEditing={false}
-              />
-            );
-          }
-          return null;
+          // Get the appropriate component based on component_name
+          const SectionComponent = getSectionComponent(section.component_name);
+          return (
+            <SectionComponent
+              key={section.id}
+              content={section.content || {}}
+              isEditing={false}
+            />
+          );
         })
       )}
     </div>

@@ -13,16 +13,29 @@ Visit http://localhost:3000
 
 ## 🏗️ Architecture
 
-### Tech Stack
-- **Next.js 15** - App Router, Server Components
-- **TypeScript** - Strict mode for type safety
-- **Tailwind CSS** - Utility-first styling
-- **shadcn/ui** - High-quality UI components
-- **Zustand** - State management
-- **React Query** - Data fetching (ready for Supabase)
-- **Framer Motion** - Animations
-- **Zod** - Schema validation
-- **React Hook Form** - Form management (coming soon)
+## 🛠️ Technology Stack
+
+- **Framework**: Next.js 15 (App Router)
+  - Docs: https://nextjs.org/docs
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS + shadcn/ui
+- **State**: Zustand
+- **Database**: Supabase (PostgreSQL)
+- **Data Fetching**: React Query
+- **Deployment**: Vercel
+- **Validation**: Zod
+- **Testing**: Vitest & Playwright (use the MCPs)
+  - Playwright Docs: https://playwright.dev/docs/intro
+  - Vitest Docs: https://vitest.dev/guide/
+- **Web Search**: Firecrawl (use the MCP)
+  - Docs: https://docs.firecrawl.dev/introduction
+- **Versioning**: Github (use the CLI)
+- **UI Libraries**: Shadcn UI
+  - Docs: https://ui.shadcn.com/docs/
+- **Debugging**: Sentry
+- **Platform Email Service**: Resend
+  - Docs: https://resend.com/docs/introduction
+
 
 ### Project Structure
 ```
@@ -43,64 +56,13 @@ src/
 
 ## ✅ Current Features
 
-### PageBuilder (`/builder/[projectId]`)
-- Drag and drop sections from library
-- Inline text editing (click to edit)
-- Delete sections on hover
-- Persistent state with Zustand
-- Visual feedback for selected sections
+See: /nextjs-app/docs/MASTER-TASK-LIST.MD 
 
-### Preview (`/preview/[projectId]`)
-- Shows edited content without edit controls
-- Client-side rendering (temporary)
-- Back to builder navigation
-
-### Sections
-- **Hero Section**: Customizable headline, subheadline, button
-  - Inline text editing
-  - Color customization (coming soon)
-  - Background images (coming soon)
-
-## 🎯 Core Concept Proven
-
-The PageBuilder → Preview pipeline works! You can:
-1. Drag sections to build pages
-2. Edit content inline
-3. Preview the result
-4. All with the same component code
 
 ## 📋 Next Steps
 
-1. **Enhanced Editing**
-   - Add React Hook Form for better inline editing
-   - Color pickers for backgrounds/text
-   - Image upload support
+See: /nextjs-app/docs/MASTER-TASK-LIST.MD 
 
-2. **Persistence**
-   - Connect to Supabase
-   - Save sections to database
-   - Load projects from database
-
-3. **Deployment**
-   - Implement static export
-   - Netlify API integration
-   - One-click deploy
-
-4. **More Sections**
-   - Features grid
-   - Navigation
-   - Footer
-   - Custom sections
-
-## 🔧 Development
-
-### Environment Variables
-Copy `.env.example` to `.env.local` and fill in your values:
-```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-NETLIFY_AUTH_TOKEN=
-```
 
 ### Commands
 ```bash
@@ -119,9 +81,4 @@ npm run lint   # Run ESLint
 
 ## 🐛 Known Issues
 
-- Preview uses client-side rendering (temporary)
-- No persistence yet (refresh loses data)
-- Only Hero section implemented
-- Deploy button not functional yet
-
-These are all planned improvements, not fundamental issues!
+See: /nextjs-app/docs/MASTER-TASK-LIST.MD 
