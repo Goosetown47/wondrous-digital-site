@@ -15,7 +15,7 @@ import {
   type AccountWithStats,
   type CreateAccountData,
   type UpdateAccountData,
-  type AccountStats,
+  // type AccountStats,
 } from '@/lib/services/accounts';
 
 /**
@@ -240,12 +240,12 @@ export function useBulkAccountOperations() {
 }
 
 /**
- * Utility hook to get account status
+ * Utility function to get account status
  */
-export function useAccountStatus(account: AccountWithStats | null | undefined) {
+export function getAccountStatus(account: AccountWithStats | null | undefined) {
   if (!account) return null;
 
-  const settings = account.settings as any;
+  const settings = account.settings as Record<string, unknown>;
   const isSuspended = settings?.suspended === true;
   
   return {

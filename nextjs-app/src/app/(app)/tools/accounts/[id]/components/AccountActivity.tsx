@@ -13,7 +13,7 @@ interface AccountActivityProps {
   accountId: string;
 }
 
-export function AccountActivity({ accountId }: AccountActivityProps) {
+export function AccountActivity({ accountId: _accountId }: AccountActivityProps) {
   return (
     <div className="space-y-6">
       <Card>

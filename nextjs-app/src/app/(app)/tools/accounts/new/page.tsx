@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+// import { useState } from 'react'; // May be needed later
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -50,7 +50,7 @@ export default function NewAccountPage() {
   const {
     register,
     handleSubmit,
-    watch,
+    // watch,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<CreateAccountForm>({
@@ -63,7 +63,7 @@ export default function NewAccountPage() {
     },
   });
 
-  const watchName = watch('name');
+  // const watchName = watch('name'); // For auto-slug generation
 
   // Auto-generate slug from name
   const generateSlug = (name: string) => {

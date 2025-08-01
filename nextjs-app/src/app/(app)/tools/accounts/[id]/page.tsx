@@ -5,12 +5,11 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { 
   useAccount, 
-  useAccountStats,
-  useUpdateAccount,
+  // useUpdateAccount,
   useSuspendAccount,
   useActivateAccount,
   useDeleteAccount,
-  useAccountStatus,
+  getAccountStatus,
 } from '@/hooks/useAccounts';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 import { Button } from '@/components/ui/button';
@@ -45,12 +44,12 @@ import {
   CheckCircle, 
   Trash2,
   Users,
-  FolderOpen,
   Calendar,
   Activity,
   Settings,
   CreditCard,
-  Shield,
+  // FolderOpen,
+  // Shield,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -68,9 +67,9 @@ export default function AccountDetailPage() {
   const activeTab = searchParams.get('tab') || 'overview';
 
   const { data: account, isLoading } = useAccount(accountId);
-  const accountStatus = useAccountStatus(account);
+  const accountStatus = getAccountStatus(account);
   
-  const updateAccount = useUpdateAccount();
+  // const updateAccount = useUpdateAccount(); // May be needed for editing
   const suspendAccount = useSuspendAccount();
   const activateAccount = useActivateAccount();
   const deleteAccount = useDeleteAccount();

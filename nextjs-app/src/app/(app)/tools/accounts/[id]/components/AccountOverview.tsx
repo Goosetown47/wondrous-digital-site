@@ -15,7 +15,6 @@ import {
   FolderOpen, 
   FileText, 
   Activity,
-  Calendar,
   HardDrive,
 } from 'lucide-react';
 import type { AccountWithStats } from '@/lib/services/accounts';
@@ -25,7 +24,7 @@ interface AccountOverviewProps {
 }
 
 export function AccountOverview({ account }: AccountOverviewProps) {
-  const { data: stats, isLoading: statsLoading } = useAccountStats(account.id);
+  const { data: stats } = useAccountStats(account.id);
 
   const statCards = [
     {

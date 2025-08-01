@@ -61,7 +61,7 @@ export function AccountSettings({ account }: AccountSettingsProps) {
       name: account.name,
       slug: account.slug,
       plan: account.plan,
-      description: (account.settings as any)?.description || '',
+      description: (account.settings as Record<string, unknown>)?.description as string || '',
     },
   });
 
@@ -73,7 +73,7 @@ export function AccountSettings({ account }: AccountSettingsProps) {
       name: account.name,
       slug: account.slug,
       plan: account.plan,
-      description: (account.settings as any)?.description || '',
+      description: (account.settings as Record<string, unknown>)?.description as string || '',
     });
   }, [account, reset]);
 
@@ -105,19 +105,19 @@ export function AccountSettings({ account }: AccountSettingsProps) {
     setIsEditing(false);
   };
 
-  const planDescriptions = {
+  const planDescriptions: Record<'free' | 'pro' | 'enterprise', string> = {
     free: 'Basic features for small projects',
     pro: 'Advanced features for growing businesses',
     enterprise: 'Full features with enterprise support',
   };
 
-  const planPricing = {
+  const planPricing: Record<'free' | 'pro' | 'enterprise', string> = {
     free: 'Free',
     pro: '$29/month',
     enterprise: 'Contact Sales',
   };
 
-  const planLimits = {
+  const planLimits: Record<'free' | 'pro' | 'enterprise', { projects: string | number; users: string | number; storage: string }> = {
     free: { projects: 3, users: 2, storage: '1 GB' },
     pro: { projects: 25, users: 10, storage: '10 GB' },
     enterprise: { projects: 'Unlimited', users: 'Unlimited', storage: '100 GB' },
@@ -180,7 +180,7 @@ export function AccountSettings({ account }: AccountSettingsProps) {
                 <div>
                   <Label className="text-sm font-medium">Description</Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {(account.settings as any)?.description || 'No description provided'}
+                    {(account.settings as Record<string, unknown>)?.description as string || 'No description provided'}
                   </p>
                 </div>
               </div>

@@ -28,7 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Palette, Globe, AlertTriangle, Loader2 } from 'lucide-react';
+import { Palette, AlertTriangle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useArchiveProject } from '@/hooks/useProjects';

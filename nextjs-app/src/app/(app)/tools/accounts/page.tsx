@@ -10,7 +10,7 @@ import {
   useSuspendAccount,
   useActivateAccount,
   useDeleteAccount,
-  useAccountStatus,
+  getAccountStatus,
 } from '@/hooks/useAccounts';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 import { EnhancedTable } from '@/components/ui/enhanced-table';
@@ -44,8 +44,7 @@ export default function AccountsPage() {
   const { 
     suspendAccounts, 
     activateAccounts, 
-    deleteAccounts, 
-    isLoading: bulkLoading 
+    deleteAccounts
   } = useBulkAccountOperations();
   
   const suspendAccount = useSuspendAccount();
@@ -124,8 +123,8 @@ export default function AccountsPage() {
       key: 'status',
       title: 'Status',
       render: (account: AccountWithStats) => {
-        // Use the status hook
-        const status = useAccountStatus(account);
+        // Get the account status
+        const status = getAccountStatus(account);
         if (status?.isSuspended) {
           return <Badge variant="destructive">Suspended</Badge>;
         }
@@ -163,7 +162,7 @@ export default function AccountsPage() {
       onClick: (account: AccountWithStats) => suspendAccount.mutate(account.id),
       variant: 'ghost' as const,
       className: 'text-orange-600 hover:text-orange-700',
-      show: (account: AccountWithStats) => !useAccountStatus(account)?.isSuspended,
+      show: (account: AccountWithStats) => !getAccountStatus(account)?.isSuspended,
     },
     {
       label: 'Activate Account',
@@ -171,7 +170,7 @@ export default function AccountsPage() {
       onClick: (account: AccountWithStats) => activateAccount.mutate(account.id),
       variant: 'ghost' as const,
       className: 'text-green-600 hover:text-green-700',
-      show: (account: AccountWithStats) => !!useAccountStatus(account)?.isSuspended,
+      show: (account: AccountWithStats) => !!getAccountStatus(account)?.isSuspended,
     },
     {
       label: 'Delete Account',
@@ -189,7 +188,7 @@ export default function AccountsPage() {
       icon: Ban,
       onClick: (selectedAccounts: AccountWithStats[]) => {
         const activeAccountIds = selectedAccounts
-          .filter(account => !useAccountStatus(account)?.isSuspended)
+          .filter(account => !getAccountStatus(account)?.isSuspended)
           .map(account => account.id);
         if (activeAccountIds.length > 0) {
           suspendAccounts(activeAccountIds);
@@ -202,7 +201,7 @@ export default function AccountsPage() {
       icon: CheckCircle,
       onClick: (selectedAccounts: AccountWithStats[]) => {
         const suspendedAccountIds = selectedAccounts
-          .filter(account => useAccountStatus(account)?.isSuspended)
+          .filter(account => getAccountStatus(account)?.isSuspended)
           .map(account => account.id);
         if (suspendedAccountIds.length > 0) {
           activateAccounts(suspendedAccountIds);
@@ -242,12 +241,12 @@ export default function AccountsPage() {
         { 
           label: 'Active', 
           value: 'active', 
-          count: accounts?.filter(a => !useAccountStatus(a)?.isSuspended).length 
+          count: accounts?.filter(a => !getAccountStatus(a)?.isSuspended).length 
         },
         { 
           label: 'Suspended', 
           value: 'suspended', 
-          count: accounts?.filter(a => useAccountStatus(a)?.isSuspended).length 
+          count: accounts?.filter(a => getAccountStatus(a)?.isSuspended).length 
         },
       ],
     },
