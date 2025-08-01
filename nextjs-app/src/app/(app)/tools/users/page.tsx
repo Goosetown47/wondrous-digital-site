@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { 
   useUsers, 
-  useBulkUserOperations,
+  // useBulkUserOperations,
   useUpdateUserRole,
   useRemoveUserFromAccount,
 } from '@/hooks/useUsers';
@@ -40,7 +40,6 @@ import {
   Mail,
   Shield,
   CheckCircle,
-  XCircle,
   Users,
 } from 'lucide-react';
 import type { UserWithAccounts } from '@/lib/services/users';
@@ -48,11 +47,11 @@ import type { UserWithAccounts } from '@/lib/services/users';
 export default function UsersPage() {
   const router = useRouter();
   const { data: users, isLoading } = useUsers();
-  const { 
-    updateUserRoles, 
-    removeUsersFromAccount, 
-    isLoading: bulkLoading 
-  } = useBulkUserOperations();
+  // const { 
+  //   updateUserRoles, 
+  //   removeUsersFromAccount, 
+  //   isLoading: bulkLoading 
+  // } = useBulkUserOperations();
   
   const updateUserRole = useUpdateUserRole();
   const removeUserFromAccount = useRemoveUserFromAccount();
@@ -355,18 +354,18 @@ export default function UsersPage() {
   };
 
   // Helper function for role badge colors
-  function getRoleBadgeColor(role: string) {
-    switch (role) {
-      case 'admin':
-        return 'bg-red-100 text-red-700';
-      case 'staff':
-        return 'bg-orange-100 text-orange-700';
-      case 'account_owner':
-        return 'bg-blue-100 text-blue-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  }
+  // function getRoleBadgeColor(role: string) {
+  //   switch (role) {
+  //     case 'admin':
+  //       return 'bg-red-100 text-red-700';
+  //     case 'staff':
+  //       return 'bg-orange-100 text-orange-700';
+  //     case 'account_owner':
+  //       return 'bg-blue-100 text-blue-700';
+  //     default:
+  //       return 'bg-gray-100 text-gray-700';
+  //   }
+  // }
 
   // Role selector component for inline editing
   const RoleSelector = ({ user, accountId, currentRole }: { 
@@ -386,7 +385,7 @@ export default function UsersPage() {
             {
               user_id: user.id,
               account_id: accountId,
-              role: newRole as any,
+              role: newRole as 'admin' | 'staff' | 'account_owner' | 'user',
             },
             {
               onSettled: () => setIsUpdating(false),

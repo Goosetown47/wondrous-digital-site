@@ -33,7 +33,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
 
 export default function TypesPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -167,8 +166,14 @@ export default function TypesPage() {
 }
 
 interface TypesListProps {
-  types: any[];
-  onDelete: (type: any) => void;
+  types: Array<{
+    id: string;
+    name: string;
+    display_name: string;
+    category: string;
+    description?: string;
+  }>;
+  onDelete: (type: { id: string; display_name: string }) => void;
 }
 
 function TypesList({ types, onDelete }: TypesListProps) {
