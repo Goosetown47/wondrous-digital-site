@@ -138,17 +138,6 @@ export default function EditDraftPage() {
     }
   }, [draft]);
 
-  // Auto-save functionality
-  useEffect(() => {
-    if (!autoSaveEnabled || !draft) return;
-
-    const timeoutId = setTimeout(() => {
-      handleSave();
-    }, 2000);
-
-    return () => clearTimeout(timeoutId);
-  }, [heroContent, autoSaveEnabled, draft, handleSave]);
-
   const handleSave = useCallback(async () => {
     if (!draft) return;
     setIsSaving(true);
@@ -165,6 +154,17 @@ export default function EditDraftPage() {
       setIsSaving(false);
     }
   }, [draft, heroContent, updateMutation]);
+
+  // Auto-save functionality
+  useEffect(() => {
+    if (!autoSaveEnabled || !draft) return;
+
+    const timeoutId = setTimeout(() => {
+      handleSave();
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, [heroContent, autoSaveEnabled, draft, handleSave]);
 
   const getDeviceWidth = () => {
     switch (deviceView) {
