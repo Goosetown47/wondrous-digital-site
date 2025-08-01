@@ -41,7 +41,7 @@ export default function BuilderPage() {
   useEffect(() => {
     if (page && page.sections && !hasLoadedInitialData) {
       clearAll();
-      page.sections.forEach(section => {
+      page.sections.forEach((section: unknown) => {
         addSection(section);
       });
       setHasLoadedInitialData(true);
@@ -125,10 +125,9 @@ export default function BuilderPage() {
       {/* Full-width Canvas Navbar */}
       <CanvasNavbar
         projectId={projectId}
-        projectName={project?.name}
         currentPageId={pageId}
         currentPage={page}
-        themeId={project?.theme_id}
+        themeId={project?.theme_id || undefined}
         sectionCount={sections.length}
         lastSaved={lastSaved}
         isSaving={savePage.isPending}

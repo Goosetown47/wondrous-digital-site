@@ -62,7 +62,7 @@ export async function PATCH(
         user_id: user.id,
         action: 'user.role_update',
         resource_type: 'user',
-        resource_id: params.userId,
+        resource_id: userId,
         metadata: {
           target_user_id: params.userId,
           new_role: role,

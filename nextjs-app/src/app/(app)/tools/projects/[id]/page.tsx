@@ -30,19 +30,14 @@ import {
 import { ArrowLeft, ExternalLink, Archive, ArchiveRestore, Trash2, Copy, Calendar, User } from 'lucide-react';
 import { format } from 'date-fns';
 
-export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
+export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  // Handle both sync and async params for Next.js 15 compatibility
+  // Handle async params for Next.js 15
   const [projectId, setProjectId] = useState<string | null>(null);
   
   React.useEffect(() => {
-    if (params && typeof params === 'object' && 'then' in params) {
-      // It's a Promise
-      params.then(p => setProjectId(p.id));
-    } else {
-      // It's a regular object
-      setProjectId((params as { id: string }).id);
-    }
+    // Params is always a Promise in Next.js 15
+    params.then(p => setProjectId(p.id));
   }, [params]);
   
   const { data: project, isLoading } = useProject(projectId || undefined);

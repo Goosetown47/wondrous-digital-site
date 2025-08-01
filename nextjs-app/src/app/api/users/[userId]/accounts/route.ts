@@ -61,7 +61,7 @@ export async function PATCH(
     } else if (action === 'add') {
       // Add accounts without removing existing ones
       const accountRelations = accounts.map(acc => ({
-        user_id: params.userId,
+        user_id: userId,
         account_id: acc.account_id,
         role: acc.role || 'user',
         invited_by: user.id,

@@ -56,9 +56,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params;
     const supabase = createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -89,7 +90,7 @@ export async function POST(
       .from('account_users')
       .select('role')
       .match({
-        user_id: params.userId,
+        user_id: userId,
         account_id: '00000000-0000-0000-0000-000000000000',
         role: 'staff'
       })
@@ -106,7 +107,7 @@ export async function POST(
     await adminClient
       .from('staff_account_assignments')
       .delete()
-      .eq('staff_user_id', params.userId);
+      .eq('staff_user_id', userId);
 
     // Create new assignments
     if (account_ids.length > 0) {

@@ -21,8 +21,7 @@ export default withSentryConfig(nextConfig, {
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
 
-  // Transpile SDK to be compatible with IE11 (increases bundle size)
-  transpileClientSDK: false,
+  // Note: transpileClientSDK option has been removed in newer Sentry versions
 
   // Automatically annotate React components to show their full name in breadcrumbs and session replay
   reactComponentAnnotation: {
@@ -35,8 +34,7 @@ export default withSentryConfig(nextConfig, {
   // side errors will fail.
   tunnelRoute: "/monitoring",
 
-  // Hides source maps from generated client bundles
-  hideSourceMaps: true,
+  // Note: hideSourceMaps option has been removed in newer Sentry versions
 
   // Automatically tree-shake Sentry logger statements to reduce bundle size
   disableLogger: true,

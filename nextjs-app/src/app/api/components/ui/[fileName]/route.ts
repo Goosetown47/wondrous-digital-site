@@ -4,10 +4,10 @@ import { join } from 'path';
 
 export async function GET(
   request: Request,
-  { params }: { params: { fileName: string } }
+  { params }: { params: Promise<{ fileName: string }> }
 ) {
   try {
-    const { fileName } = params;
+    const { fileName } = await params;
     
     // Security check - only allow specific files
     const allowedFiles = [
