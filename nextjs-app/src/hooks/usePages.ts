@@ -215,7 +215,7 @@ export function useSavePage() {
       }
       toast.error('Failed to save page');
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success('Page saved successfully');
     },
     onSettled: (data, error, variables) => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Check, ChevronsUpDown, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,16 +12,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/providers/auth-provider';
-import { getAccountProjects } from '@/lib/permissions';
 import { useAccount } from '@/hooks/useAccounts';
 import { useProjects } from '@/hooks/useProjects';
-import type { Project } from '@/types/database';
 
 export function ProjectDropdown() {
-  const { user, currentAccount, currentProject, setCurrentProject } = useAuth();
+  const { currentAccount, currentProject, setCurrentProject } = useAuth();
   const { data: freshAccount } = useAccount(currentAccount?.id);
   const { data: allProjects } = useProjects(currentAccount?.id);
-  const [loading, setLoading] = useState(false);
 
   // Filter projects for current account (excluding archived)
   const projects = allProjects?.filter(p => p.account_id === currentAccount?.id && !p.archived_at) || [];

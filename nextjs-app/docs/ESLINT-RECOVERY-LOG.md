@@ -3,9 +3,9 @@
 Complete inventory of all 305 ESLint errors requiring individual resolution.
 
 **Status Overview:**
-- ⏳ Pending: 192 errors
+- ⏳ Pending: 180 errors
 - 🔄 In Progress: 0 errors  
-- ✅ Complete: 112 errors
+- ✅ Complete: 124 errors
 
 ## 📊 Progress Tracking
 
@@ -21,6 +21,7 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
 | 70 min | 221 | ✅ Good progress | Fixed 83 errors total, completed all tools page fixes |
 | 80 min | 208 | ✅ Excellent progress | Fixed 96 errors total, cleaned up API routes and builder components |
 | 90 min | 196 | ✅ Excellent progress | Fixed 108 errors total, cleaned up components and hooks |
+| 100 min | 184 | ✅ Excellent progress | Fixed 120 errors total, cleaned up login/signup pages and more hooks |
 
 ---
 
@@ -522,47 +523,47 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
   - **Status**: ⏳ Pending
 
 ### File: ./src/app/login/page.tsx (4 errors)
-- [ ] **Error #112** (Line 12): 'CheckCircle2' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused import or implement CheckCircle2 icon usage
-  - **Status**: ⏳ Pending
+- [x] **Error #112** (Line 12): 'CheckCircle2' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused import
+  - **Status**: ✅ Complete
 
-- [ ] **Error #113** (Line 22): 'router' is assigned a value but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused variable or implement navigation
-  - **Status**: ⏳ Pending
+- [x] **Error #113** (Line 22): 'router' is assigned a value but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused variable and import
+  - **Status**: ✅ Complete
 
-- [ ] **Error #114** (Line 87): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
-  - **Fix**: Replace `any` with proper TypeScript interface
-  - **Status**: ⏳ Pending
+- [x] **Error #114** (Line 87): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+  - **Fix**: Fixed error handling with proper type checking
+  - **Status**: ✅ Complete
 
-- [ ] **Error #115** (Line 115): 'error' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused variable or implement error handling
-  - **Status**: ⏳ Pending
+- [x] **Error #115** (Line 115): 'error' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused error parameter
+  - **Status**: ✅ Complete
 
 ### File: ./src/app/setup/page.tsx (1 error)
-- [ ] **Error #116** (Line 100): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
-  - **Fix**: Replace `any` with proper TypeScript interface
-  - **Status**: ⏳ Pending
+- [x] **Error #116** (Line 100): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+  - **Fix**: Fixed error handling with proper type checking
+  - **Status**: ✅ Complete
 
 ### File: ./src/app/signup/page.tsx (4 errors)
-- [ ] **Error #117** (Line 16): 'validatePassword' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused import or implement password validation
-  - **Status**: ⏳ Pending
+- [x] **Error #117** (Line 16): 'validatePassword' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused import
+  - **Status**: ✅ Complete
 
-- [ ] **Error #118** (Line 31): 'success' is assigned a value but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused variable or implement success state
-  - **Status**: ⏳ Pending
+- [x] **Error #118** (Line 31): 'success' is assigned a value but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused variable
+  - **Status**: ✅ Complete
 
-- [ ] **Error #119** (Line 31): 'setSuccess' is assigned a value but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused setter or implement success state
-  - **Status**: ⏳ Pending
+- [x] **Error #119** (Line 31): 'setSuccess' is assigned a value but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused setter
+  - **Status**: ✅ Complete
 
 - [ ] **Error #120** (Line 86): React Hook useEffect has a missing dependency - react-hooks/exhaustive-deps
   - **Fix**: Add 'fieldErrors.email' to dependency array or remove it
   - **Status**: ⏳ Pending
 
-- [ ] **Error #121** (Line 168): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
-  - **Fix**: Replace `any` with proper TypeScript interface
-  - **Status**: ⏳ Pending
+- [x] **Error #121** (Line 168): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+  - **Fix**: Fixed error handling with proper type checking
+  - **Status**: ✅ Complete
 
 ### File: ./src/components/DomainSettings.tsx (6 errors)
 - [x] **Error #122** (Line 3): 'useEffect' is defined but never used - @typescript-eslint/no-unused-vars
@@ -682,25 +683,25 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
   - **Status**: ✅ Complete
 
 ### File: ./src/components/navigation/ProjectDropdown.tsx (6 errors)
-- [ ] **Error #149** (Line 15): 'getAccountProjects' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused import or implement project fetching
-  - **Status**: ⏳ Pending
+- [x] **Error #149** (Line 15): 'getAccountProjects' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused import
+  - **Status**: ✅ Complete
 
-- [ ] **Error #150** (Line 18): 'Project' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused import or implement Project type usage
-  - **Status**: ⏳ Pending
+- [x] **Error #150** (Line 18): 'Project' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused import
+  - **Status**: ✅ Complete
 
-- [ ] **Error #151** (Line 21): 'user' is assigned a value but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused variable or implement user display
-  - **Status**: ⏳ Pending
+- [x] **Error #151** (Line 21): 'user' is assigned a value but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused variable from destructuring
+  - **Status**: ✅ Complete
 
-- [ ] **Error #152** (Line 24): 'loading' is assigned a value but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused variable or implement loading state
-  - **Status**: ⏳ Pending
+- [x] **Error #152** (Line 24): 'loading' is assigned a value but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused state
+  - **Status**: ✅ Complete
 
-- [ ] **Error #153** (Line 24): 'setLoading' is assigned a value but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused setter or implement loading state
-  - **Status**: ⏳ Pending
+- [x] **Error #153** (Line 24): 'setLoading' is assigned a value but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused state
+  - **Status**: ✅ Complete
 
 - [ ] **Error #154** (Line 27): The 'projects' logical expression could make dependencies change - react-hooks/exhaustive-deps
   - **Fix**: Wrap 'projects' initialization in useMemo hook
@@ -991,9 +992,9 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
   - **Status**: ✅ Complete
 
 ### File: ./src/hooks/useInvitations.ts (3 errors)
-- [ ] **Error #219** (Line 4): 'AccountInvitation' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused import or implement AccountInvitation type usage
-  - **Status**: ⏳ Pending
+- [x] **Error #219** (Line 4): 'AccountInvitation' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused import
+  - **Status**: ✅ Complete
 
 - [ ] **Error #220** (Line 126): 'accountId' is defined but never used - @typescript-eslint/no-unused-vars
   - **Fix**: Remove unused parameter or implement account filtering
@@ -1004,17 +1005,17 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
   - **Status**: ⏳ Pending
 
 ### File: ./src/hooks/usePages.ts (3 errors)
-- [ ] **Error #222** (Line 10): 'CreatePageData' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused import or implement CreatePageData type usage
-  - **Status**: ⏳ Pending
+- [x] **Error #222** (Line 10): 'CreatePageData' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused import
+  - **Status**: ✅ Complete
 
-- [ ] **Error #223** (Line 200): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
-  - **Fix**: Replace `any` with proper TypeScript interface
-  - **Status**: ⏳ Pending
+- [x] **Error #223** (Line 200): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+  - **Fix**: Replaced with `unknown`
+  - **Status**: ✅ Complete
 
-- [ ] **Error #224** (Line 218): 'data' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused variable or implement data handling
-  - **Status**: ⏳ Pending
+- [x] **Error #224** (Line 218): 'data' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused parameter
+  - **Status**: ✅ Complete
 
 ### File: ./src/hooks/usePermissions.ts (3 errors)
 - [ ] **Error #225** (Line 96): Generic Object Injection Sink - security/detect-object-injection

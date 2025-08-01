@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/providers/auth-provider';
-import type { AccountInvitation } from '@/types/database';
 import { toast } from 'sonner';
 
 // Get all invitations for an account

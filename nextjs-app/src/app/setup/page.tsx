@@ -97,8 +97,8 @@ export default function SetupPage() {
       
       // Success - redirect to dashboard with full reload to ensure clean state
       window.location.href = '/dashboard';
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
       setSubmitting(false);
     }
   };

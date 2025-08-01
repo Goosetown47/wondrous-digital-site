@@ -165,18 +165,19 @@ export default function SignUpPage() {
       
       // Redirect to verify email page
       router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Signup error:', err);
       // Check for specific error types
-      if (err.message?.includes('email rate limit exceeded')) {
+      const errorMessage = err instanceof Error ? err.message : '';
+      if (errorMessage.includes('email rate limit exceeded')) {
         setError('Too many signup attempts. Please try again in an hour or use a different email address.');
-      } else if (err.message?.includes('profiles') || err.message?.includes('trigger')) {
+      } else if (errorMessage.includes('profiles') || errorMessage.includes('trigger')) {
         setError('Database configuration error. Please contact support.');
-      } else if (err.message?.includes('User already registered')) {
+      } else if (errorMessage.includes('User already registered')) {
         setError('An account with this email already exists.');
         setFieldErrors({ email: 'This email is already registered' });
       } else {
-        setError(err.message || 'Failed to sign up');
+        setError(err instanceof Error ? err.message : 'Failed to sign up');
       }
     } finally {
       setIsLoading(false);
