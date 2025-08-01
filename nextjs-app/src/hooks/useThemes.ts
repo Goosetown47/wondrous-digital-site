@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { themeService } from '@/lib/supabase/themes';
-import type { Theme } from '@/types/builder';
 
 export function useThemes() {
   return useQuery({
@@ -24,11 +23,11 @@ export function useApplyTheme() {
     mutationFn: ({ projectId, themeId, overrides }: { 
       projectId: string; 
       themeId: string | null;
-      overrides?: any;
+      overrides?: Record<string, unknown>;
     }) => {
       if (themeId === null) {
         // Remove theme
-        return themeService.applyToProject(projectId, null as any, {});
+        return themeService.applyToProject(projectId, '', {});
       }
       return themeService.applyToProject(projectId, themeId, overrides);
     },

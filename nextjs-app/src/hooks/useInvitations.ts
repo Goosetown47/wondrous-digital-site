@@ -122,7 +122,6 @@ export function useCancelInvitation() {
   return useMutation({
     mutationFn: async ({
       invitationId,
-      accountId,
     }: {
       invitationId: string;
       accountId: string;
@@ -153,7 +152,6 @@ export function useResendInvitation() {
   return useMutation({
     mutationFn: async ({
       invitationId,
-      accountId,
     }: {
       invitationId: string;
       accountId: string;

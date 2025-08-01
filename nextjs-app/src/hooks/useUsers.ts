@@ -4,7 +4,6 @@ import {
   type UserWithAccounts,
   type CreateUserInvitationData,
   type UpdateUserRoleData,
-  type UserInvitation,
 } from '@/lib/services/users';
 
 /**

@@ -1,5 +1,4 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 
 const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -55,7 +54,7 @@ export async function getUserHighestRoleServer(userId: string): Promise<'admin' 
   const roleHierarchy = ['admin', 'staff', 'account_owner', 'user'];
   for (const role of roleHierarchy) {
     if (data.some(d => d.role === role)) {
-      return role as any;
+      return role as 'admin' | 'staff' | 'account_owner' | 'user';
     }
   }
   

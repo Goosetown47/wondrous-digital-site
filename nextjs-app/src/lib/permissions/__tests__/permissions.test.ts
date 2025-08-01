@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { hasPermission, isAdmin, isStaff, getUserRole } from '../index';
-import { createTestScenario, PLATFORM_ACCOUNT_ID, mockRoles } from '@/test/utils/auth-mocks';
+import { createTestScenario, PLATFORM_ACCOUNT_ID } from '@/test/utils/auth-mocks';
 import { createMockSupabaseClient } from '@/test/utils/supabase-mocks';
 
 describe('Permission System', () => {
-  let mockSupabase: any;
+  let mockSupabase: ReturnType<typeof createMockSupabaseClient>;
 
   beforeEach(() => {
     mockSupabase = createMockSupabaseClient();

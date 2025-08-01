@@ -12,7 +12,6 @@ import {
   getProjectTemplates,
   reassignProjectAccount,
   getAllAccounts,
-  type CreateProjectData,
   type UpdateProjectData,
 } from '@/lib/services/projects';
 import { toast } from 'sonner';

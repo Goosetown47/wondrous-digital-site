@@ -36,9 +36,8 @@ describe('Staff Assignment Hooks', () => {
         queries: { retry: false },
       },
     });
-    wrapper = ({ children }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
+    wrapper = ({ children }: { children: React.ReactNode }) => 
+      React.createElement(QueryClientProvider, { client: queryClient }, children);
   });
 
   describe('useStaffMembers', () => {

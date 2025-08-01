@@ -7,10 +7,10 @@ import {
   listProjectPages,
   getOrCreateHomepage,
   duplicatePage,
-  type CreatePageData,
   type UpdatePageData,
 } from '@/lib/services/pages';
 import type { Section } from '@/stores/builderStore';
+import type { Page } from '@/types/database';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase/client';
 
@@ -197,7 +197,7 @@ export function useSavePage() {
       const previousPage = queryClient.getQueryData(['pages', projectId, '/']);
       
       // Optimistically update the page
-      queryClient.setQueryData(['pages', projectId, '/'], (old: any) => ({
+      queryClient.setQueryData(['pages', projectId, '/'], (old: Page | undefined) => ({
         ...old,
         sections,
         updated_at: new Date().toISOString(),

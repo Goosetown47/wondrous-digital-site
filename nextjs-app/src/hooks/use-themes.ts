@@ -111,7 +111,7 @@ export function useApplyThemeToProject() {
     }: { 
       projectId: string; 
       themeId: string; 
-      overrides?: any 
+      overrides?: Record<string, unknown> 
     }) => themeService.applyToProject(projectId, themeId, overrides),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['project', variables.projectId] });

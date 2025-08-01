@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
 import type { Permission } from './constants';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase';
 
 const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -7,7 +9,7 @@ const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000000';
  * Check if a user has admin role (platform admin)
  * Admins have access to all accounts and bypass all permission checks
  */
-export async function isAdmin(userId: string, client?: any): Promise<boolean> {
+export async function isAdmin(userId: string, client?: SupabaseClient<Database>): Promise<boolean> {
   const supabaseClient = client || supabase;
   
   const { data, error } = await supabaseClient
@@ -25,7 +27,7 @@ export async function isAdmin(userId: string, client?: any): Promise<boolean> {
  * Check if a user has staff or admin role
  * Staff have access to Lab, Library, Core, and Tools
  */
-export async function isStaff(userId: string, client?: any): Promise<boolean> {
+export async function isStaff(userId: string, client?: SupabaseClient<Database>): Promise<boolean> {
   const supabaseClient = client || supabase;
   
   const { data, error } = await supabaseClient
@@ -42,7 +44,7 @@ export async function isStaff(userId: string, client?: any): Promise<boolean> {
 /**
  * Get the user's highest role across all accounts
  */
-export async function getUserRole(userId: string, client?: any): Promise<'admin' | 'staff' | 'account_owner' | 'user' | null> {
+export async function getUserRole(userId: string, client?: SupabaseClient<Database>): Promise<'admin' | 'staff' | 'account_owner' | 'user' | null> {
   const supabaseClient = client || supabase;
   
   const { data, error } = await supabaseClient
@@ -57,7 +59,7 @@ export async function getUserRole(userId: string, client?: any): Promise<'admin'
   const roleHierarchy = ['admin', 'staff', 'account_owner', 'user'];
   for (const role of roleHierarchy) {
     if (data.some(d => d.role === role)) {
-      return role as any;
+      return role as 'admin' | 'staff' | 'account_owner' | 'user';
     }
   }
   
@@ -68,7 +70,7 @@ export async function getUserRole(userId: string, client?: any): Promise<'admin'
  * Check if a user is a system admin (deprecated - use isAdmin instead)
  * @deprecated Use isAdmin() instead
  */
-export async function checkSystemAdmin(userId: string, client?: any): Promise<boolean> {
+export async function checkSystemAdmin(userId: string, client?: SupabaseClient<Database>): Promise<boolean> {
   return isAdmin(userId, client);
 }
 
@@ -83,7 +85,7 @@ export async function hasPermission(
   userId: string,
   accountId: string,
   permission: Permission | string,
-  client?: any
+  client?: SupabaseClient<Database>
 ): Promise<boolean> {
   const supabaseClient = client || supabase;
   
@@ -119,7 +121,7 @@ export async function requirePermission(
   userId: string,
   accountId: string,
   permission: Permission | string,
-  client?: any
+  client?: SupabaseClient<Database>
 ): Promise<void> {
   const hasAccess = await hasPermission(userId, accountId, permission, client);
   
@@ -132,7 +134,7 @@ export async function requirePermission(
  * Get all accounts accessible to a user
  * System admins get all accounts, regular users get their own
  */
-export async function getUserAccounts(userId: string, client?: any) {
+export async function getUserAccounts(userId: string, client?: SupabaseClient<Database>) {
   // Use the API endpoint that uses service role pattern
   try {
     const response = await fetch('/api/accounts', {
@@ -178,7 +180,7 @@ export async function getUserAccounts(userId: string, client?: any) {
 export async function getAccountProjects(
   userId: string, 
   accountId: string,
-  client?: any
+  client?: SupabaseClient<Database>
 ) {
   const supabaseClient = client || supabase;
   

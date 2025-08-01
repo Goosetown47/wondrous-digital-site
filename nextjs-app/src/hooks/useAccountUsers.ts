@@ -7,7 +7,7 @@ interface UserProfile {
   user_id: string;
   display_name: string | null;
   avatar_url: string | null;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 interface AccountUserWithDetails extends AccountUser {
