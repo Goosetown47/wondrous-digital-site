@@ -67,7 +67,7 @@ export default function LabPage() {
         </Button>
       </div>
 
-      <Tabs value={selectedType} onValueChange={(value) => setSelectedType(value as 'all' | 'section' | 'page' | 'site' | 'theme')}>
+      <Tabs value={selectedType} onValueChange={(value: string) => setSelectedType(value as 'all' | 'section' | 'page' | 'site' | 'theme')}>
         <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="section">Sections</TabsTrigger>

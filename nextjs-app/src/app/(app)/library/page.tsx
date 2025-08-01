@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-// import { Card, CardContent } from '@/components/ui/card'; // Unused imports
 import { LibraryHeader } from '@/components/library/LibraryHeader';
 import { LibraryGrid } from '@/components/library/LibraryGrid';
 import { useLibraryItems } from '@/hooks/useLibrary';
@@ -19,7 +18,7 @@ export default function LibraryPage() {
     (tabParam as LibraryItemType) || 'section'
   );
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory] = useState<string | undefined>();
+  const selectedCategory: string | undefined = undefined;
 
   // Update selected type when URL parameter changes
   useEffect(() => {
@@ -46,7 +45,7 @@ export default function LibraryPage() {
         onSearchChange={setSearchQuery}
       />
 
-      <Tabs value={selectedType} onValueChange={(value) => setSelectedType(value as LibraryItemType)}>
+      <Tabs value={selectedType} onValueChange={(value: string) => setSelectedType(value as LibraryItemType)}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="site">Sites</TabsTrigger>
           <TabsTrigger value="page">Pages</TabsTrigger>

@@ -38,7 +38,6 @@ import {
   Edit,
   Trash2,
   CheckCircle,
-  XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -112,7 +111,7 @@ export default function UserDetailPage() {
     updateUserRole.mutate({
       user_id: userId,
       account_id: accountId,
-      role: newRole as any,
+      role: newRole as 'account_owner' | 'admin' | 'user',
     });
   };
 

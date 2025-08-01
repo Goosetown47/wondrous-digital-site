@@ -75,7 +75,7 @@ export default function NewTypePage() {
     try {
       await createType.mutateAsync(data);
       router.push('/tools/types');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to create type:', error);
       if (error.message?.includes('duplicate')) {
         setError('name', { message: 'This name is already taken' });
@@ -105,7 +105,7 @@ export default function NewTypePage() {
             <Label htmlFor="category">Category</Label>
             <Select
               value={watchCategory}
-              onValueChange={(value) => setValue('category', value as any)}
+              onValueChange={(value) => setValue('category', value as 'section' | 'page' | 'site' | 'theme')}
             >
               <SelectTrigger id="category">
                 <SelectValue />

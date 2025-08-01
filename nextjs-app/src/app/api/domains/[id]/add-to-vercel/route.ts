@@ -43,12 +43,13 @@ export async function POST(
       await logDomainOperation(domainId, 'ADD_TO_VERCEL_SUCCESS', 'success', {
         domain: domain.domain
       });
-    } catch (vercelError: any) {
+    } catch (vercelError) {
       // If domain already exists in Vercel, that's okay
-      if (!vercelError.message?.includes('already exists')) {
+      const errorMessage = vercelError instanceof Error ? vercelError.message : String(vercelError);
+      if (!errorMessage.includes('already exists')) {
         await logDomainOperation(domainId, 'ADD_TO_VERCEL_ERROR', 'error', {
           domain: domain.domain,
-          error: vercelError.message
+          error: errorMessage
         });
         throw vercelError;
       } else {
@@ -62,10 +63,10 @@ export async function POST(
       success: true,
       domain: domain.domain,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error adding domain to Vercel:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to add domain to Vercel' },
+      { error: error instanceof Error ? error.message : 'Failed to add domain to Vercel' },
       { status: 500 }
     );
   }
