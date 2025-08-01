@@ -60,7 +60,7 @@ export function PageCreationDialog({
       newErrors.path = 'Path is required';
     } else if (!path.startsWith('/')) {
       newErrors.path = 'Path must start with /';
-    } else if (!/^\/[a-z0-9\-\/]*$/.test(path)) {
+    } else if (!/^\/[a-z0-9\-/]*$/.test(path)) {
       newErrors.path = 'Path can only contain lowercase letters, numbers, hyphens, and slashes';
     }
 
@@ -82,7 +82,7 @@ export function PageCreationDialog({
         status: 'published'
       }
     }, {
-      onSuccess: (page) => {
+      onSuccess: () => {
         // Reset form
         setTitle('');
         setPath('');

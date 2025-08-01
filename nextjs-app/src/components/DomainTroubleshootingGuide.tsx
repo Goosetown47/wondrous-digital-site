@@ -5,13 +5,10 @@ import {
   AlertCircle, 
   ChevronDown, 
   ChevronRight, 
-  CheckCircle, 
-  XCircle,
   Terminal,
   Globe,
   Shield,
   Clock,
-  RefreshCw,
   ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

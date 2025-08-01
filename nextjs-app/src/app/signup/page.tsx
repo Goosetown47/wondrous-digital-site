@@ -13,7 +13,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { LogoFull } from '@/components/ui/logo';
 import { PasswordStrength } from '@/components/ui/password-strength';
 import { signupSchema, type SignupFormData } from '@/schemas/auth';
-import { validatePassword, isValidEmail } from '@/lib/validation/password';
+import { isValidEmail } from '@/lib/validation/password';
 import { ZodError } from 'zod';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -28,7 +28,6 @@ export default function SignUpPage() {
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof SignupFormData, string>>>({});
   
   const [showPasswordStrength, setShowPasswordStrength] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
   

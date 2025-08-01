@@ -17,7 +17,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -44,7 +43,6 @@ import {
   Edit, 
   Copy, 
   Trash2, 
-  ExternalLink,
   Home,
   FileText,
   Settings,
@@ -103,7 +101,7 @@ export function PageList({ pages, projectId, viewMode = 'list' }: PageListProps)
       }>
         {sortedPages.map((page) => {
           const isHomepage = page.path === '/';
-          const metadata = page.metadata as any || {};
+          const metadata = page.metadata || {};
           
           return (
             <Card key={page.id} className={`overflow-hidden transition-all hover:shadow-lg ${viewMode === 'grid' ? 'h-full flex flex-col' : ''}`}>

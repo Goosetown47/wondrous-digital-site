@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 import { AccountDropdown } from './AccountDropdown';
 import { ProjectDropdown } from './ProjectDropdown';
 import { Separator } from '@/components/ui/separator';
@@ -16,17 +14,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
   SidebarHeader,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import {
   Home,
   Hammer,
@@ -37,7 +27,6 @@ import {
   Users,
   LogOut,
   CreditCard,
-  ChevronRight,
   Palette,
   Wrench,
   FileText,
@@ -55,14 +44,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { authService } from '@/lib/supabase/auth';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/providers/auth-provider';
-import type { User } from '@supabase/supabase-js';
 import { SidebarMenuItemComponent } from './sidebar-menu-item';
 import { useIsStaff, useIsAdmin, useIsAccountOwner } from '@/hooks/useRole';
 
-const getNavigationItems = (currentProject: any) => [
+import type { Project } from '@/types/database';
+
+const getNavigationItems = (currentProject: Project | null) => [
   {
     title: 'Dashboard',
     href: '/dashboard',
@@ -165,25 +154,12 @@ const getAppItems = () => [
 ];
 
 export function AppSidebar() {
-  const pathname = usePathname();
   const router = useRouter();
   const { user, signOut: authSignOut, currentProject } = useAuth();
-  const [localUser, setLocalUser] = useState<User | null>(null);
   const { data: isStaff, isLoading: isStaffLoading } = useIsStaff();
   const { data: isAdmin, isLoading: isAdminLoading } = useIsAdmin();
   const { data: isAccountOwner, isLoading: isAccountOwnerLoading } = useIsAccountOwner();
 
-  useEffect(() => {
-    // Get initial user
-    authService.getUser().then(setLocalUser).catch(console.error);
-
-    // Listen for auth changes
-    const { data: { subscription } } = authService.onAuthStateChange((event, session) => {
-      setLocalUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   const handleSignOut = async () => {
     try {

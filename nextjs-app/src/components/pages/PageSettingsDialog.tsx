@@ -36,7 +36,7 @@ export function PageSettingsDialog({
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   // Metadata fields
-  const metadata = page.metadata as any || {};
+  const metadata = page.metadata || {};
   const [description, setDescription] = useState(metadata.description || '');
   const [metaDescription, setMetaDescription] = useState(metadata.metaDescription || '');
   const [ogTitle, setOgTitle] = useState(metadata.ogTitle || '');
@@ -48,7 +48,7 @@ export function PageSettingsDialog({
   useEffect(() => {
     // Reset form when page changes
     setTitle(page.title || '');
-    const meta = page.metadata as any || {};
+    const meta = page.metadata || {};
     setDescription(meta.description || '');
     setMetaDescription(meta.metaDescription || '');
     setOgTitle(meta.ogTitle || '');
