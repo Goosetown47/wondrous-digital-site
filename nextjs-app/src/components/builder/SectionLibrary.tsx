@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Type, Layout, FileText, Globe, Search, Loader2, Filter, Tag } from 'lucide-react';
+import { Layout, FileText, Globe, Search, Loader2, Filter, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLibraryItems } from '@/hooks/useLibrary';
 import { useTypesByCategory } from '@/hooks/useTypes';
@@ -64,7 +64,7 @@ export function SectionLibrary({ onDragStart }: SectionLibraryProps) {
 
   // Reset type filter when category changes
   const handleCategoryChange = (value: string) => {
-    setSelectedType(value as any);
+    setSelectedType(value as 'all' | 'section' | 'page');
     setSelectedTypeId('all');
   };
 

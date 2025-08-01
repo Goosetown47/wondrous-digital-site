@@ -11,7 +11,6 @@ import {
   SelectSeparator
 } from '@/components/ui/select';
 import { useThemes, useProjectTheme } from '@/hooks/useThemes';
-import { cn } from '@/lib/utils';
 
 interface ThemeSelectorProps {
   projectId: string;

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { env } from '@/env.mjs';
@@ -6,11 +6,11 @@ import { isAdmin, isStaff, getUserRole, getUserAccounts } from '@/lib/permission
 
 const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000000';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   console.log('🔍 [DEBUG/Auth] Starting comprehensive auth analysis...');
 
   try {
-    const result: any = {
+    const result: Record<string, unknown> = {
       timestamp: new Date().toISOString(),
       step1_cookies: {},
       step2_supabase_client: {},
@@ -140,8 +140,8 @@ export async function GET(request: NextRequest) {
     let userAccountsError = null;
     try {
       userAccounts = await getUserAccounts(user.id, supabase);
-    } catch (e: any) {
-      userAccountsError = e.message;
+    } catch (e) {
+      userAccountsError = e instanceof Error ? e.message : 'Unknown error';
     }
 
     result.step5_permission_functions = {
@@ -242,12 +242,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result, { status: 200 });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ [DEBUG/Auth] Error:', error);
     return NextResponse.json({
       error: 'Debug endpoint failed',
-      message: error.message,
-      stack: error.stack
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     }, { status: 500 });
   }
 }

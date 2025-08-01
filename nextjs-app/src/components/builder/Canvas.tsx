@@ -1,6 +1,6 @@
 'use client';
 
-import { getSectionComponent, type BaseSectionProps } from '@/components/sections/index';
+import { getSectionComponent } from '@/components/sections/index';
 import { useBuilderStore } from '@/stores/builderStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
@@ -11,7 +11,7 @@ export function Canvas() {
     useBuilderStore();
 
 
-  const handleSectionContentChange = (sectionId: string, updates: any) => {
+  const handleSectionContentChange = (sectionId: string, updates: Record<string, unknown>) => {
     const section = sections.find(s => s.id === sectionId);
     if (section) {
       updateSection(sectionId, {
@@ -20,7 +20,7 @@ export function Canvas() {
     }
   };
 
-  const renderSection = (section: any) => {
+  const renderSection = (section: { id: string; component_name: string; content?: Record<string, unknown> }) => {
     // Get the appropriate component using component_name from the section
     const SectionComponent = getSectionComponent(section.component_name);
 

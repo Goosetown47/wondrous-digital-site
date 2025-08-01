@@ -18,7 +18,6 @@ import Link from 'next/link';
 
 interface CanvasNavbarProps {
   projectId: string;
-  projectName?: string;
   currentPageId: string;
   currentPage?: {
     id: string;

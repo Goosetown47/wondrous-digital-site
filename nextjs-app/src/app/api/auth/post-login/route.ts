@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Get authenticated user
     const supabase = await createSupabaseServerClient();
