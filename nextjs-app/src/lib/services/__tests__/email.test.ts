@@ -29,16 +29,16 @@ import { createAdminClient } from '@/lib/supabase/admin';
 // We'll dynamically import the email module in tests
 
 describe('Email Service', () => {
-  let mockSupabase: any;
-  let consoleLogSpy: any;
-  let consoleErrorSpy: any;
+  let mockSupabase: ReturnType<typeof createAdminClient>;
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>;
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
   const originalEnv = process.env.NODE_ENV;
   const originalResendApiKey = process.env.RESEND_API_KEY;
-  let sendEmail: any;
-  let queueEmail: any;
-  let processEmailQueue: any;
-  let retryFailedEmails: any;
-  let getEmailQueueStats: any;
+  let sendEmail: typeof import('../email').sendEmail;
+  let queueEmail: typeof import('../email').queueEmail;
+  let processEmailQueue: typeof import('../email').processEmailQueue;
+  let retryFailedEmails: typeof import('../email').retryFailedEmails;
+  let getEmailQueueStats: typeof import('../email').getEmailQueueStats;
 
   beforeEach(async () => {
     // Reset all mocks
@@ -68,7 +68,7 @@ describe('Email Service', () => {
       single: vi.fn(() => mockSupabase),
       sql: vi.fn((template) => template),
     };
-    (createAdminClient as any).mockReturnValue(mockSupabase);
+    (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(mockSupabase);
     
     // Reset mock Resend instance
     mockResendInstance.emails.send.mockClear();

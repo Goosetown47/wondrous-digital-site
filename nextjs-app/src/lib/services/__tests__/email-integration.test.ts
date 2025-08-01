@@ -351,12 +351,6 @@ describe('Email System Integration Tests', () => {
 
   describe('Staff Assignment Email Notifications', () => {
     it('should send email when staff is assigned to new accounts', async () => {
-      const staffAssignment = {
-        staff_user_id: 'staff-123',
-        account_ids: ['account-1', 'account-2'],
-        assigned_by: 'admin-123',
-      };
-
       const staffUser = {
         id: 'staff-123',
         email: 'staff@wondrousdigital.com',

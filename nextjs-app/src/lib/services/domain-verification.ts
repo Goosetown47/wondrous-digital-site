@@ -1,16 +1,15 @@
-import { createClient } from '@supabase/supabase-js';
-import { env } from '@/env.mjs';
 import { checkDomainStatus } from './domains.server';
 import { updateDomainVerification } from './domains';
 
-interface VerificationAttempt {
-  domain_id: string;
-  attempt_number: number;
-  status: 'pending' | 'verified' | 'failed';
-  error?: string;
-  next_retry_at?: string;
-  created_at: string;
-}
+// TODO: Use this interface when implementing verification history
+// interface VerificationAttempt {
+//   domain_id: string;
+//   attempt_number: number;
+//   status: 'pending' | 'verified' | 'failed';
+//   error?: string;
+//   next_retry_at?: string;
+//   created_at: string;
+// }
 
 // Exponential backoff configuration
 const MAX_RETRY_ATTEMPTS = 10;
@@ -36,7 +35,7 @@ export async function logDomainOperation(
   domainId: string,
   operation: string,
   status: 'success' | 'error' | 'info',
-  details: any
+  details: unknown
 ) {
   const timestamp = new Date().toISOString();
   console.log(`[DOMAIN-OPS] ${timestamp} | ${operation} | ${status} | Domain: ${domainId}`, details);
