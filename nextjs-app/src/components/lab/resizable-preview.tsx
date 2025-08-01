@@ -6,13 +6,10 @@ import { cn } from '@/lib/utils';
 
 interface ResizablePreviewProps {
   children: React.ReactNode;
-  className?: string;
   minWidth?: number;
   maxWidth?: number;
-  defaultWidth?: number;
   presetWidth?: number | null;
   isDarkMode?: boolean;
-  deviceView?: 'desktop' | 'tablet' | 'mobile';
 }
 
 export function ResizablePreview({

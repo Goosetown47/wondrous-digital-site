@@ -13,9 +13,9 @@ vi.mock('@/hooks/useRole');
 vi.mock('@/hooks/usePermissions');
 
 describe('PermissionGate Component', () => {
-  const mockUseAuth = useAuth as any;
-  const mockUseIsAdmin = useIsAdmin as any;
-  const mockUseHasPermission = useHasPermission as any;
+  const mockUseAuth = useAuth as vi.Mock;
+  const mockUseIsAdmin = useIsAdmin as vi.Mock;
+  const mockUseHasPermission = useHasPermission as vi.Mock;
 
   beforeEach(() => {
     vi.clearAllMocks();

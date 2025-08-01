@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/providers/auth-provider';
-import { toast } from '@/components/ui/use-toast';
 
 export interface EmailPreferences {
   user_id: string;

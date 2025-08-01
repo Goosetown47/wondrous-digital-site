@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, X, Globe, CheckCircle, AlertCircle, Copy, ExternalLink, RefreshCw, Loader2, AlertTriangle, Info, ChevronDown } from 'lucide-react';
-import { useDomains, useAddDomain, useRemoveDomain, useVerifyDomain, useDomainStatus, useVercelStatus } from '@/hooks/useDomains';
+import { Plus, X, Globe, AlertCircle, Copy, ExternalLink, RefreshCw, Loader2, Info, ChevronDown } from 'lucide-react';
+import { useDomains, useAddDomain, useRemoveDomain, useVerifyDomain, useVercelStatus } from '@/hooks/useDomains';
 import { toast } from 'sonner';
 import { DomainStatus } from '@/components/DomainStatus';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -24,7 +24,6 @@ function isApexDomain(domain: string): boolean {
   const parts = domain.split('.');
   // Apex domains have 2 parts (example.com)
   // Exception for country-code TLDs (example.co.uk)
-  const tld = parts.slice(-2).join('.');
   const isCountryCodeTLD = /\.(co|com|net|org|gov|edu|ac)\.[a-z]{2}$/.test(domain);
   
   if (isCountryCodeTLD) {
@@ -71,7 +70,6 @@ export function DomainSettings({ projectId, projectSlug }: DomainSettingsProps) 
   const [newDomain, setNewDomain] = useState('');
   const [domainError, setDomainError] = useState<string | null>(null);
   const [selectedDomainType, setSelectedDomainType] = useState<'apex' | 'subdomain' | null>(null);
-  const [selectedDomainId, setSelectedDomainId] = useState<string | null>(null);
   const [showTroubleshooting, setShowTroubleshooting] = useState(false);
   const { data: domains, isLoading } = useDomains(projectId);
   const { data: vercelStatus } = useVercelStatus();

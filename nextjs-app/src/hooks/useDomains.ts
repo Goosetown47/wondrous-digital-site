@@ -122,7 +122,7 @@ export function useVerifyDomain() {
 
       return await response.json();
     },
-    onSuccess: (data, domainId) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['domains'] });
       
       if (data.verified) {

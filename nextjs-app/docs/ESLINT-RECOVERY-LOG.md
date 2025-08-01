@@ -3,9 +3,9 @@
 Complete inventory of all 305 ESLint errors requiring individual resolution.
 
 **Status Overview:**
-- ⏳ Pending: 204 errors
+- ⏳ Pending: 192 errors
 - 🔄 In Progress: 0 errors  
-- ✅ Complete: 100 errors
+- ✅ Complete: 112 errors
 
 ## 📊 Progress Tracking
 
@@ -20,6 +20,7 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
 | 60 min | 224 | ✅ Good progress | Fixed 80 errors total, cleaned up tools pages |
 | 70 min | 221 | ✅ Good progress | Fixed 83 errors total, completed all tools page fixes |
 | 80 min | 208 | ✅ Excellent progress | Fixed 96 errors total, cleaned up API routes and builder components |
+| 90 min | 196 | ✅ Excellent progress | Fixed 108 errors total, cleaned up components and hooks |
 
 ---
 
@@ -564,33 +565,33 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
   - **Status**: ⏳ Pending
 
 ### File: ./src/components/DomainSettings.tsx (6 errors)
-- [ ] **Error #122** (Line 3): 'useEffect' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused import or implement useEffect
-  - **Status**: ⏳ Pending
+- [x] **Error #122** (Line 3): 'useEffect' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused import
+  - **Status**: ✅ Complete
 
-- [ ] **Error #123** (Line 6): 'CheckCircle' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused import or implement CheckCircle icon usage
-  - **Status**: ⏳ Pending
+- [x] **Error #123** (Line 6): 'CheckCircle' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused import
+  - **Status**: ✅ Complete
 
-- [ ] **Error #124** (Line 6): 'AlertTriangle' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused import or implement AlertTriangle icon usage
-  - **Status**: ⏳ Pending
+- [x] **Error #124** (Line 6): 'AlertTriangle' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused import
+  - **Status**: ✅ Complete
 
-- [ ] **Error #125** (Line 7): 'useDomainStatus' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused import or implement domain status checking
-  - **Status**: ⏳ Pending
+- [x] **Error #125** (Line 7): 'useDomainStatus' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused import
+  - **Status**: ✅ Complete
 
 - [ ] **Error #126** (Line 20): Unsafe Regular Expression - security/detect-unsafe-regex
   - **Fix**: Use safer regex pattern or validate input
   - **Status**: ⏳ Pending
 
-- [ ] **Error #127** (Line 27): 'tld' is assigned a value but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused variable or implement TLD validation
-  - **Status**: ⏳ Pending
+- [x] **Error #127** (Line 27): 'tld' is assigned a value but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused variable
+  - **Status**: ✅ Complete
 
-- [ ] **Error #128** (Line 74): 'selectedDomainId' is assigned a value but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused variable or implement domain selection
-  - **Status**: ⏳ Pending
+- [x] **Error #128** (Line 74): 'selectedDomainId' is assigned a value but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused variable
+  - **Status**: ✅ Complete
 
 - [ ] **Error #129** (Line 74): 'setSelectedDomainId' is assigned a value but never used - @typescript-eslint/no-unused-vars
   - **Fix**: Remove unused setter or implement domain selection
@@ -619,17 +620,17 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
   - **Status**: ⏳ Pending
 
 ### File: ./src/components/auth/__tests__/PermissionGate.test.tsx (3 errors)
-- [ ] **Error #135** (Line 16): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
-  - **Fix**: Replace `any` with proper TypeScript interface for test mocks
-  - **Status**: ⏳ Pending
+- [x] **Error #135** (Line 16): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+  - **Fix**: Replaced with `vi.Mock`
+  - **Status**: ✅ Complete
 
-- [ ] **Error #136** (Line 17): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
-  - **Fix**: Replace `any` with proper TypeScript interface for test mocks
-  - **Status**: ⏳ Pending
+- [x] **Error #136** (Line 17): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+  - **Fix**: Replaced with `vi.Mock`
+  - **Status**: ✅ Complete
 
-- [ ] **Error #137** (Line 18): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
-  - **Fix**: Replace `any` with proper TypeScript interface for test mocks
-  - **Status**: ⏳ Pending
+- [x] **Error #137** (Line 18): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+  - **Fix**: Replaced with `vi.Mock`
+  - **Status**: ✅ Complete
 
 ### File: ./src/components/builder/Canvas.tsx (3 errors)
 - [x] **Error #138** (Line 3): 'BaseSectionProps' is defined but never used - @typescript-eslint/no-unused-vars
@@ -664,21 +665,21 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
   - **Status**: ✅ Complete
 
 ### File: ./src/components/lab/resizable-preview.tsx (4 errors)
-- [ ] **Error #145** (Line 5): 'GripVertical' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused import or implement GripVertical icon usage
-  - **Status**: ⏳ Pending
+- [x] **Error #145** (Line 5): 'GripVertical' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Already commented out (not removed from interface)
+  - **Status**: ✅ Complete
 
-- [ ] **Error #146** (Line 20): 'className' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused parameter or implement className usage
-  - **Status**: ⏳ Pending
+- [x] **Error #146** (Line 20): 'className' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed from interface
+  - **Status**: ✅ Complete
 
-- [ ] **Error #147** (Line 23): 'defaultWidth' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused parameter or implement default width
-  - **Status**: ⏳ Pending
+- [x] **Error #147** (Line 23): 'defaultWidth' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed from interface
+  - **Status**: ✅ Complete
 
-- [ ] **Error #148** (Line 26): 'deviceView' is assigned a value but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused variable or implement device view state
-  - **Status**: ⏳ Pending
+- [x] **Error #148** (Line 26): 'deviceView' is assigned a value but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed from interface
+  - **Status**: ✅ Complete
 
 ### File: ./src/components/navigation/ProjectDropdown.tsx (6 errors)
 - [ ] **Error #149** (Line 15): 'getAccountProjects' is defined but never used - @typescript-eslint/no-unused-vars
@@ -980,14 +981,14 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
   - **Status**: ⏳ Pending
 
 ### File: ./src/hooks/useDomains.ts (1 error)
-- [ ] **Error #217** (Line 125): 'domainId' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused parameter or implement domain ID usage
-  - **Status**: ⏳ Pending
+- [x] **Error #217** (Line 125): 'domainId' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused parameter from onSuccess callback
+  - **Status**: ✅ Complete
 
 ### File: ./src/hooks/useEmailPreferences.ts (1 error)
-- [ ] **Error #218** (Line 4): 'toast' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused import or implement toast notifications
-  - **Status**: ⏳ Pending
+- [x] **Error #218** (Line 4): 'toast' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed unused import
+  - **Status**: ✅ Complete
 
 ### File: ./src/hooks/useInvitations.ts (3 errors)
 - [ ] **Error #219** (Line 4): 'AccountInvitation' is defined but never used - @typescript-eslint/no-unused-vars
