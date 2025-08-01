@@ -2,7 +2,7 @@ import { supabase } from './client';
 import type { LabDraft } from '@/types/builder';
 
 // Helper function to calculate content hash using browser crypto API
-async function calculateContentHash(content: any): Promise<string> {
+async function calculateContentHash(content: unknown): Promise<string> {
   const contentString = JSON.stringify(content);
   const encoder = new TextEncoder();
   const data = encoder.encode(contentString);
@@ -93,7 +93,7 @@ export const labDraftService = {
   async update(id: string, updates: Partial<Omit<LabDraft, 'id' | 'created_at' | 'updated_at'>>) {
     try {
       // Calculate content hash if content is being updated
-      let updatePayload: any = { ...updates };
+      const updatePayload: Record<string, unknown> = { ...updates };
       if (updates.content) {
         updatePayload.content_hash = await calculateContentHash(updates.content);
       }

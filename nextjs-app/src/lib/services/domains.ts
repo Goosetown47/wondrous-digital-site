@@ -33,8 +33,7 @@ export interface VercelDomainStatus {
  */
 export async function updateDomainVerification(
   domainId: string,
-  verified: boolean,
-  sslState?: string
+  verified: boolean
 ): Promise<void> {
   const updates: Partial<ProjectDomain> = {
     verified,

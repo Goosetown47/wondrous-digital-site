@@ -54,7 +54,11 @@ export async function verifyDomainWithRetry(
   attemptNumber: number = 1
 ): Promise<{
   verified: boolean;
-  ssl?: any;
+  ssl?: {
+    configured: boolean;
+    status: string;
+    [key: string]: unknown;
+  };
   error?: string;
   shouldRetry: boolean;
   nextRetryDelay?: number;
@@ -109,11 +113,11 @@ export async function verifyDomainWithRetry(
       shouldRetry,
       nextRetryDelay
     };
-  } catch (error: any) {
+  } catch (error) {
     await logDomainOperation(domainId, 'VERIFY_ERROR', 'error', {
       domain,
       attemptNumber,
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     });
 
     // Determine if error is retryable
@@ -127,7 +131,7 @@ export async function verifyDomainWithRetry(
 
     return {
       verified: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       shouldRetry,
       nextRetryDelay
     };

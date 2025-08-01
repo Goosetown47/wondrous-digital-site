@@ -213,7 +213,7 @@ export async function duplicatePage(pageId: string, newPath: string, newTitle?: 
       title: newTitle || `${originalPage.title || 'Untitled'} (Copy)`,
       sections: originalPage.sections || [],
       metadata: {
-        ...(originalPage.metadata as any || {}),
+        ...(originalPage.metadata as Record<string, unknown> || {}),
         duplicatedFrom: pageId,
         duplicatedAt: new Date().toISOString()
       }
@@ -240,7 +240,7 @@ async function logPageAction(
   action: string, 
   pageId: string, 
   projectId: string, 
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;

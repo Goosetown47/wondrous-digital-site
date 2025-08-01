@@ -1,7 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { AccountInvitation } from '@/types/database';
 import { queueEmail } from '@/lib/services/email';
-import { InvitationEmail } from '@/emails/invitation';
 
 export interface CreateInvitationParams {
   accountId: string;

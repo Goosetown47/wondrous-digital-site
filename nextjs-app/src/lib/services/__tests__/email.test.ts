@@ -164,7 +164,7 @@ describe('Email Service', () => {
       };
 
       const renderedHtml = '<p>Test React Email</p>';
-      (render as any).mockResolvedValue(renderedHtml);
+      (render as ReturnType<typeof vi.fn>).mockResolvedValue(renderedHtml);
 
       mockResendInstance.emails.send.mockResolvedValue({
         data: { id: 'email-456' },

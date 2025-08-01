@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { queueEmail, processEmailQueue } from '../email';
 import { createInvitation, resendInvitation } from '../invitations';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { render } from '@react-email/components';
 
 // Mock dependencies
 vi.mock('@/lib/supabase/admin', () => ({
@@ -21,9 +20,17 @@ vi.mock('resend', () => ({
   })),
 }));
 
+type MockSupabase = ReturnType<typeof createAdminClient> & {
+  auth?: {
+    admin: {
+      getUserById: ReturnType<typeof vi.fn>;
+    };
+  };
+};
+
 describe('Email System Integration Tests', () => {
-  let mockSupabase: any;
-  let mockResend: any;
+  let mockSupabase: MockSupabase;
+  let mockResend: { emails: { send: ReturnType<typeof vi.fn> } };
   const originalEnv = process.env.NODE_ENV;
 
   beforeEach(() => {
@@ -50,16 +57,16 @@ describe('Email System Integration Tests', () => {
       sql: vi.fn((template) => template),
       rpc: vi.fn(),
     };
-    (createAdminClient as any).mockReturnValue(mockSupabase);
+    (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(mockSupabase);
 
     // Setup mock Resend
-    const { Resend } = require('resend');
+    const resendModule = await vi.importMock<{ Resend: ReturnType<typeof vi.fn> }>('resend');
     mockResend = {
       emails: {
         send: vi.fn(),
       },
     };
-    Resend.mockImplementation(() => mockResend);
+    resendModule.Resend.mockImplementation(() => mockResend);
   });
 
   afterEach(() => {
@@ -286,7 +293,7 @@ describe('Email System Integration Tests', () => {
 
       // In a real implementation, the processor would check preferences
       // and skip emails for opted-out users
-      const shouldSendEmail = async (email: any) => {
+      const shouldSendEmail = async (email: { template_id: string; to_email: string }) => {
         if (email.template_id === 'weekly-digest') {
           const { data: prefs } = await mockSupabase
             .from('email_preferences')

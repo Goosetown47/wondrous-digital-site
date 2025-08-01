@@ -159,7 +159,7 @@ class ThemeService {
   /**
    * Apply a theme to a project
    */
-  async applyToProject(projectId: string, themeId: string, overrides?: any) {
+  async applyToProject(projectId: string, themeId: string, overrides?: Record<string, unknown>) {
     try {
       const response = await fetch(`/api/projects/${projectId}/theme`, {
         method: 'PUT',

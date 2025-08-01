@@ -7,8 +7,8 @@ export interface CreateTypeInput {
   category: 'section' | 'page' | 'site' | 'theme';
   description?: string;
   icon?: string;
-  schema?: Record<string, any>;
-  metadata?: Record<string, any>;
+  schema?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateTypeInput {
@@ -16,8 +16,8 @@ export interface UpdateTypeInput {
   display_name?: string;
   description?: string;
   icon?: string;
-  schema?: Record<string, any>;
-  metadata?: Record<string, any>;
+  schema?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 class TypesService {

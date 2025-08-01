@@ -31,7 +31,7 @@ export interface EmailOptions {
 
 export interface QueueEmailOptions extends Omit<EmailOptions, 'react'> {
   templateId?: string;
-  templateData?: Record<string, any>;
+  templateData?: Record<string, unknown>;
   scheduledAt?: Date;
 }
 
@@ -42,7 +42,7 @@ export interface EmailQueueItem {
   subject: string;
   body: string;
   template_id?: string;
-  template_data?: Record<string, any>;
+  template_data?: Record<string, unknown>;
   status: 'pending' | 'processing' | 'sent' | 'failed';
   retry_count: number;
   max_retries: number;
@@ -58,7 +58,7 @@ export interface EmailQueueItem {
  */
 export async function sendEmail(options: EmailOptions): Promise<{
   success: boolean;
-  data?: any;
+  data?: { id: string } | null;
   error?: string;
 }> {
   try {
@@ -284,7 +284,7 @@ export async function processEmailQueue(limit: number = 10): Promise<{
 /**
  * Apply template variables to a string
  */
-function applyTemplate(template: string, data: Record<string, any>): string {
+function applyTemplate(template: string, data: Record<string, unknown>): string {
   return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
     return data[key] !== undefined ? String(data[key]) : match;
   });
@@ -341,7 +341,7 @@ export async function getEmailQueueStats(): Promise<{
   const supabase = createAdminClient();
 
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('email_queue')
       .select('status', { count: 'exact', head: true });
 

@@ -1,5 +1,4 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { UserWithAccounts } from './users';
 
 export interface AuthUser {
@@ -12,7 +11,7 @@ export interface AuthUser {
     display_name?: string;
     avatar_url?: string;
     phone?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -21,7 +20,7 @@ export interface UserProfile {
   display_name?: string;
   avatar_url?: string;
   phone?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**

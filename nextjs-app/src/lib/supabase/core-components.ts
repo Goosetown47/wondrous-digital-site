@@ -8,7 +8,7 @@ export interface CreateComponentInput {
   dependencies?: string[];
   imports?: Record<string, string>;
   description?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateComponentInput extends Partial<CreateComponentInput> {

@@ -192,7 +192,7 @@ export async function inviteUser({ email, account_id, role, invited_by }: Create
   if (!canInvite) throw new Error('Insufficient permissions');
 
   // Check if user is already in the account
-  const { data: existingUser } = await supabase
+  await supabase
     .from('account_users')
     .select('user_id')
     .match({ account_id })
@@ -237,7 +237,7 @@ export async function inviteUser({ email, account_id, role, invited_by }: Create
 /**
  * Get pending invitations for an account
  */
-export async function getAccountInvitations(accountId: string): Promise<UserInvitation[]> {
+export async function getAccountInvitations(): Promise<UserInvitation[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
