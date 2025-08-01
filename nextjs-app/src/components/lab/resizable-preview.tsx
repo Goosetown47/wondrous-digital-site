@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { GripVertical } from 'lucide-react';
+// import { GripVertical } from 'lucide-react';
 
 interface ResizablePreviewProps {
   children: React.ReactNode;
@@ -17,13 +17,13 @@ interface ResizablePreviewProps {
 
 export function ResizablePreview({
   children,
-  className,
+  // className,
   minWidth = 320,
   maxWidth = 1400,
-  defaultWidth,
+  // defaultWidth,
   presetWidth,
   isDarkMode = false,
-  deviceView = 'desktop',
+  // deviceView = 'desktop',
 }: ResizablePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);

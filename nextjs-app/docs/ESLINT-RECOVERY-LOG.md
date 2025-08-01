@@ -3,9 +3,9 @@
 Complete inventory of all 305 ESLint errors requiring individual resolution.
 
 **Status Overview:**
-- ⏳ Pending: 249 errors
+- ⏳ Pending: 238 errors
 - 🔄 In Progress: 0 errors  
-- ✅ Complete: 55 errors
+- ✅ Complete: 66 errors
 
 ## 📊 Progress Tracking
 
@@ -15,6 +15,7 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
 | 10 min | 287 | ✅ Good progress | Fixed 17 errors across 8 files |
 | 20 min | 273 | ✅ Excellent progress | Fixed 31 errors total, systematic approach working |
 | 30 min | 249 | ✅ Excellent progress | Fixed 55 errors total, completed tools/accounts module |
+| 40 min | 238 | ✅ Good progress | Fixed 66 errors total, completed lab module and API routes |
 
 ---
 
@@ -137,9 +138,9 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
   - **Fix**: Replace `any` with proper TypeScript interface
   - **Status**: ⏳ Pending
 
-- [ ] **Error #28** (Line 150): React Hook useEffect has missing dependencies - react-hooks/exhaustive-deps
-  - **Fix**: Add 'draft' and 'handleSave' to dependency array or remove them
-  - **Status**: ⏳ Pending
+- [x] **Error #28** (Line 150): React Hook useEffect has missing dependencies - react-hooks/exhaustive-deps
+  - **Fix**: Added dependencies and wrapped handleSave in useCallback
+  - **Status**: ✅ Complete
 
 - [ ] **Error #29** (Line 417): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace `any` with proper TypeScript interface
@@ -169,14 +170,14 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
   - **Status**: ⏳ Pending
 
 ### File: ./src/app/(app)/lab/themes/[id]/page.tsx (1 error)
-- [ ] **Error #35** (Line 69): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
-  - **Fix**: Replace `any` with proper TypeScript interface
-  - **Status**: ⏳ Pending
+- [x] **Error #35** (Line 69): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+  - **Fix**: Replaced with `Error` type
+  - **Status**: ✅ Complete
 
 ### File: ./src/app/(app)/lab/themes/new/page.tsx (1 error)
-- [ ] **Error #36** (Line 30): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
-  - **Fix**: Replace `any` with proper TypeScript interface
-  - **Status**: ⏳ Pending
+- [x] **Error #36** (Line 30): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+  - **Fix**: Replaced with `Parameters<typeof labDraftService.create>[0]`
+  - **Status**: ✅ Complete
 
 ### File: ./src/app/(app)/library/page.tsx (3 errors)
 - [ ] **Error #37** (Line 6): 'Card' is defined but never used - @typescript-eslint/no-unused-vars
@@ -197,9 +198,9 @@ Complete inventory of all 305 ESLint errors requiring individual resolution.
   - **Status**: ⏳ Pending
 
 ### File: ./src/app/(app)/tools/accounts/[id]/components/AccountActivity.tsx (1 error)
-- [ ] **Error #41** (Line 16): 'accountId' is defined but never used - @typescript-eslint/no-unused-vars
-  - **Fix**: Remove unused parameter or implement account filtering
-  - **Status**: ⏳ Pending
+- [x] **Error #41** (Line 16): 'accountId' is defined but never used - @typescript-eslint/no-unused-vars
+  - **Fix**: Removed parameter from destructuring
+  - **Status**: ✅ Complete
 
 ### File: ./src/app/(app)/tools/accounts/[id]/components/AccountOverview.tsx (2 errors)
 - [x] **Error #42** (Line 18): 'Calendar' is defined but never used - @typescript-eslint/no-unused-vars

@@ -39,7 +39,7 @@ interface CanvasNavbarProps {
 
 export function CanvasNavbar({
   projectId,
-  projectName,
+  // projectName,
   currentPageId,
   currentPage,
   themeId,

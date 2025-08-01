@@ -66,7 +66,7 @@ export default function EditThemePage() {
       console.log('Theme promoted successfully:', data);
       router.push('/library?tab=theme');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Failed to promote theme:', {
         message: error.message || error.toString(),
         error: error

@@ -78,10 +78,11 @@ export async function GET(
 
     return NextResponse.json(item);
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ [API/Library] Unexpected error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to fetch library item';
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch library item' },
+      { error: message },
       { status: 500 }
     );
   }

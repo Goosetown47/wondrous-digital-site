@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -147,9 +147,9 @@ export default function EditDraftPage() {
     }, 2000);
 
     return () => clearTimeout(timeoutId);
-  }, [heroContent, autoSaveEnabled]);
+  }, [heroContent, autoSaveEnabled, draft, handleSave]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!draft) return;
     setIsSaving(true);
     try {
@@ -164,7 +164,7 @@ export default function EditDraftPage() {
       console.error('Failed to save draft:', error);
       setIsSaving(false);
     }
-  };
+  }, [draft, heroContent, updateMutation]);
 
   const getDeviceWidth = () => {
     switch (deviceView) {

@@ -460,7 +460,7 @@ export async function getAllAccounts() {
 /**
  * Log project actions for audit trail
  */
-async function logProjectAction(action: string, projectId: string, metadata?: Record<string, any>) {
+async function logProjectAction(action: string, projectId: string, metadata?: Record<string, unknown>) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 

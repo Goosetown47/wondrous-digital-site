@@ -27,7 +27,7 @@ export default function NewThemePage() {
   const [isCreating, setIsCreating] = useState(false);
 
   const createMutation = useMutation({
-    mutationFn: (draft: any) => labDraftService.create(draft),
+    mutationFn: (draft: Parameters<typeof labDraftService.create>[0]) => labDraftService.create(draft),
     onSuccess: (data) => {
       router.push(`/lab/themes/${data.id}`);
     },

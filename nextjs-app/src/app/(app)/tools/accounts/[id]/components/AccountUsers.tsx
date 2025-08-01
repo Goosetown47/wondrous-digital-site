@@ -14,7 +14,7 @@ interface AccountUsersProps {
   accountId: string;
 }
 
-export function AccountUsers({ accountId: _accountId }: AccountUsersProps) {
+export function AccountUsers(_props: AccountUsersProps) {
   return (
     <div className="space-y-6">
       <Card>

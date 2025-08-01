@@ -128,7 +128,7 @@ export async function PUT(
             project_name: currentProject.name,
             previous_account: {
               id: currentProject.account_id,
-              name: (currentProject.accounts as any)?.name || 'Unknown'
+              name: (currentProject.accounts as Record<string, unknown>)?.name as string || 'Unknown'
             },
             new_account: {
               id: targetAccount.id,
@@ -143,7 +143,7 @@ export async function PUT(
       // Continue despite logging failure
     }
 
-    console.log(`✅ Project "${currentProject.name}" reassigned from account "${(currentProject.accounts as any)?.name}" to "${targetAccount.name}"`);
+    console.log(`✅ Project "${currentProject.name}" reassigned from account "${(currentProject.accounts as Record<string, unknown>)?.name as string}" to "${targetAccount.name}"`);
 
     return NextResponse.json({
       message: 'Project account updated successfully',
