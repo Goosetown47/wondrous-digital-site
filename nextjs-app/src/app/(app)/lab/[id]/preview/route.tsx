@@ -13,13 +13,27 @@ export async function GET(
       return new Response('Draft not found', { status: 404 });
     }
 
-    const heroContent = draft.content?.heroContent || {
-      heading: "Blocks Built With Shadcn & Tailwind",
-      subtext: "Finely crafted components built with React, Tailwind and Shadcn UI.",
-      buttonText: "Discover all components",
-      buttonLink: "#",
-      imageUrl: "",
-    };
+    // TODO: This preview is hardcoded for hero sections.
+    // Should dynamically render different section types based on draft.type and draft.component_name
+    interface HeroSectionContent {
+      heroContent: {
+        heading: string;
+        subtext: string;
+        buttonText: string;
+        buttonLink: string;
+        imageUrl: string;
+      };
+    }
+    
+    const heroContent = (draft.content && typeof draft.content === 'object' && 'heroContent' in draft.content) 
+      ? (draft.content as HeroSectionContent).heroContent 
+      : {
+          heading: "Blocks Built With Shadcn & Tailwind",
+          subtext: "Finely crafted components built with React, Tailwind and Shadcn UI.",
+          buttonText: "Discover all components",
+          buttonLink: "#",
+          imageUrl: "",
+        };
 
     const html = `
       <!DOCTYPE html>

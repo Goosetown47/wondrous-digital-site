@@ -146,7 +146,7 @@ export default function AddComponentPage() {
                   <Label htmlFor="source">Source</Label>
                   <Select
                     value={formData.source}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, source: value as 'shadcn' | 'custom' | 'third-party' }))}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, source: value as 'shadcn' | 'aceternity' | 'expansions' | 'custom' }))}
                   >
                     <SelectTrigger id="source">
                       <SelectValue />

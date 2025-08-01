@@ -55,8 +55,29 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 // import { cn } from '@/lib/utils'; // Unused utility
+import type { LabDraft, CoreComponent } from '@/types/builder';
 
 type DeviceView = 'desktop' | 'tablet' | 'mobile';
+
+interface HeroSectionContent {
+  heroContent: {
+    heading: string;
+    subtext: string;
+    buttonText: string;
+    buttonLink: string;
+    imageUrl: string;
+  };
+}
+
+// Type guard to check if content has heroContent
+function hasHeroContent(content: unknown): content is HeroSectionContent {
+  return (
+    typeof content === 'object' &&
+    content !== null &&
+    'heroContent' in content &&
+    typeof (content as Record<string, unknown>).heroContent === 'object'
+  );
+}
 
 export default function EditDraftPage() {
   const params = useParams();
@@ -100,7 +121,7 @@ export default function EditDraftPage() {
   const { data: types = [] } = useTypes(draft?.type);
 
   const updateMutation = useMutation({
-    mutationFn: (updates: Partial<{ name: string; type: string; status: string; content: Record<string, unknown>; metadata: Record<string, unknown> }>) => labDraftService.update(draftId, updates),
+    mutationFn: (updates: Partial<Omit<LabDraft, 'id' | 'created_at' | 'updated_at'>>) => labDraftService.update(draftId, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lab-draft', draftId] });
     },
@@ -133,7 +154,7 @@ export default function EditDraftPage() {
 
   // Load saved content when draft loads
   useEffect(() => {
-    if (draft?.content?.heroContent) {
+    if (draft?.content && hasHeroContent(draft.content)) {
       setHeroContent(draft.content.heroContent);
     }
   }, [draft]);
@@ -144,7 +165,7 @@ export default function EditDraftPage() {
     try {
       await updateMutation.mutateAsync({
         content: {
-          ...draft.content,
+          ...(typeof draft.content === 'object' ? draft.content : {}),
           heroContent,
         },
       });
@@ -297,9 +318,9 @@ export default function EditDraftPage() {
                         <Label htmlFor="draft-description">Description</Label>
                         <Textarea
                           id="draft-description"
-                          value={draft.metadata?.description || ''}
+                          value={(draft.metadata?.description as string) || ''}
                           onChange={(e) => updateMutation.mutate({
-                            metadata: { ...draft.metadata, description: e.target.value }
+                            metadata: { ...(draft.metadata || {}), description: e.target.value }
                           })}
                           rows={3}
                         />
@@ -330,9 +351,9 @@ export default function EditDraftPage() {
                           <Label htmlFor="component-name">Component Name</Label>
                           <Input
                             id="component-name"
-                            value={draft.metadata?.component_name || ''}
+                            value={(draft.metadata?.component_name as string) || ''}
                             onChange={(e) => updateMutation.mutate({
-                              metadata: { ...draft.metadata, component_name: e.target.value }
+                              metadata: { ...(draft.metadata || {}), component_name: e.target.value }
                             })}
                             placeholder="e.g., HeroTwoColumn"
                           />
@@ -349,6 +370,9 @@ export default function EditDraftPage() {
                   <div>
                     <h3 className="font-semibold mb-3">Content Properties</h3>
                     <div className="space-y-4">
+                      {/* TODO: This section editor is hardcoded for HeroTwoColumn sections.
+                          The lab should dynamically render different property editors based on the section type.
+                          For now, we'll show these fields only when it's a hero section. */}
                       <div>
                         <Label htmlFor="heading">Heading</Label>
                         <Input
@@ -391,7 +415,7 @@ export default function EditDraftPage() {
                     <h3 className="font-semibold mb-3">Components</h3>
                     <ScrollArea className="h-[200px]">
                       <div className="space-y-2">
-                        {coreComponents.map((component) => (
+                        {coreComponents.map((component: CoreComponent) => (
                           <Card key={component.id} className="cursor-pointer hover:bg-muted/50">
                             <CardHeader className="p-3">
                               <CardTitle className="text-sm">{component.name}</CardTitle>
@@ -498,11 +522,9 @@ export default function EditDraftPage() {
           {activeTab === 'preview' ? (
             <ResizablePreview
               presetWidth={getDeviceWidth()}
-              defaultWidth={1400}
               minWidth={320}
               maxWidth={1400}
               isDarkMode={isDarkMode}
-              deviceView={deviceView}
             >
               <HeroTwoColumn
                 {...heroContent}

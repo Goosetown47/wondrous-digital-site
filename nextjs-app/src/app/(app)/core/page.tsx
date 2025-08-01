@@ -33,7 +33,7 @@ export default function CorePage() {
     if (source === 'all') {
       setFilters(prev => ({ ...prev, source: undefined }));
     } else {
-      setFilters(prev => ({ ...prev, source: source as 'shadcn' | 'custom' | 'third-party' }));
+      setFilters(prev => ({ ...prev, source: source as 'shadcn' | 'aceternity' | 'expansions' | 'custom' }));
     }
   };
 

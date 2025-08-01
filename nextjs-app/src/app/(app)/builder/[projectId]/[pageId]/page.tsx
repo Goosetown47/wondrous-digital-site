@@ -11,6 +11,7 @@ import { useProject } from '@/hooks/useProjects';
 import { usePageById, useSavePage } from '@/hooks/usePages';
 import { useTheme } from '@/hooks/useThemes';
 import { useEffect, useState } from 'react';
+import type { Section } from '@/schemas/section';
 
 export default function BuilderPage() {
   const params = useParams();
@@ -41,7 +42,7 @@ export default function BuilderPage() {
   useEffect(() => {
     if (page && page.sections && !hasLoadedInitialData) {
       clearAll();
-      page.sections.forEach((section: unknown) => {
+      page.sections.forEach((section: Section) => {
         addSection(section);
       });
       setHasLoadedInitialData(true);

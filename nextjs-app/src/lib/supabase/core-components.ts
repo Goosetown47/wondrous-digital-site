@@ -6,7 +6,7 @@ export interface CreateComponentInput {
   source: 'shadcn' | 'aceternity' | 'expansions' | 'custom';
   code: string;
   dependencies?: string[];
-  imports?: Record<string, string>;
+  imports?: string[];
   description?: string;
   metadata?: Record<string, unknown>;
 }
@@ -22,6 +22,10 @@ export interface ComponentFilters {
 }
 
 class CoreComponentsService {
+
+  async getAll(): Promise<CoreComponent[]> {
+    return this.getComponents();
+  }
 
   async getComponents(filters?: ComponentFilters): Promise<CoreComponent[]> {
     try {
