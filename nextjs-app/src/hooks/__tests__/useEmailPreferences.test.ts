@@ -21,7 +21,7 @@ vi.mock('@/components/ui/use-toast', () => ({
 // Import mocked modules
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/providers/auth-provider';
-import { toast } from '@/components/ui/use-toast';
+// import { toast } from '@/components/ui/use-toast';
 
 describe('Email Preferences Hooks', () => {
   let queryClient: QueryClient;
@@ -35,12 +35,11 @@ describe('Email Preferences Hooks', () => {
         queries: { retry: false },
       },
     });
-    wrapper = ({ children }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
+    wrapper = ({ children }: { children: React.ReactNode }) => 
+      React.createElement(QueryClientProvider, { client: queryClient }, children);
     
     // Default auth state
-    (useAuth as any).mockReturnValue({ user: mockUser });
+    (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ user: mockUser });
   });
 
   describe('useEmailPreferences', () => {

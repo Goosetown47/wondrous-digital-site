@@ -47,7 +47,7 @@ export function UserAccountsDialog({ user, open, onOpenChange }: UserAccountsDia
     updateUserRole.mutate({
       user_id: user.id,
       account_id: accountId,
-      role: newRole as any,
+      role: newRole as 'admin' | 'staff' | 'account_owner' | 'user',
     });
   };
 

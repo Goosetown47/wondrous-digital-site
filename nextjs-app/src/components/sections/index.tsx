@@ -5,11 +5,17 @@ import { HeroSection } from './HeroSection';
 import { HeroTwoColumn } from './hero-two-column';
 import type { ComponentType } from 'react';
 
+// Define the content type for sections
+export interface SectionContent {
+  type?: string;
+  [key: string]: unknown;
+}
+
 // Define the props interface that all section components should accept
 export interface BaseSectionProps {
-  content: any;
+  content: SectionContent;
   isEditing?: boolean;
-  onContentChange?: (updates: any) => void;
+  onContentChange?: (updates: Partial<SectionContent>) => void;
 }
 
 // Registry of section components
@@ -23,7 +29,7 @@ export const SECTION_COMPONENTS: Record<string, ComponentType<BaseSectionProps>>
 };
 
 // Generic section component for sections without specific components
-export function GenericSection({ content, isEditing, onContentChange }: BaseSectionProps) {
+export function GenericSection({ content, isEditing }: BaseSectionProps) {
   return (
     <div className="py-12 px-4 bg-gray-100 border-2 border-dashed border-gray-300">
       <div className="max-w-4xl mx-auto text-center">

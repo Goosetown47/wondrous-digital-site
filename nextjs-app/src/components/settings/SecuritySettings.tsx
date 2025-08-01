@@ -1,22 +1,16 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Shield, Key, Smartphone, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function SecuritySettings() {
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsChangingPassword(true);
     // TODO: Implement password change
-    setTimeout(() => setIsChangingPassword(false), 1000);
   };
 
   return (

@@ -59,7 +59,6 @@ export function EmailPreferencesForm() {
   const { data: preferences, isLoading, error } = useEmailPreferences();
   const updatePreferences = useUpdateEmailPreferences();
   const [localPreferences, setLocalPreferences] = useState<EmailPreferences | null>(null);
-  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     if (preferences) {
@@ -72,7 +71,6 @@ export function EmailPreferencesForm() {
 
     const newPreferences = { ...localPreferences, [key]: value };
     setLocalPreferences(newPreferences);
-    setHasChanges(true);
 
     // Auto-save with debounce
     const timeoutId = setTimeout(() => {
@@ -84,9 +82,8 @@ export function EmailPreferencesForm() {
               title: 'Preferences updated',
               description: 'Your email notification preferences have been saved.',
             });
-            setHasChanges(false);
           },
-          onError: (error) => {
+          onError: () => {
             toast({
               title: 'Update failed',
               description: 'Failed to update your preferences. Please try again.',

@@ -22,8 +22,6 @@ import {
   Search,
   Building2,
   Users,
-  Check,
-  X,
 } from 'lucide-react';
 
 interface AssignStaffDialogProps {
@@ -96,7 +94,7 @@ export function AssignStaffDialog({
         notes: notes.trim() || undefined,
       });
       onSuccess?.();
-    } catch (error) {
+    } catch {
       // Error is handled by the mutation
     }
   };

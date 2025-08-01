@@ -9,13 +9,11 @@ interface HeroTwoColumnProps {
   heading?: string;
   subtext?: string;
   buttonText?: string;
-  buttonLink?: string;
   imageUrl?: string;
   imageAlt?: string;
   onHeadingChange?: (value: string) => void;
   onSubtextChange?: (value: string) => void;
   onButtonTextChange?: (value: string) => void;
-  onButtonLinkChange?: (value: string) => void;
   onImageChange?: (file: File) => void;
   editable?: boolean;
 }
@@ -24,13 +22,11 @@ export function HeroTwoColumn({
   heading = "Blocks Built With Shadcn & Tailwind",
   subtext = "Finely crafted components built with React, Tailwind and Shadcn UI. Developers can copy and paste these blocks directly into their project.",
   buttonText = "Discover all components",
-  buttonLink = "#",
   imageUrl,
   imageAlt = "Hero image",
   onHeadingChange,
   onSubtextChange,
   onButtonTextChange,
-  onButtonLinkChange,
   onImageChange,
   editable = false,
 }: HeroTwoColumnProps) {

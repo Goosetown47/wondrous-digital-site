@@ -8,10 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { AlertCircle, Check, Copy, Download, Upload } from 'lucide-react';
+import { AlertCircle, Check, Copy, Download } from 'lucide-react';
+
+interface ThemeVariables {
+  colors?: Record<string, string>;
+  radius?: string;
+}
 
 interface ThemePreviewProps {
-  variables: any;
+  variables: ThemeVariables;
   showHeader?: boolean;
 }
 

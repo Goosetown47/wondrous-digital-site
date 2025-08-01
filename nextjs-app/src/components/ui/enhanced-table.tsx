@@ -15,9 +15,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { 
   Search, 
-  Trash2, 
-  Edit, 
-  Eye, 
   MoreHorizontal,
   ChevronDown
 } from 'lucide-react';
@@ -32,7 +29,7 @@ import {
 export interface TableColumn<T> {
   key: string;
   title: string;
-  render?: (item: T, value: any) => React.ReactNode;
+  render?: (item: T, value: unknown) => React.ReactNode;
   sortable?: boolean;
   searchable?: boolean;
   className?: string;
@@ -109,7 +106,7 @@ export function EnhancedTable<T>({
       filtered = filtered.filter(item => {
         return columns.some(column => {
           if (column.searchable === false) return false;
-          const value = (item as any)[column.key];
+          const value = (item as Record<string, unknown>)[column.key];
           return String(value).toLowerCase().includes(searchQuery.toLowerCase());
         });
       });
@@ -120,7 +117,7 @@ export function EnhancedTable<T>({
       filtered = filtered.filter(item => {
         return Object.entries(activeFilters).every(([key, value]) => {
           if (value === 'all' || !value) return true;
-          const itemValue = (item as any)[key];
+          const itemValue = (item as Record<string, unknown>)[key];
           return String(itemValue) === value;
         });
       });
@@ -322,7 +319,7 @@ export function EnhancedTable<T>({
                       </TableCell>
                     )}
                     {columns.map((column) => {
-                      const value = (item as any)[column.key];
+                      const value = (item as Record<string, unknown>)[column.key];
                       return (
                         <TableCell key={column.key} className={column.className}>
                           {column.render ? column.render(item, value) : String(value || '')}

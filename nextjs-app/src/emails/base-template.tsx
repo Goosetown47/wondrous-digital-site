@@ -17,7 +17,6 @@ export interface BaseEmailTemplateProps {
   children: React.ReactNode;
   logoUrl?: string;
   logoAlt?: string;
-  brandColor?: string;
   footerText?: string;
   unsubscribeUrl?: string;
 }
@@ -27,7 +26,6 @@ export const BaseEmailTemplate: React.FC<BaseEmailTemplateProps> = ({
   children,
   logoUrl = 'https://wondrousdigital.com/logo.png',
   logoAlt = 'Wondrous Digital',
-  brandColor = '#4F46E5',
   footerText = '© 2025 Wondrous Digital. All rights reserved.',
   unsubscribeUrl,
 }) => {
