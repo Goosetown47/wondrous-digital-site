@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getEmailQueueStats } from '@/lib/services/email';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Check if user is authenticated and is a platform admin
     const supabase = await createSupabaseServerClient();

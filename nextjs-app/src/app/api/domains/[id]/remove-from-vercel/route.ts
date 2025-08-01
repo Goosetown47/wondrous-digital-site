@@ -33,7 +33,7 @@ export async function DELETE(
     // Remove domain from Vercel
     try {
       await removeDomainFromVercel(domain.domain);
-    } catch (vercelError: any) {
+    } catch (vercelError) {
       // If domain doesn't exist in Vercel, that's okay
       console.warn('Error removing domain from Vercel:', vercelError);
     }
@@ -42,10 +42,10 @@ export async function DELETE(
       success: true,
       domain: domain.domain,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error removing domain from Vercel:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to remove domain from Vercel' },
+      { error: error instanceof Error ? error.message : 'Failed to remove domain from Vercel' },
       { status: 500 }
     );
   }

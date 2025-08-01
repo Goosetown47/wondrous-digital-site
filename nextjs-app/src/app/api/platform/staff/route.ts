@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isAdminServer } from '@/lib/permissions/server-checks';
 
 const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000000';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();

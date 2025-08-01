@@ -6,7 +6,7 @@ import { env } from '@/env.mjs';
 
 const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000000';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   console.log('🔍 [API/Platform/Admins] Fetching platform admins (using service role)...');
 
   try {

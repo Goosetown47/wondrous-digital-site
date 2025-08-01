@@ -48,7 +48,7 @@ export default function VerifyEmailPage() {
         setResendStatus('error');
         toast.error(data.error || 'Failed to resend email');
       }
-    } catch (error) {
+    } catch {
       setResendStatus('error');
       toast.error('Network error. Please try again.');
     } finally {

@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
 
     const types = await typesService.getAll(category);
     return NextResponse.json(types);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching types:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'An error occurred' }, { status: 500 });
   }
 }
 
@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const type = await typesService.create(body);
     return NextResponse.json(type);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating type:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'An error occurred' }, { status: 500 });
   }
 }

@@ -11,7 +11,7 @@ export async function GET() {
         ? 'Vercel integration is configured' 
         : 'Vercel integration not configured. Domain verification will run in mock mode.',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error checking Vercel status:', error);
     return NextResponse.json(
       { error: 'Failed to check Vercel status' },

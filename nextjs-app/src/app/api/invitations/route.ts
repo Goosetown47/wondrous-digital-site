@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     
     const searchParams = request.nextUrl.searchParams;
     const accountId = searchParams.get('accountId');
-    const status = searchParams.get('status') as any || 'all';
+    const status = searchParams.get('status') || 'all';
     
     if (!accountId) {
       return NextResponse.json({ error: 'Account ID required' }, { status: 400 });

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { cookies } from 'next/headers';
 import { env } from '@/env.mjs';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   console.log('🔍 [API/Users] Fetching all users (using service role)...');
 
   try {
