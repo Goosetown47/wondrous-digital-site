@@ -10,7 +10,7 @@ export default function BuilderRedirectPage() {
   const router = useRouter();
   const projectId = params.projectId as string;
   
-  const { data: homepage, isLoading, error } = useHomepage(projectId);
+  const { data: homepage, error } = useHomepage(projectId);
 
   useEffect(() => {
     if (homepage?.id) {

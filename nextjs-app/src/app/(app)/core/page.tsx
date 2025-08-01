@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Code, Package, Loader2 } from 'lucide-react';
 import type { ComponentFilters } from '@/lib/supabase/core-components';
 
@@ -33,7 +33,7 @@ export default function CorePage() {
     if (source === 'all') {
       setFilters(prev => ({ ...prev, source: undefined }));
     } else {
-      setFilters(prev => ({ ...prev, source: source as any }));
+      setFilters(prev => ({ ...prev, source: source as 'shadcn' | 'custom' | 'third-party' }));
     }
   };
 

@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { useUsers, useUpdateUserRole } from '@/hooks/useUsers';
+import { useUsers } from '@/hooks/useUsers';
 import { useIsAdmin } from '@/hooks/useRole';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+// import { Badge } from '@/components/ui/badge'; // Unused import
 import {
   Table,
   TableBody,
@@ -33,9 +33,9 @@ import { toast } from 'sonner';
 export default function AdminsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: users, isLoading } = useUsers();
+  const { data: users } = useUsers();
   const { data: isCurrentUserAdmin } = useIsAdmin();
-  const updateUserRole = useUpdateUserRole();
+  // const updateUserRole = useUpdateUserRole(); // Unused but may be needed
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     userId?: string;

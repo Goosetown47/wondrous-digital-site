@@ -7,15 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { labDraftService } from '@/lib/supabase/lab-drafts';
 import { coreComponentsService } from '@/lib/supabase/core-components';
 import { useTypes } from '@/hooks/useTypes';
 import { 
-  ArrowLeft, Save, Eye, Upload, Plus, Settings, Maximize, 
+  ArrowLeft, Save, Upload, Plus, Settings, Maximize, 
   Monitor, Tablet, Smartphone, Moon, Sun, ChevronDown,
-  X, Check, Code, ExternalLink
+  Check, ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
@@ -54,7 +54,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { cn } from '@/lib/utils';
+// import { cn } from '@/lib/utils'; // Unused utility
 
 type DeviceView = 'desktop' | 'tablet' | 'mobile';
 
@@ -69,7 +69,7 @@ export default function EditDraftPage() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeTab, setActiveTab] = useState<'preview' | 'code'>('preview');
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [autoSaveEnabled] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
@@ -100,7 +100,7 @@ export default function EditDraftPage() {
   const { data: types = [] } = useTypes(draft?.type);
 
   const updateMutation = useMutation({
-    mutationFn: (updates: any) => labDraftService.update(draftId, updates),
+    mutationFn: (updates: Partial<{ name: string; type: string; status: string; content: Record<string, unknown>; metadata: Record<string, unknown> }>) => labDraftService.update(draftId, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lab-draft', draftId] });
     },
@@ -414,7 +414,7 @@ export default function EditDraftPage() {
         <div className="border-t px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'preview' | 'code')}>
                 <TabsList className="h-8">
                   <TabsTrigger value="preview" className="text-xs">Preview</TabsTrigger>
                   <TabsTrigger value="code" className="text-xs">Code</TabsTrigger>

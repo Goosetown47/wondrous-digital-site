@@ -1,5 +1,5 @@
 import { labDraftService } from '@/lib/supabase/lab-drafts';
-import { HeroTwoColumn } from '@/components/sections/hero-two-column';
+// import { HeroTwoColumn } from '@/components/sections/hero-two-column'; // TODO: Use for actual rendering
 
 export async function GET(
   request: Request,
@@ -77,7 +77,7 @@ export async function GET(
         'Content-Type': 'text/html',
       },
     });
-  } catch (error) {
+  } catch {
     return new Response('Internal Server Error', { status: 500 });
   }
 }

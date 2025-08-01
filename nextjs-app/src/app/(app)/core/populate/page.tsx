@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation'; // May be needed for navigation
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -116,7 +116,7 @@ const componentsToAdd = [
 ];
 
 export default function PopulateCorePage() {
-  const router = useRouter();
+  // const router = useRouter(); // May be needed for navigation
   const [isPopulating, setIsPopulating] = useState(false);
   const [results, setResults] = useState<Array<{name: string, status: 'success' | 'error', error?: string}>>([]);
   const createComponent = useCreateComponent();
@@ -149,11 +149,11 @@ export default function PopulateCorePage() {
         });
 
         newResults.push({ name: component.name, status: 'success' as const });
-      } catch (error: any) {
+      } catch (error: unknown) {
         newResults.push({ 
           name: component.name, 
           status: 'error' as const, 
-          error: error.message 
+          error: error instanceof Error ? error.message : 'Unknown error' 
         });
       }
       
@@ -201,7 +201,7 @@ export default function PopulateCorePage() {
           {(isPopulating || results.length > 0) && (
             <div className="space-y-4">
               <div className="space-y-2">
-                {componentsToAdd.map((component, index) => {
+                {componentsToAdd.map((component) => {
                   const result = results.find(r => r.name === component.name);
                   
                   return (

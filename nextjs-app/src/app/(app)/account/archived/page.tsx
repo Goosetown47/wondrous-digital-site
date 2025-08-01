@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
+// import { useQueryClient } from '@tanstack/react-query'; // May be needed later
 import { useAuth } from '@/providers/auth-provider';
 import { useAccountProjects, useRestoreProject, useDeleteProject } from '@/hooks/useProjects';
 import { Button } from '@/components/ui/button';
@@ -31,15 +31,15 @@ import { format } from 'date-fns';
 
 export default function ArchivedProjectsPage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient(); // Unused but may be needed for future functionality
   const { currentAccount } = useAuth();
   const { data: projects, isLoading } = useAccountProjects(currentAccount?.id);
   const { mutate: restoreProject } = useRestoreProject();
   const { mutate: deleteProject } = useDeleteProject();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [restoreDialog, setRestoreDialog] = useState<{ open: boolean; project?: any }>({ open: false });
-  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; project?: any }>({ open: false });
+  const [restoreDialog, setRestoreDialog] = useState<{ open: boolean; project?: { id: string; name: string } }>({ open: false });
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; project?: { id: string; name: string } }>({ open: false });
 
   // Filter for archived projects only
   const archivedProjects = projects?.filter(p => p.archived_at) || [];
@@ -51,11 +51,11 @@ export default function ArchivedProjectsPage() {
     return matchesSearch;
   });
 
-  const handleRestore = (project: any) => {
+  const handleRestore = (project: { id: string; name: string }) => {
     setRestoreDialog({ open: true, project });
   };
 
-  const handleDelete = (project: any) => {
+  const handleDelete = (project: { id: string; name: string }) => {
     setDeleteDialog({ open: true, project });
   };
 

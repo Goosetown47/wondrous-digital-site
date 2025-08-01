@@ -130,7 +130,7 @@ export default function AddComponentPage() {
                   <Label htmlFor="type">Type</Label>
                   <Select
                     value={formData.type}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as any }))}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as 'component' | 'section' }))}
                   >
                     <SelectTrigger id="type">
                       <SelectValue />
@@ -146,7 +146,7 @@ export default function AddComponentPage() {
                   <Label htmlFor="source">Source</Label>
                   <Select
                     value={formData.source}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, source: value as any }))}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, source: value as 'shadcn' | 'custom' | 'third-party' }))}
                   >
                     <SelectTrigger id="source">
                       <SelectValue />

@@ -55,9 +55,9 @@ export default function NewDraftPage() {
       } else {
         router.push(`/lab/${draft.id}`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create draft:', error);
-      alert(`Failed to create draft: ${error.message || 'Unknown error'}`);
+      alert(`Failed to create draft: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsCreating(false);
     }
   };
@@ -146,7 +146,7 @@ export default function NewDraftPage() {
               <Label>Category</Label>
               <RadioGroup
                 value={formData.type}
-                onValueChange={(value) => setFormData({ ...formData, type: value as any })}
+                onValueChange={(value) => setFormData({ ...formData, type: value as 'section' | 'page' | 'site' | 'theme' })}
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="section" id="section" />

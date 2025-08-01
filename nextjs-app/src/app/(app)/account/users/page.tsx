@@ -96,7 +96,7 @@ export default function AccountUsersPage() {
       setInviteModalOpen(false);
       setInviteEmail('');
       setInviteRole('user');
-    } catch (error) {
+    } catch {
       // Error is handled by the mutation's onError
     }
   };
@@ -111,7 +111,7 @@ export default function AccountUsersPage() {
         role: newRole,
       });
       toast.success('Role updated successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to update role');
     }
   };
@@ -126,7 +126,7 @@ export default function AccountUsersPage() {
       });
       toast.success('User removed successfully');
       setRemoveUserDialog({ open: false });
-    } catch (error) {
+    } catch {
       toast.error('Failed to remove user');
     }
   };

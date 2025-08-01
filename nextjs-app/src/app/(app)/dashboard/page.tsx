@@ -11,7 +11,7 @@ import { CreateProjectDialog } from '@/components/projects/CreateProjectDialog';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, currentAccount, currentProject } = useAuth();
+  const { currentAccount, currentProject } = useAuth();
   const { data: accountRole } = useAccountRole();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
