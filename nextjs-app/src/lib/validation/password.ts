@@ -23,7 +23,7 @@ export const passwordRequirements: PasswordRequirement[] = [
   {
     id: 'symbol',
     label: 'One special character',
-    test: (password: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+    test: (password: string) => /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
   },
 ];
 
@@ -82,7 +82,7 @@ export function getPasswordStrengthMessage(password: string): string {
 export function isValidEmail(email: string): boolean {
   // More strict email validation regex
   // Ensures proper format with valid characters and structure
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
   
   // Additional validation rules
   if (!email || email.length > 254) return false;

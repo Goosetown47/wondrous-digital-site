@@ -127,7 +127,7 @@ export interface EmailQueue {
   subject: string;
   body: string;
   template_id?: string | null;
-  template_data?: Record<string, any>;
+  template_data?: Record<string, unknown>;
   status: 'pending' | 'processing' | 'sent' | 'failed';
   retry_count: number;
   max_retries: number;
@@ -149,7 +149,7 @@ export interface EmailLog {
   clicked_at?: string | null;
   bounced_at?: string | null;
   complained_at?: string | null;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
 }
 

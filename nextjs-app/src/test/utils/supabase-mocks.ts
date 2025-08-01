@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { mockAccountUsers, mockAccounts, mockRoles, PLATFORM_ACCOUNT_ID } from './auth-mocks';
+import type { Database } from '@/types/supabase';
+import { mockAccountUsers, mockAccounts, mockRoles } from './auth-mocks';
 
 // Mock Supabase client
 export function createMockSupabaseClient(overrides?: Partial<SupabaseClient>) {
@@ -31,14 +32,14 @@ export function createMockSupabaseClient(overrides?: Partial<SupabaseClient>) {
           return createMockQuery(table);
       }
     }),
-    rpc: vi.fn((functionName: string, params?: any) => {
+    rpc: vi.fn((functionName: string, params?: Record<string, unknown>) => {
       switch (functionName) {
         case 'is_platform_admin':
           return {
             data: params?.check_user_id === 'admin-user-id',
             error: null,
           };
-        case 'get_user_role_in_account':
+        case 'get_user_role_in_account': {
           // Return role based on user and account
           const accountUser = Object.values(mockAccountUsers).find(
             au => au.user_id === params?.p_user_id && au.account_id === params?.p_account_id
@@ -47,6 +48,7 @@ export function createMockSupabaseClient(overrides?: Partial<SupabaseClient>) {
             data: accountUser?.role || null,
             error: null,
           };
+        }
         default:
           return { data: null, error: null };
       }
@@ -137,7 +139,7 @@ function getMockDataForTable(table: string) {
 }
 
 // Mock specific responses for testing scenarios
-export function mockSupabaseResponse(client: any, table: string, method: string, response: any) {
+export function mockSupabaseResponse(client: SupabaseClient<Database>, table: string, method: string, response: unknown) {
   const query = client.from(table);
   query[method].mockReturnValueOnce({
     ...query,
@@ -149,17 +151,17 @@ export function mockSupabaseResponse(client: any, table: string, method: string,
 }
 
 // Mock auth responses
-export function mockAuthResponse(client: any, method: keyof typeof client.auth, response: any) {
+export function mockAuthResponse(client: SupabaseClient<Database>, method: keyof SupabaseClient<Database>['auth'], response: unknown) {
   client.auth[method].mockResolvedValueOnce(response);
 }
 
 // Mock RPC responses
-export function mockRpcResponse(client: any, functionName: string, response: any) {
+export function mockRpcResponse(client: SupabaseClient<Database>, functionName: string, response: unknown) {
   client.rpc.mockResolvedValueOnce(response);
 }
 
 // Helper to setup common auth scenarios
-export function setupAuthScenario(client: any, scenario: 'admin' | 'owner' | 'user' | 'unauthenticated') {
+export function setupAuthScenario(client: SupabaseClient<Database>, scenario: 'admin' | 'owner' | 'user' | 'unauthenticated') {
   switch (scenario) {
     case 'admin':
       mockAuthResponse(client, 'getUser', {

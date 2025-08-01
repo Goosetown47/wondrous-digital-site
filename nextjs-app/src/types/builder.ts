@@ -6,8 +6,8 @@ export interface Type {
   category: 'section' | 'page' | 'site' | 'theme';
   description: string | null;
   icon: string | null; // optional icon identifier
-  schema: Record<string, any> | null; // optional JSON schema
-  metadata: Record<string, any>;
+  schema: Record<string, unknown> | null; // optional JSON schema
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -21,7 +21,7 @@ export interface CoreComponent {
   code: string;
   dependencies: string[];
   imports: string[];
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -32,12 +32,12 @@ export interface LabDraft {
   name: string;
   type: 'section' | 'page' | 'site' | 'theme';
   type_id: string | null; // Reference to types table
-  content: any; // Will be more specific based on type
+  content: SectionContent | PageContent | SiteContent | ThemeVariables; // Will be more specific based on type
   version: number;
   status: 'draft' | 'testing' | 'ready' | 'promoted';
   content_hash: string | null; // SHA-256 hash of content for change detection
   library_version: number | null; // Version of linked library item
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -49,7 +49,7 @@ export interface Theme {
   name: string;
   description: string | null;
   variables: ThemeVariables;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -101,7 +101,7 @@ export interface ThemeVariables {
   };
   
   // Custom properties
-  [key: string]: any;
+  [key: string]: string | Record<string, string> | undefined;
 }
 
 // Library item types
@@ -112,13 +112,13 @@ export interface LibraryItem {
   type_id: string | null; // Reference to types table
   component_name: string | null; // React component name (e.g., 'HeroTwoColumn')
   category: string | null;
-  content: any; // Will be more specific based on type
+  content: SectionContent | PageContent | SiteContent | ThemeVariables; // Will be more specific based on type
   published: boolean;
   version: number;
   source_draft_id: string | null;
   theme_id: string | null;
   usage_count: number;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -129,7 +129,7 @@ export interface LibraryVersion {
   id: string;
   library_item_id: string;
   version: number;
-  content: any;
+  content: SectionContent | PageContent | SiteContent | ThemeVariables;
   change_notes: string | null;
   created_by: string | null;
   created_at: string;
@@ -139,7 +139,7 @@ export interface LibraryVersion {
 export interface SectionContent {
   components: Array<{
     component_id: string;
-    props: Record<string, any>;
+    props: Record<string, unknown>;
     children?: SectionContent['components'];
   }>;
   layout?: {
@@ -153,7 +153,7 @@ export interface PageContent {
   sections: Array<{
     section_id: string;
     order: number;
-    props?: Record<string, any>;
+    props?: Record<string, unknown>;
   }>;
   metadata?: {
     title?: string;
@@ -169,10 +169,10 @@ export interface SiteContent {
     is_home?: boolean;
   }>;
   navigation?: {
-    header?: any;
-    footer?: any;
+    header?: Record<string, unknown>;
+    footer?: Record<string, unknown>;
   };
-  global_settings?: Record<string, any>;
+  global_settings?: Record<string, unknown>;
 }
 
 // Extended Project type with theme support

@@ -613,141 +613,141 @@ Complete inventory of all ESLint errors requiring systematic resolution.
   - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
 ### File: ./src/lib/validation/password.ts (3 errors)
-- [ ] **Error #302** (Line 26): Unnecessary escape character: \[ - no-useless-escape
+- [x] **Error #302** (Line 26): Unnecessary escape character: \[ - no-useless-escape
   - **Fix**: Remove unnecessary backslash
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Removed unnecessary escape for [ in regex
 
-- [ ] **Error #303** (Line 26): Unnecessary escape character: \/ - no-useless-escape
+- [x] **Error #303** (Line 26): Unnecessary escape character: \/ - no-useless-escape
   - **Fix**: Remove unnecessary backslash
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Removed unnecessary escape for / in regex
 
-- [ ] **Error #304** (Line 85): Unnecessary escape character: \/ - no-useless-escape
+- [x] **Error #304** (Line 85): Unnecessary escape character: \/ - no-useless-escape
   - **Fix**: Remove unnecessary backslash
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Removed unnecessary escape for / in email regex
 
 ### File: ./src/test/utils/permission-helpers.ts (3 errors)
-- [ ] **Error #305** (Line 101): '_' is defined but never used - @typescript-eslint/no-unused-vars
+- [x] **Error #305** (Line 101): '_' is defined but never used - @typescript-eslint/no-unused-vars
   - **Fix**: Remove unused parameter
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Removed underscore prefix from unused parameter
 
-- [ ] **Error #306** (Line 185): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #306** (Line 185): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Promise<unknown> | unknown
 
-- [ ] **Error #307** (Line 194): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #307** (Line 194): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with SupabaseClient<Database>
 
 ### File: ./src/test/utils/supabase-mocks.ts (13 errors)
-- [ ] **Error #308** (Line 3): 'PLATFORM_ACCOUNT_ID' is defined but never used - @typescript-eslint/no-unused-vars
+- [x] **Error #308** (Line 3): 'PLATFORM_ACCOUNT_ID' is defined but never used - @typescript-eslint/no-unused-vars
   - **Fix**: Remove unused import
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Removed unused PLATFORM_ACCOUNT_ID import
 
-- [ ] **Error #309** (Line 34): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #309** (Line 34): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper mock type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
-- [ ] **Error #310** (Line 43): Unexpected lexical declaration in case block - no-case-declarations
+- [x] **Error #310** (Line 43): Unexpected lexical declaration in case block - no-case-declarations
   - **Fix**: Wrap case block in braces
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Wrapped case block in braces
 
-- [ ] **Error #311** (Line 140): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #311** (Line 140): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with SupabaseClient<Database>
 
-- [ ] **Error #312** (Line 140): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #312** (Line 140): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced response type with unknown
 
-- [ ] **Error #313** (Line 152): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #313** (Line 152): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with SupabaseClient<Database>
 
-- [ ] **Error #314** (Line 152): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #314** (Line 152): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced response type with unknown
 
-- [ ] **Error #315** (Line 157): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #315** (Line 157): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with SupabaseClient<Database>
 
-- [ ] **Error #316** (Line 157): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #316** (Line 157): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced response type with unknown
 
-- [ ] **Error #317** (Line 162): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #317** (Line 162): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with SupabaseClient<Database>
 
 ### File: ./src/types/builder.ts (15 errors)
-- [ ] **Error #318** (Line 9): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #318** (Line 9): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper content type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
-- [ ] **Error #319** (Line 10): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #319** (Line 10): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper metadata type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
-- [ ] **Error #320** (Line 24): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #320** (Line 24): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper metadata type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
-- [ ] **Error #321** (Line 35): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #321** (Line 35): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper props type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with union type: SectionContent | PageContent | SiteContent | ThemeVariables
 
-- [ ] **Error #322** (Line 40): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #322** (Line 40): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper metadata type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
-- [ ] **Error #323** (Line 52): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #323** (Line 52): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper metadata type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
-- [ ] **Error #324** (Line 104): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #324** (Line 104): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper content type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with string | Record<string, string> | undefined
 
-- [ ] **Error #325** (Line 115): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #325** (Line 115): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper props type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with union type: SectionContent | PageContent | SiteContent | ThemeVariables
 
-- [ ] **Error #326** (Line 121): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #326** (Line 121): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper metadata type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
-- [ ] **Error #327** (Line 132): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #327** (Line 132): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper props type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with union type: SectionContent | PageContent | SiteContent | ThemeVariables
 
-- [ ] **Error #328** (Line 142): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #328** (Line 142): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper config type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
-- [ ] **Error #329** (Line 156): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #329** (Line 156): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper metadata type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
-- [ ] **Error #330** (Line 172): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #330** (Line 172): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper array type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
-- [ ] **Error #331** (Line 173): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #331** (Line 173): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper array type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
-- [ ] **Error #332** (Line 175): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #332** (Line 175): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper change handler type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
 ### File: ./src/types/database.ts (2 errors)
-- [ ] **Error #333** (Line 130): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #333** (Line 130): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper JSON type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
-- [ ] **Error #334** (Line 152): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
+- [x] **Error #334** (Line 152): Unexpected any. Specify a different type - @typescript-eslint/no-explicit-any
   - **Fix**: Replace with proper JSON type
-  - **Status**: ⏳ Pending
+  - **Status**: ✅ Complete - Replaced with Record<string, unknown>
 
 ---
 

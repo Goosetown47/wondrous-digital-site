@@ -1,5 +1,7 @@
 import { PERMISSIONS } from '@/lib/permissions/constants';
 import type { Permission } from '@/lib/permissions/constants';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase';
 
 // Helper to generate all permissions for a role
 export function getPermissionsForRole(role: 'admin' | 'staff' | 'account_owner' | 'user'): string[] {
@@ -98,7 +100,7 @@ export async function assertPermissions(
   }
   
   const failures = Object.entries(results).filter(
-    ([_, { expected, actual }]) => expected !== actual
+    ([, { expected, actual }]) => expected !== actual
   );
   
   if (failures.length > 0) {
@@ -182,7 +184,7 @@ export function createRLSTest(
   table: string,
   operation: 'select' | 'insert' | 'update' | 'delete',
   scenario: string,
-  setup: () => any,
+  setup: () => Promise<unknown> | unknown,
   expectedResult: 'allow' | 'deny'
 ) {
   return {
@@ -191,7 +193,7 @@ export function createRLSTest(
     scenario,
     setup,
     expectedResult,
-    async execute(supabaseClient: any) {
+    async execute(supabaseClient: SupabaseClient<Database>) {
       const context = await setup();
       
       let query = supabaseClient.from(table);
