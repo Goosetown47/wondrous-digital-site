@@ -13,6 +13,7 @@ import { labDraftService } from '@/lib/supabase/lab-drafts';
 import { useTypes } from '@/hooks/useTypes';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import type { SectionContent, PageContent, SiteContent, ThemeVariables } from '@/types/builder';
 
 export default function NewDraftPage() {
   const router = useRouter();
@@ -62,48 +63,50 @@ export default function NewDraftPage() {
     }
   };
 
-  const getInitialContent = (type: string) => {
+  const getInitialContent = (type: string): SectionContent | PageContent | SiteContent | ThemeVariables => {
     switch (type) {
-      case 'section':
-        return {
+      case 'section': {
+        const sectionContent: SectionContent = {
           components: [],
-          layout: 'full-width',
-          styles: {},
-          data: {} // Content data for the section
+          layout: {
+            container: true,
+            spacing: 'default',
+          },
         };
-      case 'page':
-        return {
+        return sectionContent;
+      }
+      case 'page': {
+        const pageContent: PageContent = {
           sections: [],
           metadata: {
             title: formData.name,
             description: formData.description,
           },
         };
-      case 'site':
-        return {
+        return pageContent;
+      }
+      case 'site': {
+        const siteContent: SiteContent = {
           pages: [],
-          theme: null,
-          metadata: {
-            name: formData.name,
-            description: formData.description,
-          },
+          navigation: {},
+          global_settings: {},
         };
-      case 'theme':
-        return {
-          variables: {
-            colors: {
-              primary: '222.2 47.4% 11.2%',
-              secondary: '210 40% 96.1%',
-              accent: '210 40% 96.1%',
-              background: '0 0% 100%',
-              foreground: '222.2 47.4% 11.2%',
-            },
-            radius: '0.5rem',
-          },
-          description: formData.description,
+        return siteContent;
+      }
+      case 'theme': {
+        const themeContent: ThemeVariables = {
+          primary: '222.2 47.4% 11.2%',
+          secondary: '210 40% 96.1%',
+          accent: '210 40% 96.1%',
+          background: '0 0% 100%',
+          foreground: '222.2 47.4% 11.2%',
+          radius: '0.5rem',
         };
+        return themeContent;
+      }
       default:
-        return {};
+        // Default to empty section content
+        return { components: [] };
     }
   };
 

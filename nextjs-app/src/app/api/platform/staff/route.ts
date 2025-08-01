@@ -7,7 +7,7 @@ const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000000';
 
 export async function GET() {
   try {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {

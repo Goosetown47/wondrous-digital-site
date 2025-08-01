@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     const { userId } = await params;
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
@@ -60,7 +60,7 @@ export async function POST(
 ) {
   try {
     const { userId } = await params;
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
@@ -112,7 +112,7 @@ export async function POST(
     // Create new assignments
     if (account_ids.length > 0) {
       const assignments = account_ids.map(account_id => ({
-        staff_user_id: params.userId,
+        staff_user_id: userId,
         account_id,
         assigned_by: user.id,
       }));
@@ -132,9 +132,9 @@ export async function POST(
           user_id: user.id,
           action: 'staff.assignments_updated',
           resource_type: 'user',
-          resource_id: params.userId,
+          resource_id: userId,
           metadata: {
-            staff_user_id: params.userId,
+            staff_user_id: userId,
             assigned_accounts: account_ids,
             assigned_by: user.id,
           },

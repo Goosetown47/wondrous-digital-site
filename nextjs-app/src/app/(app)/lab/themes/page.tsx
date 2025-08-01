@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Palette } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { labDraftService } from '@/lib/supabase/lab-drafts';
+import type { ThemeVariables } from '@/types/builder';
 
 export default function ThemesPage() {
   const router = useRouter();
@@ -95,35 +96,39 @@ export default function ThemesPage() {
                   <div className="flex items-center space-x-2">
                     <div className="grid grid-cols-5 gap-1 flex-1">
                       {/* Show color swatches if available */}
-                      {draft.content?.variables?.colors?.primary && (
-                        <div
-                          className="h-8 w-full rounded"
-                          style={{ backgroundColor: `hsl(${draft.content.variables.colors.primary})` }}
-                        />
-                      )}
-                      {draft.content?.variables?.colors?.secondary && (
-                        <div
-                          className="h-8 w-full rounded"
-                          style={{ backgroundColor: `hsl(${draft.content.variables.colors.secondary})` }}
-                        />
-                      )}
-                      {draft.content?.variables?.colors?.accent && (
-                        <div
-                          className="h-8 w-full rounded"
-                          style={{ backgroundColor: `hsl(${draft.content.variables.colors.accent})` }}
-                        />
-                      )}
-                      {draft.content?.variables?.colors?.muted && (
-                        <div
-                          className="h-8 w-full rounded"
-                          style={{ backgroundColor: `hsl(${draft.content.variables.colors.muted})` }}
-                        />
-                      )}
-                      {draft.content?.variables?.colors?.destructive && (
-                        <div
-                          className="h-8 w-full rounded"
-                          style={{ backgroundColor: `hsl(${draft.content.variables.colors.destructive})` }}
-                        />
+                      {draft.type === 'theme' && draft.content && (
+                        <>
+                          {(draft.content as ThemeVariables).primary && (
+                            <div
+                              className="h-8 w-full rounded"
+                              style={{ backgroundColor: `hsl(${(draft.content as ThemeVariables).primary})` }}
+                            />
+                          )}
+                          {(draft.content as ThemeVariables).secondary && (
+                            <div
+                              className="h-8 w-full rounded"
+                              style={{ backgroundColor: `hsl(${(draft.content as ThemeVariables).secondary})` }}
+                            />
+                          )}
+                          {(draft.content as ThemeVariables).accent && (
+                            <div
+                              className="h-8 w-full rounded"
+                              style={{ backgroundColor: `hsl(${(draft.content as ThemeVariables).accent})` }}
+                            />
+                          )}
+                          {(draft.content as ThemeVariables).muted && (
+                            <div
+                              className="h-8 w-full rounded"
+                              style={{ backgroundColor: `hsl(${(draft.content as ThemeVariables).muted})` }}
+                            />
+                          )}
+                          {(draft.content as ThemeVariables).destructive && (
+                            <div
+                              className="h-8 w-full rounded"
+                              style={{ backgroundColor: `hsl(${(draft.content as ThemeVariables).destructive})` }}
+                            />
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

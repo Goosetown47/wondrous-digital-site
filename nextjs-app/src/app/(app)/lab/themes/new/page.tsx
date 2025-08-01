@@ -11,6 +11,7 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import { labDraftService } from '@/lib/supabase/lab-drafts';
+import type { ThemeVariables } from '@/types/builder';
 
 const themePresets = [
   { name: 'Default', id: 'default', description: 'Clean and modern default theme' },
@@ -44,11 +45,9 @@ export default function NewThemePage() {
       await createMutation.mutateAsync({
         name: themeName,
         type: 'theme',
-        content: {
-          variables: defaultVariables,
-          metadata: {
-            preset,
-          },
+        content: defaultVariables,
+        metadata: {
+          preset,
         },
         status: 'draft',
       });
@@ -131,29 +130,29 @@ export default function NewThemePage() {
 }
 
 // Helper function to get default theme variables based on preset
-function getDefaultThemeVariables(preset: string) {
-  const baseVariables = {
-    colors: {
-      background: '0 0% 100%',
-      foreground: '222.2 84% 4.9%',
-      card: '0 0% 100%',
-      'card-foreground': '222.2 84% 4.9%',
-      popover: '0 0% 100%',
-      'popover-foreground': '222.2 84% 4.9%',
-      primary: '222.2 47.4% 11.2%',
-      'primary-foreground': '210 40% 98%',
-      secondary: '210 40% 96.1%',
-      'secondary-foreground': '222.2 47.4% 11.2%',
-      muted: '210 40% 96.1%',
-      'muted-foreground': '215.4 16.3% 46.9%',
-      accent: '210 40% 96.1%',
-      'accent-foreground': '222.2 47.4% 11.2%',
-      destructive: '0 84.2% 60.2%',
-      'destructive-foreground': '210 40% 98%',
-      border: '214.3 31.8% 91.4%',
-      input: '214.3 31.8% 91.4%',
-      ring: '222.2 84% 4.9%',
-    },
+function getDefaultThemeVariables(preset: string): ThemeVariables {
+  const baseVariables: ThemeVariables = {
+    // Colors
+    background: '0 0% 100%',
+    foreground: '222.2 84% 4.9%',
+    card: '0 0% 100%',
+    cardForeground: '222.2 84% 4.9%',
+    popover: '0 0% 100%',
+    popoverForeground: '222.2 84% 4.9%',
+    primary: '222.2 47.4% 11.2%',
+    primaryForeground: '210 40% 98%',
+    secondary: '210 40% 96.1%',
+    secondaryForeground: '222.2 47.4% 11.2%',
+    muted: '210 40% 96.1%',
+    mutedForeground: '215.4 16.3% 46.9%',
+    accent: '210 40% 96.1%',
+    accentForeground: '222.2 47.4% 11.2%',
+    destructive: '0 84.2% 60.2%',
+    destructiveForeground: '210 40% 98%',
+    border: '214.3 31.8% 91.4%',
+    input: '214.3 31.8% 91.4%',
+    ring: '222.2 84% 4.9%',
+    // Sizing
     radius: '0.5rem',
   };
 
@@ -162,48 +161,39 @@ function getDefaultThemeVariables(preset: string) {
     case 'dark':
       return {
         ...baseVariables,
-        colors: {
-          ...baseVariables.colors,
-          background: '222.2 84% 4.9%',
-          foreground: '210 40% 98%',
-          card: '222.2 84% 4.9%',
-          'card-foreground': '210 40% 98%',
-          popover: '222.2 84% 4.9%',
-          'popover-foreground': '210 40% 98%',
-          primary: '210 40% 98%',
-          'primary-foreground': '222.2 47.4% 11.2%',
-          secondary: '217.2 32.6% 17.5%',
-          'secondary-foreground': '210 40% 98%',
-          muted: '217.2 32.6% 17.5%',
-          'muted-foreground': '215 20.2% 65.1%',
-          accent: '217.2 32.6% 17.5%',
-          'accent-foreground': '210 40% 98%',
-          destructive: '0 62.8% 30.6%',
-          'destructive-foreground': '210 40% 98%',
-          border: '217.2 32.6% 17.5%',
-          input: '217.2 32.6% 17.5%',
-          ring: '212.7 26.8% 83.9%',
-        },
+        background: '222.2 84% 4.9%',
+        foreground: '210 40% 98%',
+        card: '222.2 84% 4.9%',
+        cardForeground: '210 40% 98%',
+        popover: '222.2 84% 4.9%',
+        popoverForeground: '210 40% 98%',
+        primary: '210 40% 98%',
+        primaryForeground: '222.2 47.4% 11.2%',
+        secondary: '217.2 32.6% 17.5%',
+        secondaryForeground: '210 40% 98%',
+        muted: '217.2 32.6% 17.5%',
+        mutedForeground: '215 20.2% 65.1%',
+        accent: '217.2 32.6% 17.5%',
+        accentForeground: '210 40% 98%',
+        destructive: '0 62.8% 30.6%',
+        destructiveForeground: '210 40% 98%',
+        border: '217.2 32.6% 17.5%',
+        input: '217.2 32.6% 17.5%',
+        ring: '212.7 26.8% 83.9%',
       };
     case 'vibrant':
       return {
         ...baseVariables,
-        colors: {
-          ...baseVariables.colors,
-          primary: '262.1 83.3% 57.8%',
-          secondary: '173.4 80.4% 40%',
-          accent: '24.6 95% 53.1%',
-        },
+        primary: '262.1 83.3% 57.8%',
+        secondary: '173.4 80.4% 40%',
+        accent: '24.6 95% 53.1%',
       };
     case 'minimal':
       return {
         ...baseVariables,
-        colors: {
-          ...baseVariables.colors,
-          primary: '0 0% 9%',
-          secondary: '0 0% 96%',
-          accent: '0 0% 96%',
-        },
+        primary: '0 0% 9%',
+        secondary: '0 0% 96%',
+        accent: '0 0% 96%',
         radius: '0',
       };
     default:

@@ -9,7 +9,7 @@ export async function PATCH(
 ) {
   try {
     const { userId } = await params;
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
@@ -64,7 +64,7 @@ export async function PATCH(
         resource_type: 'user',
         resource_id: userId,
         metadata: {
-          target_user_id: params.userId,
+          target_user_id: userId,
           new_role: role,
           account_id,
         },

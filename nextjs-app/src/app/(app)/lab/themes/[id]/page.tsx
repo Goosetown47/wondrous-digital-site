@@ -20,6 +20,7 @@ import { ThemePreview } from '@/components/theme-builder/theme-preview';
 import { ThemePreviewProvider } from '@/components/theme-builder/theme-preview-provider';
 import { ColorPicker } from '@/components/theme-builder/color-picker';
 import { ColorGroupSection } from '@/components/theme-builder/color-group-section';
+import type { ThemeVariables } from '@/types/builder';
 
 export default function EditThemePage() {
   const params = useParams();
@@ -28,8 +29,7 @@ export default function EditThemePage() {
   const themeId = params.id as string;
 
   const [isSaving, setIsSaving] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [themeVariables, setThemeVariables] = useState<any>({});
+  const [themeVariables, setThemeVariables] = useState<ThemeVariables>({});
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   const { data: draft, isLoading: isDraftLoading } = useQuery({
@@ -38,8 +38,8 @@ export default function EditThemePage() {
   });
 
   const updateMutation = useMutation({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mutationFn: (updates: any) => labDraftService.update(themeId, updates),
+    mutationFn: (updates: Partial<{ content: ThemeVariables; metadata?: Record<string, unknown> }>) => 
+      labDraftService.update(themeId, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lab-draft', themeId] });
     },
@@ -52,10 +52,10 @@ export default function EditThemePage() {
       
       console.log('Saving theme before promotion...');
       await updateMutation.mutateAsync({
-        content: {
-          ...draft.content,
-          variables: themeVariables,
-          description: draft.content?.description || `Theme with ${Object.keys(themeVariables.colors || {}).length} colors`,
+        content: themeVariables,
+        metadata: {
+          ...(draft.metadata || {}),
+          description: (draft.metadata?.description as string) || `Theme with ${Object.keys(themeVariables || {}).length} colors`,
         },
       });
       
@@ -78,8 +78,9 @@ export default function EditThemePage() {
 
   // Load theme variables when draft loads
   useEffect(() => {
-    if (draft?.content?.variables) {
-      setThemeVariables(draft.content.variables);
+    if (draft?.content && draft.type === 'theme') {
+      // For theme drafts, the content IS the ThemeVariables
+      setThemeVariables(draft.content as ThemeVariables);
     }
   }, [draft]);
 
@@ -88,10 +89,10 @@ export default function EditThemePage() {
     setIsSaving(true);
     try {
       const updateData = {
-        content: {
-          ...draft.content,
-          variables: themeVariables,
-          description: draft.content?.description || `Theme with ${Object.keys(themeVariables.colors || {}).length} colors`,
+        content: themeVariables,
+        metadata: {
+          ...(draft.metadata || {}),
+          description: (draft.metadata?.description as string) || `Theme with ${Object.keys(themeVariables || {}).length} colors`,
         },
       };
       console.log('Saving theme with data:', updateData);
@@ -106,10 +107,7 @@ export default function EditThemePage() {
   const handleColorChange = (colorKey: string, value: string) => {
     setThemeVariables({
       ...themeVariables,
-      colors: {
-        ...themeVariables.colors,
-        [colorKey]: value,
-      },
+      [colorKey]: value,
     });
   };
 
@@ -123,26 +121,17 @@ export default function EditThemePage() {
   const getCSSVariables = () => {
     let css = ':root {\n';
     
-    if (themeVariables.colors) {
-      Object.entries(themeVariables.colors).forEach(([key, value]) => {
-        css += `  --${key}: ${value};\n`;
-      });
-    }
+    // Convert camelCase to kebab-case for CSS variables
+    const toKebabCase = (str: string) => str.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
     
-    if (themeVariables.radius) {
-      css += `  --radius: ${themeVariables.radius};\n`;
-    }
+    Object.entries(themeVariables).forEach(([key, value]) => {
+      if (typeof value === 'string') {
+        const cssKey = toKebabCase(key);
+        css += `  --${cssKey}: ${value};\n`;
+      }
+    });
     
     css += '}\n\n';
-    
-    // Add dark mode variables if applicable
-    if (themeVariables.darkColors) {
-      css += '.dark {\n';
-      Object.entries(themeVariables.darkColors).forEach(([key, value]) => {
-        css += `  --${key}: ${value};\n`;
-      });
-      css += '}';
-    }
     
     return css;
   };
@@ -271,13 +260,13 @@ export default function EditThemePage() {
             >
               <ColorPicker
                 label="Primary"
-                value={themeVariables.colors?.primary || '222.2 47.4% 11.2%'}
+                value={themeVariables.primary || '222.2 47.4% 11.2%'}
                 onChange={(value) => handleColorChange('primary', value)}
               />
               <ColorPicker
                 label="Primary Foreground"
-                value={themeVariables.colors?.['primary-foreground'] || '210 40% 98%'}
-                onChange={(value) => handleColorChange('primary-foreground', value)}
+                value={themeVariables.primaryForeground || '210 40% 98%'}
+                onChange={(value) => handleColorChange('primaryForeground', value)}
               />
             </ColorGroupSection>
 
@@ -289,13 +278,13 @@ export default function EditThemePage() {
             >
               <ColorPicker
                 label="Secondary"
-                value={themeVariables.colors?.secondary || '210 40% 96.1%'}
+                value={themeVariables.secondary || '210 40% 96.1%'}
                 onChange={(value) => handleColorChange('secondary', value)}
               />
               <ColorPicker
                 label="Secondary Foreground"
-                value={themeVariables.colors?.['secondary-foreground'] || '222.2 47.4% 11.2%'}
-                onChange={(value) => handleColorChange('secondary-foreground', value)}
+                value={themeVariables.secondaryForeground || '222.2 47.4% 11.2%'}
+                onChange={(value) => handleColorChange('secondaryForeground', value)}
               />
             </ColorGroupSection>
 
@@ -307,13 +296,13 @@ export default function EditThemePage() {
             >
               <ColorPicker
                 label="Accent"
-                value={themeVariables.colors?.accent || '210 40% 96.1%'}
+                value={themeVariables.accent || '210 40% 96.1%'}
                 onChange={(value) => handleColorChange('accent', value)}
               />
               <ColorPicker
                 label="Accent Foreground"
-                value={themeVariables.colors?.['accent-foreground'] || '222.2 47.4% 11.2%'}
-                onChange={(value) => handleColorChange('accent-foreground', value)}
+                value={themeVariables.accentForeground || '222.2 47.4% 11.2%'}
+                onChange={(value) => handleColorChange('accentForeground', value)}
               />
             </ColorGroupSection>
 
@@ -325,12 +314,12 @@ export default function EditThemePage() {
             >
               <ColorPicker
                 label="Background"
-                value={themeVariables.colors?.background || '0 0% 100%'}
+                value={themeVariables.background || '0 0% 100%'}
                 onChange={(value) => handleColorChange('background', value)}
               />
               <ColorPicker
                 label="Foreground"
-                value={themeVariables.colors?.foreground || '222.2 84% 4.9%'}
+                value={themeVariables.foreground || '222.2 84% 4.9%'}
                 onChange={(value) => handleColorChange('foreground', value)}
               />
             </ColorGroupSection>
@@ -343,13 +332,13 @@ export default function EditThemePage() {
             >
               <ColorPicker
                 label="Card"
-                value={themeVariables.colors?.card || '0 0% 100%'}
+                value={themeVariables.card || '0 0% 100%'}
                 onChange={(value) => handleColorChange('card', value)}
               />
               <ColorPicker
                 label="Card Foreground"
-                value={themeVariables.colors?.['card-foreground'] || '222.2 84% 4.9%'}
-                onChange={(value) => handleColorChange('card-foreground', value)}
+                value={themeVariables.cardForeground || '222.2 84% 4.9%'}
+                onChange={(value) => handleColorChange('cardForeground', value)}
               />
             </ColorGroupSection>
 
@@ -361,13 +350,13 @@ export default function EditThemePage() {
             >
               <ColorPicker
                 label="Popover"
-                value={themeVariables.colors?.popover || '0 0% 100%'}
+                value={themeVariables.popover || '0 0% 100%'}
                 onChange={(value) => handleColorChange('popover', value)}
               />
               <ColorPicker
                 label="Popover Foreground"
-                value={themeVariables.colors?.['popover-foreground'] || '222.2 84% 4.9%'}
-                onChange={(value) => handleColorChange('popover-foreground', value)}
+                value={themeVariables.popoverForeground || '222.2 84% 4.9%'}
+                onChange={(value) => handleColorChange('popoverForeground', value)}
               />
             </ColorGroupSection>
 
@@ -379,23 +368,23 @@ export default function EditThemePage() {
             >
               <ColorPicker
                 label="Muted"
-                value={themeVariables.colors?.muted || '210 40% 96.1%'}
+                value={themeVariables.muted || '210 40% 96.1%'}
                 onChange={(value) => handleColorChange('muted', value)}
               />
               <ColorPicker
                 label="Muted Foreground"
-                value={themeVariables.colors?.['muted-foreground'] || '215.4 16.3% 46.9%'}
-                onChange={(value) => handleColorChange('muted-foreground', value)}
+                value={themeVariables.mutedForeground || '215.4 16.3% 46.9%'}
+                onChange={(value) => handleColorChange('mutedForeground', value)}
               />
               <ColorPicker
                 label="Destructive"
-                value={themeVariables.colors?.destructive || '0 84.2% 60.2%'}
+                value={themeVariables.destructive || '0 84.2% 60.2%'}
                 onChange={(value) => handleColorChange('destructive', value)}
               />
               <ColorPicker
                 label="Destructive Foreground"
-                value={themeVariables.colors?.['destructive-foreground'] || '210 40% 98%'}
-                onChange={(value) => handleColorChange('destructive-foreground', value)}
+                value={themeVariables.destructiveForeground || '210 40% 98%'}
+                onChange={(value) => handleColorChange('destructiveForeground', value)}
               />
             </ColorGroupSection>
 
@@ -407,17 +396,17 @@ export default function EditThemePage() {
             >
               <ColorPicker
                 label="Border"
-                value={themeVariables.colors?.border || '214.3 31.8% 91.4%'}
+                value={themeVariables.border || '214.3 31.8% 91.4%'}
                 onChange={(value) => handleColorChange('border', value)}
               />
               <ColorPicker
                 label="Input"
-                value={themeVariables.colors?.input || '214.3 31.8% 91.4%'}
+                value={themeVariables.input || '214.3 31.8% 91.4%'}
                 onChange={(value) => handleColorChange('input', value)}
               />
               <ColorPicker
                 label="Ring"
-                value={themeVariables.colors?.ring || '222.2 84% 4.9%'}
+                value={themeVariables.ring || '222.2 84% 4.9%'}
                 onChange={(value) => handleColorChange('ring', value)}
               />
             </ColorGroupSection>

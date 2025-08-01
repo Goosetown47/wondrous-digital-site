@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LibraryHeader } from '@/components/library/LibraryHeader';
 import { LibraryGrid } from '@/components/library/LibraryGrid';
 import { useLibraryItems } from '@/hooks/useLibrary';
-import type { LibraryItemType } from '@/types/builder';
+type LibraryItemType = 'section' | 'page' | 'site' | 'theme';
 
 export default function LibraryPage() {
   const searchParams = useSearchParams();

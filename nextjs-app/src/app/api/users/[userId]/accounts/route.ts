@@ -79,7 +79,7 @@ export async function PATCH(
       const { error: deleteError } = await adminClient
         .from('account_users')
         .delete()
-        .eq('user_id', params.userId)
+        .eq('user_id', userId)
         .in('account_id', accountIds);
 
       if (deleteError) throw deleteError;
@@ -92,9 +92,9 @@ export async function PATCH(
         user_id: user.id,
         action: `user.accounts_${action}`,
         resource_type: 'user',
-        resource_id: params.userId,
+        resource_id: userId,
         metadata: {
-          target_user_id: params.userId,
+          target_user_id: userId,
           accounts,
           action,
         },

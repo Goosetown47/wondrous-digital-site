@@ -103,7 +103,7 @@ export default function LabPage() {
                     </div>
                     <CardTitle className="text-lg">{draft.name}</CardTitle>
                     <CardDescription>
-                      {draft.metadata?.description || 'No description'}
+                      {(draft.metadata?.description as string) || 'No description'}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
