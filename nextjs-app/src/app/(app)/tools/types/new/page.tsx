@@ -77,7 +77,7 @@ export default function NewTypePage() {
       router.push('/tools/types');
     } catch (error) {
       console.error('Failed to create type:', error);
-      if (error.message?.includes('duplicate')) {
+      if (error instanceof Error && error.message?.includes('duplicate')) {
         setError('name', { message: 'This name is already taken' });
       }
     }

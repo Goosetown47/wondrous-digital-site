@@ -66,7 +66,7 @@ export function ResizablePreview({
   // Update width when preset changes
   useEffect(() => {
     // Always update width when presetWidth changes (including to null)
-    setWidth(presetWidth);
+    setWidth(presetWidth ?? null);
   }, [presetWidth]);
 
   useEffect(() => {

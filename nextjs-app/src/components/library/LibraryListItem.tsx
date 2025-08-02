@@ -76,9 +76,9 @@ export function LibraryListItem({ item }: LibraryListItemProps) {
               <Badge variant="outline" className="shrink-0">{item.category}</Badge>
             )}
           </div>
-          {item.content?.description && (
+          {item.content && typeof item.content === 'object' && 'description' in item.content && (
             <p className="text-sm text-muted-foreground truncate mt-1">
-              {item.content.description}
+              {(item.content as { description: string }).description}
             </p>
           )}
         </div>

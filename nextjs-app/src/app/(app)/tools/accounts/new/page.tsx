@@ -35,9 +35,7 @@ const createAccountSchema = z.object({
     .max(50, 'Slug too long')
     .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens')
     .refine(slug => !slug.startsWith('-') && !slug.endsWith('-'), 'Slug cannot start or end with hyphen'),
-  plan: z.enum(['free', 'pro', 'enterprise'], {
-    required_error: 'Please select a plan',
-  }),
+  plan: z.enum(['free', 'pro', 'enterprise']).describe('Please select a plan'),
   description: z.string().max(500, 'Description too long').optional(),
 });
 

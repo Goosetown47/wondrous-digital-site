@@ -79,7 +79,7 @@ export default function EditTypePage() {
       router.push('/tools/types');
     } catch (error) {
       console.error('Failed to update type:', error);
-      if (error.message?.includes('duplicate')) {
+      if (error instanceof Error && error.message?.includes('duplicate')) {
         setError('name', { message: 'This name is already taken' });
       }
     }

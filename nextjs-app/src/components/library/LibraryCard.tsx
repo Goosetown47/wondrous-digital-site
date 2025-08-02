@@ -119,9 +119,9 @@ export function LibraryCard({ item }: LibraryCardProps) {
             <Icon className="h-12 w-12 text-muted-foreground/30" />
           </div>
           
-          {item.content?.description && (
+          {item.content && typeof item.content === 'object' && 'description' in item.content && (
             <p className="text-sm text-muted-foreground line-clamp-2">
-              {item.content.description}
+              {(item.content as { description: string }).description}
             </p>
           )}
         </CardContent>

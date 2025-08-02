@@ -63,9 +63,9 @@ export default function UserDetailPage() {
     if (user) {
       setFormData({
         display_name: user.display_name || '',
-        phone: user.user_metadata?.phone || '',
-        address: user.user_metadata?.address || '',
-        notes: user.user_metadata?.notes || '',
+        phone: '',  // TODO: Add phone field to UserWithAccounts
+        address: '',  // TODO: Add address field to UserWithAccounts
+        notes: '',  // TODO: Add notes field to UserWithAccounts
       });
     }
   }, [user]);

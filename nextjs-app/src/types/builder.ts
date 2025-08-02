@@ -105,6 +105,7 @@ export interface ThemeVariables {
 }
 
 // Library item types
+export type LibraryItemType = 'section' | 'page' | 'site' | 'theme';
 export interface LibraryItem {
   id: string;
   name: string;

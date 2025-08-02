@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Check, ChevronsUpDown, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,10 +18,13 @@ import { useProjects } from '@/hooks/useProjects';
 export function ProjectDropdown() {
   const { currentAccount, currentProject, setCurrentProject } = useAuth();
   const { data: freshAccount } = useAccount(currentAccount?.id);
-  const { data: allProjects } = useProjects(currentAccount?.id);
+  const { data: allProjects } = useProjects(false);
 
   // Filter projects for current account (excluding archived)
-  const projects = allProjects?.filter(p => p.account_id === currentAccount?.id && !p.archived_at) || [];
+  const projects = useMemo(() => 
+    allProjects?.filter(p => p.account_id === currentAccount?.id && !p.archived_at) || [],
+    [allProjects, currentAccount?.id]
+  );
 
   useEffect(() => {
     // If current project is not in the list, clear it

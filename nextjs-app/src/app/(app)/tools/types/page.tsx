@@ -125,7 +125,7 @@ export default function TypesPage() {
                       {category} Types
                     </h3>
                     <TypesList 
-                      types={categoryTypes} 
+                      types={categoryTypes.map(t => ({ ...t, description: t.description ?? undefined }))} 
                       onDelete={(type) => setDeleteConfirm({ id: type.id, name: type.display_name })}
                     />
                   </div>
@@ -133,7 +133,7 @@ export default function TypesPage() {
               </div>
             ) : (
               <TypesList 
-                types={types} 
+                types={types.map(t => ({ ...t, description: t.description ?? undefined }))} 
                 onDelete={(type) => setDeleteConfirm({ id: type.id, name: type.display_name })}
               />
             )}

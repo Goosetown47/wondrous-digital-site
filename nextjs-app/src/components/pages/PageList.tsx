@@ -159,7 +159,7 @@ export function PageList({ pages, projectId, viewMode = 'list' }: PageListProps)
                       <div className="flex items-center gap-2">
                         <span>{page.sections?.length || 0} sections</span>
                       </div>
-                      {metadata.description && (
+                      {metadata.description && typeof metadata.description === 'string' && (
                         <p className="truncate text-xs">
                           {metadata.description}
                         </p>
@@ -174,7 +174,7 @@ export function PageList({ pages, projectId, viewMode = 'list' }: PageListProps)
                         <span>
                           {page.sections?.length || 0} sections
                         </span>
-                        {metadata.description && (
+                        {metadata.description && typeof metadata.description === 'string' && (
                           <span className="truncate max-w-xs">
                             {metadata.description}
                           </span>

@@ -20,7 +20,7 @@ export function Canvas() {
     }
   };
 
-  const renderSection = (section: { id: string; component_name: string; content?: Record<string, unknown> }) => {
+  const renderSection = (section: { id: string; component_name?: string; content: Record<string, unknown> }) => {
     // Get the appropriate component using component_name from the section
     const SectionComponent = getSectionComponent(section.component_name);
 

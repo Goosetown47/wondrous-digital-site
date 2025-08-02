@@ -19,7 +19,8 @@ const typeIcons = {
   section: Layout,
   page: FileText,
   site: Globe,
-};
+  theme: Layout, // Default icon for theme
+} as const;
 
 interface SectionLibraryProps {
   onDragStart: (sectionType: string) => void;
@@ -158,9 +159,9 @@ export function SectionLibrary({ onDragStart }: SectionLibraryProps) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm truncate">{item.name}</h4>
-                        {item.content?.description && (
+                        {item.content && typeof item.content === 'object' && 'description' in item.content && (
                           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                            {item.content.description}
+                            {(item.content as Record<string, unknown>).description as string}
                           </p>
                         )}
                         <div className="flex items-center gap-2 mt-1">

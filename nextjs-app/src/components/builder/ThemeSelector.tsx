@@ -61,27 +61,27 @@ export function ThemeSelector({ projectId, currentThemeId }: ThemeSelectorProps)
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
                   {/* Show color swatches */}
-                  {theme.variables?.colors?.primary && (
+                  {theme.variables?.primary && (
                     <div 
                       className="w-4 h-4 rounded border border-border"
                       style={{ 
-                        backgroundColor: `hsl(${theme.variables.colors.primary})` 
+                        backgroundColor: `hsl(${theme.variables.primary})` 
                       }}
                     />
                   )}
-                  {theme.variables?.colors?.secondary && (
+                  {theme.variables?.secondary && (
                     <div 
                       className="w-4 h-4 rounded border border-border"
                       style={{ 
-                        backgroundColor: `hsl(${theme.variables.colors.secondary})` 
+                        backgroundColor: `hsl(${theme.variables.secondary})` 
                       }}
                     />
                   )}
-                  {theme.variables?.colors?.accent && (
+                  {theme.variables?.accent && (
                     <div 
                       className="w-4 h-4 rounded border border-border"
                       style={{ 
-                        backgroundColor: `hsl(${theme.variables.colors.accent})` 
+                        backgroundColor: `hsl(${theme.variables.accent})` 
                       }}
                     />
                   )}
