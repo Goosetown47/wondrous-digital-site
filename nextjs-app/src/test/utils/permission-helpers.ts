@@ -194,26 +194,30 @@ export function createRLSTest(
     setup,
     expectedResult,
     async execute(supabaseClient: SupabaseClient<Database>) {
-      const context = await setup();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const context = await setup() as any;
       
-      let query = supabaseClient.from(table);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result: { data: any; error: any };
       
       switch (operation) {
         case 'select':
-          query = query.select('*');
+          result = await supabaseClient.from(table).select('*');
           break;
         case 'insert':
-          query = query.insert(context.data);
+          result = await supabaseClient.from(table).insert(context.data).single();
           break;
         case 'update':
-          query = query.update(context.data).eq('id', context.id);
+          result = await supabaseClient.from(table).update(context.data).eq('id', context.id).single();
           break;
         case 'delete':
-          query = query.delete().eq('id', context.id);
+          result = await supabaseClient.from(table).delete().eq('id', context.id).single();
           break;
+        default:
+          throw new Error(`Unknown operation: ${operation}`);
       }
       
-      const { data, error } = await query;
+      const { data, error } = result;
       
       if (expectedResult === 'allow') {
         if (error) throw new Error(`Expected operation to succeed but got error: ${error.message}`);

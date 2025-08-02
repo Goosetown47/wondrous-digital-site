@@ -139,12 +139,12 @@ function getMockDataForTable(table: string) {
 }
 
 // Mock specific responses for testing scenarios
-export function mockSupabaseResponse(client: Record<string, unknown>, table: string, method: string, response: unknown) {
-  const fromFn = client.from as ((table: string) => Record<string, unknown>);
-  const query = fromFn(table);
-  // eslint-disable-next-line security/detect-object-injection
-  const mockMethod = query[method];
-  if (mockMethod && mockMethod.mockReturnValueOnce) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function mockSupabaseResponse(client: any, table: string, method: string, response: unknown) {
+  const query = client.from(table);
+  // eslint-disable-next-line security/detect-object-injection, @typescript-eslint/no-explicit-any
+  const mockMethod = (query as any)[method];
+  if (mockMethod && typeof mockMethod.mockReturnValueOnce === 'function') {
     mockMethod.mockReturnValueOnce({
       ...query,
       then: vi.fn((resolve: (value: unknown) => void) => {

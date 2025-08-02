@@ -29,7 +29,11 @@ import { createAdminClient } from '@/lib/supabase/admin';
 // We'll dynamically import the email module in tests
 
 describe('Email Service', () => {
-  let mockSupabase: ReturnType<typeof createAdminClient>;
+  // Using any for test mocks is acceptable
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockSupabase: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockQueryBuilder: any;
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
   const originalEnv = process.env.NODE_ENV;
@@ -51,21 +55,26 @@ describe('Email Service', () => {
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     
-    // Setup Supabase mock with proper chaining
+    // Setup query builder mock
+    mockQueryBuilder = {
+      select: vi.fn(() => mockQueryBuilder),
+      insert: vi.fn(() => mockQueryBuilder),
+      update: vi.fn(() => mockQueryBuilder),
+      delete: vi.fn(() => mockQueryBuilder),
+      eq: vi.fn(() => mockQueryBuilder),
+      neq: vi.fn(() => mockQueryBuilder),
+      lte: vi.fn(() => mockQueryBuilder),
+      lt: vi.fn(() => mockQueryBuilder),
+      gte: vi.fn(() => mockQueryBuilder),
+      order: vi.fn(() => mockQueryBuilder),
+      limit: vi.fn(() => mockQueryBuilder),
+      single: vi.fn(() => Promise.resolve({ data: null, error: null })),
+      maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
+    };
+    
+    // Setup Supabase mock
     mockSupabase = {
-      from: vi.fn(() => mockSupabase),
-      select: vi.fn(() => mockSupabase),
-      insert: vi.fn(() => mockSupabase),
-      update: vi.fn(() => mockSupabase),
-      delete: vi.fn(() => mockSupabase),
-      eq: vi.fn(() => mockSupabase),
-      neq: vi.fn(() => mockSupabase),
-      lte: vi.fn(() => mockSupabase),
-      lt: vi.fn(() => mockSupabase),
-      gte: vi.fn(() => mockSupabase),
-      order: vi.fn(() => mockSupabase),
-      limit: vi.fn(() => mockSupabase),
-      single: vi.fn(() => mockSupabase),
+      from: vi.fn(() => mockQueryBuilder),
       sql: vi.fn((template) => template),
     };
     (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(mockSupabase);
@@ -86,8 +95,12 @@ describe('Email Service', () => {
     consoleLogSpy.mockRestore();
     consoleErrorSpy.mockRestore();
     vi.unstubAllEnvs();
-    if (originalEnv) process.env.NODE_ENV = originalEnv;
-    if (originalResendApiKey) process.env.RESEND_API_KEY = originalResendApiKey;
+    if (originalEnv !== undefined) {
+      vi.stubEnv('NODE_ENV', originalEnv);
+    }
+    if (originalResendApiKey) {
+      vi.stubEnv('RESEND_API_KEY', originalResendApiKey);
+    }
   });
 
   describe('sendEmail', () => {
@@ -142,7 +155,7 @@ describe('Email Service', () => {
       const result = await sendEmailDev(emailOptions);
 
       expect(result.success).toBe(true);
-      expect(result.data.id).toMatch(/^dev-\d+$/);
+      expect(result.data?.id).toMatch(/^dev-\d+$/);
       expect(mockResendInstance.emails.send).not.toHaveBeenCalled();
       expect(consoleLogSpy).toHaveBeenCalledWith(
         '📧 Email (Development Mode):',
@@ -258,7 +271,7 @@ describe('Email Service', () => {
         html: '<p>Queued content</p>',
       };
 
-      mockSupabase.single.mockResolvedValue({
+      mockQueryBuilder.single.mockResolvedValue({
         data: { id: 'queue-123' },
         error: null,
       });
@@ -268,7 +281,7 @@ describe('Email Service', () => {
       expect(result.success).toBe(true);
       expect(result.id).toBe('queue-123');
       expect(mockSupabase.from).toHaveBeenCalledWith('email_queue');
-      expect(mockSupabase.insert).toHaveBeenCalledWith({
+      expect(mockQueryBuilder.insert).toHaveBeenCalledWith({
         to_email: queueOptions.to,
         from_email: 'noreply@wondrousdigital.com',
         subject: queueOptions.subject,
@@ -286,14 +299,14 @@ describe('Email Service', () => {
         text: 'Plain text content',
       };
 
-      mockSupabase.single.mockResolvedValue({
+      mockQueryBuilder.single.mockResolvedValue({
         data: { id: 'queue-456' },
         error: null,
       });
 
       await queueEmail(queueOptions);
 
-      expect(mockSupabase.insert).toHaveBeenCalledWith(
+      expect(mockQueryBuilder.insert).toHaveBeenCalledWith(
         expect.objectContaining({
           to_email: 'user1@example.com,user2@example.com',
         })
@@ -309,14 +322,14 @@ describe('Email Service', () => {
         scheduledAt: scheduledDate,
       };
 
-      mockSupabase.single.mockResolvedValue({
+      mockQueryBuilder.single.mockResolvedValue({
         data: { id: 'queue-789' },
         error: null,
       });
 
       await queueEmail(queueOptions);
 
-      expect(mockSupabase.insert).toHaveBeenCalledWith(
+      expect(mockQueryBuilder.insert).toHaveBeenCalledWith(
         expect.objectContaining({
           scheduled_at: scheduledDate.toISOString(),
         })
@@ -331,14 +344,14 @@ describe('Email Service', () => {
         templateData: { name: 'John Doe', company: 'Test Corp' },
       };
 
-      mockSupabase.single.mockResolvedValue({
+      mockQueryBuilder.single.mockResolvedValue({
         data: { id: 'queue-template' },
         error: null,
       });
 
       await queueEmail(queueOptions);
 
-      expect(mockSupabase.insert).toHaveBeenCalledWith(
+      expect(mockQueryBuilder.insert).toHaveBeenCalledWith(
         expect.objectContaining({
           template_id: queueOptions.templateId,
           template_data: queueOptions.templateData,
@@ -353,7 +366,7 @@ describe('Email Service', () => {
         html: '<p>Test</p>',
       };
 
-      mockSupabase.single.mockResolvedValue({
+      mockQueryBuilder.single.mockResolvedValue({
         data: null,
         error: new Error('Database error'),
       });
@@ -409,8 +422,9 @@ describe('Email Service', () => {
       });
 
       // Mock status updates
-      mockSupabase.eq.mockReturnThis();
-      mockSupabase.update.mockResolvedValue({ error: null });
+      mockQueryBuilder.eq.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.update.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({ data: null, error: null });
 
       const result = await processEmailQueue(10);
 
@@ -418,7 +432,7 @@ describe('Email Service', () => {
       expect(result.failed).toBe(0);
       expect(result.errors).toHaveLength(0);
       expect(mockSupabase.from).toHaveBeenCalledWith('email_queue');
-      expect(mockSupabase.update).toHaveBeenCalledTimes(4); // 2 processing + 2 sent
+      expect(mockQueryBuilder.update).toHaveBeenCalledTimes(4); // 2 processing + 2 sent
     });
 
     it('should handle email sending failures with retry logic', async () => {
@@ -432,7 +446,8 @@ describe('Email Service', () => {
         max_retries: 3,
       };
 
-      mockSupabase.limit.mockResolvedValue({
+      mockQueryBuilder.limit.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({
         data: [mockEmail],
         error: null,
       });
@@ -443,8 +458,9 @@ describe('Email Service', () => {
         error: { message: 'Network error' },
       });
 
-      mockSupabase.eq.mockReturnThis();
-      mockSupabase.update.mockResolvedValue({ error: null });
+      mockQueryBuilder.eq.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.update.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({ data: null, error: null });
 
       const result = await processEmailQueue();
 
@@ -453,7 +469,7 @@ describe('Email Service', () => {
       expect(result.errors).toContain('Email email-fail: Network error');
       
       // Should update retry count and keep status as pending
-      expect(mockSupabase.update).toHaveBeenCalledWith(
+      expect(mockQueryBuilder.update).toHaveBeenCalledWith(
         expect.objectContaining({
           status: 'pending',
           retry_count: 2,
@@ -473,7 +489,8 @@ describe('Email Service', () => {
         max_retries: 3,
       };
 
-      mockSupabase.limit.mockResolvedValue({
+      mockQueryBuilder.limit.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({
         data: [mockEmail],
         error: null,
       });
@@ -483,13 +500,14 @@ describe('Email Service', () => {
         error: { message: 'Permanent failure' },
       });
 
-      mockSupabase.eq.mockReturnThis();
-      mockSupabase.update.mockResolvedValue({ error: null });
+      mockQueryBuilder.eq.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.update.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({ data: null, error: null });
 
       await processEmailQueue();
 
       // Should mark as failed since retry_count + 1 >= max_retries
-      expect(mockSupabase.update).toHaveBeenCalledWith(
+      expect(mockQueryBuilder.update).toHaveBeenCalledWith(
         expect.objectContaining({
           status: 'failed',
           retry_count: 3,
@@ -517,13 +535,14 @@ describe('Email Service', () => {
         body_template: '<p>Hello {{name}} from {{company}}</p>',
       };
 
-      mockSupabase.limit.mockResolvedValue({
+      mockQueryBuilder.limit.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({
         data: [mockEmail],
         error: null,
       });
 
       // Mock template fetch
-      mockSupabase.single.mockResolvedValue({
+      mockQueryBuilder.single.mockResolvedValue({
         data: mockTemplate,
         error: null,
       });
@@ -533,8 +552,9 @@ describe('Email Service', () => {
         error: null,
       });
 
-      mockSupabase.eq.mockReturnThis();
-      mockSupabase.update.mockResolvedValue({ error: null });
+      mockQueryBuilder.eq.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.update.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({ data: null, error: null });
 
       await processEmailQueue();
 
@@ -547,7 +567,8 @@ describe('Email Service', () => {
     });
 
     it('should handle empty queue', async () => {
-      mockSupabase.limit.mockResolvedValue({
+      mockQueryBuilder.limit.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({
         data: [],
         error: null,
       });
@@ -570,7 +591,8 @@ describe('Email Service', () => {
         max_retries: 3,
       };
 
-      mockSupabase.limit.mockResolvedValue({
+      mockQueryBuilder.limit.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({
         data: [mockEmail],
         error: null,
       });
@@ -580,15 +602,17 @@ describe('Email Service', () => {
         error: null,
       });
 
-      mockSupabase.eq.mockReturnThis();
-      mockSupabase.update.mockResolvedValue({ error: null });
-      mockSupabase.insert.mockResolvedValue({ error: null });
+      mockQueryBuilder.eq.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.update.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({ data: null, error: null });
+      mockQueryBuilder.insert.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({ data: null, error: null });
 
       await processEmailQueue();
 
       // Should log successful delivery
       expect(mockSupabase.from).toHaveBeenCalledWith('email_logs');
-      expect(mockSupabase.insert).toHaveBeenCalledWith({
+      expect(mockQueryBuilder.insert).toHaveBeenCalledWith({
         email_queue_id: 'email-log',
         provider: 'resend',
         provider_id: 'resend-123',
@@ -605,7 +629,8 @@ describe('Email Service', () => {
         { id: 'retry-2', retry_count: 2, max_retries: 5 },
       ];
 
-      mockSupabase.limit.mockResolvedValue({
+      mockQueryBuilder.limit.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({
         data: mockFailedEmails,
         error: null,
       });
@@ -614,14 +639,15 @@ describe('Email Service', () => {
 
       expect(result.retried).toBe(2);
       expect(result.errors).toHaveLength(0);
-      expect(mockSupabase.update).toHaveBeenCalledWith({
+      expect(mockQueryBuilder.update).toHaveBeenCalledWith({
         status: 'pending',
         error_message: null,
       });
     });
 
     it('should handle retry errors', async () => {
-      mockSupabase.limit.mockResolvedValue({
+      mockQueryBuilder.limit.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({
         data: null,
         error: new Error('Database connection failed'),
       });
@@ -640,7 +666,7 @@ describe('Email Service', () => {
       const counts = [5, 2, 100, 3]; // pending, processing, sent, failed
 
       // Mock the chained calls
-      mockSupabase.select.mockImplementation(() => {
+      mockQueryBuilder.select.mockImplementation(() => {
         // Return the count for the current status query
         const currentCount = counts[callCount] || 0;
         callCount++;
@@ -659,7 +685,9 @@ describe('Email Service', () => {
     });
 
     it('should handle stats query errors', async () => {
-      mockSupabase.select.mockRejectedValue(new Error('Stats query failed'));
+      mockQueryBuilder.select.mockImplementation(() => {
+        throw new Error('Stats query failed');
+      });
 
       const stats = await getEmailQueueStats();
 
@@ -686,7 +714,8 @@ describe('Email Service', () => {
         max_retries: 3,
       }));
 
-      mockSupabase.limit.mockResolvedValue({
+      mockQueryBuilder.limit.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({
         data: mockEmails,
         error: null,
       });
@@ -696,8 +725,9 @@ describe('Email Service', () => {
         error: null,
       });
 
-      mockSupabase.eq.mockReturnThis();
-      mockSupabase.update.mockResolvedValue({ error: null });
+      mockQueryBuilder.eq.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.update.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({ data: null, error: null });
 
       // Process emails concurrently
       const results = await Promise.all([
@@ -718,8 +748,9 @@ describe('Email Service', () => {
       };
 
       const template = 'Hello {{name}} from {{company}}';
-      const rendered = template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-        return maliciousData[key] !== undefined ? String(maliciousData[key]) : match;
+      const rendered = template.replace(/\{\{(\w+)\}\}/g, (match: string, key: string) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, security/detect-object-injection
+        return (maliciousData as any)[key] !== undefined ? String((maliciousData as any)[key]) : match;
       });
 
       // The template should render the malicious content as-is (string)
@@ -749,11 +780,13 @@ describe('Email Service', () => {
       ];
 
       // The query should filter by scheduled_at <= now
-      mockSupabase.lte.mockImplementation((field, value) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      mockQueryBuilder.lte.mockImplementation((field: string, value: any) => {
         if (field === 'scheduled_at') {
           const now = new Date(value);
           const filtered = mockEmails.filter(e => new Date(e.scheduled_at) <= now);
-          mockSupabase.limit.mockResolvedValue({
+          mockQueryBuilder.limit.mockReturnValue(mockQueryBuilder);
+      mockQueryBuilder.single.mockResolvedValue({
             data: filtered,
             error: null,
           });
@@ -764,7 +797,7 @@ describe('Email Service', () => {
       await processEmailQueue();
 
       // Only the past email should be processed
-      expect(mockSupabase.lte).toHaveBeenCalledWith('scheduled_at', expect.any(String));
+      expect(mockQueryBuilder.lte).toHaveBeenCalledWith('scheduled_at', expect.any(String));
     });
   });
 });
