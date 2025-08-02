@@ -3,7 +3,7 @@
 ## Overview
 **Status**: In Progress  
 **Initial Errors**: 452 TypeScript errors blocking production build  
-**Current Errors**: 137 (315 fixed - 70% reduction!)  
+**Current Errors**: 77 (375 fixed - 83% reduction!)  
 **Goal**: Fix all errors correctly and systematically for Vercel deployment  
 **Start Date**: 2025-01-08  
 **Last Updated**: 2025-08-02  
@@ -14,33 +14,30 @@
 - Third-Party Library Errors: ~400 errors (FIXED)
 - Application Code Errors: ~52 errors
 
-### Current Error Distribution (188 total)
-1. **Test Files**: ~115 errors (41%)
-   - Mock type definitions
-   - Test utility types
-   - Permission helper types
+### Current Error Distribution (77 total)
+1. **Components**: ~30 errors (39%)
+   - PageSettingsDialog.tsx: 11 errors
+   - Section components: 3 errors
+   - Theme builder types
+   - Library components
    
-2. **Service Layer**: ~75 errors (27%)
+2. **Service Layer**: ~25 errors (32%)
    - Database query types
    - Auth service types
-   - Email service types
+   - Email service (non-test) types
    
-3. **Components**: ~50 errors (18%)
-   - Component prop types
-   - Theme builder types
-   - Library component types
-   
-4. **API Routes**: ~22 errors (8%)
+3. **API Routes**: ~15 errors (19%)
    - Async params types
    - Response types
    - Auth middleware types
    
-5. **Lab Section**: ~17 errors (6%)
-   - Theme content access
-   - Type union property access
-   - Content type mismatches
+4. **Other**: ~7 errors (10%)
+   - Schema validation
+   - Type guards
+   - Misc type issues
 
 ## Recent Commits
+- **2025-08-02**: "fix: Phase 2 Test Infrastructure - fix email.test.ts mocks and test utilities" (137 → 77 errors)
 - **2025-08-02**: "fix: Phase 1 TypeScript fixes - array access, async Supabase, and implicit any types" (158 → 137 errors)
 - **2025-08-02**: "fix: Enable skipLibCheck to resolve unplugin/rollup type error blocking production build" (159 → 158 errors)
 - **2025-01-11**: "fix: Fix test file and lab page TypeScript errors" (258 → 188 errors)
@@ -90,6 +87,20 @@
   - Added type annotations for callback parameters
   - Fixed 7 TS7006 errors across the codebase
 - [x] Result: 21 errors fixed (158 → 137)
+
+### ✅ Phase 2: Test Infrastructure (COMPLETED)
+- [x] Fixed email.test.ts mock structure (commit: 8a1ef6b)
+  - Restructured Supabase mock to properly implement chaining API
+  - Created separate mockQueryBuilder for proper type separation
+  - Fixed all method calls to use query builder instead of client
+  - Reduced from 49 errors to 5 errors in email.test.ts
+- [x] Fixed test utility types
+  - Fixed permission-helpers.ts type issues with query operations
+  - Fixed supabase-mocks.ts mock function types
+- [x] Fixed environment variable mocking
+  - Replaced direct NODE_ENV assignment with vi.stubEnv()
+  - Fixed all process.env assignments in tests
+- [x] Result: 60 errors fixed (137 → 77)
 
 ### 🔄 Phase 2: Core Application Type Fixes (IN PROGRESS)
 
@@ -212,8 +223,8 @@
 ---
 
 **Last Updated**: 2025-08-02  
-**Current Phase**: Phase 2 - Test Infrastructure (starting)  
-**Next Action**: Fix email.test.ts (49 errors) and test utilities
+**Current Phase**: Phase 3 - Component & Service Types (starting)  
+**Next Action**: Fix PageSettingsDialog.tsx and other component prop types
 
 ## Error Type Breakdown (for reference)
 - **TS2339 (Property does not exist)**: 98 errors (62%)
@@ -230,10 +241,12 @@
 
 3. **Test Infrastructure**: A large portion of remaining errors (~41%) are in test files, indicating we need to update our test mocking strategy for the new type system.
 
-4. **Progress Tracking**: We've successfully reduced errors by 70% (from 452 to 137) by systematically fixing type definitions and core application interfaces.
+4. **Progress Tracking**: We've successfully reduced errors by 83% (from 452 to 77) by systematically fixing type definitions and core application interfaces.
 
 5. **ThemeVariables Structure Change**: Discovered that ThemeVariables changed from nested structure (e.g., `colors.primary`) to flat structure (e.g., `primary`). This affected multiple theme-related components.
 
 6. **Next.js 15 Async Patterns**: All API routes now properly await `createSupabaseServerClient()` and handle async params correctly.
 
 7. **Build Blocker Resolved**: The unplugin/rollup type error was preventing production builds. Setting `skipLibCheck: true` resolved this third-party type issue.
+
+8. **Test Mock Architecture**: Proper Supabase mock structure requires separating the client mock from the query builder mock to match the actual chaining API.
