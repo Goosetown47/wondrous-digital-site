@@ -195,8 +195,8 @@ export const labDraftService = {
         .from('themes')
         .insert({
           name: draft.name,
-          description: draft.content?.description || null,
-          variables: draft.content?.variables || {},
+          description: (draft.content && 'description' in draft.content ? draft.content.description : null) || null,
+          variables: (draft.content && 'variables' in draft.content ? draft.content.variables : {}) || {},
           metadata: {
             ...draft.metadata,
             library_item_id: libraryItem.id,

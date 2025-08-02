@@ -155,7 +155,7 @@ describe('Email Preferences Hooks', () => {
 
       const { result } = renderHook(() => useEmailPreferences(), { wrapper });
 
-      expect(result.current.isIdle).toBe(true);
+      expect(result.current.status).toBe('pending');
       expect(supabase.from).not.toHaveBeenCalled();
     });
   });
@@ -480,6 +480,7 @@ describe('Email Preferences Hooks', () => {
       // Mock checking preferences before sending an email
       const canSendEmail = (type: keyof typeof mockPreferences): boolean => {
         if (type === 'user_id') return false;
+        // eslint-disable-next-line security/detect-object-injection
         return mockPreferences[type] === true;
       };
 

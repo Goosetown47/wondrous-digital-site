@@ -1,4 +1,5 @@
 import type { Theme } from '@/types/builder';
+import { supabase } from '@/lib/supabase/client';
 
 class ThemeService {
   /**
@@ -147,7 +148,7 @@ class ThemeService {
     // Create the theme
     return this.create({
       name,
-      description,
+      description: description || null,
       variables: draft.content.variables || {},
       metadata: {
         ...draft.content.metadata,

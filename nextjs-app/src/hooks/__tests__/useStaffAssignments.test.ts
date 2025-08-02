@@ -396,11 +396,15 @@ describe('Staff Assignment Hooks', () => {
     it('should invalidate queries after successful unassignment', async () => {
       const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      const mockQueryBuilder = {
         delete: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockResolvedValue({ error: null }),
-      });
+      };
+      
+      // Make the final eq call resolve the promise
+      mockQueryBuilder.eq.mockResolvedValueOnce({ error: null });
+      
+      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue(mockQueryBuilder);
 
       const { result } = renderHook(() => useUnassignStaff(), { wrapper });
 

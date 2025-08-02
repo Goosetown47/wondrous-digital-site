@@ -70,14 +70,18 @@ export async function getAllUsersWithAuth(): Promise<UserWithAccounts[]> {
   const usersWithAccounts: UserWithAccounts[] = authUsers.users.map(authUser => {
     const userAccounts = userAccountsMap.get(authUser.id) || [];
     
-    const accounts = userAccounts.map(relation => ({
-      account_id: relation.account_id,
-      account_name: relation.accounts.name,
-      account_slug: relation.accounts.slug,
-      role: relation.role,
-      joined_at: relation.joined_at,
-      invited_by: relation.invited_by,
-    }));
+    const accounts = userAccounts.map(relation => {
+      // Handle Supabase relationship which could be array or single object
+      const account = Array.isArray(relation.accounts) ? relation.accounts[0] : relation.accounts;
+      return {
+        account_id: relation.account_id,
+        account_name: account?.name,
+        account_slug: account?.slug,
+        role: relation.role,
+        joined_at: relation.joined_at,
+        invited_by: relation.invited_by,
+      };
+    });
 
     // Filter out platform account from regular accounts display
     const regularAccounts = accounts.filter(acc => acc.account_id !== PLATFORM_ACCOUNT_ID);
@@ -134,14 +138,18 @@ export async function getUserByIdWithAuth(userId: string): Promise<UserWithAccou
 
   if (accountError) throw accountError;
 
-  const accounts = accountUsers.map(relation => ({
-    account_id: relation.account_id,
-    account_name: relation.accounts.name,
-    account_slug: relation.accounts.slug,
-    role: relation.role,
-    joined_at: relation.joined_at,
-    invited_by: relation.invited_by,
-  }));
+  const accounts = accountUsers.map(relation => {
+    // Handle Supabase relationship which could be array or single object
+    const account = Array.isArray(relation.accounts) ? relation.accounts[0] : relation.accounts;
+    return {
+      account_id: relation.account_id,
+      account_name: account?.name,
+      account_slug: account?.slug,
+      role: relation.role,
+      joined_at: relation.joined_at,
+      invited_by: relation.invited_by,
+    };
+  });
 
   const primaryAccount = accounts.find(acc => acc.role === 'account_owner') || accounts[0];
 

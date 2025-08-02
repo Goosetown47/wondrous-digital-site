@@ -88,7 +88,7 @@ describe('Email System Integration Tests', () => {
 
   afterEach(() => {
     vi.unstubAllEnvs();
-    if (originalEnv) process.env.NODE_ENV = originalEnv;
+    if (originalEnv) vi.stubEnv('NODE_ENV', originalEnv);
   });
 
   describe('Invitation Email Flow', () => {

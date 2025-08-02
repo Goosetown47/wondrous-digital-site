@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { hasPermission, isAdmin, isStaff, getUserRole } from '../index';
 import { createTestScenario, PLATFORM_ACCOUNT_ID } from '@/test/utils/auth-mocks';
@@ -15,14 +16,16 @@ describe('Permission System', () => {
       const { user } = createTestScenario('platformAdmin');
       
       // Mock the query response
-      mockSupabase.from.mockReturnValueOnce({
+      const mockQuery = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         limit: vi.fn().mockResolvedValue({
           data: [{ role: 'admin' }],
           error: null
         })
-      });
+      };
+      
+      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery as any);
 
       const result = await isAdmin(user.id, mockSupabase);
       expect(result).toBe(true);
@@ -31,14 +34,16 @@ describe('Permission System', () => {
     it('should return false for non-admin users', async () => {
       const { user } = createTestScenario('regularUser');
       
-      mockSupabase.from.mockReturnValueOnce({
+      const mockQuery = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         limit: vi.fn().mockResolvedValue({
           data: [],
           error: null
         })
-      });
+      };
+      
+      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery as any);
 
       const result = await isAdmin(user.id, mockSupabase);
       expect(result).toBe(false);
@@ -49,7 +54,7 @@ describe('Permission System', () => {
     it('should return true for staff members', async () => {
       const { user } = createTestScenario('platformStaff');
       
-      mockSupabase.from.mockReturnValueOnce({
+      const mockQuery = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         in: vi.fn().mockReturnThis(),
@@ -57,7 +62,9 @@ describe('Permission System', () => {
           data: [{ role: 'staff' }],
           error: null
         })
-      });
+      };
+      
+      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery as any);
 
       const result = await isStaff(user.id, mockSupabase);
       expect(result).toBe(true);
@@ -66,7 +73,7 @@ describe('Permission System', () => {
     it('should return true for admins (who are also staff)', async () => {
       const { user } = createTestScenario('platformAdmin');
       
-      mockSupabase.from.mockReturnValueOnce({
+      const mockQuery = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         in: vi.fn().mockReturnThis(),
@@ -74,7 +81,9 @@ describe('Permission System', () => {
           data: [{ role: 'admin' }],
           error: null
         })
-      });
+      };
+      
+      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery as any);
 
       const result = await isStaff(user.id, mockSupabase);
       expect(result).toBe(true);
@@ -85,28 +94,32 @@ describe('Permission System', () => {
     it('should return highest role for user', async () => {
       const { user } = createTestScenario('platformAdmin');
       
-      mockSupabase.from.mockReturnValueOnce({
+      const mockQuery = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({
           data: [{ role: 'admin' }, { role: 'user' }],
           error: null
         })
-      });
+      };
+      
+      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery as any);
 
       const result = await getUserRole(user.id, mockSupabase);
       expect(result).toBe('admin');
     });
 
     it('should return null for user with no roles', async () => {
-      mockSupabase.from.mockReturnValueOnce({
+      const mockQuery = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({
           data: [],
           error: null
         })
-      });
+      };
+      
+      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery as any);
 
       const result = await getUserRole('unknown-user', mockSupabase);
       expect(result).toBe(null);
@@ -118,14 +131,16 @@ describe('Permission System', () => {
       const adminScenario = createTestScenario('platformAdmin');
       
       // First check will call isAdmin which returns true
-      mockSupabase.from.mockReturnValueOnce({
+      const mockQuery = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         limit: vi.fn().mockResolvedValue({
           data: [{ role: 'admin' }],
           error: null
         })
-      });
+      };
+      
+      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery as any);
 
       const result = await hasPermission(
         adminScenario.user.id,
@@ -140,17 +155,19 @@ describe('Permission System', () => {
       const userScenario = createTestScenario('regularUser');
       
       // First check isAdmin - returns false
-      mockSupabase.from.mockReturnValueOnce({
+      const mockQuery1 = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         limit: vi.fn().mockResolvedValue({
           data: [],
           error: null
         })
-      });
+      };
+      
+      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery1 as any);
 
       // Then check user permissions
-      mockSupabase.from.mockReturnValueOnce({
+      const mockQuery2 = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
@@ -162,7 +179,9 @@ describe('Permission System', () => {
           },
           error: null
         })
-      });
+      };
+      
+      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery2 as any);
 
       const result = await hasPermission(
         userScenario.user.id,
@@ -177,17 +196,19 @@ describe('Permission System', () => {
       const userScenario = createTestScenario('regularUser');
       
       // First check isAdmin - returns false
-      mockSupabase.from.mockReturnValueOnce({
+      const mockQuery1 = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         limit: vi.fn().mockResolvedValue({
           data: [],
           error: null
         })
-      });
+      };
+      
+      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery1 as any);
 
       // Then check user permissions
-      mockSupabase.from.mockReturnValueOnce({
+      const mockQuery2 = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
@@ -199,7 +220,9 @@ describe('Permission System', () => {
           },
           error: null
         })
-      });
+      };
+      
+      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery2 as any);
 
       const result = await hasPermission(
         userScenario.user.id,
@@ -215,24 +238,28 @@ describe('Permission System', () => {
       const otherAccount = createTestScenario('otherAccountUser').account;
       
       // First check isAdmin - returns false
-      mockSupabase.from.mockReturnValueOnce({
+      const mockQuery1 = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         limit: vi.fn().mockResolvedValue({
           data: [],
           error: null
         })
-      });
+      };
+      
+      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery1 as any);
 
       // User not found in the other account
-      mockSupabase.from.mockReturnValueOnce({
+      const mockQuery2 = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
           data: null,
           error: { message: 'Not found' }
         })
-      });
+      };
+      
+      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery2 as any);
 
       const result = await hasPermission(
         userScenario.user.id,

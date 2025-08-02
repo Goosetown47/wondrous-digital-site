@@ -308,24 +308,28 @@ export async function getAccountUsers(accountId: string): Promise<UserWithAccoun
 
   if (error) throw error;
 
-  return accountUsers.map(relation => ({
-    id: relation.user_id,
-    email: `user-${relation.user_id.slice(0, 8)}@example.com`, // Placeholder
-    created_at: relation.joined_at,
-    last_sign_in_at: null,
-    email_confirmed_at: null,
-    accounts: [{
-      account_id: accountId,
-      account_name: relation.accounts.name,
-      account_slug: relation.accounts.slug,
-      role: relation.role,
-      joined_at: relation.joined_at,
-      invited_by: relation.invited_by,
-    }],
-    primary_account: {
-      account_id: accountId,
-      account_name: relation.accounts.name,
-      role: relation.role,
-    },
-  }));
+  return accountUsers.map(relation => {
+    // Handle Supabase relationship which could be array or single object
+    const account = Array.isArray(relation.accounts) ? relation.accounts[0] : relation.accounts;
+    return {
+      id: relation.user_id,
+      email: `user-${relation.user_id.slice(0, 8)}@example.com`, // Placeholder
+      created_at: relation.joined_at,
+      last_sign_in_at: null,
+      email_confirmed_at: null,
+      accounts: [{
+        account_id: accountId,
+        account_name: account?.name,
+        account_slug: account?.slug,
+        role: relation.role,
+        joined_at: relation.joined_at,
+        invited_by: relation.invited_by,
+      }],
+      primary_account: {
+        account_id: accountId,
+        account_name: account?.name,
+        role: relation.role,
+      },
+    };
+  });
 }

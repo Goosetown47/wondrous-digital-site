@@ -89,7 +89,7 @@ export async function sendEmail(options: EmailOptions): Promise<{
       from: options.from || 'Wondrous Digital <noreply@wondrousdigital.com>',
       to: options.to,
       subject: options.subject,
-      html,
+      html: html!,  // We've already validated that either html or text exists
       text: options.text,
       replyTo: options.replyTo,
       headers: options.headers,

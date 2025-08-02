@@ -126,7 +126,7 @@ class LibraryService {
    * Increment usage count for a library item
    */
   async incrementUsage(id: string) {
-    const { data: item } = await this.getById(id);
+    const item = await this.getById(id);
     if (!item) throw new Error('Library item not found');
 
     const { error } = await supabase

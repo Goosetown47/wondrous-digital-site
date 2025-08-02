@@ -156,7 +156,7 @@ class CoreComponentsService {
     }
   }
 
-  async getComponentsBySource(source: string): Promise<CoreComponent[]> {
+  async getComponentsBySource(source: 'shadcn' | 'aceternity' | 'expansions' | 'custom'): Promise<CoreComponent[]> {
     return this.getComponents({ source });
   }
 

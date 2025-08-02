@@ -10,11 +10,8 @@ export const signupSchema = z.object({
     .refine((password) => {
       const result = validatePassword(password);
       return result.isValid;
-    }, (password: string) => {
-      const result = validatePassword(password);
-      // Return the first unmet requirement as the error message
-      const firstError = result.errors[0];
-      return { message: firstError || 'Password does not meet requirements' };
+    }, {
+      message: 'Password does not meet requirements'
     }),
   confirmPassword: z.string()
     .min(1, 'Please confirm your password'),
