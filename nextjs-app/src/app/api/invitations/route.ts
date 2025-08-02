@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    const invitations = await getAccountInvitations(accountId, status);
+    const invitations = await getAccountInvitations(accountId, status as 'pending' | 'accepted' | 'declined' | 'expired' | 'all');
     
     return NextResponse.json(invitations);
   } catch (error) {

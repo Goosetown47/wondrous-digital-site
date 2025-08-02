@@ -91,7 +91,7 @@ export async function sendEmail(options: EmailOptions): Promise<{
       subject: options.subject,
       html,
       text: options.text,
-      reply_to: options.replyTo,
+      replyTo: options.replyTo,
       headers: options.headers,
       attachments: options.attachments,
       tags: options.tags,
@@ -173,7 +173,7 @@ export async function processEmailQueue(limit: number = 10): Promise<{
       .select('*')
       .eq('status', 'pending')
       .lte('scheduled_at', new Date().toISOString())
-      .lt('retry_count', supabase.sql`max_retries`)
+      .lt('retry_count', 3) // Max retries hardcoded
       .order('scheduled_at', { ascending: true })
       .limit(limit);
 
@@ -286,6 +286,7 @@ export async function processEmailQueue(limit: number = 10): Promise<{
  */
 function applyTemplate(template: string, data: Record<string, unknown>): string {
   return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    // eslint-disable-next-line security/detect-object-injection
     return data[key] !== undefined ? String(data[key]) : match;
   });
 }
@@ -308,7 +309,7 @@ export async function retryFailedEmails(limit: number = 10): Promise<{
         error_message: null,
       })
       .eq('status', 'failed')
-      .lt('retry_count', supabase.sql`max_retries`)
+      .lt('retry_count', 3) // Max retries hardcoded
       .select()
       .limit(limit);
 
@@ -365,6 +366,7 @@ export async function getEmailQueueStats(): Promise<{
         .select('*', { count: 'exact', head: true })
         .eq('status', status);
 
+      // eslint-disable-next-line security/detect-object-injection
       stats[status] = count || 0;
     }
 

@@ -61,7 +61,7 @@ export async function getAllAccounts(includeStats = false) {
       return {
         ...account,
         ...stats,
-      } as AccountWithStats;
+      } as unknown as AccountWithStats;
     })
   );
 

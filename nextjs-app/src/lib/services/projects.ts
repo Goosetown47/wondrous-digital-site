@@ -118,13 +118,7 @@ export async function createProject(projectData: CreateProjectData) {
     .single();
 
   if (error) {
-    console.error('Failed to create project:', {
-      message: error.message,
-      code: error.code,
-      details: error.details,
-      hint: error.hint,
-      ...error
-    });
+    console.error('Failed to create project:', error);
     throw error;
   }
   

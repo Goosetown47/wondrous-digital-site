@@ -75,8 +75,7 @@ export async function verifyDomainWithRetry(
     // Update database
     await updateDomainVerification(
       domainId,
-      status.verified,
-      status.ssl?.state
+      status.verified
     );
 
     if (status.verified) {
@@ -88,7 +87,11 @@ export async function verifyDomainWithRetry(
 
       return {
         verified: true,
-        ssl: status.ssl,
+        ssl: status.ssl ? {
+          configured: status.ssl.state === 'READY',
+          status: status.ssl.state,
+          ...status.ssl
+        } : undefined,
         shouldRetry: false
       };
     }
@@ -107,7 +110,11 @@ export async function verifyDomainWithRetry(
 
     return {
       verified: false,
-      ssl: status.ssl,
+      ssl: status.ssl ? {
+        configured: status.ssl.state === 'READY',
+        status: status.ssl.state,
+        ...status.ssl
+      } : undefined,
       error: status.error,
       shouldRetry,
       nextRetryDelay

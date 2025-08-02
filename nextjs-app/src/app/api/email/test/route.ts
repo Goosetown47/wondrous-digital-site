@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail } from '@/lib/services/email';
 import { InvitationEmail } from '@/emails/invitation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createElement } from 'react';
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,14 +44,14 @@ export async function POST(request: NextRequest) {
         result = await sendEmail({
           to,
           subject: 'Test Invitation Email',
-          react: InvitationEmail({
+          react: createElement(InvitationEmail, {
             inviteeName: to.split('@')[0],
             inviterName: user.email?.split('@')[0] || 'Test User',
             inviterEmail: user.email || 'test@example.com',
-            accountName: 'Test Account',
-            role: 'user',
+            accountName: "Test Account",
+            role: "user",
             invitationLink: `${process.env.NEXT_PUBLIC_APP_URL}/invitation?token=test-token`,
-            expiresIn: '7 days',
+            expiresIn: "7 days"
           }),
         });
         break;

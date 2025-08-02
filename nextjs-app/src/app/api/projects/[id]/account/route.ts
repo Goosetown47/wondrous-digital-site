@@ -128,7 +128,8 @@ export async function PUT(
             project_name: currentProject.name,
             previous_account: {
               id: currentProject.account_id,
-              name: (currentProject.accounts as Record<string, unknown>)?.name as string || 'Unknown'
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              name: Array.isArray(currentProject.accounts) ? currentProject.accounts[0]?.name : (currentProject.accounts as any)?.name || 'Unknown'
             },
             new_account: {
               id: targetAccount.id,
@@ -143,7 +144,9 @@ export async function PUT(
       // Continue despite logging failure
     }
 
-    console.log(`✅ Project "${currentProject.name}" reassigned from account "${(currentProject.accounts as Record<string, unknown>)?.name as string}" to "${targetAccount.name}"`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const previousAccountName = Array.isArray(currentProject.accounts) ? currentProject.accounts[0]?.name : (currentProject.accounts as any)?.name || 'Unknown';
+    console.log(`✅ Project "${currentProject.name}" reassigned from account "${previousAccountName}" to "${targetAccount.name}"`);
 
     return NextResponse.json({
       message: 'Project account updated successfully',

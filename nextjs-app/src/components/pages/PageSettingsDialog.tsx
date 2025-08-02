@@ -37,11 +37,11 @@ export function PageSettingsDialog({
   
   // Metadata fields
   const metadata = page.metadata || {};
-  const [description, setDescription] = useState(metadata.description || '');
-  const [metaDescription, setMetaDescription] = useState(metadata.metaDescription || '');
-  const [ogTitle, setOgTitle] = useState(metadata.ogTitle || '');
-  const [ogDescription, setOgDescription] = useState(metadata.ogDescription || '');
-  const [ogImage, setOgImage] = useState(metadata.ogImage || '');
+  const [description, setDescription] = useState((metadata.description as string) || '');
+  const [metaDescription, setMetaDescription] = useState((metadata.metaDescription as string) || '');
+  const [ogTitle, setOgTitle] = useState((metadata.ogTitle as string) || '');
+  const [ogDescription, setOgDescription] = useState((metadata.ogDescription as string) || '');
+  const [ogImage, setOgImage] = useState((metadata.ogImage as string) || '');
   const [isDraft, setIsDraft] = useState(metadata.status === 'draft');
   const [isHomepage, setIsHomepage] = useState(page.path === '/');
 
@@ -49,11 +49,11 @@ export function PageSettingsDialog({
     // Reset form when page changes
     setTitle(page.title || '');
     const meta = page.metadata || {};
-    setDescription(meta.description || '');
-    setMetaDescription(meta.metaDescription || '');
-    setOgTitle(meta.ogTitle || '');
-    setOgDescription(meta.ogDescription || '');
-    setOgImage(meta.ogImage || '');
+    setDescription((meta.description as string) || '');
+    setMetaDescription((meta.metaDescription as string) || '');
+    setOgTitle((meta.ogTitle as string) || '');
+    setOgDescription((meta.ogDescription as string) || '');
+    setOgImage((meta.ogImage as string) || '');
     setIsDraft(meta.status === 'draft');
     setIsHomepage(page.path === '/');
   }, [page]);

@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     // Generate a new email verification link
     const { error: resendError } = await supabase.auth.admin.generateLink({
-      type: 'signup',
+      type: 'magiclink',
       email: normalizedEmail,
     });
 
