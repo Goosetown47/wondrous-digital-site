@@ -3,11 +3,36 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { render } from '@react-email/components';
 import type { ReactElement } from 'react';
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-loaded Resend client to prevent build-time initialization
+let resendClient: Resend | null = null;
 
 // Development mode flag
 const isDevelopment = process.env.NODE_ENV === 'development';
+
+/**
+ * Get or create Resend client with lazy initialization
+ * This prevents build-time errors when RESEND_API_KEY is not available
+ */
+function getResendClient(): Resend | null {
+  // Return cached client if already initialized
+  if (resendClient) return resendClient;
+  
+  const apiKey = process.env.RESEND_API_KEY;
+  
+  // Handle missing API key
+  if (!apiKey) {
+    if (isDevelopment) {
+      console.warn('RESEND_API_KEY not set - emails will be logged to console only');
+      return null;
+    }
+    // In production, throw error only when actually trying to send emails
+    throw new Error('RESEND_API_KEY is required in production');
+  }
+  
+  // Initialize and cache the client
+  resendClient = new Resend(apiKey);
+  return resendClient;
+}
 
 export interface EmailOptions {
   to: string | string[];
@@ -72,8 +97,11 @@ export async function sendEmail(options: EmailOptions): Promise<{
       throw new Error('Either html, text, or react content is required');
     }
 
-    // In development, log to console instead of sending
-    if (isDevelopment) {
+    // Get Resend client (may be null in development without API key)
+    const client = getResendClient();
+    
+    // In development or without API key, log to console instead of sending
+    if (!client || isDevelopment) {
       console.log('📧 Email (Development Mode):', {
         to: options.to,
         from: options.from || 'noreply@wondrousdigital.com',
@@ -85,7 +113,7 @@ export async function sendEmail(options: EmailOptions): Promise<{
     }
 
     // Send via Resend
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await client.emails.send({
       from: options.from || 'Wondrous Digital <noreply@wondrousdigital.com>',
       to: options.to,
       subject: options.subject,
