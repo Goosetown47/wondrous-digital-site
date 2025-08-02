@@ -150,7 +150,7 @@ export async function GET() {
       user_role: userRole,
       user_accounts: {
         count: userAccounts?.length || 0,
-        accounts: userAccounts?.map(acc => ({ id: acc.id, name: acc.name, slug: acc.slug })) || [],
+        accounts: userAccounts?.map((acc: { id: string; name: string; slug: string }) => ({ id: acc.id, name: acc.name, slug: acc.slug })) || [],
         error: userAccountsError
       }
     };

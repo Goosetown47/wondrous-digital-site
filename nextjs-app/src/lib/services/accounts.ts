@@ -56,7 +56,7 @@ export async function getAllAccounts(includeStats = false) {
 
   // Fetch additional stats for each account
   const accountsWithStats = await Promise.all(
-    accounts.map(async (account) => {
+    accounts.map(async (account: { id: string }) => {
       const stats = await getAccountStats(account.id);
       return {
         ...account,

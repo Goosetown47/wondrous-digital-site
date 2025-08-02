@@ -10,7 +10,7 @@ export const signupSchema = z.object({
     .refine((password) => {
       const result = validatePassword(password);
       return result.isValid;
-    }, (password) => {
+    }, (password: string) => {
       const result = validatePassword(password);
       // Return the first unmet requirement as the error message
       const firstError = result.errors[0];

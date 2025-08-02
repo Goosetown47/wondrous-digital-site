@@ -86,12 +86,15 @@ export function useStaffMembers() {
         const userAssignments = assignments?.filter(a => a.staff_user_id === staff.user_id) || [];
         const profile = profiles?.find(p => p.user_id === staff.user_id);
         
+        // Handle case where auth_users might be an array
+        const authUser = Array.isArray(staff.auth_users) ? staff.auth_users[0] : staff.auth_users;
+        
         return {
           id: staff.user_id,
-          email: staff.auth_users.email,
-          display_name: profile?.display_name || staff.auth_users.raw_user_meta_data?.full_name || null,
-          last_sign_in_at: staff.auth_users.last_sign_in_at,
-          created_at: staff.auth_users.created_at,
+          email: authUser.email,
+          display_name: profile?.display_name || authUser.raw_user_meta_data?.full_name || null,
+          last_sign_in_at: authUser.last_sign_in_at,
+          created_at: authUser.created_at,
           assignment_count: userAssignments.length,
           assignments: userAssignments,
         };

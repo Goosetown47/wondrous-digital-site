@@ -7,7 +7,7 @@ const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000000';
  * Use this in API routes and server components
  */
 export async function isAdminServer(userId: string): Promise<boolean> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   const { data, error } = await supabase
     .from('account_users')
@@ -24,7 +24,7 @@ export async function isAdminServer(userId: string): Promise<boolean> {
  * Server-side check if a user has staff or admin role
  */
 export async function isStaffServer(userId: string): Promise<boolean> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   const { data, error } = await supabase
     .from('account_users')
@@ -41,7 +41,7 @@ export async function isStaffServer(userId: string): Promise<boolean> {
  * Get user's highest role across all accounts (server-side)
  */
 export async function getUserHighestRoleServer(userId: string): Promise<'admin' | 'staff' | 'account_owner' | 'user' | null> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   const { data, error } = await supabase
     .from('account_users')
@@ -69,7 +69,7 @@ export async function hasRoleInAccountServer(
   accountId: string, 
   requiredRoles: string[]
 ): Promise<boolean> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   
   const { data, error } = await supabase
     .from('account_users')

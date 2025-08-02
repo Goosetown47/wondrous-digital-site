@@ -82,7 +82,7 @@ export default function SignUpPage() {
     };
 
     checkEmailAvailability();
-  }, [debouncedEmail, emailTouched]); // Removed problematic dependencies
+  }, [debouncedEmail, emailTouched, fieldErrors.email]);
 
   // Clear field errors when user types or clears the field
   const handleEmailChange = (value: string) => {

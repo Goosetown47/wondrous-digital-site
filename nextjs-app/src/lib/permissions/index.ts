@@ -186,7 +186,7 @@ export async function getAccountProjects(
   
   // Check if user has access to this account
   const accounts = await getUserAccounts(userId, supabaseClient);
-  const hasAccess = accounts.some(acc => acc.id === accountId);
+  const hasAccess = accounts.some((acc: { id: string }) => acc.id === accountId);
   
   if (!hasAccess) {
     return [];

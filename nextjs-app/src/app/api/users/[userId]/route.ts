@@ -82,13 +82,17 @@ export async function GET(
     console.log('✅ [API/Users/UserId] Found account relationships:', accountUsers.length);
 
     // Transform account data
-    const userAccounts = accountUsers.map(au => ({
-      account_id: au.accounts.id,
-      account_name: au.accounts.name,
-      account_slug: au.accounts.slug,
-      role: au.role,
-      joined_at: au.joined_at ? new Date(au.joined_at).toISOString() : null
-    }));
+    const userAccounts = accountUsers.map(au => {
+      // Handle case where accounts might be an array
+      const account = Array.isArray(au.accounts) ? au.accounts[0] : au.accounts;
+      return {
+        account_id: account.id,
+        account_name: account.name,
+        account_slug: account.slug,
+        role: au.role,
+        joined_at: au.joined_at ? new Date(au.joined_at).toISOString() : null
+      };
+    });
 
     // Determine primary account (platform account if admin/staff, otherwise first account)
     const platformAccount = userAccounts.find(
