@@ -45,7 +45,11 @@ export default function NewThemePage() {
       await createMutation.mutateAsync({
         name: themeName,
         type: 'theme',
+        type_id: null,
         content: defaultVariables,
+        version: 1,
+        content_hash: null,
+        library_version: null,
         metadata: {
           preset,
         },

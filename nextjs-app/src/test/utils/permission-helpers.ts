@@ -1,7 +1,7 @@
 import { PERMISSIONS } from '@/lib/permissions/constants';
 import type { Permission } from '@/lib/permissions/constants';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase';
+import type { Database } from '@/types/database';
 
 // Helper to generate all permissions for a role
 export function getPermissionsForRole(role: 'admin' | 'staff' | 'account_owner' | 'user'): string[] {

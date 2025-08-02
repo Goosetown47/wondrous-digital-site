@@ -12,7 +12,7 @@ export const mockUsers = {
     user_metadata: {
       display_name: 'Platform Admin',
     },
-  } as User,
+  } as unknown as User,
   
   platformStaff: {
     id: 'staff-user-id',
@@ -20,7 +20,7 @@ export const mockUsers = {
     user_metadata: {
       display_name: 'Platform Staff',
     },
-  } as User,
+  } as unknown as User,
   
   accountOwner: {
     id: 'owner-user-id',
@@ -28,7 +28,7 @@ export const mockUsers = {
     user_metadata: {
       display_name: 'Account Owner',
     },
-  } as User,
+  } as unknown as User,
   
   regularUser: {
     id: 'user-user-id',
@@ -36,7 +36,7 @@ export const mockUsers = {
     user_metadata: {
       display_name: 'Regular User',
     },
-  } as User,
+  } as unknown as User,
   
   otherAccountUser: {
     id: 'other-user-id',
@@ -44,7 +44,7 @@ export const mockUsers = {
     user_metadata: {
       display_name: 'Other Account User',
     },
-  } as User,
+  } as unknown as User,
 };
 
 // Mock accounts

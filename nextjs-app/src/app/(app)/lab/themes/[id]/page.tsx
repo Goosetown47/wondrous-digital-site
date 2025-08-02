@@ -260,12 +260,12 @@ export default function EditThemePage() {
             >
               <ColorPicker
                 label="Primary"
-                value={themeVariables.primary || '222.2 47.4% 11.2%'}
+                value={typeof themeVariables.primary === 'string' ? themeVariables.primary : '222.2 47.4% 11.2%'}
                 onChange={(value) => handleColorChange('primary', value)}
               />
               <ColorPicker
                 label="Primary Foreground"
-                value={themeVariables.primaryForeground || '210 40% 98%'}
+                value={typeof themeVariables.primaryForeground === 'string' ? themeVariables.primaryForeground : '210 40% 98%'}
                 onChange={(value) => handleColorChange('primaryForeground', value)}
               />
             </ColorGroupSection>
@@ -278,12 +278,12 @@ export default function EditThemePage() {
             >
               <ColorPicker
                 label="Secondary"
-                value={themeVariables.secondary || '210 40% 96.1%'}
+                value={typeof themeVariables.secondary === 'string' ? themeVariables.secondary : '210 40% 96.1%'}
                 onChange={(value) => handleColorChange('secondary', value)}
               />
               <ColorPicker
                 label="Secondary Foreground"
-                value={themeVariables.secondaryForeground || '222.2 47.4% 11.2%'}
+                value={typeof themeVariables.secondaryForeground === 'string' ? themeVariables.secondaryForeground : '222.2 47.4% 11.2%'}
                 onChange={(value) => handleColorChange('secondaryForeground', value)}
               />
             </ColorGroupSection>
@@ -296,12 +296,12 @@ export default function EditThemePage() {
             >
               <ColorPicker
                 label="Accent"
-                value={themeVariables.accent || '210 40% 96.1%'}
+                value={typeof themeVariables.accent === 'string' ? themeVariables.accent : '210 40% 96.1%'}
                 onChange={(value) => handleColorChange('accent', value)}
               />
               <ColorPicker
                 label="Accent Foreground"
-                value={themeVariables.accentForeground || '222.2 47.4% 11.2%'}
+                value={typeof themeVariables.accentForeground === 'string' ? themeVariables.accentForeground : '222.2 47.4% 11.2%'}
                 onChange={(value) => handleColorChange('accentForeground', value)}
               />
             </ColorGroupSection>
@@ -378,12 +378,12 @@ export default function EditThemePage() {
               />
               <ColorPicker
                 label="Destructive"
-                value={themeVariables.destructive || '0 84.2% 60.2%'}
+                value={typeof themeVariables.destructive === 'string' ? themeVariables.destructive : '0 84.2% 60.2%'}
                 onChange={(value) => handleColorChange('destructive', value)}
               />
               <ColorPicker
                 label="Destructive Foreground"
-                value={themeVariables.destructiveForeground || '210 40% 98%'}
+                value={typeof themeVariables.destructiveForeground === 'string' ? themeVariables.destructiveForeground : '210 40% 98%'}
                 onChange={(value) => handleColorChange('destructiveForeground', value)}
               />
             </ColorGroupSection>

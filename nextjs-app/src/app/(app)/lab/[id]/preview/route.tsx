@@ -26,7 +26,7 @@ export async function GET(
     }
     
     const heroContent = (draft.content && typeof draft.content === 'object' && 'heroContent' in draft.content) 
-      ? (draft.content as HeroSectionContent).heroContent 
+      ? ((draft.content as unknown) as HeroSectionContent).heroContent 
       : {
           heading: "Blocks Built With Shadcn & Tailwind",
           subtext: "Finely crafted components built with React, Tailwind and Shadcn UI.",

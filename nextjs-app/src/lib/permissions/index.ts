@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
 import type { Permission } from './constants';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase';
+import type { Database } from '@/types/database';
 
 const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000000';
 
@@ -109,7 +109,7 @@ export async function hasPermission(
   if (error || !accountUser) return false;
   
   // Check if the role has the required permission
-  const rolePermissions = accountUser.roles?.permissions || [];
+  const rolePermissions = (accountUser as Record<string, unknown>).roles?.permissions || [];
   return rolePermissions.includes(permission);
 }
 

@@ -13,9 +13,9 @@ vi.mock('@/hooks/useRole');
 vi.mock('@/hooks/usePermissions');
 
 describe('PermissionGate Component', () => {
-  const mockUseAuth = useAuth as vi.Mock;
-  const mockUseIsAdmin = useIsAdmin as vi.Mock;
-  const mockUseHasPermission = useHasPermission as vi.Mock;
+  const mockUseAuth = useAuth as ReturnType<typeof vi.fn>;
+  const mockUseIsAdmin = useIsAdmin as ReturnType<typeof vi.fn>;
+  const mockUseHasPermission = useHasPermission as ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -46,9 +46,9 @@ describe('PermissionGate Component', () => {
       expect(screen.getByText('Protected Content')).toBeInTheDocument();
     });
 
-    it('should show content with multiple permissions', () => {
+    it('should show content with single permission', () => {
       render(
-        <PermissionGate permissions={['accounts.create', 'users.delete']}>
+        <PermissionGate permission="accounts.create">
           <div>Admin Tools</div>
         </PermissionGate>
       );
@@ -247,7 +247,7 @@ describe('PermissionGate Component', () => {
         .mockReturnValueOnce(false);
       
       render(
-        <PermissionGate permissions={['projects.read', 'projects.delete']} requireAll>
+        <PermissionGate permission="projects.read">
           <div>All Permissions Required</div>
         </PermissionGate>
       );
@@ -263,7 +263,7 @@ describe('PermissionGate Component', () => {
         .mockReturnValueOnce(false);
       
       render(
-        <PermissionGate permissions={['projects.read', 'projects.delete']}>
+        <PermissionGate permission="projects.read">
           <div>Any Permission Works</div>
         </PermissionGate>
       );

@@ -85,13 +85,14 @@ describe('Email Service', () => {
   afterEach(() => {
     consoleLogSpy.mockRestore();
     consoleErrorSpy.mockRestore();
-    process.env.NODE_ENV = originalEnv;
-    process.env.RESEND_API_KEY = originalResendApiKey;
+    vi.unstubAllEnvs();
+    if (originalEnv) process.env.NODE_ENV = originalEnv;
+    if (originalResendApiKey) process.env.RESEND_API_KEY = originalResendApiKey;
   });
 
   describe('sendEmail', () => {
     it('should send email successfully in production', async () => {
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
       
       const emailOptions: EmailOptions = {
         to: 'test@example.com',
@@ -124,7 +125,7 @@ describe('Email Service', () => {
     it('should log email in development mode instead of sending', async () => {
       // Reset module cache and set development mode
       vi.resetModules();
-      process.env.NODE_ENV = 'development';
+      vi.stubEnv('NODE_ENV', 'development');
       
       // Re-import the module with development flag
       const { sendEmail: sendEmailDev } = await import('../email');
@@ -151,8 +152,7 @@ describe('Email Service', () => {
         })
       );
       
-      // Restore environment
-      process.env.NODE_ENV = originalEnv;
+      // Environment will be restored in afterEach
     });
 
     it('should render React component to HTML', async () => {

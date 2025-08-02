@@ -46,7 +46,7 @@ export function usePermissions() {
         .eq('user_id', user.id)
         .single();
 
-      return accountUser?.roles?.permissions || [];
+      return (accountUser as Record<string, unknown>)?.roles?.permissions || [];
     },
     enabled: !!user && !!currentAccount,
   });

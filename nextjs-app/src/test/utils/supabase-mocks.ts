@@ -1,10 +1,10 @@
 import { vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase';
+import type { Database } from '@/types/database';
 import { mockAccountUsers, mockAccounts, mockRoles } from './auth-mocks';
 
 // Mock Supabase client
-export function createMockSupabaseClient(overrides?: Partial<SupabaseClient>) {
+export function createMockSupabaseClient(overrides?: Partial<SupabaseClient<Database>>) {
   const mockClient = {
     auth: {
       getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
@@ -54,7 +54,7 @@ export function createMockSupabaseClient(overrides?: Partial<SupabaseClient>) {
       }
     }),
     ...overrides,
-  } as unknown as SupabaseClient;
+  } as unknown as SupabaseClient<Database>;
 
   return mockClient;
 }
@@ -139,29 +139,42 @@ function getMockDataForTable(table: string) {
 }
 
 // Mock specific responses for testing scenarios
-export function mockSupabaseResponse(client: SupabaseClient<Database>, table: string, method: string, response: unknown) {
-  const query = client.from(table);
-  query[method].mockReturnValueOnce({
-    ...query,
-    then: vi.fn((resolve) => {
-      resolve(response);
-      return Promise.resolve(response);
-    }),
-  });
+export function mockSupabaseResponse(client: Record<string, unknown>, table: string, method: string, response: unknown) {
+  const fromFn = client.from as ((table: string) => Record<string, unknown>);
+  const query = fromFn(table);
+  // eslint-disable-next-line security/detect-object-injection
+  const mockMethod = query[method];
+  if (mockMethod && mockMethod.mockReturnValueOnce) {
+    mockMethod.mockReturnValueOnce({
+      ...query,
+      then: vi.fn((resolve: (value: unknown) => void) => {
+        resolve(response);
+        return Promise.resolve(response);
+      }),
+    });
+  }
 }
 
 // Mock auth responses
-export function mockAuthResponse(client: SupabaseClient<Database>, method: keyof SupabaseClient<Database>['auth'], response: unknown) {
-  client.auth[method].mockResolvedValueOnce(response);
+export function mockAuthResponse(client: Record<string, unknown>, method: string, response: unknown) {
+  const auth = client.auth as Record<string, unknown>;
+  // eslint-disable-next-line security/detect-object-injection
+  const authMethod = auth[method] as { mockResolvedValueOnce?: (response: unknown) => void };
+  if (authMethod && authMethod.mockResolvedValueOnce) {
+    authMethod.mockResolvedValueOnce(response);
+  }
 }
 
 // Mock RPC responses
-export function mockRpcResponse(client: SupabaseClient<Database>, functionName: string, response: unknown) {
-  client.rpc.mockResolvedValueOnce(response);
+export function mockRpcResponse(client: Record<string, unknown>, functionName: string, response: unknown) {
+  const rpc = client.rpc as { mockResolvedValueOnce?: (response: unknown) => void };
+  if (rpc && rpc.mockResolvedValueOnce) {
+    rpc.mockResolvedValueOnce(response);
+  }
 }
 
 // Helper to setup common auth scenarios
-export function setupAuthScenario(client: SupabaseClient<Database>, scenario: 'admin' | 'owner' | 'user' | 'unauthenticated') {
+export function setupAuthScenario(client: Record<string, unknown>, scenario: 'admin' | 'owner' | 'user' | 'unauthenticated') {
   switch (scenario) {
     case 'admin':
       mockAuthResponse(client, 'getUser', {

@@ -45,6 +45,8 @@ export default function NewDraftPage() {
         status: 'draft',
         content: getInitialContent(formData.type),
         version: 1,
+        content_hash: null,
+        library_version: null,
         metadata: {
           description: formData.description,
         },

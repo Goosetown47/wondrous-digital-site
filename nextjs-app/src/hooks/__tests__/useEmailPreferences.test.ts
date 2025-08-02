@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEmailPreferences, useUpdateEmailPreferences } from '../useEmailPreferences';
 import { createMockSupabaseClient } from '@/test/utils/supabase-mocks';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/supabase';
+import type { Database } from '@/types/database';
 import React from 'react';
 
 // Mock dependencies

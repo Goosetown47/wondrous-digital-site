@@ -20,13 +20,30 @@ vi.mock('resend', () => ({
   })),
 }));
 
-type MockSupabase = ReturnType<typeof createAdminClient> & {
+interface MockSupabase {
+  from: ReturnType<typeof vi.fn>;
+  select: ReturnType<typeof vi.fn>;
+  insert: ReturnType<typeof vi.fn>;
+  update: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+  eq: ReturnType<typeof vi.fn>;
+  neq: ReturnType<typeof vi.fn>;
+  in: ReturnType<typeof vi.fn>;
+  lte: ReturnType<typeof vi.fn>;
+  lt: ReturnType<typeof vi.fn>;
+  gte: ReturnType<typeof vi.fn>;
+  order: ReturnType<typeof vi.fn>;
+  limit: ReturnType<typeof vi.fn>;
+  single: ReturnType<typeof vi.fn>;
+  maybeSingle: ReturnType<typeof vi.fn>;
+  sql: ReturnType<typeof vi.fn>;
+  rpc: ReturnType<typeof vi.fn>;
   auth?: {
     admin: {
       getUserById: ReturnType<typeof vi.fn>;
     };
   };
-};
+}
 
 describe('Email System Integration Tests', () => {
   let mockSupabase: MockSupabase;
@@ -35,7 +52,7 @@ describe('Email System Integration Tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.NODE_ENV = 'production'; // Test in production mode
+    vi.stubEnv('NODE_ENV', 'production'); // Test in production mode
     
     // Setup mock Supabase client
     mockSupabase = {
@@ -60,17 +77,18 @@ describe('Email System Integration Tests', () => {
     (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(mockSupabase);
 
     // Setup mock Resend
-    const resendModule = await vi.importMock<{ Resend: ReturnType<typeof vi.fn> }>('resend');
+    // Mock Resend is already setup via vi.mock at top of file
     mockResend = {
       emails: {
         send: vi.fn(),
       },
     };
-    resendModule.Resend.mockImplementation(() => mockResend);
+    // Resend mock implementation is already defined
   });
 
   afterEach(() => {
-    process.env.NODE_ENV = originalEnv;
+    vi.unstubAllEnvs();
+    if (originalEnv) process.env.NODE_ENV = originalEnv;
   });
 
   describe('Invitation Email Flow', () => {
