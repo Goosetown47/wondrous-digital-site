@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCreateProject, useProject } from '@/hooks/useProjects';
 import { updateProject } from '@/lib/services/projects';
@@ -20,7 +20,7 @@ import {
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function NewProjectPage() {
+function NewProjectPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const templateId = searchParams.get('template');
@@ -232,5 +232,13 @@ export default function NewProjectPage() {
         </form>
       </div>
     </PermissionGate>
+  );
+}
+
+export default function NewProjectPage() {
+  return (
+    <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+      <NewProjectPageContent />
+    </Suspense>
   );
 }

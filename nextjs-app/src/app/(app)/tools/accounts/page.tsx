@@ -304,15 +304,18 @@ export default function AccountsPage() {
                     Are you sure you want to permanently delete "{deleteDialog.account?.name}"?
                   </>
                 )}
-                <br /><br />
-                <strong>This action cannot be undone</strong> and will remove all account data, including:
-                <ul className="list-disc list-inside mt-2 space-y-1">
+              </AlertDialogDescription>
+              <div className="mt-4">
+                <p className="text-sm text-muted-foreground">
+                  <strong>This action cannot be undone</strong> and will remove all account data, including:
+                </p>
+                <ul className="list-disc list-inside mt-2 space-y-1 text-sm text-muted-foreground">
                   <li>All projects and pages</li>
                   <li>User memberships</li>
                   <li>Billing history</li>
                   <li>Activity logs</li>
                 </ul>
-              </AlertDialogDescription>
+              </div>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>

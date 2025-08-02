@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LibraryHeader } from '@/components/library/LibraryHeader';
@@ -8,7 +8,7 @@ import { LibraryGrid } from '@/components/library/LibraryGrid';
 import { useLibraryItems } from '@/hooks/useLibrary';
 type LibraryItemType = 'section' | 'page' | 'site' | 'theme';
 
-export default function LibraryPage() {
+function LibraryPageContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
   
@@ -90,5 +90,13 @@ export default function LibraryPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function LibraryPage() {
+  return (
+    <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+      <LibraryPageContent />
+    </Suspense>
   );
 }

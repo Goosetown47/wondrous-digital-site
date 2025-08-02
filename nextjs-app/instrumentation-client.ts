@@ -26,3 +26,6 @@ Sentry.init({
     }),
   ],
 });
+
+// Export the required router transition hook for Next.js 15
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

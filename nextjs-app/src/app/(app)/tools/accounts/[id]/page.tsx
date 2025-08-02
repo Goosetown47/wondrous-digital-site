@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { 
@@ -59,7 +59,7 @@ import { AccountSettings } from './components/AccountSettings';
 import { AccountUsers } from './components/AccountUsers';
 import { AccountActivity } from './components/AccountActivity';
 
-export default function AccountDetailPage() {
+function AccountDetailPageContent() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -264,18 +264,19 @@ export default function AccountDetailPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Account</AlertDialogTitle>
               <AlertDialogDescription>
-                <div>
-                  Are you sure you want to permanently delete "{account.name}"?
-                  <br /><br />
+                Are you sure you want to permanently delete "{account.name}"?
+              </AlertDialogDescription>
+              <div className="mt-4">
+                <p className="text-sm text-muted-foreground">
                   <strong>This action cannot be undone</strong> and will remove all account data, including:
-                </div>
-                <ul className="list-disc list-inside mt-2 space-y-1">
+                </p>
+                <ul className="list-disc list-inside mt-2 space-y-1 text-sm text-muted-foreground">
                   <li>All projects and pages ({account.project_count || 0} projects)</li>
                   <li>User memberships ({account.user_count || 0} users)</li>
                   <li>Billing history</li>
                   <li>Activity logs</li>
                 </ul>
-              </AlertDialogDescription>
+              </div>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -290,5 +291,13 @@ export default function AccountDetailPage() {
         </AlertDialog>
       </div>
     </PermissionGate>
+  );
+}
+
+export default function AccountDetailPage() {
+  return (
+    <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+      <AccountDetailPageContent />
+    </Suspense>
   );
 }
