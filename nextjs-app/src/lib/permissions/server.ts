@@ -11,7 +11,7 @@ export async function serverHasPermission(
   accountId: string,
   permission: Permission | string
 ): Promise<boolean> {
-  const supabaseClient = createSupabaseServerClient();
+  const supabaseClient = await createSupabaseServerClient();
   return hasPermission(userId, accountId, permission, supabaseClient);
 }
 
@@ -23,6 +23,6 @@ export async function serverRequirePermission(
   accountId: string,
   permission: Permission | string
 ): Promise<void> {
-  const supabaseClient = createSupabaseServerClient();
+  const supabaseClient = await createSupabaseServerClient();
   return requirePermission(userId, accountId, permission, supabaseClient);
 }

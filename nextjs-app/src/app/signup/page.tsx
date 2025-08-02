@@ -142,14 +142,14 @@ export default function SignUpPage() {
     } catch (err) {
       if (err instanceof ZodError) {
         const errors: Partial<Record<keyof SignupFormData, string>> = {};
-        err.errors.forEach((error) => {
+        err.issues.forEach((error) => {
           if (error.path[0]) {
             errors[error.path[0] as keyof SignupFormData] = error.message;
           }
         });
         setFieldErrors(errors);
         // Set the first error as the main error
-        const firstError = err.errors[0]?.message;
+        const firstError = err.issues[0]?.message;
         if (firstError) {
           setError(firstError);
         }

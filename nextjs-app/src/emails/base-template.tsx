@@ -34,7 +34,7 @@ export const BaseEmailTemplate: React.FC<BaseEmailTemplateProps> = ({
       <Head>
         <Font
           fontFamily="Inter"
-          fallbackFontFamily="Arial, Helvetica, sans-serif"
+          fallbackFontFamily={["Arial", "Helvetica", "sans-serif"]}
           webFont={{
             url: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
             format: 'woff2',

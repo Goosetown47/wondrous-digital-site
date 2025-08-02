@@ -109,7 +109,9 @@ export async function hasPermission(
   if (error || !accountUser) return false;
   
   // Check if the role has the required permission
-  const rolePermissions = (accountUser as Record<string, unknown>).roles?.permissions || [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const roles = (accountUser as any).roles;
+  const rolePermissions = Array.isArray(roles?.permissions) ? roles.permissions : [];
   return rolePermissions.includes(permission);
 }
 

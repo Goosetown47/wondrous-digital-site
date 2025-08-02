@@ -46,7 +46,9 @@ export function usePermissions() {
         .eq('user_id', user.id)
         .single();
 
-      return (accountUser as Record<string, unknown>)?.roles?.permissions || [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const roles = (accountUser as any)?.roles;
+      return Array.isArray(roles?.permissions) ? roles.permissions : [];
     },
     enabled: !!user && !!currentAccount,
   });
@@ -108,7 +110,7 @@ export function useHasPermissions(permissions: (Permission | string)[]) {
           .in('role', ['admin', 'staff'])
           .limit(1);
           
-        const hasAccess = data && data.length > 0;
+        const hasAccess = !!(data && data.length > 0);
         return permissions.reduce((acc, permission) => {
           acc[permission] = hasAccess;
           return acc;

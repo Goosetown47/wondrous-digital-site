@@ -90,7 +90,7 @@ export function ColorPicker({
   const [isTailwindOpen, setIsTailwindOpen] = useState(false);
   const [color, setColor] = useState<HslColor>(parseHSLString(value));
   const [hexValue, setHexValue] = useState('');
-  const timeoutRef = useRef<NodeJS.Timeout | undefined>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   
   // Debounced onChange to prevent rapid updates
   const debouncedOnChange = useCallback((newValue: string) => {

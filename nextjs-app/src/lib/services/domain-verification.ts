@@ -127,10 +127,11 @@ export async function verifyDomainWithRetry(
     });
 
     // Determine if error is retryable
+    const errorMessage = error instanceof Error ? error.message : String(error);
     const isRetryableError = 
-      error.message?.includes('ECONNREFUSED') ||
-      error.message?.includes('ETIMEDOUT') ||
-      error.message?.includes('ENOTFOUND');
+      errorMessage.includes('ECONNREFUSED') ||
+      errorMessage.includes('ETIMEDOUT') ||
+      errorMessage.includes('ENOTFOUND');
 
     const shouldRetry = isRetryableError && attemptNumber < MAX_RETRY_ATTEMPTS;
     const nextRetryDelay = shouldRetry ? calculateNextRetryDelay(attemptNumber) : undefined;

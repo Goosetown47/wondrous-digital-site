@@ -37,7 +37,7 @@ export async function updateDomainVerification(
 ): Promise<void> {
   const updates: Partial<ProjectDomain> = {
     verified,
-    verified_at: verified ? new Date().toISOString() : null,
+    verified_at: verified ? new Date().toISOString() : undefined,
   };
 
   // Could add ssl_state to database if needed

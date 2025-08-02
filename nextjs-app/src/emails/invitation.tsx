@@ -39,7 +39,6 @@ export const InvitationEmail: React.FC<InvitationEmailProps> = ({
     <BaseEmailTemplate
       preview={preview}
       logoUrl={logoUrl}
-      brandColor={brandColor}
     >
       <Heading style={h1}>You're invited to join {accountName}</Heading>
       

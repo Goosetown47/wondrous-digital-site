@@ -174,11 +174,11 @@ export function PageList({ pages, projectId, viewMode = 'list' }: PageListProps)
                         <span>
                           {page.sections?.length || 0} sections
                         </span>
-                        {metadata.description && typeof metadata.description === 'string' && (
+                        {metadata.description && typeof metadata.description === 'string' ? (
                           <span className="truncate max-w-xs">
                             {metadata.description}
                           </span>
-                        )}
+                        ) : null}
                       </div>
                       <span>
                         Updated {formatDistanceToNow(new Date(page.updated_at))} ago
