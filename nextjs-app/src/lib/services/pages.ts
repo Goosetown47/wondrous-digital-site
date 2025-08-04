@@ -142,6 +142,9 @@ export async function deletePage(pageId: string) {
       page_title: page.title 
     });
   }
+  
+  // Return the deleted page info for cache invalidation
+  return page;
 }
 
 /**

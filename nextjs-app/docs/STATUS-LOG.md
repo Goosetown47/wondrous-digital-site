@@ -59,9 +59,32 @@ Completed theme system bug fixes identified during post-deployment testing. Fixe
   - Commit: 39fe2bc - "fix: Resolve theme system color display and dark mode issues"
 
 
+##### Builder Testing
+- ✅ ⚗️ Test drag-and-drop from section library to canvas
+- ✅ ⚗️ Verify sections render with correct props after drop
+- ✅ ⚗️ Test page saving shows success/error states
+- ✅ 🪲 Fix theme selector if not showing themes properly
 
+##### Theme System Testing & Fixes
+- ✅ 🪲 Fix color picker functionality that's currently broken
+- ✅ 🪲 Colors don't show up in the lab on the theme builder cards
+- ✅ 🪲 The color picker does show up on click, but it no longer changes the preview elements in the theme builder.
+- ✅ Light/dark toggle works in theme builder on preview UI
+- ✅ 🪲 Border radius works in Labs theme builder
+- ✅ ⚗️ Test theme application in Builder - verify CSS variables apply correctly
+- ✅ ⚗️ Test theme switching - ensure themes persist when changing 
+- ✅ ⚗️ Verify dark/light mode toggle works in theme preview
+- ✅ ⚗️ Check theme isolation - ensure theme only applies to Canvas, not app UI
 
+##### Lab Environment Testing
+- ✅ ⚗️ Verify inline editing saves content properly
+- ✅ ⚗️ Test responsive preview handles (desktop/tablet/mobile resizing)
+- ✅ ⚗️ Test Lab-to-Library promotion with proper metadata
 
+##### Library System Testing
+- ✅ ⚗️ Test CRUD operations for Sites, Pages, Sections, and Themes
+- ✅ ⚗️ Verify publish/unpublish toggle updates status correctly
+- ✅ ⚗️ Test search functionality across all library types
 
 
 

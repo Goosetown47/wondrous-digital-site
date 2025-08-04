@@ -121,8 +121,13 @@ export function useDeletePage() {
 
   return useMutation({
     mutationFn: deletePage,
-    onSuccess: () => {
+    onSuccess: (deletedPage) => {
+      // Invalidate all page queries including project-specific ones
       queryClient.invalidateQueries({ queryKey: ['pages'] });
+      // Specifically invalidate the project pages list
+      if (deletedPage?.project_id) {
+        queryClient.invalidateQueries({ queryKey: ['pages', 'project', deletedPage.project_id] });
+      }
       toast.success('Page deleted successfully');
     },
     onError: (error) => {
