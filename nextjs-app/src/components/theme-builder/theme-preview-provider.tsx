@@ -5,11 +5,7 @@ import { cn } from '@/lib/utils';
 import { generateDarkModeColors } from '@/lib/theme-utils';
 
 interface ThemePreviewProviderProps {
-  variables: {
-    colors?: Record<string, string>;
-    radius?: string;
-    darkColors?: Record<string, string>;
-  };
+  variables: Record<string, unknown>;
   isDarkMode?: boolean;
   children: React.ReactNode;
   className?: string;
@@ -28,34 +24,57 @@ export function ThemePreviewProvider({
 
     const container = containerRef.current;
     
-    // Get the colors based on mode
-    let colors = variables.colors;
+    // Convert camelCase to kebab-case for CSS variables
+    const toKebabCase = (str: string) => str.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
     
-    if (isDarkMode) {
-      // Use provided dark colors or generate them
-      colors = variables.darkColors || (variables.colors ? generateDarkModeColors(variables.colors) : undefined);
+    // Handle direct theme variables (from theme builder)
+    // or nested structure (from other uses)
+    let themeVars: Record<string, unknown> = variables;
+    if (variables.colors && typeof variables.colors === 'object') {
+      // If it has a colors property, use that structure
+      themeVars = variables.colors as Record<string, unknown>;
+    }
+    
+    // Apply all theme variables
+    Object.entries(themeVars).forEach(([key, value]) => {
+      if (typeof value === 'string') {
+        const cssKey = toKebabCase(key);
+        container.style.setProperty(`--${cssKey}`, value);
+      }
+    });
+    
+    // Handle dark mode
+    if (isDarkMode && themeVars) {
+      // Convert themeVars to Record<string, string> for generateDarkModeColors
+      const colorVars: Record<string, string> = {};
+      Object.entries(themeVars).forEach(([key, value]) => {
+        if (typeof value === 'string') {
+          colorVars[key] = value;
+        }
+      });
+      
+      const darkColors = (variables.darkColors as Record<string, string>) || generateDarkModeColors(colorVars);
+      Object.entries(darkColors).forEach(([key, value]) => {
+        if (typeof value === 'string') {
+          const cssKey = toKebabCase(key);
+          container.style.setProperty(`--${cssKey}`, value);
+        }
+      });
     }
 
-    if (!colors) return;
-
-    // Apply CSS variables to the container
-    Object.entries(colors).forEach(([key, value]) => {
-      container.style.setProperty(`--${key}`, value);
-    });
-
-    // Apply other variables
-    if (variables.radius) {
-      container.style.setProperty('--radius', variables.radius);
+    // Apply radius if it exists (either at root or in variables)
+    const radius = variables.radius || themeVars.radius;
+    if (radius && typeof radius === 'string') {
+      container.style.setProperty('--radius', radius);
     }
 
     // Cleanup function to remove inline styles
     return () => {
-      if (colors) {
-        Object.keys(colors).forEach(key => {
-          container.style.removeProperty(`--${key}`);
-        });
-      }
-      if (variables.radius) {
+      Object.keys(themeVars).forEach(key => {
+        const cssKey = toKebabCase(key);
+        container.style.removeProperty(`--${cssKey}`);
+      });
+      if (radius && typeof radius === 'string') {
         container.style.removeProperty('--radius');
       }
     };

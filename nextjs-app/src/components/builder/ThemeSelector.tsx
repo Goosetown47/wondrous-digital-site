@@ -12,6 +12,20 @@ import {
 } from '@/components/ui/select';
 import { useThemes, useProjectTheme } from '@/hooks/useThemes';
 
+interface ThemeWithNestedColors {
+  id: string;
+  name: string;
+  variables?: {
+    colors?: {
+      primary?: string;
+      secondary?: string;
+      accent?: string;
+      [key: string]: string | undefined;
+    };
+    radius?: string;
+  };
+}
+
 interface ThemeSelectorProps {
   projectId: string;
   currentThemeId?: string | null;
@@ -56,43 +70,47 @@ export function ThemeSelector({ projectId, currentThemeId }: ThemeSelectorProps)
             </div>
           </SelectItem>
           <SelectSeparator />
-          {themes?.map((theme) => (
-            <SelectItem key={theme.id} value={theme.id}>
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1">
-                  {/* Show color swatches */}
-                  {theme.variables?.primary && (
-                    <div 
-                      className="w-4 h-4 rounded border border-border"
-                      style={{ 
-                        backgroundColor: `hsl(${theme.variables.primary})` 
-                      }}
-                    />
-                  )}
-                  {theme.variables?.secondary && (
-                    <div 
-                      className="w-4 h-4 rounded border border-border"
-                      style={{ 
-                        backgroundColor: `hsl(${theme.variables.secondary})` 
-                      }}
-                    />
-                  )}
-                  {theme.variables?.accent && (
-                    <div 
-                      className="w-4 h-4 rounded border border-border"
-                      style={{ 
-                        backgroundColor: `hsl(${theme.variables.accent})` 
-                      }}
-                    />
+          {themes?.map((theme) => {
+            // Cast to our nested structure type
+            const themeWithColors = theme as ThemeWithNestedColors;
+            return (
+              <SelectItem key={themeWithColors.id} value={themeWithColors.id}>
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1">
+                    {/* Show color swatches */}
+                    {themeWithColors.variables?.colors?.primary && (
+                      <div 
+                        className="w-4 h-4 rounded border border-border"
+                        style={{ 
+                          backgroundColor: `hsl(${themeWithColors.variables.colors.primary.replace(/\s+/g, ', ')})` 
+                        }}
+                      />
+                    )}
+                    {themeWithColors.variables?.colors?.secondary && (
+                      <div 
+                        className="w-4 h-4 rounded border border-border"
+                        style={{ 
+                          backgroundColor: `hsl(${themeWithColors.variables.colors.secondary.replace(/\s+/g, ', ')})` 
+                        }}
+                      />
+                    )}
+                    {themeWithColors.variables?.colors?.accent && (
+                      <div 
+                        className="w-4 h-4 rounded border border-border"
+                        style={{ 
+                          backgroundColor: `hsl(${themeWithColors.variables.colors.accent.replace(/\s+/g, ', ')})` 
+                        }}
+                      />
+                    )}
+                  </div>
+                  <span className="truncate">{themeWithColors.name}</span>
+                  {currentThemeId === themeWithColors.id && (
+                    <Check className="h-3 w-3 ml-auto" />
                   )}
                 </div>
-                <span className="truncate">{theme.name}</span>
-                {currentThemeId === theme.id && (
-                  <Check className="h-3 w-3 ml-auto" />
-                )}
-              </div>
-            </SelectItem>
-          ))}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
       {isApplying && (

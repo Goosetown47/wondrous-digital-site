@@ -98,36 +98,56 @@ export default function ThemesPage() {
                       {/* Show color swatches if available */}
                       {draft.type === 'theme' && draft.content && (
                         <>
-                          {(draft.content as ThemeVariables).primary && (
-                            <div
-                              className="h-8 w-full rounded"
-                              style={{ backgroundColor: `hsl(${(draft.content as ThemeVariables).primary})` }}
-                            />
-                          )}
-                          {(draft.content as ThemeVariables).secondary && (
-                            <div
-                              className="h-8 w-full rounded"
-                              style={{ backgroundColor: `hsl(${(draft.content as ThemeVariables).secondary})` }}
-                            />
-                          )}
-                          {(draft.content as ThemeVariables).accent && (
-                            <div
-                              className="h-8 w-full rounded"
-                              style={{ backgroundColor: `hsl(${(draft.content as ThemeVariables).accent})` }}
-                            />
-                          )}
-                          {(draft.content as ThemeVariables).muted && (
-                            <div
-                              className="h-8 w-full rounded"
-                              style={{ backgroundColor: `hsl(${(draft.content as ThemeVariables).muted})` }}
-                            />
-                          )}
-                          {(draft.content as ThemeVariables).destructive && (
-                            <div
-                              className="h-8 w-full rounded"
-                              style={{ backgroundColor: `hsl(${(draft.content as ThemeVariables).destructive})` }}
-                            />
-                          )}
+                          {(() => {
+                            const content = draft.content as ThemeVariables;
+                            const primary = content.primary;
+                            return primary && typeof primary === 'string' ? (
+                              <div
+                                className="h-8 w-full rounded"
+                                style={{ backgroundColor: `hsl(${primary.replace(/\s+/g, ', ')})` }}
+                              />
+                            ) : null;
+                          })()}
+                          {(() => {
+                            const content = draft.content as ThemeVariables;
+                            const secondary = content.secondary;
+                            return secondary && typeof secondary === 'string' ? (
+                              <div
+                                className="h-8 w-full rounded"
+                                style={{ backgroundColor: `hsl(${secondary.replace(/\s+/g, ', ')})` }}
+                              />
+                            ) : null;
+                          })()}
+                          {(() => {
+                            const content = draft.content as ThemeVariables;
+                            const accent = content.accent;
+                            return accent && typeof accent === 'string' ? (
+                              <div
+                                className="h-8 w-full rounded"
+                                style={{ backgroundColor: `hsl(${accent.replace(/\s+/g, ', ')})` }}
+                              />
+                            ) : null;
+                          })()}
+                          {(() => {
+                            const content = draft.content as ThemeVariables;
+                            const muted = content.muted;
+                            return muted && typeof muted === 'string' ? (
+                              <div
+                                className="h-8 w-full rounded"
+                                style={{ backgroundColor: `hsl(${muted.replace(/\s+/g, ', ')})` }}
+                              />
+                            ) : null;
+                          })()}
+                          {(() => {
+                            const content = draft.content as ThemeVariables;
+                            const destructive = content.destructive;
+                            return destructive && typeof destructive === 'string' ? (
+                              <div
+                                className="h-8 w-full rounded"
+                                style={{ backgroundColor: `hsl(${destructive.replace(/\s+/g, ', ')})` }}
+                              />
+                            ) : null;
+                          })()}
                         </>
                       )}
                     </div>
