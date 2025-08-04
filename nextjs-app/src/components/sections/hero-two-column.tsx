@@ -79,12 +79,12 @@ export function HeroTwoColumn({
                   onChange={(e) => setTempHeading(e.target.value)}
                   onBlur={handleHeadingSave}
                   onKeyDown={(e) => e.key === 'Enter' && handleHeadingSave()}
-                  className="text-3xl font-bold tracking-tight @[640px]:text-4xl @[768px]:text-5xl @[1280px]:text-6xl bg-transparent border-b-2 border-primary focus:outline-none w-full text-center @[1000px]:text-left"
+                  className="text-3xl font-bold tracking-tight text-foreground @[640px]:text-4xl @[768px]:text-5xl @[1280px]:text-6xl bg-transparent border-b-2 border-primary focus:outline-none w-full text-center @[1000px]:text-left"
                   autoFocus
                 />
               ) : (
                 <h1
-                  className={`text-3xl font-bold tracking-tight @[640px]:text-4xl @[768px]:text-5xl @[1280px]:text-6xl ${
+                  className={`text-3xl font-bold tracking-tight text-foreground @[640px]:text-4xl @[768px]:text-5xl @[1280px]:text-6xl ${
                     editable ? 'cursor-pointer hover:opacity-80' : ''
                   }`}
                   onClick={() => editable && setIsEditingHeading(true)}
@@ -135,7 +135,7 @@ export function HeroTwoColumn({
                 </Button>
               )}
               
-              <Button size="lg" variant="outline">
+              <Button size="lg" variant="outline" className="text-foreground">
                 View on GitHub
               </Button>
             </div>
@@ -156,7 +156,7 @@ export function HeroTwoColumn({
                   {/* Geometric shape placeholder similar to ShadcnBlocks */}
                   <svg
                     viewBox="0 0 200 200"
-                    className="w-32 h-32 @[640px]:w-40 @[640px]:h-40 @[1024px]:w-48 @[1024px]:h-48"
+                    className="w-32 h-32 @[640px]:w-40 @[640px]:h-40 @[1024px]:w-48 @[1024px]:h-48 text-muted-foreground"
                     fill="currentColor"
                   >
                     <path d="M100 30 L170 70 L170 130 L100 170 L30 130 L30 70 Z" />
