@@ -6,28 +6,113 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **Next.js 15 multi-tenant website builder platform**. All active development is in the `/nextjs-app/` directory. The legacy React/Vite app exists but is not in use.
 
+**Production Version:** v0.1.0 (Released 8/1/2025 @ 11pm)
+**Development Version:** v0.1.1 (Active Planning Now)
+**Deployment Branch:** `nextjs-pagebuilder-core` (NOT master/main!)
+
 ## 📋 Essential Reading
 
 **IMPORTANT**: Before making any code changes, read these documents in `/nextjs-app/docs/`:
 
-1. **[PRD Design & Build System](./nextjs-app/docs/PRD%20Design%20%26%20Build%20System.md)** - Product vision, architecture, and implementation phases
-2. **[MASTER-TASK-LIST.MD](./nextjs-app/docs/MASTER-TASK-LIST.MD)** - Current development tasks and progress tracking
-3. **[STARTUP-PROMPT.md](./nextjs-app/docs/STARTUP-PROMPT.md)** - Quick context for new development sessions
+### CONTEXT DOCS
+**[PRD Design & Build System](./nextjs-app/docs/PRD%20Design%20%26%20Build%20System.md)** - Product vision, architecture, and implementation phases
+**[STARTUP-PROMPT.md](./nextjs-app/docs/prompts/STARTUP-PROMPT.md)** - Quick context for new development sessions
 
-## 🏗️ Architecture Overview
 
-### Multi-Tenant Platform
+### DEVELOPMENT DOCS
+1. **[CODE-CHECKLIST.md](./nextjs-app/docs/OPERATIONS/CODE-CHECKLIST.md)** - This document serves as a **MANDATORY** checklist that must be followed for every feature, fix, or code change. It was created after spending multiple days fixing 452 TypeScript errors, 304+ ESLint errors, and numerous build/deployment issues.
+2. **[DEV-LIFECYCLE.md](./nextjs-app/docs/OPERATIONS/DEV-LIFECYCLE.md)** - This is our development lifecycle. This is how we process the items in our active sprint. These steps are **MANDATORY** to complete before a sprint can be finished.
+3. **[DEV-TOOLS.md](./nextjs-app/docs/OPERATIONS/DEV-TOOLS.md)** - This document outlines what our platform is, what tools are available, and a guide for what to use, when, and how. It should contain every single command, and Claude user stories on when to use what, mapped to each part of our DEV-LIFECYCLE.
+
+
+### OPERATIONAL DOCS
+#### We are using 4 documents to manage our tasks, in a modified agile development process.
+1. **[BACKLOG] (./nextjs-app/docs/BACKLOG.md)** - This is our full list of tasks and things we pull from into our active-sprint. Whenever we have new things to add we put them here. This is arranged in priority sections P1, P2, P Low.
+2. **[ACTIVE-SPRINT] (./nextjs-app/docs/ACTIVE-SPRINT.md)** - We pull from our backlog document into our ACTIVE_SPRINT, which maps to a release number. 
+3. **[STATUS-LOG] (./nextjs-app/docs/STATUS-LOG.md)** - This is an ongoing log of everything we do across the application, from bug fixes to whatever. Every time we do a work segment this should be updated.
+4. **[RELEASE NOTES] (.nextjs-app/docs/Release_Notes/)** - This is where we create a release notes for each release. 
+  **Release Notes Format**
+  Identify which version this is and set up a “Release Notes” document add to Release_Notes folder.
+    1. Identify which versions dev is on, which version production is on. The Release will be what we are deploying to production.
+    2. This will have a list of features added, bugs fixed, etc. 
+    3. It should be in a “customer facing” format that non technical people can read and understand. It will be public facing information. 
+    4. It should NOT contain any critical or sensitive information. Just new features and bug fixes.
+
+
+## ---------------------------------------------- ##
+# Sprint Process Guide
+
+## Sprint Planning (Start of Sprint)
+
+  1. Review BACKLOG.md → Pull priority items into ACTIVE-SPRINT.md
+  2. Set version number → Decide scope (major.minor.patch)
+  3. Move packets → Cut H4 sections from BACKLOG to ACTIVE-SPRINT
+  4. Order packets → Arrange by priority/dependency
+
+
+## During Sprint Execution
+
+### Per Packet Workflow:
+
+  1. Move packet to Current Focus → Work on one packet at a time
+  2. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
+  3. As you discover issues → Add to "Found Work" section:
+    - Critical → Must fix in current version
+    - Non-Critical → Defer to next version
+    - Tech Debt → Document for future
+  4. Update STATUS-LOG.md → Log progress after each packet
+  5. Check off tasks → Mark complete in ACTIVE-SPRINT.md
+  6. Move to Sprint Backlog → When packet done, grab next
+
+### Daily Flow:
+
+  - Start: Check Current Focus in ACTIVE-SPRINT.md
+  - Work: Follow DEV-LIFECYCLE for that packet
+  - Discover: Add found issues to appropriate section
+  - End: Update STATUS-LOG with progress
+
+### Sprint Completion
+
+  1. All packets done → Verify all tasks checked
+  2. Create Release Notes → /docs/Release_Notes/v0.1.1.md
+  3. Archive sprint content → Copy ACTIVE-SPRINT to STATUS-LOG
+  4. Clear ACTIVE-SPRINT.md → Reset for next sprint
+  5. Update version numbers → Production/Development in all docs
+
+
+## Key Rules
+
+  - ONE packet in Current Focus at a time
+  - COMPLETE DEV-LIFECYCLE per packet before moving on
+  - DOCUMENT found work immediately
+  - UPDATE STATUS-LOG per packet completion
+  - NEVER skip DEV-LIFECYCLE steps
+
+## ---------------------------------------------- ##
+
+
+
+# 🏗️ Architecture Overview
+
+## Multi-Tenant Platform
 - Single Next.js application serving thousands of customer websites
 - Domain-based routing via middleware
 - Deployed on Vercel with automatic SSL for custom domains
 - Following the proven architecture of Webflow, Shopify, etc.
 
-### Key Components
+## Key Components
 1. **Core** - Raw component library from shadcn/ui
 2. **Lab** - Internal workspace for creating templates
 3. **Library** - Published templates (sections, pages, sites, themes)
 4. **Builder** - User-facing drag-and-drop interface
 5. **Projects** - Individual customer websites
+
+## 🚀 Deployment Process
+
+**CRITICAL**: Our deployment branch is `nextjs-pagebuilder-core` (NOT master/main!)
+- All PRs must target `nextjs-pagebuilder-core`
+- Vercel automatically deploys from `nextjs-pagebuilder-core`
+- Never create PRs against `master` branch
 
 ## 💻 Development Commands
 
@@ -70,7 +155,7 @@ npm run dev:logs
 npm run dev:status
 ```
 
-## 🗄️ Database Management
+# 🗄️ Database Management
 
 ### Supabase Configuration
 - Database migrations are in `/nextjs-app/supabase/migrations/`
