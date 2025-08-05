@@ -142,10 +142,10 @@ This sprint takes all our critical items from fixing database security issues, t
   - [ ] Separate draft saves from published content
   - [ ] Add "Publish Changes" button to navbar
   - [ ] Update page queries to differentiate draft/published
-- [ ] 🚀 Refactor preview to use Zustand state
-  - [ ] Pass builder state to preview via context
-  - [ ] Remove database fetch dependency in preview
-  - [ ] Ensure instant preview without save delays
+- [✅] 🚀 Refactor preview to use Zustand state
+  - [✅] Pass builder state to preview via context
+  - [✅] Remove database fetch dependency in preview
+  - [✅] Ensure instant preview without save delays
 - [ ] ⚙️ Update data flow architecture
   - [ ] Remove optimistic updates from React Query
   - [ ] Simplify cache invalidation logic

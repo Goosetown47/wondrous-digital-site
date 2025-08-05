@@ -23,7 +23,8 @@ export default function BuilderPage() {
     sections, 
     loadPage,
     saveStatus,
-    lastSavedAt
+    lastSavedAt,
+    pageId: storedPageId
   } = useBuilderStore();
   const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -38,6 +39,11 @@ export default function BuilderPage() {
   // Fetch theme if project has one
   const { data: theme } = useTheme(project?.theme_id);
 
+  // Reset hasLoadedInitialData when pageId changes
+  useEffect(() => {
+    setHasLoadedInitialData(false);
+  }, [pageId]);
+
   // Handle page not found
   useEffect(() => {
     if (pageError) {
@@ -47,7 +53,12 @@ export default function BuilderPage() {
 
   // Load page sections when data arrives
   useEffect(() => {
-    if (page && page.sections && !hasLoadedInitialData) {
+    // Check if we need to load/reload data:
+    // 1. Page data is available
+    // 2. Either we haven't loaded initial data OR the stored pageId doesn't match current pageId
+    const needsLoad = page && page.sections && (!hasLoadedInitialData || storedPageId !== pageId);
+    
+    if (needsLoad) {
       // For now, use sections as both draft and published until we implement proper draft system
       loadPage(
         pageId,
@@ -58,7 +69,7 @@ export default function BuilderPage() {
       );
       setHasLoadedInitialData(true);
     }
-  }, [page, loadPage, pageId, projectId, hasLoadedInitialData]);
+  }, [page, loadPage, pageId, projectId, hasLoadedInitialData, storedPageId]);
 
   const handleDragStart = (itemId: string) => {
     console.log('Drag started for item:', itemId);
