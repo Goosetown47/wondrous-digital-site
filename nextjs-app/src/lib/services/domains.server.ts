@@ -65,10 +65,12 @@ export interface VercelDomainStatus {
  */
 export async function addDomainToVercel(domain: string): Promise<void> {
   if (!VERCEL_API_TOKEN || !VERCEL_PROJECT_ID) {
-    console.warn('Vercel integration not configured. Skipping domain addition.');
+    console.warn('[VERCEL] Integration not configured. Skipping domain addition.');
     return;
   }
 
+  console.log(`[VERCEL] Adding domain ${domain} to project ${VERCEL_PROJECT_ID}`);
+  
   try {
     const response = await vercelRequest(`/v10/projects/${VERCEL_PROJECT_ID}/domains`, {
       method: 'POST',
@@ -77,10 +79,22 @@ export async function addDomainToVercel(domain: string): Promise<void> {
 
     if (!response.ok) {
       const error = await response.json();
+      console.error(`[VERCEL] Failed to add domain:`, error);
+      
+      // Check for specific error cases
+      if (error.error?.code === 'domain_already_in_use') {
+        throw new Error(`Domain ${domain} is already in use by another Vercel project`);
+      } else if (error.error?.code === 'domain_already_exists') {
+        console.log(`[VERCEL] Domain ${domain} already exists in this project`);
+        return; // This is OK, domain is already added
+      }
+      
       throw new Error(error.error?.message || 'Failed to add domain to Vercel');
     }
+    
+    console.log(`[VERCEL] Successfully added domain ${domain} to project`);
   } catch (error) {
-    console.error('Error adding domain to Vercel:', error);
+    console.error('[VERCEL] Error adding domain to Vercel:', error);
     throw error;
   }
 }
@@ -117,9 +131,12 @@ export async function removeDomainFromVercel(domain: string): Promise<void> {
  */
 export async function checkDomainStatus(domain: string): Promise<VercelDomainStatus> {
   if (!VERCEL_API_TOKEN || !VERCEL_PROJECT_ID) {
-    console.warn('Vercel integration not configured. Cannot check domain status.');
-    return { verified: false, error: 'Vercel integration not configured' };
+    console.warn('[VERCEL] Integration not configured. Cannot check domain status.');
+    console.warn(`[VERCEL] Token: ${VERCEL_API_TOKEN ? 'Set' : 'Missing'}, Project: ${VERCEL_PROJECT_ID ? 'Set' : 'Missing'}`);
+    return { verified: false, error: 'Vercel integration not configured. Please check environment variables.' };
   }
+  
+  console.log(`[VERCEL] Checking domain status for: ${domain}`);
 
   try {
     const response = await vercelRequest(
@@ -131,13 +148,20 @@ export async function checkDomainStatus(domain: string): Promise<VercelDomainSta
 
     if (!response.ok) {
       if (response.status === 404) {
-        return { verified: false, error: 'Domain not found in Vercel' };
+        console.log(`[VERCEL] Domain ${domain} not found in Vercel project`);
+        return { verified: false, error: 'Domain not found in Vercel. It may need to be added to the project first.' };
       }
       const error = await response.json();
+      console.error(`[VERCEL] Error checking domain status:`, error);
       return { verified: false, error: error.error?.message || 'Unknown error' };
     }
 
     const data = await response.json();
+    console.log(`[VERCEL] Domain status for ${domain}:`, {
+      verified: data.verified,
+      ssl: data.ssl?.state,
+      verification: data.verification?.length || 0
+    });
     
     return {
       verified: data.verified || false,

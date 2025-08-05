@@ -50,12 +50,26 @@ export function useAddDomain() {
 
       if (error) throw error;
       
-      // Add to Vercel (fire and forget - don't block on this)
-      fetch(`/api/domains/${data.id}/add-to-vercel`, {
-        method: 'POST',
-      }).catch(err => {
-        console.error('Failed to add domain to Vercel:', err);
-      });
+      // Add to Vercel - wait for this to complete
+      console.log(`[DOMAIN] Adding domain to Vercel: ${domain}`);
+      try {
+        const vercelResponse = await fetch(`/api/domains/${data.id}/add-to-vercel`, {
+          method: 'POST',
+        });
+        
+        if (!vercelResponse.ok) {
+          const vercelError = await vercelResponse.json();
+          console.error('[DOMAIN] Failed to add domain to Vercel:', vercelError);
+          
+          // Still return the domain but warn about Vercel
+          toast.warning(`Domain added to database but Vercel configuration failed: ${vercelError.error || 'Unknown error'}`);
+        } else {
+          console.log('[DOMAIN] Successfully added domain to Vercel');
+        }
+      } catch (err) {
+        console.error('[DOMAIN] Failed to add domain to Vercel:', err);
+        toast.warning('Domain added to database but Vercel configuration failed. You may need to configure it manually.');
+      }
 
       return data as ProjectDomain;
     },
