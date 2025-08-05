@@ -75,16 +75,17 @@ export async function middleware(request: NextRequest) {
       env.SUPABASE_SERVICE_ROLE_KEY
     );
     
-    // Check if this is a preview domain
-    if (domain.endsWith('.sites.wondrousdigital.com')) {
-      const subdomain = domain.replace('.sites.wondrousdigital.com', '');
-      console.log(`[DOMAIN-ROUTING] Preview domain detected, slug: ${subdomain}`);
+    // Check if this is a preview domain (format: project-slug-preview.wondrousdigital.com)
+    if (domain.endsWith('-preview.wondrousdigital.com')) {
+      // Extract project slug by removing -preview.wondrousdigital.com
+      const projectSlug = domain.replace('-preview.wondrousdigital.com', '');
+      console.log(`[DOMAIN-ROUTING] Preview domain detected, slug: ${projectSlug}`);
       
       // Look up project by slug
       const { data: projectData } = await supabaseAdmin
         .from('projects')
         .select('id')
-        .eq('slug', subdomain)
+        .eq('slug', projectSlug)
         .single();
         
       if (projectData) {
@@ -93,7 +94,7 @@ export async function middleware(request: NextRequest) {
         console.log(`[DOMAIN-ROUTING] Preview domain routed to project: ${projectData.id}`);
         return NextResponse.rewrite(url);
       } else {
-        console.log(`[DOMAIN-ROUTING] Preview domain not found for slug: ${subdomain}`);
+        console.log(`[DOMAIN-ROUTING] Preview domain not found for slug: ${projectSlug}`);
       }
     } else {
       // Look up custom domain
