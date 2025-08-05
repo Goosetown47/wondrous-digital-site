@@ -130,7 +130,6 @@ export default function BuilderPage() {
         themeId={project?.theme_id || undefined}
         sectionCount={sections.length}
         lastSaved={lastSavedAt}
-        isSaving={saveStatus === 'saving'}
         onSave={handleManualSave}
         saveSuccess={saveStatus === 'saved'}
         saveError={null}

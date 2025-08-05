@@ -10,6 +10,8 @@ import { usePageById } from '@/hooks/usePages';
 import { useDomains } from '@/hooks/useDomains';
 import { useTheme } from '@/hooks/useThemes';
 import { ThemeProvider } from '@/components/builder/ThemeProvider';
+import { useBuilderStore } from '@/stores/builderStore';
+import { useEffect, useState } from 'react';
 import type { Section } from '@/stores/builderStore';
 
 export default function PreviewPage() {
@@ -20,6 +22,27 @@ export default function PreviewPage() {
   const { data: page, isLoading } = usePageById(pageId);
   const { data: domains } = useDomains(projectId);
   const { data: theme } = useTheme(project?.theme_id);
+  
+  // Get sections from builder store - this will be the live preview data
+  const builderSections = useBuilderStore((state) => state.sections);
+  const builderPageId = useBuilderStore((state) => state.pageId);
+  const builderPageTitle = useBuilderStore((state) => state.pageTitle);
+  
+  // Use builder sections if we're previewing the same page, otherwise use database
+  const [previewSections, setPreviewSections] = useState<Section[]>([]);
+  const [previewTitle, setPreviewTitle] = useState<string>('');
+  
+  useEffect(() => {
+    // If builder store has the same page loaded, use its sections for instant preview
+    if (builderPageId === pageId && builderSections.length > 0) {
+      setPreviewSections(builderSections);
+      setPreviewTitle(builderPageTitle);
+    } else if (page) {
+      // Otherwise fall back to database sections
+      setPreviewSections(page.sections || []);
+      setPreviewTitle(page.title || page.path);
+    }
+  }, [builderPageId, pageId, builderSections, builderPageTitle, page]);
   
   // Get the primary domain or first available domain
   const primaryDomain = domains?.find(d => d.is_primary) || domains?.[0];
@@ -48,8 +71,6 @@ export default function PreviewPage() {
     );
   }
 
-  const sections = page.sections || [];
-
   return (
     <div className="min-h-screen">
       {/* Preview toolbar */}
@@ -63,7 +84,7 @@ export default function PreviewPage() {
               </Link>
             </Button>
             <span className="text-sm opacity-75">
-              Preview Mode - {project?.name || 'Loading...'} - {page.title || page.path}
+              Preview Mode - {project?.name || 'Loading...'} - {previewTitle}
             </span>
           </div>
           
@@ -86,13 +107,13 @@ export default function PreviewPage() {
         </div>
       </div>
 
-      {/* Render sections from database with theme */}
+      {/* Render sections with theme */}
       <ThemeProvider theme={theme} className="min-h-screen">
         <div 
           className="w-full @container"
           style={{ containerType: 'inline-size' }}
         >
-          {sections.length === 0 ? (
+          {previewSections.length === 0 ? (
             <div className="flex items-center justify-center h-96">
               <div className="text-center">
                 <p className="text-gray-500 mb-2">No sections to preview</p>
@@ -104,7 +125,7 @@ export default function PreviewPage() {
               </div>
             </div>
           ) : (
-            sections.map((section: Section) => {
+            previewSections.map((section: Section) => {
               // Get the appropriate component based on component_name
               const SectionComponent = getSectionComponent(section.component_name);
               return (

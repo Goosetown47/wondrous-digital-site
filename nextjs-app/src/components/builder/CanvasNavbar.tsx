@@ -31,7 +31,6 @@ interface CanvasNavbarProps {
   themeId?: string;
   sectionCount: number;
   lastSaved: Date | null;
-  isSaving: boolean;
   onSave: () => void;
   saveSuccess?: boolean;
   saveError?: Error | null;
@@ -44,7 +43,6 @@ export function CanvasNavbar({
   currentPage,
   themeId,
   sectionCount,
-  isSaving,
   onSave,
 }: CanvasNavbarProps) {
   const router = useRouter();
@@ -144,26 +142,12 @@ export function CanvasNavbar({
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={async () => {
-                try {
-                  // Always save before preview to ensure latest changes are persisted
-                  if (!isSaving) {
-                    await onSave();
-                  }
-                  // Navigate only after save completes
-                  router.push(`/preview/${projectId}/${currentPageId}`);
-                } catch (error) {
-                  console.error('Failed to save before preview:', error);
-                  // Don't navigate if save failed
-                }
+              onClick={() => {
+                // Navigate directly to preview - it will use Zustand state
+                router.push(`/preview/${projectId}/${currentPageId}`);
               }}
-              disabled={isSaving}
             >
-              {isSaving ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Eye className="w-4 h-4 mr-2" />
-              )}
+              <Eye className="w-4 h-4 mr-2" />
               Preview
             </Button>
 
