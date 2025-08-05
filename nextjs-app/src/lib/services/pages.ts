@@ -226,7 +226,30 @@ export async function setPageAsHomepage(pageId: string, projectId: string) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '') || 'page';
     
-    const newPathForOldHomepage = `/${oldHomepageSlug}`;
+    // Find an available path by checking for conflicts
+    let newPathForOldHomepage = `/${oldHomepageSlug}`;
+    let pathSuffix = 1;
+    
+    // Check if path already exists and increment suffix until we find available path
+    while (true) {
+      const { data: existingPage } = await supabase
+        .from('pages')
+        .select('id')
+        .eq('project_id', projectId)
+        .eq('path', newPathForOldHomepage)
+        .single();
+      
+      if (!existingPage) {
+        // Path is available
+        break;
+      }
+      
+      // Path exists, try with suffix
+      pathSuffix++;
+      newPathForOldHomepage = `/${oldHomepageSlug}-${pathSuffix}`;
+    }
+    
+    console.log(`Moving old homepage to path: ${newPathForOldHomepage}`);
     
     // Update the old homepage
     updates.push(
@@ -260,13 +283,24 @@ export async function setPageAsHomepage(pageId: string, projectId: string) {
   );
 
   // Execute all updates
-  const results = await Promise.all(updates);
+  console.log(`Executing ${updates.length} homepage updates...`);
   
-  // Check for errors
-  for (const result of results) {
-    if (result.error) {
-      throw result.error;
+  try {
+    const results = await Promise.all(updates);
+    
+    // Check for errors
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      if (result.error) {
+        console.error(`Homepage update ${i + 1} failed:`, result.error);
+        throw new Error(`Failed to update homepage: ${result.error.message}`);
+      }
     }
+    
+    console.log('All homepage updates completed successfully');
+  } catch (error) {
+    console.error('Homepage update operation failed:', error);
+    throw error;
   }
 
   // Log the action

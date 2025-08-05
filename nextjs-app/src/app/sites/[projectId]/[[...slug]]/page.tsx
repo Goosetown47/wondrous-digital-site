@@ -1,7 +1,8 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getSectionComponent } from '@/components/sections/index';
 import { ThemeProvider } from '@/components/builder/ThemeProvider';
-import type { Page, Project, Theme } from '@/types/database';
+import type { Page, Project } from '@/types/database';
+import type { Theme } from '@/types/builder';
 import type { Section } from '@/stores/builderStore';
 import { notFound } from 'next/navigation';
 
