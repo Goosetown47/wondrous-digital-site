@@ -147,12 +147,12 @@ export function DomainSettings({ projectId, projectSlug }: DomainSettingsProps) 
         <h3 className="font-semibold text-sm mb-2">Preview Domain</h3>
         <div className="flex items-center gap-2">
           <a
-            href={`https://${projectSlug}-preview.wondrousdigital.com`}
+            href={`https://${projectSlug}.wondrousdigital.com`}
             target="_blank"
             rel="noopener noreferrer"
             className="font-mono text-sm flex-1 text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
           >
-            {projectSlug}-preview.wondrousdigital.com
+            {projectSlug}.wondrousdigital.com
             <ExternalLink className="h-3 w-3" />
           </a>
           <Button
@@ -160,7 +160,7 @@ export function DomainSettings({ projectId, projectSlug }: DomainSettingsProps) 
             size="icon"
             className="h-8 w-8"
             onClick={() => {
-              const previewDomain = `${projectSlug}-preview.wondrousdigital.com`;
+              const previewDomain = `${projectSlug}.wondrousdigital.com`;
               navigator.clipboard.writeText(previewDomain);
               toast.success('Preview domain copied to clipboard');
             }}

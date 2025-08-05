@@ -10,6 +10,18 @@ const RESERVED_DOMAINS = [
   'vercel.app',
 ];
 
+// Subdomains that are reserved and should not be treated as preview domains
+const RESERVED_SUBDOMAINS = [
+  'app',      // Main application
+  'www',      // Marketing site
+  'sites',    // CNAME target for custom domains
+  'api',      // API endpoints
+  'admin',    // Admin panel
+  'docs',     // Documentation
+  'blog',     // Blog
+  'support',  // Support portal
+];
+
 // Public routes that don't require authentication
 const PUBLIC_ROUTES = ['/login', '/signup', '/auth/callback', '/auth/verify-email', '/auth/confirm'];
 
@@ -75,26 +87,34 @@ export async function middleware(request: NextRequest) {
       env.SUPABASE_SERVICE_ROLE_KEY
     );
     
-    // Check if this is a preview domain (format: project-slug-preview.wondrousdigital.com)
-    if (domain.endsWith('-preview.wondrousdigital.com')) {
-      // Extract project slug by removing -preview.wondrousdigital.com
-      const projectSlug = domain.replace('-preview.wondrousdigital.com', '');
-      console.log(`[DOMAIN-ROUTING] Preview domain detected, slug: ${projectSlug}`);
+    // Check if this is a subdomain of wondrousdigital.com (potential preview domain)
+    if (domain.endsWith('.wondrousdigital.com') && !domain.endsWith('.vercel.app')) {
+      // Extract subdomain
+      const subdomain = domain.replace('.wondrousdigital.com', '').split('.').pop() || '';
       
-      // Look up project by slug
-      const { data: projectData } = await supabaseAdmin
-        .from('projects')
-        .select('id')
-        .eq('slug', projectSlug)
-        .single();
-        
-      if (projectData) {
-        // Rewrite to the dynamic site route
-        url.pathname = `/sites/${projectData.id}${url.pathname}`;
-        console.log(`[DOMAIN-ROUTING] Preview domain routed to project: ${projectData.id}`);
-        return NextResponse.rewrite(url);
+      // Check if it's a reserved subdomain
+      if (RESERVED_SUBDOMAINS.includes(subdomain)) {
+        console.log(`[DOMAIN-ROUTING] Reserved subdomain detected: ${subdomain}`);
+        // Continue with normal routing for reserved subdomains
       } else {
-        console.log(`[DOMAIN-ROUTING] Preview domain not found for slug: ${projectSlug}`);
+        // It's a project preview domain
+        console.log(`[DOMAIN-ROUTING] Preview domain detected, slug: ${subdomain}`);
+        
+        // Look up project by slug
+        const { data: projectData } = await supabaseAdmin
+          .from('projects')
+          .select('id')
+          .eq('slug', subdomain)
+          .single();
+          
+        if (projectData) {
+          // Rewrite to the dynamic site route
+          url.pathname = `/sites/${projectData.id}${url.pathname}`;
+          console.log(`[DOMAIN-ROUTING] Preview domain routed to project: ${projectData.id}`);
+          return NextResponse.rewrite(url);
+        } else {
+          console.log(`[DOMAIN-ROUTING] Preview domain not found for slug: ${subdomain}`);
+        }
       }
     } else {
       // Look up custom domain
