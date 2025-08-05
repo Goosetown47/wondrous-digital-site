@@ -10,7 +10,7 @@ I'm working on the Wondrous Digital platform - a Next.js 15 multi-tenant website
 
 **Environment**: WSL (Windows Subsystem for Linux)
 **Project Location**: `/nextjs-app/` directory (ignore legacy `/src/`)
-**Versions**: Production v0.0.1 | Development v0.0.2
+**Versions**: Production v0.1.0 | Development v0.1.1
 
 ## 📋 MANDATORY: Read These First
 
@@ -20,6 +20,8 @@ I'm working on the Wondrous Digital platform - a Next.js 15 multi-tenant website
 4. **[DEV-TOOLS.md](/nextjs-app/docs/OPERATIONS/DEV-TOOLS.md)** - WSL commands quick reference
 
 ## 🎯 Current Sprint & Tasks
+
+Right now our goal is to debug the domain system in our app. Preview domains are working perfectly. Custom domains are not working yet.
 
 - **Active Sprint**: Check [ACTIVE-SPRINT.md](/nextjs-app/docs/ACTIVE-SPRINT.md)
 - **Backlog**: Check [BACKLOG.md](/nextjs-app/docs/BACKLOG.md) 
