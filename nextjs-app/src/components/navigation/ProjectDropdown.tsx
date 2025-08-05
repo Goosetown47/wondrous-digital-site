@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { Check, ChevronsUpDown, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +17,8 @@ import { useAccount } from '@/hooks/useAccounts';
 import { useProjects } from '@/hooks/useProjects';
 
 export function ProjectDropdown() {
+  const router = useRouter();
+  const pathname = usePathname();
   const { currentAccount, currentProject, setCurrentProject } = useAuth();
   const { data: freshAccount } = useAccount(currentAccount?.id);
   const { data: allProjects } = useProjects(false);
@@ -77,7 +80,18 @@ export function ProjectDropdown() {
             projects.map((project) => (
               <DropdownMenuItem
                 key={project.id}
-                onSelect={() => setCurrentProject(project)}
+                onSelect={() => {
+                  setCurrentProject(project);
+                  // Navigate based on current context
+                  if (pathname.includes('/builder/')) {
+                    router.push(`/builder/${project.id}`);
+                  } else if (pathname.includes('/project/')) {
+                    router.push(`/project/${project.id}/settings`);
+                  } else {
+                    // Default to builder if we're not in a specific project context
+                    router.push(`/builder/${project.id}`);
+                  }
+                }}
                 className="flex items-center justify-between"
               >
                 <span>{project.name}</span>

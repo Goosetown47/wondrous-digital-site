@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, ChevronsUpDown, Building2, Shield } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import {
 import { useAuth } from '@/providers/auth-provider';
 
 export function AccountDropdown() {
+  const router = useRouter();
   const { user, accounts, isAdmin: isAdminUser, currentAccount, setCurrentAccount, loading } = useAuth();
 
   if (loading) {
@@ -58,7 +60,11 @@ export function AccountDropdown() {
             accounts.map((account) => (
               <DropdownMenuItem
                 key={account.id}
-                onSelect={() => setCurrentAccount(account)}
+                onSelect={() => {
+                  setCurrentAccount(account);
+                  // Navigate to dashboard to refresh context
+                  router.push('/dashboard');
+                }}
                 className="flex items-center justify-between"
               >
                 <div className="flex items-center gap-2">
