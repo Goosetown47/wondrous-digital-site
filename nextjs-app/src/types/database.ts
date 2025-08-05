@@ -94,6 +94,7 @@ export interface Page {
   path: string;
   title?: string;
   sections: Section[];
+  published_sections?: Section[];
   metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;

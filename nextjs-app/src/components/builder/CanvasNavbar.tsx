@@ -10,11 +10,12 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ThemeSelector } from '@/components/builder/ThemeSelector';
-import { useProjectPages } from '@/hooks/usePages';
+import { useProjectPages, usePublishPage } from '@/hooks/usePages';
 import { useRouter } from 'next/navigation';
-import { Save, Loader2, Eye, Plus, FileText, Calendar } from 'lucide-react';
+import { Save, Loader2, Eye, Plus, FileText, Calendar, Check, AlertCircle, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import { useBuilderStore } from '@/stores/builderStore';
 
 interface CanvasNavbarProps {
   projectId: string;
@@ -30,7 +31,6 @@ interface CanvasNavbarProps {
   themeId?: string;
   sectionCount: number;
   lastSaved: Date | null;
-  isSaving: boolean;
   onSave: () => void;
   saveSuccess?: boolean;
   saveError?: Error | null;
@@ -43,17 +43,27 @@ export function CanvasNavbar({
   currentPage,
   themeId,
   sectionCount,
-  lastSaved,
-  isSaving,
   onSave,
-  saveSuccess,
-  saveError,
 }: CanvasNavbarProps) {
   const router = useRouter();
   const { data: pages } = useProjectPages(projectId);
+  const publishPage = usePublishPage();
+  
+  // Get save status and unpublished changes from Zustand (single source of truth)
+  const { saveStatus, lastSavedAt, saveError: storeSaveError, isDirty, hasUnpublishedChanges } = useBuilderStore();
 
   const handlePageChange = (pageId: string) => {
     router.push(`/builder/${projectId}/${pageId}`);
+  };
+
+  const handlePublish = async () => {
+    if (!currentPageId) return;
+    
+    try {
+      await publishPage.mutateAsync({ pageId: currentPageId });
+    } catch (error) {
+      console.error('Publish failed:', error);
+    }
   };
 
   return (
@@ -140,51 +150,92 @@ export function CanvasNavbar({
             <div className="h-6 w-px bg-border" />
 
             {/* Preview button */}
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/preview/${projectId}/${currentPageId}`}>
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
-              </Link>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                // Navigate directly to preview - it will use Zustand state
+                router.push(`/preview/${projectId}/${currentPageId}`);
+              }}
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Preview
             </Button>
 
-            {/* Save button and status */}
+            {/* Publish button */}
+            <Button 
+              onClick={handlePublish}
+              disabled={publishPage.isPending || !hasUnpublishedChanges()}
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {publishPage.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Publish Changes
+                </>
+              )}
+            </Button>
+
+            {/* Auto-save status indicator */}
             <div className="flex items-center gap-2">
-              <Button 
-                size="sm" 
-                onClick={onSave}
-                disabled={isSaving}
-              >
-                {isSaving ? (
+              {/* Save status indicator */}
+              <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-muted/50">
+                {saveStatus === 'saving' && (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save
+                    <Loader2 className="w-3 h-3 animate-spin text-blue-600" />
+                    <span className="text-xs text-blue-600">Saving draft...</span>
                   </>
                 )}
-              </Button>
+                
+                {saveStatus === 'saved' && !isDirty && (
+                  <>
+                    <Check className="w-3 h-3 text-green-600" />
+                    <span className="text-xs text-green-600">
+                      Draft saved {lastSavedAt ? format(lastSavedAt, 'h:mm a') : ''}
+                    </span>
+                  </>
+                )}
+                
+                {saveStatus === 'error' && (
+                  <>
+                    <AlertCircle className="w-3 h-3 text-red-600" />
+                    <span className="text-xs text-red-600" title={storeSaveError || 'Save failed'}>
+                      Draft save failed
+                    </span>
+                  </>
+                )}
+                
+                {isDirty && saveStatus !== 'saving' && (
+                  <>
+                    <div className="w-2 h-2 rounded-full bg-orange-500" />
+                    <span className="text-xs text-muted-foreground">Unsaved changes</span>
+                  </>
+                )}
 
-              {/* Save status */}
-              {lastSaved && !isSaving && (
-                <span className="text-xs text-muted-foreground">
-                  Saved {format(lastSaved, 'h:mm a')}
-                </span>
-              )}
-              
-              {saveSuccess && !isSaving && (
-                <span className="text-xs text-green-600">
-                  Saved!
-                </span>
-              )}
-              
-              {saveError && (
-                <span className="text-xs text-red-600" title={saveError.message}>
-                  Failed to save
-                </span>
-              )}
+                {hasUnpublishedChanges() && !isDirty && saveStatus !== 'saving' && (
+                  <>
+                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                    <span className="text-xs text-muted-foreground">Unpublished changes</span>
+                  </>
+                )}
+              </div>
+
+              {/* Manual save button (for edge cases) */}
+              <Button 
+                size="sm" 
+                variant="ghost"
+                onClick={onSave}
+                disabled={saveStatus === 'saving' || !isDirty}
+                title="Force save draft now"
+              >
+                <Save className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>

@@ -83,6 +83,7 @@ export async function GET(
         path: '/',
         title: 'Home',
         sections: [],
+        published_sections: [], // Initialize published_sections as empty array
         metadata: {
           description: 'Homepage',
           isHomepage: true

@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { HeroSection } from '@/components/sections/HeroSection';
+import { getSectionComponent } from '@/components/sections/index';
 import type { Page } from '@/types/database';
-import type { HeroContent } from '@/schemas/section';
+import type { Section } from '@/stores/builderStore';
 import { notFound } from 'next/navigation';
 
 interface PageProps {
@@ -15,7 +15,7 @@ async function getPageData(projectId: string, path: string): Promise<Page | null
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from('pages')
-    .select('*')
+    .select('id, project_id, path, title, sections, published_sections, metadata, created_at, updated_at')
     .eq('project_id', projectId)
     .eq('path', path)
     .single();
@@ -36,23 +36,29 @@ export default async function SitePage({ params }: PageProps) {
     notFound();
   }
 
+  // Use published sections for live sites, fallback to draft sections if no published content exists
+  const sectionsToRender = page.published_sections && page.published_sections.length > 0 
+    ? page.published_sections 
+    : page.sections;
+
   return (
     <main className="min-h-screen">
-      {page.sections.map((section) => {
-        switch (section.type) {
-          case 'hero':
-            return (
-              <HeroSection
-                key={section.id}
-                content={section.content as HeroContent}
-                isEditing={false}
-              />
-            );
-          // Add more section types here as they're implemented
-          default:
-            return null;
-        }
-      })}
+      <div 
+        className="w-full @container"
+        style={{ containerType: 'inline-size' }}
+      >
+        {sectionsToRender.map((section: Section) => {
+          // Get the appropriate component based on component_name
+          const SectionComponent = getSectionComponent(section.component_name);
+          return (
+            <SectionComponent
+              key={section.id}
+              content={section.content || {}}
+              isEditing={false}
+            />
+          );
+        })}
+      </div>
     </main>
   );
 }

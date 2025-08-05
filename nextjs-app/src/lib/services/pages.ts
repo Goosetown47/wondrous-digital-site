@@ -21,6 +21,7 @@ export interface CreatePageData {
 export interface UpdatePageData {
   title?: string;
   sections?: Section[];
+  published_sections?: Section[];
   metadata?: Record<string, unknown>;
 }
 
@@ -64,6 +65,7 @@ export async function createPage(pageData: CreatePageData) {
     .insert({
       ...pageData,
       sections: pageData.sections || [],
+      published_sections: pageData.sections || [], // Initialize published_sections with same content as sections
       metadata: pageData.metadata || {}
     })
     .select()
@@ -142,6 +144,9 @@ export async function deletePage(pageId: string) {
       page_title: page.title 
     });
   }
+  
+  // Return the deleted page info for cache invalidation
+  return page;
 }
 
 /**
@@ -188,6 +193,99 @@ export async function getOrCreateHomepage(projectId: string) {
 }
 
 /**
+ * Set a page as the homepage
+ */
+export async function setPageAsHomepage(pageId: string, projectId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  // Get the current page details
+  const { data: currentPage, error: pageError } = await supabase
+    .from('pages')
+    .select('*')
+    .eq('id', pageId)
+    .single();
+
+  if (pageError || !currentPage) throw new Error('Page not found');
+
+  // Get the current homepage if it exists
+  const { data: currentHomepage } = await supabase
+    .from('pages')
+    .select('*')
+    .eq('project_id', projectId)
+    .eq('path', '/')
+    .single();
+
+  // Start a transaction-like operation
+  const updates = [];
+
+  // If there's a current homepage and it's not the same page, move it to a new path
+  if (currentHomepage && currentHomepage.id !== pageId) {
+    // Generate a new path for the old homepage based on its title
+    const oldHomepageSlug = currentHomepage.title?.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'page';
+    
+    const newPathForOldHomepage = `/${oldHomepageSlug}`;
+    
+    // Update the old homepage
+    updates.push(
+      supabase
+        .from('pages')
+        .update({
+          path: newPathForOldHomepage,
+          metadata: {
+            ...currentHomepage.metadata,
+            isHomepage: false
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentHomepage.id)
+    );
+  }
+
+  // Update the new homepage
+  updates.push(
+    supabase
+      .from('pages')
+      .update({
+        path: '/',
+        metadata: {
+          ...currentPage.metadata,
+          isHomepage: true
+        },
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', pageId)
+  );
+
+  // Execute all updates
+  const results = await Promise.all(updates);
+  
+  // Check for errors
+  for (const result of results) {
+    if (result.error) {
+      throw result.error;
+    }
+  }
+
+  // Log the action
+  await logPageAction('update', pageId, projectId, { 
+    action: 'set_as_homepage',
+    previous_path: currentPage.path
+  });
+
+  // Return the updated page
+  const { data: updatedPage } = await supabase
+    .from('pages')
+    .select('*')
+    .eq('id', pageId)
+    .single();
+
+  return updatedPage as Page;
+}
+
+/**
  * Duplicate a page with a new path
  */
 export async function duplicatePage(pageId: string, newPath: string, newTitle?: string) {
@@ -212,6 +310,7 @@ export async function duplicatePage(pageId: string, newPath: string, newTitle?: 
       path: newPath,
       title: newTitle || `${originalPage.title || 'Untitled'} (Copy)`,
       sections: originalPage.sections || [],
+      published_sections: originalPage.published_sections || originalPage.sections || [], // Copy published sections or fallback to sections
       metadata: {
         ...(originalPage.metadata as Record<string, unknown> || {}),
         duplicatedFrom: pageId,
@@ -231,6 +330,80 @@ export async function duplicatePage(pageId: string, newPath: string, newTitle?: 
   });
   
   return data as Page;
+}
+
+/**
+ * Publish draft sections to live (published_sections = sections)
+ */
+export async function publishPageDraft(pageId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  // Use the database function for publishing
+  const { data, error } = await supabase
+    .rpc('publish_page_draft', { page_id: pageId });
+
+  if (error) throw error;
+
+  // Log the action
+  if (data) {
+    await logPageAction('publish', pageId, data.project_id, { 
+      section_count: data.sections?.length || 0 
+    });
+  }
+
+  return data as Page;
+}
+
+/**
+ * Save draft sections (sections column only, doesn't affect published)
+ */
+export async function saveDraftPage(pageId: string, sections: Section[]) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  // Get the page first to get project_id for logging
+  const { data: existingPage } = await supabase
+    .from('pages')
+    .select('project_id, path')
+    .eq('id', pageId)
+    .single();
+
+  const { data, error } = await supabase
+    .from('pages')
+    .update({
+      sections: sections,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', pageId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  
+  // Log the action
+  if (existingPage) {
+    await logPageAction('save_draft', pageId, existingPage.project_id, { 
+      section_count: sections.length 
+    });
+  }
+  
+  return data as Page;
+}
+
+/**
+ * Check if a page has unpublished changes
+ */
+export async function pageHasUnpublishedChanges(pageId: string): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .rpc('page_has_unpublished_changes', { page_id: pageId });
+
+  if (error) throw error;
+  
+  return data as boolean;
 }
 
 /**

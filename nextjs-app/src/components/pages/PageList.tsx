@@ -36,8 +36,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Switch } from '@/components/ui/switch';
 import { useRouter } from 'next/navigation';
-import { useDeletePage } from '@/hooks/usePages';
+import { useDeletePage, useSetAsHomepage } from '@/hooks/usePages';
 import { 
   MoreVertical, 
   Edit, 
@@ -58,12 +59,20 @@ interface PageListProps {
 export function PageList({ pages, projectId, viewMode = 'list' }: PageListProps) {
   const router = useRouter();
   const deletePage = useDeletePage();
+  const setAsHomepage = useSetAsHomepage();
   const [editingPage, setEditingPage] = useState<Page | null>(null);
   const [deletingPage, setDeletingPage] = useState<Page | null>(null);
   const [duplicatingPage, setDuplicatingPage] = useState<Page | null>(null);
 
   const handleEdit = (page: Page) => {
     setEditingPage(page);
+  };
+
+  const handleSetAsHomepage = (page: Page) => {
+    setAsHomepage.mutate({
+      pageId: page.id,
+      projectId: page.project_id
+    });
   };
 
   const handleDelete = async () => {
@@ -140,6 +149,18 @@ export function PageList({ pages, projectId, viewMode = 'list' }: PageListProps)
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => goToBuilder(page.id)}>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit in Builder
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEdit(page)}>
+                        <Settings className="w-4 h-4 mr-2" />
+                        Page Settings
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDuplicate(page)}>
+                        <Copy className="w-4 h-4 mr-2" />
+                        Duplicate Page
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => setDeletingPage(page)}
                         disabled={isHomepage}
@@ -197,6 +218,34 @@ export function PageList({ pages, projectId, viewMode = 'list' }: PageListProps)
                     <Edit className="w-4 h-4" />
                     {viewMode === 'grid' ? 'Edit' : 'Edit in Builder'}
                   </Button>
+                  
+                  {/* Homepage Toggle */}
+                  <div className="flex items-center gap-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2">
+                          <label htmlFor={`homepage-${page.id}`} className="text-sm text-muted-foreground cursor-pointer">
+                            <Home className="w-4 h-4" />
+                          </label>
+                          <Switch
+                            id={`homepage-${page.id}`}
+                            checked={isHomepage}
+                            onCheckedChange={(checked) => {
+                              if (checked && !isHomepage) {
+                                handleSetAsHomepage(page);
+                              }
+                              // Don't allow unchecking - homepage can only be changed by selecting another page
+                            }}
+                            disabled={isHomepage || setAsHomepage.isPending}
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{isHomepage ? 'Current homepage' : 'Set as homepage'}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+
                   <div className={`flex items-center ${viewMode === 'grid' ? 'gap-1' : 'gap-2'}`}>
                     <Tooltip>
                       <TooltipTrigger asChild>

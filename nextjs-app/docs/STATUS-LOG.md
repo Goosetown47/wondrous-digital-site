@@ -41,13 +41,40 @@ This is an ongoing log of everything we do across the application, from bug fixe
 # MOST RECENT LOG
 ## ------------------------------------------------ ##
 
-### LOG (Date: 8/4/2025 @ 5:45pm)
+### LOG (Date: 8/5/2025 @ 9:23pm)
 #### Version: v0.1.1 (Development)
 #### Overview Summary
 
-Completed theme system bug fixes identified during post-deployment testing. Fixed all color-related issues in theme builder, library, and dark mode support.
+Completed Industry-Standard Architecture Refactor to address critical content loss issues and implement auto-save, draft/publish system, and instant preview following WordPress Gutenberg and Webflow patterns.
 
 #### Log Items
+
+- **Industry-Standard Architecture Refactor** (feature/industry-standard-refactor)
+  - **Phase 1 - Zustand Store (Single Source of Truth)**:
+    - Refactored builderStore to be primary data source, removing React Query dependency
+    - Added isDirty flag, lastSavedAt timestamps, saveStatus management
+    - Fixed hasUnpublishedChanges to use get() instead of getState()
+  - **Phase 2 - Auto-Save Implementation**:
+    - Created useAutoSave hook with 2-second debounce
+    - Added visual save indicators (Saving.../Saved/Error states)
+    - Removed manual save button - seamless auto-save experience
+  - **Phase 3 - Preview Refactor**:
+    - Preview now reads directly from Zustand store via BuilderContext
+    - Removed database fetch dependency for instant updates
+    - Fixed all synchronization issues between builder and preview
+  - **Phase 4 - Draft/Publish System**:
+    - Database migration adding published_sections column
+    - Separate saveDraftPage and publishPageDraft functions
+    - Live sites show published_sections while builder/preview show draft sections
+    - Added "Publish Changes" button with unpublished changes indicator
+  - **Testing & Quality Assurance**:
+    - Fixed Vitest setup (ESM issues, converted to .mjs config)
+    - All tests passing for core functionality
+    - Zero TypeScript errors, zero ESLint errors
+    - Build completes successfully
+  - Commits:
+    - Migration: 20250910_000000_add_draft_publish_system.sql
+    - Multiple commits implementing each phase with tests
 
 - **Theme System Bug Fixes** (bugfix/theme-system-fixes)
   - Fixed color picker not updating preview: ThemePreviewProvider was expecting nested `colors` object but receiving direct theme variables
@@ -60,7 +87,116 @@ Completed theme system bug fixes identified during post-deployment testing. Fixe
 
 
 
+#### TASK CHECKLIST LOG
 
+##### Builder Testing
+- ✅ ⚗️ Test drag-and-drop from section library to canvas
+- ✅ ⚗️ Verify sections render with correct props after drop
+- ✅ ⚗️ Test page saving shows success/error states
+- ✅ 🪲 Fix theme selector if not showing themes properly
+
+##### Theme System Testing & Fixes
+- ✅ 🪲 Fix color picker functionality that's currently broken
+- ✅ 🪲 Colors don't show up in the lab on the theme builder cards
+- ✅ 🪲 The color picker does show up on click, but it no longer changes the preview elements in the theme builder.
+- ✅ Light/dark toggle works in theme builder on preview UI
+- ✅ 🪲 Border radius works in Labs theme builder
+- ✅ ⚗️ Test theme application in Builder - verify CSS variables apply correctly
+- ✅ ⚗️ Test theme switching - ensure themes persist when changing 
+- ✅ ⚗️ Verify dark/light mode toggle works in theme preview
+- ✅ ⚗️ Check theme isolation - ensure theme only applies to Canvas, not app UI
+
+##### Lab Environment Testing
+- ✅ ⚗️ Verify inline editing saves content properly
+- ✅ ⚗️ Test responsive preview handles (desktop/tablet/mobile resizing)
+- ✅ ⚗️ Test Lab-to-Library promotion with proper metadata
+
+##### Library System Testing
+- ✅ ⚗️ Test CRUD operations for Sites, Pages, Sections, and Themes
+- ✅ ⚗️ Verify publish/unpublish toggle updates status correctly
+- ✅ ⚗️ Test search functionality across all library types
+
+##### Page Management Testing
+- ✅ ⚗️ Test page creation with slug generation
+- ✅ ⚗️ Verify SEO metadata (title, description, OG image) saves
+- ✅ ⚗️ Test page duplication creates proper copy
+- ✅ ⚗️ Verify homepage cannot be deleted
+
+- ✅ 🪲 I can see my page in preview mode in a browser window
+    - ✅ 🪲 The browser preview doesn't utilize the selected theme.
+    - ✅ 🪲 The browser preview doesn't utilize the correct browser width size detection for desktop, tablet, and mobile views. It's set to just mobile view.
+    - ✅ 🪲 When I save a section to a new page, then preview it, nothing shows up. Then when I click the back to builder button, the section I created and saved, is missing.
+- ✅ 🪲 Page deletion works. 
+
+
+##### Industry-Standard Architecture Refactor
+
+**User Stories:**
+
+*Auto-Save Feature:*
+- [✅] As a content creator, I can edit content without manually saving so that I never lose work
+- [✅] As a content creator, I can see when my content is being saved so that I know my work is safe
+- [✅] As a content creator, I can continue editing while auto-save happens so that my workflow isn't interrupted
+
+*Draft/Publish System:*
+- [✅] As a content creator, I can edit content without affecting the live site so that I can work safely
+- [✅] As a content creator, I can publish my draft changes when ready so that I control when updates go live
+- [✅] As a site visitor, I only see published content so that I don't see work-in-progress
+
+*Preview System:*
+- [✅] As a content creator, I can preview my changes instantly so that I can see exactly what I'm building
+- [✅] As a content creator, I can switch between builder and preview without saving so that my workflow is fast
+- [✅] As a content creator, my preview shows exactly what's in the builder so that there's no confusion
+
+*Edge Cases:*
+- [✅] As a content creator, if auto-save fails, I see a clear error so that I know to retry
+- [✅] As a content creator, if I navigate away with failed saves, I get a warning so that I don't lose work
+- [✅] As a content creator, if I lose connection, my local changes are preserved so that I can save when reconnected
+
+**Implementation Tasks:**
+
+- [✅] 🚀 Implement single source of truth with Zustand
+  - [✅] Update builderStore to be the primary data source
+  - [✅] Add isDirty flag to track unsaved changes
+  - [✅] Add lastSavedAt timestamp tracking
+- [✅] 🚀 Implement auto-save functionality
+  - [✅] Create useAutoSave hook with 2-second debounce
+  - [✅] Add save status indicator to Canvas navbar
+  - [✅] Remove manual save button requirement
+- [✅] 🚀 Implement proper draft/publish system
+  - [✅] Separate draft saves from published content
+  - [✅] Add "Publish Changes" button to navbar
+  - [✅] Update page queries to differentiate draft/published
+- [✅] 🚀 Refactor preview to use Zustand state
+  - [✅] Pass builder state to preview via context
+  - [✅] Remove database fetch dependency in preview
+  - [✅] Ensure instant preview without save delays
+- [✅] ⚙️ Update data flow architecture
+  - [✅] Remove optimistic updates from React Query
+  - [✅] Simplify cache invalidation logic
+  - [✅] Ensure single source of truth throughout
+- [✅] ⚗️ Test auto-save functionality
+  - [✅] Verify changes save every 2 seconds
+  - [✅] Test save indicator shows correct status
+  - [✅] Ensure no data loss on navigation
+- [✅] ⚗️ Test draft/publish flow
+  - [✅] Verify draft changes don't affect live site
+  - [✅] Test publish updates live content
+  - [✅] Confirm preview shows draft content
+- [✅] ⚗️ Test new preview behavior
+  - [✅] Verify instant preview without save
+  - [✅] Test content consistency between builder/preview
+  - [✅] Ensure no cache synchronization issues
+- [✅] 🪲 Fix unpublished changes indicator persisting after publish
+  - [✅] Update usePublishPage hook to sync Zustand store
+  - [✅] Fix initial page load to handle null published_sections
+  - [✅] Simplify CanvasNavbar to use single source of truth
+- [✅] 🪲 Fix unpublished changes false positives
+  - [✅] Implement deepEqual utility for robust content comparison
+  - [✅] Update Zustand store to use proper change detection
+  - [✅] Fix Hero component to only update on actual changes
+  - [✅] Add ESC key handling to cancel edits without saving
+  - [✅] Write comprehensive tests for deepEqual utility
 
 
 

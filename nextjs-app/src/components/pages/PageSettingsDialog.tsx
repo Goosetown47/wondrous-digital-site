@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Page } from '@/types/database';
-import { useUpdatePage } from '@/hooks/usePages';
+import { useUpdatePage, useSetAsHomepage } from '@/hooks/usePages';
 import {
   Dialog,
   DialogContent,
@@ -32,6 +32,7 @@ export function PageSettingsDialog({
   onOpenChange 
 }: PageSettingsDialogProps) {
   const updatePage = useUpdatePage(page.id);
+  const setAsHomepage = useSetAsHomepage();
   const [title, setTitle] = useState(page.title || '');
   const [errors, setErrors] = useState<Record<string, string>>({});
   
@@ -173,8 +174,26 @@ export function PageSettingsDialog({
                   <Switch
                     id="homepage"
                     checked={isHomepage}
-                    onCheckedChange={setIsHomepage}
-                    disabled // TODO: Implement homepage switching
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        // Set this page as homepage
+                        setAsHomepage.mutate({
+                          pageId: page.id,
+                          projectId: page.project_id
+                        }, {
+                          onSuccess: () => {
+                            setIsHomepage(true);
+                            // Close dialog after successful update
+                            onOpenChange(false);
+                          }
+                        });
+                      } else {
+                        // Don't allow unchecking if it's the homepage
+                        // Homepage can only be changed by setting another page as homepage
+                        setIsHomepage(true);
+                      }
+                    }}
+                    disabled={setAsHomepage.isPending}
                   />
                 </div>
               )}
