@@ -117,6 +117,43 @@ export async function middleware(request: NextRequest) {
         }
       }
     } else {
+      // Check for reserved domains with account-specific permissions
+      if (domain === 'wondrousdigital.com' || domain === 'www.wondrousdigital.com') {
+        console.log(`[DOMAIN-ROUTING] Checking reserved domain permissions: ${domain}`);
+        
+        // First check if any account has permission for this domain
+        const { data: permission } = await supabaseAdmin
+          .from('reserved_domain_permissions')
+          .select('account_id')
+          .eq('domain', domain)
+          .single();
+          
+        if (!permission) {
+          console.log(`[DOMAIN-ROUTING] No permissions exist for reserved domain: ${domain}`);
+          // Continue to normal flow (will 404)
+        } else {
+          // Check if there's a verified domain for the permitted account
+          const { data: domainData } = await supabaseAdmin
+            .from('project_domains')
+            .select(`
+              project_id,
+              projects!inner(customer_id)
+            `)
+            .eq('domain', domain)
+            .eq('verified', true)
+            .eq('projects.customer_id', permission.account_id)
+            .single();
+            
+          if (domainData) {
+            url.pathname = `/sites/${domainData.project_id}${url.pathname}`;
+            console.log(`[DOMAIN-ROUTING] Reserved domain routed to project: ${domainData.project_id}`);
+            return NextResponse.rewrite(url);
+          } else {
+            console.log(`[DOMAIN-ROUTING] No verified domain found for permitted account`);
+          }
+        }
+      }
+      
       // Look up custom domain
       console.log(`[DOMAIN-ROUTING] Checking custom domain: ${domain}`);
       

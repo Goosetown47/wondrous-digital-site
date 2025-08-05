@@ -72,6 +72,12 @@ export function validateDomainFormat(domain: string): string | null {
     return 'This domain is reserved';
   }
   
+  // Special reserved domains that require permissions
+  const permissionRequired = ['wondrousdigital.com', 'www.wondrousdigital.com'];
+  if (permissionRequired.includes(domain)) {
+    return 'This domain requires special permission. Please contact support if you own this domain.';
+  }
+  
   // Check domain length
   if (domain.length > 253) {
     return 'Domain is too long';
