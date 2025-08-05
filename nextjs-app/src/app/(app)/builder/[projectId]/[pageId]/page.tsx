@@ -8,25 +8,32 @@ import { useBuilderStore } from '@/stores/builderStore';
 import { Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useProject } from '@/hooks/useProjects';
-import { usePageById, useSavePage } from '@/hooks/usePages';
+import { usePageById } from '@/hooks/usePages';
 import { useTheme } from '@/hooks/useThemes';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import { useEffect, useState } from 'react';
-import type { Section } from '@/schemas/section';
 
 export default function BuilderPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.projectId as string;
   const pageId = params.pageId as string;
-  const { addSection, sections, clearAll } = useBuilderStore();
+  const { 
+    addSection, 
+    sections, 
+    loadPage,
+    saveStatus,
+    lastSavedAt
+  } = useBuilderStore();
   const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   
   // Fetch project and page data
   const { data: project } = useProject(projectId);
   const { data: page, isLoading: isLoadingPage, error: pageError } = usePageById(pageId);
-  const savePage = useSavePage();
+  
+  // Enable auto-save
+  const { saveNow } = useAutoSave();
   
   // Fetch theme if project has one
   const { data: theme } = useTheme(project?.theme_id);
@@ -41,16 +48,17 @@ export default function BuilderPage() {
   // Load page sections when data arrives
   useEffect(() => {
     if (page && page.sections && !hasLoadedInitialData) {
-      clearAll();
-      page.sections.forEach((section: Section) => {
-        addSection(section);
-      });
+      // For now, use sections as both draft and published until we implement proper draft system
+      loadPage(
+        pageId,
+        projectId,
+        page.sections,
+        page.sections, // TODO: Load actual published sections when draft system is ready
+        page.title || 'Untitled Page'
+      );
       setHasLoadedInitialData(true);
-      if (page.updated_at) {
-        setLastSaved(new Date(page.updated_at));
-      }
     }
-  }, [page, clearAll, addSection, hasLoadedInitialData]);
+  }, [page, loadPage, pageId, projectId, hasLoadedInitialData]);
 
   const handleDragStart = (itemId: string) => {
     console.log('Drag started for item:', itemId);
@@ -101,16 +109,7 @@ export default function BuilderPage() {
   };
 
   const handleManualSave = () => {
-    savePage.mutate({
-      projectId,
-      pageId: page?.id,
-      sections,
-      title: page?.title || 'Untitled Page',
-    }, {
-      onSuccess: () => {
-        setLastSaved(new Date());
-      }
-    });
+    return saveNow();
   };
 
   if (isLoadingPage) {
@@ -130,11 +129,11 @@ export default function BuilderPage() {
         currentPage={page}
         themeId={project?.theme_id || undefined}
         sectionCount={sections.length}
-        lastSaved={lastSaved}
-        isSaving={savePage.isPending}
+        lastSaved={lastSavedAt}
+        isSaving={saveStatus === 'saving'}
         onSave={handleManualSave}
-        saveSuccess={savePage.isSuccess && !savePage.isPending}
-        saveError={savePage.error}
+        saveSuccess={saveStatus === 'saved'}
+        saveError={null}
       />
 
       {/* Main content area with sidebar and canvas */}

@@ -103,45 +103,68 @@ This sprint takes all our critical items from fixing database security issues, t
 #### [Packet] Post Deployment Clean Up & Testing
 **Goal:** Clean up any broken features from our deployment bug fixes and thoroughly test all v0.1.0 functionality.
 
-##### Theme System Testing & Fixes
-- ✅ 🪲 Fix color picker functionality that's currently broken
-- ✅ 🪲 Colors don't show up in the lab on the theme builder cards
-- ✅ 🪲 The color picker does show up on click, but it no longer changes the preview elements in the theme builder.
-- ✅ Light/dark toggle works in theme builder on preview UI
-- ✅ 🪲 Border radius works in Labs theme builder
-- ✅ ⚗️ Test theme application in Builder - verify CSS variables apply correctly
-- ✅ ⚗️ Test theme switching - ensure themes persist when changing	
-- ✅ ⚗️ Verify dark/light mode toggle works in theme preview
-- ✅ ⚗️ Check theme isolation - ensure theme only applies to Canvas, not app UI
 
-##### Lab Environment Testing
-- ✅ ⚗️ Verify inline editing saves content properly
-- ✅ ⚗️ Test responsive preview handles (desktop/tablet/mobile resizing)
-- ✅ ⚗️ Test Lab-to-Library promotion with proper metadata
+##### Industry-Standard Architecture Refactor
 
-##### Library System Testing
-- ✅ ⚗️ Test CRUD operations for Sites, Pages, Sections, and Themes
-- ✅ ⚗️ Verify publish/unpublish toggle updates status correctly
-- ✅ ⚗️ Test search functionality across all library types
+**User Stories:**
+
+*Auto-Save Feature:*
+- [ ] As a content creator, I can edit content without manually saving so that I never lose work
+- [ ] As a content creator, I can see when my content is being saved so that I know my work is safe
+- [ ] As a content creator, I can continue editing while auto-save happens so that my workflow isn't interrupted
+
+*Draft/Publish System:*
+- [ ] As a content creator, I can edit content without affecting the live site so that I can work safely
+- [ ] As a content creator, I can publish my draft changes when ready so that I control when updates go live
+- [ ] As a site visitor, I only see published content so that I don't see work-in-progress
+
+*Preview System:*
+- [ ] As a content creator, I can preview my changes instantly so that I can see exactly what I'm building
+- [ ] As a content creator, I can switch between builder and preview without saving so that my workflow is fast
+- [ ] As a content creator, my preview shows exactly what's in the builder so that there's no confusion
+
+*Edge Cases:*
+- [ ] As a content creator, if auto-save fails, I see a clear error so that I know to retry
+- [ ] As a content creator, if I navigate away with failed saves, I get a warning so that I don't lose work
+- [ ] As a content creator, if I lose connection, my local changes are preserved so that I can save when reconnected
+
+**Implementation Tasks:**
+
+- [✅] 🚀 Implement single source of truth with Zustand
+  - [✅] Update builderStore to be the primary data source
+  - [✅] Add isDirty flag to track unsaved changes
+  - [✅] Add lastSavedAt timestamp tracking
+- [✅] 🚀 Implement auto-save functionality
+  - [✅] Create useAutoSave hook with 2-second debounce
+  - [✅] Add save status indicator to Canvas navbar
+  - [✅] Remove manual save button requirement
+- [ ] 🚀 Implement proper draft/publish system
+  - [ ] Separate draft saves from published content
+  - [ ] Add "Publish Changes" button to navbar
+  - [ ] Update page queries to differentiate draft/published
+- [ ] 🚀 Refactor preview to use Zustand state
+  - [ ] Pass builder state to preview via context
+  - [ ] Remove database fetch dependency in preview
+  - [ ] Ensure instant preview without save delays
+- [ ] ⚙️ Update data flow architecture
+  - [ ] Remove optimistic updates from React Query
+  - [ ] Simplify cache invalidation logic
+  - [ ] Ensure single source of truth throughout
+- [ ] ⚗️ Test auto-save functionality
+  - [ ] Verify changes save every 2 seconds
+  - [ ] Test save indicator shows correct status
+  - [ ] Ensure no data loss on navigation
+- [ ] ⚗️ Test draft/publish flow
+  - [ ] Verify draft changes don't affect live site
+  - [ ] Test publish updates live content
+  - [ ] Confirm preview shows draft content
+- [ ] ⚗️ Test new preview behavior
+  - [ ] Verify instant preview without save
+  - [ ] Test content consistency between builder/preview
+  - [ ] Ensure no cache synchronization issues
 
 
-##### Builder Testing
-- ✅ ⚗️ Test drag-and-drop from section library to canvas
-- ✅ ⚗️ Verify sections render with correct props after drop
-- ✅ ⚗️ Test page saving shows success/error states
-- [ ] 🪲 Fix theme selector if not showing themes properly
-- [ ] 🪲 Page switching does not maintain unsaved changes or give a warning.
 
-##### Page Management Testing
-- ✅ ⚗️ Test page creation with slug generation
-- ✅ ⚗️ Verify SEO metadata (title, description, OG image) saves
-- ✅ ⚗️ Test page duplication creates proper copy
-- ⚠️ ⚗️ Verify homepage cannot be deleted
-	- We should always have a home page, but I currently can not set any other page to be the home page. The switches are greyed out. I should be able to set any page to home page. And the switch should be surfaced to the card/list item level.
-- [❌] ⚗️ Test page status toggle (published/draft)
-	- This function doesn't exist
-- [ ] 🪲 I can see my page in preview mode in a browser window (currently doesn't work)
-- [ ] 🪲 Page deletion works. It auto refreshes the listed pages and shows the proper pages listed. (this is broken)
 
 
 ##### Account & Project Dropdowns
@@ -188,8 +211,9 @@ This sprint takes all our critical items from fixing database security issues, t
 - [ ] 🚀 I can permanently delete things inside lab
 - [ ] ⚗️ Check grid/list view toggle persists preference (Broken, does not remember)
 - [ ] ⚗️ Verify version tracking increments properly
-
-
+- [ ] 🪲 Page switching does not maintain unsaved changes or give a warning.
+- [❌] ⚗️ Test page status toggle (published/draft)
+  - This function doesn't exist
 
 ### Technical Debt Identified
 - [ ] [Code quality issues discovered during investigation]

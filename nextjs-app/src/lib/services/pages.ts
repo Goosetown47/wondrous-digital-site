@@ -191,6 +191,99 @@ export async function getOrCreateHomepage(projectId: string) {
 }
 
 /**
+ * Set a page as the homepage
+ */
+export async function setPageAsHomepage(pageId: string, projectId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  // Get the current page details
+  const { data: currentPage, error: pageError } = await supabase
+    .from('pages')
+    .select('*')
+    .eq('id', pageId)
+    .single();
+
+  if (pageError || !currentPage) throw new Error('Page not found');
+
+  // Get the current homepage if it exists
+  const { data: currentHomepage } = await supabase
+    .from('pages')
+    .select('*')
+    .eq('project_id', projectId)
+    .eq('path', '/')
+    .single();
+
+  // Start a transaction-like operation
+  const updates = [];
+
+  // If there's a current homepage and it's not the same page, move it to a new path
+  if (currentHomepage && currentHomepage.id !== pageId) {
+    // Generate a new path for the old homepage based on its title
+    const oldHomepageSlug = currentHomepage.title?.toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'page';
+    
+    const newPathForOldHomepage = `/${oldHomepageSlug}`;
+    
+    // Update the old homepage
+    updates.push(
+      supabase
+        .from('pages')
+        .update({
+          path: newPathForOldHomepage,
+          metadata: {
+            ...currentHomepage.metadata,
+            isHomepage: false
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentHomepage.id)
+    );
+  }
+
+  // Update the new homepage
+  updates.push(
+    supabase
+      .from('pages')
+      .update({
+        path: '/',
+        metadata: {
+          ...currentPage.metadata,
+          isHomepage: true
+        },
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', pageId)
+  );
+
+  // Execute all updates
+  const results = await Promise.all(updates);
+  
+  // Check for errors
+  for (const result of results) {
+    if (result.error) {
+      throw result.error;
+    }
+  }
+
+  // Log the action
+  await logPageAction('update', pageId, projectId, { 
+    action: 'set_as_homepage',
+    previous_path: currentPage.path
+  });
+
+  // Return the updated page
+  const { data: updatedPage } = await supabase
+    .from('pages')
+    .select('*')
+    .eq('id', pageId)
+    .single();
+
+  return updatedPage as Page;
+}
+
+/**
  * Duplicate a page with a new path
  */
 export async function duplicatePage(pageId: string, newPath: string, newTitle?: string) {

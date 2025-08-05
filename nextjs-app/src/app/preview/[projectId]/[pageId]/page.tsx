@@ -8,6 +8,8 @@ import { useParams } from 'next/navigation';
 import { useProject } from '@/hooks/useProjects';
 import { usePageById } from '@/hooks/usePages';
 import { useDomains } from '@/hooks/useDomains';
+import { useTheme } from '@/hooks/useThemes';
+import { ThemeProvider } from '@/components/builder/ThemeProvider';
 import type { Section } from '@/stores/builderStore';
 
 export default function PreviewPage() {
@@ -17,6 +19,7 @@ export default function PreviewPage() {
   const { data: project } = useProject(projectId);
   const { data: page, isLoading } = usePageById(pageId);
   const { data: domains } = useDomains(projectId);
+  const { data: theme } = useTheme(project?.theme_id);
   
   // Get the primary domain or first available domain
   const primaryDomain = domains?.find(d => d.is_primary) || domains?.[0];
@@ -83,31 +86,38 @@ export default function PreviewPage() {
         </div>
       </div>
 
-      {/* Render sections from database */}
-      {sections.length === 0 ? (
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <p className="text-gray-500 mb-2">No sections to preview</p>
-            <Button variant="outline" asChild>
-              <Link href={`/builder/${projectId}/${pageId}`}>
-                Go back to builder
-              </Link>
-            </Button>
-          </div>
+      {/* Render sections from database with theme */}
+      <ThemeProvider theme={theme} className="min-h-screen">
+        <div 
+          className="w-full @container"
+          style={{ containerType: 'inline-size' }}
+        >
+          {sections.length === 0 ? (
+            <div className="flex items-center justify-center h-96">
+              <div className="text-center">
+                <p className="text-gray-500 mb-2">No sections to preview</p>
+                <Button variant="outline" asChild>
+                  <Link href={`/builder/${projectId}/${pageId}`}>
+                    Go back to builder
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          ) : (
+            sections.map((section: Section) => {
+              // Get the appropriate component based on component_name
+              const SectionComponent = getSectionComponent(section.component_name);
+              return (
+                <SectionComponent
+                  key={section.id}
+                  content={section.content || {}}
+                  isEditing={false}
+                />
+              );
+            })
+          )}
         </div>
-      ) : (
-        sections.map((section: Section) => {
-          // Get the appropriate component based on component_name
-          const SectionComponent = getSectionComponent(section.component_name);
-          return (
-            <SectionComponent
-              key={section.id}
-              content={section.content || {}}
-              isEditing={false}
-            />
-          );
-        })
-      )}
+      </ThemeProvider>
     </div>
   );
 }

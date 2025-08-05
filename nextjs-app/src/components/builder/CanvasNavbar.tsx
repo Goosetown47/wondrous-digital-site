@@ -12,9 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { ThemeSelector } from '@/components/builder/ThemeSelector';
 import { useProjectPages } from '@/hooks/usePages';
 import { useRouter } from 'next/navigation';
-import { Save, Loader2, Eye, Plus, FileText, Calendar } from 'lucide-react';
+import { Save, Loader2, Eye, Plus, FileText, Calendar, Check, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import { useBuilderStore } from '@/stores/builderStore';
 
 interface CanvasNavbarProps {
   projectId: string;
@@ -43,14 +44,14 @@ export function CanvasNavbar({
   currentPage,
   themeId,
   sectionCount,
-  lastSaved,
   isSaving,
   onSave,
-  saveSuccess,
-  saveError,
 }: CanvasNavbarProps) {
   const router = useRouter();
   const { data: pages } = useProjectPages(projectId);
+  
+  // Get save status from Zustand
+  const { saveStatus, lastSavedAt, saveError: storeSaveError, isDirty } = useBuilderStore();
 
   const handlePageChange = (pageId: string) => {
     router.push(`/builder/${projectId}/${pageId}`);
@@ -140,51 +141,79 @@ export function CanvasNavbar({
             <div className="h-6 w-px bg-border" />
 
             {/* Preview button */}
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/preview/${projectId}/${currentPageId}`}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={async () => {
+                try {
+                  // Always save before preview to ensure latest changes are persisted
+                  if (!isSaving) {
+                    await onSave();
+                  }
+                  // Navigate only after save completes
+                  router.push(`/preview/${projectId}/${currentPageId}`);
+                } catch (error) {
+                  console.error('Failed to save before preview:', error);
+                  // Don't navigate if save failed
+                }
+              }}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
                 <Eye className="w-4 h-4 mr-2" />
-                Preview
-              </Link>
+              )}
+              Preview
             </Button>
 
-            {/* Save button and status */}
+            {/* Auto-save status indicator */}
             <div className="flex items-center gap-2">
-              <Button 
-                size="sm" 
-                onClick={onSave}
-                disabled={isSaving}
-              >
-                {isSaving ? (
+              {/* Save status indicator */}
+              <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-muted/50">
+                {saveStatus === 'saving' && (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save
+                    <Loader2 className="w-3 h-3 animate-spin text-blue-600" />
+                    <span className="text-xs text-blue-600">Saving...</span>
                   </>
                 )}
-              </Button>
+                
+                {saveStatus === 'saved' && !isDirty && (
+                  <>
+                    <Check className="w-3 h-3 text-green-600" />
+                    <span className="text-xs text-green-600">
+                      Saved {lastSavedAt ? format(lastSavedAt, 'h:mm a') : ''}
+                    </span>
+                  </>
+                )}
+                
+                {saveStatus === 'error' && (
+                  <>
+                    <AlertCircle className="w-3 h-3 text-red-600" />
+                    <span className="text-xs text-red-600" title={storeSaveError || 'Save failed'}>
+                      Save failed
+                    </span>
+                  </>
+                )}
+                
+                {isDirty && saveStatus !== 'saving' && (
+                  <>
+                    <div className="w-2 h-2 rounded-full bg-orange-500" />
+                    <span className="text-xs text-muted-foreground">Unsaved changes</span>
+                  </>
+                )}
+              </div>
 
-              {/* Save status */}
-              {lastSaved && !isSaving && (
-                <span className="text-xs text-muted-foreground">
-                  Saved {format(lastSaved, 'h:mm a')}
-                </span>
-              )}
-              
-              {saveSuccess && !isSaving && (
-                <span className="text-xs text-green-600">
-                  Saved!
-                </span>
-              )}
-              
-              {saveError && (
-                <span className="text-xs text-red-600" title={saveError.message}>
-                  Failed to save
-                </span>
-              )}
+              {/* Manual save button (for edge cases) */}
+              <Button 
+                size="sm" 
+                variant="ghost"
+                onClick={onSave}
+                disabled={saveStatus === 'saving' || !isDirty}
+                title="Force save now"
+              >
+                <Save className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>

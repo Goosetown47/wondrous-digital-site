@@ -7,6 +7,7 @@ import {
   listProjectPages,
   getOrCreateHomepage,
   duplicatePage,
+  setPageAsHomepage,
   type UpdatePageData,
 } from '@/lib/services/pages';
 import type { Section } from '@/stores/builderStore';
@@ -164,6 +165,28 @@ export function useDuplicatePage() {
 }
 
 /**
+ * Hook to set a page as homepage
+ */
+export function useSetAsHomepage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ pageId, projectId }: { 
+      pageId: string; 
+      projectId: string;
+    }) => setPageAsHomepage(pageId, projectId),
+    onSuccess: () => {
+      // Invalidate all page queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['pages'] });
+      toast.success('Homepage updated successfully');
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to set homepage');
+    },
+  });
+}
+
+/**
  * Convenience hook for the builder to save page sections
  */
 export function useSavePage() {
@@ -181,9 +204,18 @@ export function useSavePage() {
       sections: Section[];
       title?: string;
     }) => {
+      // Clean sections data before saving - remove fields that might not exist in DB
+      const cleanedSections = sections.map(section => ({
+        id: section.id,
+        type: section.type,
+        component_name: section.component_name,
+        content: section.content,
+        order: section.order
+      }));
+      
       // If we have a pageId, update the existing page
       if (pageId) {
-        return updatePage(pageId, { sections, title });
+        return updatePage(pageId, { sections: cleanedSections, title });
       }
       
       // Otherwise, create a new homepage
@@ -191,34 +223,56 @@ export function useSavePage() {
         project_id: projectId,
         path: '/',
         title: title || 'Home',
-        sections,
+        sections: cleanedSections,
         metadata: { isHomepage: true }
       });
     },
-    onMutate: async ({ projectId, sections }) => {
+    onMutate: async ({ projectId, pageId, sections }) => {
       // Optimistic update
+      if (pageId) {
+        // Cancel queries for the specific page
+        await queryClient.cancelQueries({ queryKey: ['pages', 'id', pageId] });
+        
+        const previousPage = queryClient.getQueryData(['pages', 'id', pageId]);
+        
+        // Update the correct page cache
+        queryClient.setQueryData(['pages', 'id', pageId], (old: Page | undefined) => ({
+          ...old,
+          sections,
+          updated_at: new Date().toISOString(),
+        }));
+
+        return { previousPage, pageId };
+      }
+      
+      // For new pages (homepage creation)
       await queryClient.cancelQueries({ queryKey: ['pages', projectId] });
-      
       const previousPage = queryClient.getQueryData(['pages', projectId, '/']);
-      
-      // Optimistically update the page
       queryClient.setQueryData(['pages', projectId, '/'], (old: Page | undefined) => ({
         ...old,
         sections,
         updated_at: new Date().toISOString(),
       }));
-
+      
       return { previousPage };
     },
     onError: (err, variables, context) => {
       // Rollback on error
       if (context?.previousPage) {
-        queryClient.setQueryData(
-          ['pages', variables.projectId, '/'], 
-          context.previousPage
-        );
+        if (context.pageId) {
+          queryClient.setQueryData(
+            ['pages', 'id', context.pageId], 
+            context.previousPage
+          );
+        } else {
+          queryClient.setQueryData(
+            ['pages', variables.projectId, '/'], 
+            context.previousPage
+          );
+        }
       }
-      toast.error('Failed to save page');
+      console.error('Save failed:', err);
+      toast.error('Failed to save page: ' + (err instanceof Error ? err.message : 'Unknown error'));
     },
     onSuccess: () => {
       toast.success('Page saved successfully');
@@ -226,6 +280,10 @@ export function useSavePage() {
     onSettled: (data, error, variables) => {
       // Always refetch after mutation
       queryClient.invalidateQueries({ queryKey: ['pages', variables.projectId] });
+      // Also invalidate the specific page query
+      if (variables.pageId) {
+        queryClient.invalidateQueries({ queryKey: ['pages', 'id', variables.pageId] });
+      }
     },
   });
 }
