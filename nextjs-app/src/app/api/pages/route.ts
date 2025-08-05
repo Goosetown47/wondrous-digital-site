@@ -167,6 +167,7 @@ export async function POST(request: NextRequest) {
         path,
         title,
         sections: sections || [],
+        published_sections: sections || [], // Initialize published_sections with same content as sections
         metadata: metadata || {}
       })
       .select()

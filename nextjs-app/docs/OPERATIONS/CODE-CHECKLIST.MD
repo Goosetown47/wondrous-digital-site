@@ -6,6 +6,9 @@ This document serves as a **MANDATORY** checklist that must be followed for ever
 
 **⚠️ IMPORTANT**: Failure to follow this checklist will result in accumulating technical debt that blocks deployments and requires days of cleanup work.
 
+**⚠️ IMPORTANT**: If you run into a problem, DO NOT skip over it just to move to the next thing. Put a plan together to solve the problem and ask the user what they think about it. ONLY proceed if they say skip it.
+
+
 ---
 
 ## 📋 Table of Contents

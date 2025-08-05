@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+import { deepEqual } from '@/lib/utils';
 
 export interface Section {
   id: string;
@@ -26,7 +27,7 @@ interface BuilderState {
   isEditing: boolean;
   
   // Save State
-  isDirty: boolean;
+  isDirty: boolean; // Has unsaved draft changes
   lastSavedAt: Date | null;
   saveStatus: SaveStatus;
   saveError: string | null;
@@ -55,12 +56,14 @@ interface BuilderState {
   // Page Actions
   loadPage: (pageId: string, projectId: string, sections: Section[], publishedSections: Section[], title: string) => void;
   publishDraft: () => void;
+  hasUnpublishedChanges: () => boolean;
+  loadPublishedSections: (publishedSections: Section[]) => void;
 }
 
 export const useBuilderStore = create<BuilderState>()(
   devtools(
     persist(
-      (set) => ({
+      (set, get) => ({
         // Initial state
         sections: [],
         publishedSections: [],
@@ -90,12 +93,24 @@ export const useBuilderStore = create<BuilderState>()(
           })),
 
         updateSection: (id, updates) =>
-          set((state) => ({
-            sections: state.sections.map((s) =>
-              s.id === id ? { ...s, ...updates } : s
-            ),
-            isDirty: true,
-          })),
+          set((state) => {
+            const existingSection = state.sections.find(s => s.id === id);
+            if (!existingSection) return state;
+            
+            // Check if the update would actually change anything
+            const updatedSection = { ...existingSection, ...updates };
+            const hasChanged = !deepEqual(existingSection, updatedSection);
+            
+            // Only mark as dirty if content actually changed
+            if (!hasChanged) return state;
+            
+            return {
+              sections: state.sections.map((s) =>
+                s.id === id ? updatedSection : s
+              ),
+              isDirty: true,
+            };
+          }),
 
         reorderSections: (sections) =>
           set(() => ({
@@ -173,6 +188,19 @@ export const useBuilderStore = create<BuilderState>()(
           set((state) => ({
             publishedSections: [...state.sections],
             isDirty: false,
+            saveStatus: 'idle',
+          })),
+
+        hasUnpublishedChanges: () => {
+          const state = get();
+          // Use deep equality check instead of JSON.stringify
+          // This handles property ordering and undefined vs null properly
+          return !deepEqual(state.sections, state.publishedSections);
+        },
+
+        loadPublishedSections: (publishedSections: Section[]) =>
+          set(() => ({
+            publishedSections,
           })),
       }),
       {

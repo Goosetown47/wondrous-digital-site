@@ -33,12 +33,13 @@ export default function PreviewPage() {
   const [previewTitle, setPreviewTitle] = useState<string>('');
   
   useEffect(() => {
+    // Preview should ALWAYS show draft content
     // If builder store has the same page loaded, use its sections for instant preview
     if (builderPageId === pageId && builderSections.length > 0) {
       setPreviewSections(builderSections);
       setPreviewTitle(builderPageTitle);
     } else if (page) {
-      // Otherwise fall back to database sections
+      // Otherwise fall back to database draft sections (NOT published)
       setPreviewSections(page.sections || []);
       setPreviewTitle(page.title || page.path);
     }

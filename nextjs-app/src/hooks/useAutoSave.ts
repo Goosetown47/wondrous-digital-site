@@ -1,35 +1,31 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useBuilderStore } from '@/stores/builderStore';
-import { useSavePage } from './usePages';
+import { useSaveDraft } from './usePages';
 
 export function useAutoSave() {
   const { 
     isDirty, 
     sections, 
     pageId, 
-    projectId, 
-    pageTitle,
     markClean,
     setSaveStatus,
     setLastSavedAt 
   } = useBuilderStore();
   
-  const savePage = useSavePage();
+  const saveDraft = useSaveDraft();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Debounced save function
+  // Debounced save function - now saves draft only
   const performSave = useCallback(async () => {
-    if (!pageId || !projectId || !isDirty) return;
+    if (!pageId || !isDirty) return;
     
     setSaveStatus('saving');
     
     try {
       await new Promise((resolve, reject) => {
-        savePage.mutate({
-          projectId,
+        saveDraft.mutate({
           pageId,
           sections,
-          title: pageTitle,
         }, {
           onSuccess: () => {
             markClean();
@@ -46,7 +42,7 @@ export function useAutoSave() {
     } catch (error) {
       console.error('Auto-save failed:', error);
     }
-  }, [pageId, projectId, sections, pageTitle, isDirty, savePage, markClean, setSaveStatus, setLastSavedAt]);
+  }, [pageId, sections, isDirty, saveDraft, markClean, setSaveStatus, setLastSavedAt]);
   
   // Watch for isDirty changes and trigger auto-save
   useEffect(() => {
@@ -96,6 +92,6 @@ export function useAutoSave() {
   
   return {
     saveNow,
-    isSaving: savePage.isPending,
+    isSaving: saveDraft.isPending,
   };
 }

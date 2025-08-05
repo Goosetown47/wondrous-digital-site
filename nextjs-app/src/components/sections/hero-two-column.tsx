@@ -58,21 +58,24 @@ export function HeroTwoColumn({
   };
 
   const handleHeadingSave = () => {
-    if (onHeadingChange) {
+    // Only trigger change if content actually changed
+    if (onHeadingChange && tempHeading !== heading) {
       onHeadingChange(tempHeading);
     }
     setIsEditingHeading(false);
   };
 
   const handleSubtextSave = () => {
-    if (onSubtextChange) {
+    // Only trigger change if content actually changed
+    if (onSubtextChange && tempSubtext !== subtext) {
       onSubtextChange(tempSubtext);
     }
     setIsEditingSubtext(false);
   };
 
   const handleButtonSave = () => {
-    if (onButtonTextChange) {
+    // Only trigger change if content actually changed
+    if (onButtonTextChange && tempButtonText !== buttonText) {
       onButtonTextChange(tempButtonText);
     }
     setIsEditingButton(false);
@@ -91,7 +94,13 @@ export function HeroTwoColumn({
                   value={tempHeading}
                   onChange={(e) => setTempHeading(e.target.value)}
                   onBlur={handleHeadingSave}
-                  onKeyDown={(e) => e.key === 'Enter' && handleHeadingSave()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleHeadingSave();
+                    if (e.key === 'Escape') {
+                      setTempHeading(heading); // Reset to original
+                      setIsEditingHeading(false);
+                    }
+                  }}
                   className="text-3xl font-bold tracking-tight text-foreground @[640px]:text-4xl @[768px]:text-5xl @[1280px]:text-6xl bg-transparent border-b-2 border-primary focus:outline-none w-full text-center @[1000px]:text-left"
                   autoFocus
                 />
@@ -111,6 +120,12 @@ export function HeroTwoColumn({
                   value={tempSubtext}
                   onChange={(e) => setTempSubtext(e.target.value)}
                   onBlur={handleSubtextSave}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setTempSubtext(subtext); // Reset to original
+                      setIsEditingSubtext(false);
+                    }
+                  }}
                   className="text-base @[640px]:text-lg text-muted-foreground bg-transparent border-b-2 border-primary focus:outline-none w-full resize-none text-center @[1000px]:text-left"
                   rows={3}
                   autoFocus
@@ -134,7 +149,13 @@ export function HeroTwoColumn({
                   value={tempButtonText}
                   onChange={(e) => setTempButtonText(e.target.value)}
                   onBlur={handleButtonSave}
-                  onKeyDown={(e) => e.key === 'Enter' && handleButtonSave()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleButtonSave();
+                    if (e.key === 'Escape') {
+                      setTempButtonText(buttonText); // Reset to original
+                      setIsEditingButton(false);
+                    }
+                  }}
                   className="px-4 py-2 bg-transparent border-b-2 border-primary focus:outline-none"
                   autoFocus
                 />

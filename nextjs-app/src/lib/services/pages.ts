@@ -21,6 +21,7 @@ export interface CreatePageData {
 export interface UpdatePageData {
   title?: string;
   sections?: Section[];
+  published_sections?: Section[];
   metadata?: Record<string, unknown>;
 }
 
@@ -64,6 +65,7 @@ export async function createPage(pageData: CreatePageData) {
     .insert({
       ...pageData,
       sections: pageData.sections || [],
+      published_sections: pageData.sections || [], // Initialize published_sections with same content as sections
       metadata: pageData.metadata || {}
     })
     .select()
@@ -308,6 +310,7 @@ export async function duplicatePage(pageId: string, newPath: string, newTitle?: 
       path: newPath,
       title: newTitle || `${originalPage.title || 'Untitled'} (Copy)`,
       sections: originalPage.sections || [],
+      published_sections: originalPage.published_sections || originalPage.sections || [], // Copy published sections or fallback to sections
       metadata: {
         ...(originalPage.metadata as Record<string, unknown> || {}),
         duplicatedFrom: pageId,
@@ -327,6 +330,80 @@ export async function duplicatePage(pageId: string, newPath: string, newTitle?: 
   });
   
   return data as Page;
+}
+
+/**
+ * Publish draft sections to live (published_sections = sections)
+ */
+export async function publishPageDraft(pageId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  // Use the database function for publishing
+  const { data, error } = await supabase
+    .rpc('publish_page_draft', { page_id: pageId });
+
+  if (error) throw error;
+
+  // Log the action
+  if (data) {
+    await logPageAction('publish', pageId, data.project_id, { 
+      section_count: data.sections?.length || 0 
+    });
+  }
+
+  return data as Page;
+}
+
+/**
+ * Save draft sections (sections column only, doesn't affect published)
+ */
+export async function saveDraftPage(pageId: string, sections: Section[]) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  // Get the page first to get project_id for logging
+  const { data: existingPage } = await supabase
+    .from('pages')
+    .select('project_id, path')
+    .eq('id', pageId)
+    .single();
+
+  const { data, error } = await supabase
+    .from('pages')
+    .update({
+      sections: sections,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', pageId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  
+  // Log the action
+  if (existingPage) {
+    await logPageAction('save_draft', pageId, existingPage.project_id, { 
+      section_count: sections.length 
+    });
+  }
+  
+  return data as Page;
+}
+
+/**
+ * Check if a page has unpublished changes
+ */
+export async function pageHasUnpublishedChanges(pageId: string): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .rpc('page_has_unpublished_changes', { page_id: pageId });
+
+  if (error) throw error;
+  
+  return data as boolean;
 }
 
 /**

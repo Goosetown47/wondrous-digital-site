@@ -58,6 +58,64 @@ Use these classifications to identify each type of task. We can expand this list
 ---------------
 
 
+#### [Packet] Domain Configuration System
+**Goal:** Implement production-ready domain management with white-labeled approach
+**Note:** Core functionality is implemented, needs finalization and thorough testing on both dev and production environments.
+**Deliverable:** Fully functional white-labeled domain system with preview domains and custom domain support
+
+##### Domain Functionality Finalization
+- [ ] 🚀 Add domain usage analytics tracking (track visits per domain)
+- [ ] 🚀 Implement domain transfer between projects functionality
+- [ ] 🚀 Add bulk domain operations for managing multiple domains
+- [ ] 🚀 Create domain history/audit log for tracking changes
+- [ ] 🚀 Add support for domain redirects (www to non-www, etc.)
+- [ ] 🪲 Fix any edge cases with apex domain handling
+
+##### Development Environment Testing
+- [ ] ⚗️ Test preview domain generation for new projects
+- [ ] ⚗️ Verify *.localhost:3000 works for local multi-tenant testing
+- [ ] ⚗️ Test domain verification flow with mock DNS records
+- [ ] ⚗️ Verify middleware correctly routes based on domain
+- [ ] ⚗️ Test domain deletion and cleanup processes
+
+##### Production Environment Testing
+- [ ] ⚗️ Verify sites.wondrousdigital.com is properly configured in Vercel
+- [ ] ⚗️ Test *.sites.wondrousdigital.com wildcard certificate
+- [ ] ⚗️ Add a real test domain and verify full flow
+- [ ] ⚗️ Test SSL certificate provisioning for custom domains
+- [ ] ⚗️ Verify DNS propagation messaging is accurate
+
+##### Vercel API Integration Testing
+- [ ] ⚗️ Test domain addition via Vercel API
+- [ ] ⚗️ Verify domain removal properly cleans up in Vercel
+- [ ] ⚗️ Test API rate limiting and error handling
+- [ ] ⚗️ Verify domain verification polling intervals
+- [ ] ⚗️ Test handling of Vercel API downtime
+
+##### User Experience Improvements
+- [ ] 🚀 Add domain health check dashboard
+- [ ] 🚀 Implement email notifications for domain verification
+- [ ] 🚀 Create troubleshooting guide for common DNS issues
+- [ ] 🚀 Add domain performance metrics (response time, SSL status)
+- [ ] ⚗️ Test copy-to-clipboard for all DNS instructions
+
+##### Security & Edge Cases
+- [ ] ⚗️ Test domain hijacking prevention (verify ownership)
+- [ ] ⚗️ Verify domains can't be added to multiple projects
+- [ ] ⚗️ Test subdomain validation (prevent *.example.com)
+- [ ] ⚗️ Verify proper cleanup when project is deleted
+- [ ] 🪲 Handle international domains (IDN) properly
+
+##### Documentation & Support
+- [ ] 📌 Create video tutorial for domain setup
+- [ ] 📌 Document common DNS provider settings (GoDaddy, Namecheap, Cloudflare)
+- [ ] 📌 Create internal runbook for domain troubleshooting
+- [ ] 📌 Add domain FAQ section to help docs
+- [ ] 📌 Create customer-facing domain setup guide
+
+
+---
+
 #### [Packet] Database Isolation (Supabase) 
 **Goal:** Create proper isolation for our production and development databases. 
 **Notes:** We currently have one single database powering development and production, which is not ideal and can cause serious issues down the road. We need to have both a development and production database that are completely in sync structurally, but utilize their own content. We need proper processes in place to handle this complexity.
@@ -129,63 +187,6 @@ Use these classifications to identify each type of task. We can expand this list
 --- 
 
 
-#### [Packet] Domain Configuration System
-**Goal:** Implement production-ready domain management with white-labeled approach
-**Note:** Core functionality is implemented, needs finalization and thorough testing on both dev and production environments.
-**Deliverable:** Fully functional white-labeled domain system with preview domains and custom domain support
-
-##### Domain Functionality Finalization
-- [ ] 🚀 Add domain usage analytics tracking (track visits per domain)
-- [ ] 🚀 Implement domain transfer between projects functionality
-- [ ] 🚀 Add bulk domain operations for managing multiple domains
-- [ ] 🚀 Create domain history/audit log for tracking changes
-- [ ] 🚀 Add support for domain redirects (www to non-www, etc.)
-- [ ] 🪲 Fix any edge cases with apex domain handling
-
-##### Development Environment Testing
-- [ ] ⚗️ Test preview domain generation for new projects
-- [ ] ⚗️ Verify *.localhost:3000 works for local multi-tenant testing
-- [ ] ⚗️ Test domain verification flow with mock DNS records
-- [ ] ⚗️ Verify middleware correctly routes based on domain
-- [ ] ⚗️ Test domain deletion and cleanup processes
-
-##### Production Environment Testing
-- [ ] ⚗️ Verify sites.wondrousdigital.com is properly configured in Vercel
-- [ ] ⚗️ Test *.sites.wondrousdigital.com wildcard certificate
-- [ ] ⚗️ Add a real test domain and verify full flow
-- [ ] ⚗️ Test SSL certificate provisioning for custom domains
-- [ ] ⚗️ Verify DNS propagation messaging is accurate
-
-##### Vercel API Integration Testing
-- [ ] ⚗️ Test domain addition via Vercel API
-- [ ] ⚗️ Verify domain removal properly cleans up in Vercel
-- [ ] ⚗️ Test API rate limiting and error handling
-- [ ] ⚗️ Verify domain verification polling intervals
-- [ ] ⚗️ Test handling of Vercel API downtime
-
-##### User Experience Improvements
-- [ ] 🚀 Add domain health check dashboard
-- [ ] 🚀 Implement email notifications for domain verification
-- [ ] 🚀 Create troubleshooting guide for common DNS issues
-- [ ] 🚀 Add domain performance metrics (response time, SSL status)
-- [ ] ⚗️ Test copy-to-clipboard for all DNS instructions
-
-##### Security & Edge Cases
-- [ ] ⚗️ Test domain hijacking prevention (verify ownership)
-- [ ] ⚗️ Verify domains can't be added to multiple projects
-- [ ] ⚗️ Test subdomain validation (prevent *.example.com)
-- [ ] ⚗️ Verify proper cleanup when project is deleted
-- [ ] 🪲 Handle international domains (IDN) properly
-
-##### Documentation & Support
-- [ ] 📌 Create video tutorial for domain setup
-- [ ] 📌 Document common DNS provider settings (GoDaddy, Namecheap, Cloudflare)
-- [ ] 📌 Create internal runbook for domain troubleshooting
-- [ ] 📌 Add domain FAQ section to help docs
-- [ ] 📌 Create customer-facing domain setup guide
-
----
-
 #### [Packet] Service Layer & API Updates
 **Goal:** Update all services to be account-aware  
 **Deliverable:** Account-aware service layer
@@ -228,6 +229,18 @@ Use these classifications to identify each type of task. We can expand this list
   - [ ] 🚀 Implement page ordering for navigation
   - [ ] 🚀 Add custom 404 page configuration
   - [ ] 🚀 Create page preview functionality
+
+
+---
+
+#### [Packet] Navigation System
+**Goal:** Users can create navigation sections and functionality linking their website together.  
+**Deliverable:** Fully functioning WYSIWYG editing and config for 
+**Notes:** We need to create an industry standard, highly interactive, usable navigation system for customers to be able to connect their websites navigation, perform CRUD on elements, and select from different navigation sections (eventually) that have different complexities of configuration like super drop downs. We need this to work for nav bars, footers, and side nav bar components/sections.
+
+**Feature Task List:**
+- [ ] add  
+
 - [ ] 🚀 Navigation System:
   - [ ] 🚀 Design navigation data structure
   - [ ] 🚀 Create navigation menu builder UI
@@ -235,6 +248,7 @@ Use these classifications to identify each type of task. We can expand this list
   - [ ] 🚀 Add automatic menu generation from pages
   - [ ] 🚀 Support nested navigation items
   - [ ] 🚀 Create breadcrumb component using page hierarchy
+
 
 ---
 
@@ -268,6 +282,7 @@ Use these classifications to identify each type of task. We can expand this list
   - [ ] 🚀 Add user profile extensibility features
   - [ ] 🚀 Add inline user profile editing
 
+
 ---
 
 #### [Packet] Site Templates & Project Settings
@@ -294,6 +309,13 @@ Use these classifications to identify each type of task. We can expand this list
   - [ ] Apply selected template during creation
 
 ---
+
+
+
+##### [Packet] Canvas Builder Improvements
+
+- [ ] 🚀 Reorder sections
+
 
 
 ### PRIORITY LOW
@@ -323,6 +345,21 @@ Use these classifications to identify each type of task. We can expand this list
 
 #### [Packet] app.wondrousdigital.com DESIGN
 - [ ] 🚀 Apply theming to app itself (deferred to Phase 1D)
+
+
+---
+
+#### [Packet] Feature Tagging System
+**Goal:** Create a system where we can segment our features and enable them for different tiered customers.
+**Deliverable:** Tag system with template integration that links to paid tiers
+**Notes:** We will be enabling certain sections by paid tier and need to create a way for us to store those tags, link them to paid tiers in terms of visibility/usability. 
+
+---
+
+#### [Packet] Paid Tier System & Stripe Integration
+**Goal:** Finalize the paid tiers for our application and integrate Stripe payments into our app so users can handle their own billing.
+**Deliverable:** A set of paid tiers linked to confirmed Stripe payments to enable.
+**Notes:** We will have several plans and add ons that need to be configured and tied to features being turned on and off.
 
 
 

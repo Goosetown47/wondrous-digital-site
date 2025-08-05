@@ -59,12 +59,19 @@ export default function BuilderPage() {
     const needsLoad = page && page.sections && (!hasLoadedInitialData || storedPageId !== pageId);
     
     if (needsLoad) {
-      // For now, use sections as both draft and published until we implement proper draft system
+      // Load both draft sections and published sections
+      const draftSections = page.sections || [];
+      // If published_sections is null/undefined, use the same sections as published
+      // This ensures initial state doesn't show false "unpublished changes"
+      const publishedSections = page.published_sections !== undefined 
+        ? page.published_sections 
+        : draftSections;
+      
       loadPage(
         pageId,
         projectId,
-        page.sections,
-        page.sections, // TODO: Load actual published sections when draft system is ready
+        draftSections,
+        publishedSections,
         page.title || 'Untitled Page'
       );
       setHasLoadedInitialData(true);
