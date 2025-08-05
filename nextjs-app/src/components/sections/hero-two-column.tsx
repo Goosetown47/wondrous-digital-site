@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 import Image from 'next/image';
@@ -36,6 +36,19 @@ export function HeroTwoColumn({
   const [tempHeading, setTempHeading] = useState(heading);
   const [tempSubtext, setTempSubtext] = useState(subtext);
   const [tempButtonText, setTempButtonText] = useState(buttonText);
+
+  // Sync local state with props when they change
+  useEffect(() => {
+    setTempHeading(heading);
+  }, [heading]);
+
+  useEffect(() => {
+    setTempSubtext(subtext);
+  }, [subtext]);
+
+  useEffect(() => {
+    setTempButtonText(buttonText);
+  }, [buttonText]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
