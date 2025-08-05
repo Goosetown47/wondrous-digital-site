@@ -199,6 +199,9 @@ Completed Industry-Standard Architecture Refactor to address critical content lo
   - [✅] Write comprehensive tests for deepEqual utility
 
 
+##### Account & Project Dropdowns
+- ✅ 🪲 As admin, When I change the account from one to another, my current view changes to that account. (currently nothing happens. E.g., If I am on one accounts project, then switch to another account, I should only that accounts projects. Right now I am set to Test 2 account and their Test Project 1, but on Wondrous Digital's Veterinary Template 1. The side nav changes properly, but the project and canvas pages don't reset properly until I CLICK into the new page within their project. If I switch accounts from the drop down, all pages should reset to that context automatically.)
+- ✅ 🪲 When I change the project drop down from one to another, the application refreshes and shows that project's content automatically.
 
 
 

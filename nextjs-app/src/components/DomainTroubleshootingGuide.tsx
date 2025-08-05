@@ -5,7 +5,6 @@ import {
   AlertCircle, 
   ChevronDown, 
   ChevronRight, 
-  Terminal,
   Globe,
   Shield,
   Clock,
@@ -20,66 +19,82 @@ interface TroubleshootingStep {
   title: string;
   description: string;
   solution: string | string[];
-  command?: string;
 }
 
 const troubleshootingSteps: TroubleshootingStep[] = [
   {
     id: 'dns-not-propagated',
-    title: 'DNS changes haven\'t propagated yet',
-    description: 'DNS changes can take time to propagate globally. This is normal and depends on your DNS provider.',
+    title: 'Your changes are still spreading across the internet',
+    description: 'When you update your domain settings, it takes time for the changes to reach everywhere. Think of it like updating your address - it takes time for everyone to get the memo.',
     solution: [
-      'Wait 5-30 minutes for subdomain records',
-      'Wait 15-60 minutes for apex domain records',
-      'Clear your browser\'s DNS cache',
-      'Try accessing from a different network'
+      'This is completely normal! Here\'s what to expect:',
+      '• Subdomains (like www.yourdomain.com): Usually ready in 5-30 minutes',
+      '• Main domains (like yourdomain.com): Usually ready in 15-60 minutes',
+      '• Try refreshing this page in a few minutes',
+      '• The "Check DNS Propagation" button above shows your progress'
     ]
   },
   {
     id: 'wrong-cname',
-    title: 'Incorrect CNAME record',
-    description: 'The CNAME record must point exactly to sites.wondrousdigital.com',
-    solution: 'Double-check that your CNAME record points to: sites.wondrousdigital.com (no https://, no trailing slash)',
-    command: 'nslookup yourdomain.com'
+    title: 'Your domain isn\'t pointing to the right place',
+    description: 'Your domain needs to point to our servers so we can show your website. Right now, it might be pointing somewhere else or have a typo.',
+    solution: [
+      'In your domain provider\'s settings, make sure you have:',
+      '• Type: CNAME',
+      '• Points to: sites.wondrousdigital.com',
+      '• Common mistakes to check:',
+      '  - No "https://" at the beginning',
+      '  - No "/" at the end',
+      '  - Exactly as shown above'
+    ]
   },
   {
     id: 'conflicting-records',
-    title: 'Conflicting DNS records',
-    description: 'Having multiple records for the same domain can cause conflicts.',
+    title: 'You have multiple settings that are conflicting',
+    description: 'It looks like your domain has multiple forwarding instructions, and they\'re contradicting each other. It\'s like giving someone two different addresses - they won\'t know which one to use.',
     solution: [
-      'Remove any A, AAAA, or other CNAME records for the same subdomain',
-      'For apex domains, check if your provider supports CNAME flattening',
-      'Consider using www subdomain if apex domain isn\'t working'
+      'In your domain settings, look for any duplicate entries and:',
+      '• Keep only one CNAME record pointing to sites.wondrousdigital.com',
+      '• Remove any other records for the same domain name',
+      '• If you\'re trying to use your main domain (without www), your provider might need a special setting',
+      '• As a backup plan: Try using www.yourdomain.com instead - it usually works more reliably'
     ]
   },
   {
     id: 'proxy-enabled',
-    title: 'Cloudflare proxy is enabled',
-    description: 'If using Cloudflare, the orange cloud (proxy) can interfere with verification.',
+    title: 'Your security settings might be blocking verification (Cloudflare users)',
+    description: 'If you use Cloudflare for your domain, their security features might be preventing us from verifying your domain ownership.',
     solution: [
-      'Temporarily disable Cloudflare proxy (gray cloud) during verification',
-      'Re-enable proxy after domain is verified',
-      'Ensure SSL/TLS mode is set to "Full" in Cloudflare'
+      'In your Cloudflare dashboard:',
+      '• Find your domain and look for the orange cloud icon',
+      '• Click it to turn it gray (this temporarily disables the proxy)',
+      '• Try verifying again',
+      '• Once verified, you can turn the orange cloud back on',
+      '• Also check: SSL/TLS settings should be set to "Full"'
     ]
   },
   {
     id: 'ttl-too-high',
-    title: 'DNS TTL is too high',
-    description: 'High TTL values mean changes take longer to propagate.',
+    title: 'Your domain is set to update slowly',
+    description: 'Your domain has a setting that controls how fast changes spread. Right now it\'s set to update slowly, which means waiting longer.',
     solution: [
-      'Set TTL to 300 (5 minutes) or lower when making changes',
-      'Wait for the old TTL to expire before checking again',
-      'After verification, you can increase TTL to 3600 (1 hour)'
+      'This is a bit technical, but here\'s what to do:',
+      '• In your domain settings, look for "TTL" or "Time to Live"',
+      '• Change it to 300 or "5 minutes"',
+      '• This makes future changes happen faster',
+      '• After your domain is working, you can change it back to 3600 or "1 hour"'
     ]
   },
   {
     id: 'ssl-pending',
-    title: 'SSL certificate is still provisioning',
-    description: 'SSL certificates are automatically provisioned after domain verification.',
+    title: 'Your security certificate is being set up',
+    description: 'Great news! Your domain is verified. We\'re now setting up the security certificate (the padlock icon in browsers). This happens automatically.',
     solution: [
-      'Wait 5-10 minutes after domain verification',
-      'SSL provisioning is automatic - no action needed',
-      'Check back in a few minutes'
+      'No action needed! Here\'s what\'s happening:',
+      '• We\'re generating a security certificate for your domain',
+      '• This usually takes 5-10 minutes',
+      '• You\'ll see a padlock icon in browsers when it\'s ready',
+      '• Just refresh this page in a few minutes'
     ]
   }
 ];
@@ -183,15 +198,6 @@ export function DomainTroubleshootingGuide({ domain, isVerified }: DomainTrouble
                     )}
                   </div>
                   
-                  {step.command && (
-                    <div className="mt-3">
-                      <p className="text-sm font-medium mb-1">Check with command:</p>
-                      <code className="block p-2 bg-muted rounded text-xs font-mono">
-                        <Terminal className="inline h-3 w-3 mr-1" />
-                        {step.command.replace('yourdomain.com', domain || 'yourdomain.com')}
-                      </code>
-                    </div>
-                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -202,8 +208,9 @@ export function DomainTroubleshootingGuide({ domain, isVerified }: DomainTrouble
       <Alert>
         <Shield className="h-4 w-4" />
         <AlertDescription>
-          <strong>Still having issues?</strong> DNS propagation can sometimes take up to 48 hours in rare cases. 
-          If you've waited and followed all steps, the issue might be with your DNS provider's configuration.
+          <strong>Still need help?</strong> Sometimes domain setup can be tricky. If you've waited an hour and followed the steps above, 
+          the issue might be specific to your domain provider. Most providers have support teams who can help you set up a CNAME record - 
+          just tell them you need to point your domain to <span className="font-mono font-semibold">sites.wondrousdigital.com</span>
         </AlertDescription>
       </Alert>
     </div>

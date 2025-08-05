@@ -66,14 +66,17 @@ export async function GET(
     console.log('✅ [API/Library] Item found:', item.name);
 
     // Increment usage count using service role
+    const newUsageCount = (item.usage_count || 0) + 1;
     const { error: updateError } = await serviceClient
       .from('library_items')
-      .update({ usage_count: (item.usage_count || 0) + 1 })
+      .update({ usage_count: newUsageCount })
       .eq('id', id);
     
     if (updateError) {
       console.error('⚠️ [API/Library] Error updating usage count:', updateError);
       // Don't fail the request if usage count update fails
+    } else {
+      console.log(`✅ [API/Library] Usage count incremented for ${item.name}: ${item.usage_count || 0} → ${newUsageCount}`);
     }
 
     return NextResponse.json(item);

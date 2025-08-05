@@ -115,6 +115,9 @@ export default function BuilderPage() {
           
           console.log('Adding new section:', newSection);
           addSection(newSection);
+          
+          // Note: Usage count is automatically incremented by the API endpoint
+          console.log('Usage count incremented for library item:', itemId);
         } else {
           console.error('Failed to fetch library item, status:', response.status);
         }

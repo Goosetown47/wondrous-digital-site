@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getSectionComponent } from '@/components/sections/index';
 import type { Page } from '@/types/database';
 import type { Section } from '@/stores/builderStore';
@@ -12,7 +12,8 @@ interface PageProps {
 }
 
 async function getPageData(projectId: string, path: string): Promise<Page | null> {
-  const supabase = await createSupabaseServerClient();
+  // Use admin client to bypass RLS for public site viewing
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from('pages')
     .select('id, project_id, path, title, sections, published_sections, metadata, created_at, updated_at')
@@ -23,13 +24,14 @@ async function getPageData(projectId: string, path: string): Promise<Page | null
   if (error || !data) {
     return null;
   }
-
+  
   return data as Page;
 }
 
 export default async function SitePage({ params }: PageProps) {
   const { projectId, slug } = await params;
   const path = slug ? `/${slug.join('/')}` : '/';
+  
   const page = await getPageData(projectId, path);
 
   if (!page) {

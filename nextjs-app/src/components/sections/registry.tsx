@@ -27,21 +27,63 @@ const HeroSectionAdapter: ComponentType<BaseSectionProps> = (props) => {
 
 const HeroTwoColumnAdapter: ComponentType<BaseSectionProps> = (props) => {
   const content = props.content || {};
+  // Check if content is nested in heroContent (from lab) or at root level
+  const heroContent = (content.heroContent || content) as {
+    heading?: string;
+    subtext?: string;
+    buttonText?: string;
+    imageUrl?: string;
+    imageAlt?: string;
+  };
+  
+  // Only pass event handlers when in editing mode
+  if (props.isEditing) {
+    return (
+      <HeroTwoColumn
+        heading={heroContent.heading as string}
+        subtext={heroContent.subtext as string}
+        buttonText={heroContent.buttonText as string}
+        imageUrl={heroContent.imageUrl as string}
+        imageAlt={heroContent.imageAlt as string}
+        editable={true}
+        onHeadingChange={(value) => {
+          if (content.heroContent) {
+            props.onContentChange?.({ heroContent: { ...content.heroContent, heading: value } });
+          } else {
+            props.onContentChange?.({ heading: value });
+          }
+        }}
+        onSubtextChange={(value) => {
+          if (content.heroContent) {
+            props.onContentChange?.({ heroContent: { ...content.heroContent, subtext: value } });
+          } else {
+            props.onContentChange?.({ subtext: value });
+          }
+        }}
+        onButtonTextChange={(value) => {
+          if (content.heroContent) {
+            props.onContentChange?.({ heroContent: { ...content.heroContent, buttonText: value } });
+          } else {
+            props.onContentChange?.({ buttonText: value });
+          }
+        }}
+        onImageChange={() => {
+          // Handle file upload and update imageUrl
+          // This would need actual file upload logic
+        }}
+      />
+    );
+  }
+  
+  // For non-editing mode (public site), don't pass event handlers
   return (
     <HeroTwoColumn
-      heading={content.heading as string}
-      subtext={content.subtext as string}
-      buttonText={content.buttonText as string}
-      imageUrl={content.imageUrl as string}
-      imageAlt={content.imageAlt as string}
-      editable={props.isEditing}
-      onHeadingChange={(value) => props.onContentChange?.({ heading: value })}
-      onSubtextChange={(value) => props.onContentChange?.({ subtext: value })}
-      onButtonTextChange={(value) => props.onContentChange?.({ buttonText: value })}
-      onImageChange={() => {
-        // Handle file upload and update imageUrl
-        // This would need actual file upload logic
-      }}
+      heading={heroContent.heading as string}
+      subtext={heroContent.subtext as string}
+      buttonText={heroContent.buttonText as string}
+      imageUrl={heroContent.imageUrl as string}
+      imageAlt={heroContent.imageAlt as string}
+      editable={false}
     />
   );
 };

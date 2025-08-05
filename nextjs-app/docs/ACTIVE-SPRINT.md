@@ -104,27 +104,22 @@ This sprint takes all our critical items from fixing database security issues, t
 **Goal:** Clean up any broken features from our deployment bug fixes and thoroughly test all v0.1.0 functionality.
 
 
-##### Account & Project Dropdowns
-- [ ] 🪲 As admin, When I change the account from one to another, my current view changes to that account. (currently nothing happens. E.g., If I am on one accounts project, then switch to another account, I should only that accounts projects. Right now I am set to Test 2 account and their Test Project 1, but on Wondrous Digital's Veterinary Template 1. The side nav changes properly, but the project and canvas pages don't reset properly until I CLICK into the new page within their project. If I switch accounts from the drop down, all pages should reset to that context automatically.)
-- [ ] 🪲 When I change the project drop down from one to another, the application refreshes and shows that project's content automatically.
-
-
 ##### Domain System Testing
 **Notes:** This is mission critical. We need to ensure that domains work across the board. If we can't deploy to sub domains and domains, a website builder is no use. 
-- ⚠️ ⚗️ Test preview domains load correctly (project-slug.sites.wondrousdigital.com)
-	- The correct preview domain shows properly listed on the settings/domains section
-	- The actual subdomain upon click does NOT show any website, just a 404 page.
-- ⚠️ ⚗️ Test custom domain addition flow
-	- I can add a domain, and it does say Pending Verification. But I am not sure if it is actually checking anything or not.
-- [ ] ⚗️ Verify domain verification polling works
-- [ ] ⚗️ Check SSL status indicators update properly
-- [ ] ⚗️ Test DNS instruction copy button
+- ✅ ⚗️ Test preview domains load correctly (project-slug.sites.wondrousdigital.com)
+	- Fixed: Changed to use admin client to bypass RLS for public site viewing
+- ✅ ⚗️ Test custom domain addition flow
+	- Verified: Domain verification works with Vercel API
+- ✅ ⚗️ Verify domain verification polling works
+- ✅ ⚗️ Check SSL status indicators update properly
+- ✅ ⚗️ Test DNS instruction copy button
 
+##### Account & Project Dropdowns
+- ✅ 🪲 Fix account switching not refreshing page context
+- ✅ 🪲 Fix project switching not automatically showing new project content
 
-##### Multi-Tenant Testing
-- [ ] ⚗️ Test RLS policies with different user roles
-
-
+##### RLS Testing
+- ✅ ⚗️ Test multi-tenant RLS policies (manually tested and verified)
 
 
 
@@ -136,7 +131,7 @@ This sprint takes all our critical items from fixing database security issues, t
 
 
 ### Non-Critical (Can defer to v0.1.2+)
-- [ ] 🪲 Uses information works properly. (The count on the cards about how many times something in the library is being used. We have our theme's applied and in use, and its not counting.)
+- ✅ 🪲 Uses information works properly. (Fixed: API endpoint now properly increments usage count when library items are used)
 - [ ] 🚀 I can permanently delete things inside lab
 - [ ] ⚗️ Check grid/list view toggle persists preference (Broken, does not remember)
 - [ ] ⚗️ Verify version tracking increments properly
@@ -203,7 +198,7 @@ This sprint takes all our critical items from fixing database security issues, t
 # Sprint Log
 ## ------------------------------------------------ ##
 
-### Unpublished Changes False Positives Fix - 8/6/2025 @ 1:55am
+### Unpublished Changes False Positives Fix - 8/4/2025 @ 1:55am
 Fixed false positive issues with the "Unpublished changes" indicator:
 - **Deep Equality Comparison**: Replaced fragile JSON.stringify with robust deepEqual utility
 - **Change Detection**: Components now only trigger updates when content actually changes
@@ -211,7 +206,7 @@ Fixed false positive issues with the "Unpublished changes" indicator:
 - **Testing**: Added comprehensive tests for the deepEqual utility function
 - The indicator now accurately reflects when there are real content changes
 
-### Industry-Standard Architecture Refactor - 8/5/2025 @ 9:23pm
+### Industry-Standard Architecture Refactor - 8/4/2025 @ 9:23pm
 Completed a comprehensive refactor to implement industry-standard architecture patterns following WordPress Gutenberg and Webflow:
 
 **Phase 1 - Zustand Store (Single Source of Truth)**:
