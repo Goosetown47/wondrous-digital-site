@@ -1,12 +1,55 @@
 # Domain Architecture Testing Checklist
 
 ## Overview
-This checklist is for testing the new server-side domain architecture implementation. Please mark each item as you test it.
+This checklist tests the server-side domain architecture implementation across all environments. Each environment has specific capabilities and limitations documented below.
 
 ## Prerequisites
-- [x] Development server is running on port 3000
+- [x] Development server is running on port 3000/3001
 - [x] You have access to a test project
 - [x] You have a test domain available (or use a subdomain)
+- [ ] Verify environment variables are set correctly:
+  - `VERCEL_API_TOKEN` - Should have access to the project
+  - `VERCEL_PROJECT_ID` - Should match the Vercel project containing your domains
+  - `VERCEL_TEAM_ID` - Should be set if using team account
+
+## Environment Capabilities
+
+### LOCAL (localhost:3000)
+**What WORKS:**
+- Database operations (add/remove/update domains)
+- Vercel API calls (check status, add domains, verify)
+- Authentication and permissions
+- All CRUD operations
+
+**What DOESN'T WORK:**
+- Custom domains won't route to localhost
+- SSL certificates can't be provisioned (needs public URL)
+- Webhooks can't reach localhost
+
+**Expected Behaviors:**
+- Domains already in Vercel should show their actual status
+- New domains can be added to Vercel via API
+- Verification status should update in database
+
+### PREVIEW (Vercel preview deployments)
+**What WORKS:**
+- Everything from local PLUS:
+- Public preview URLs accessible
+- Webhooks can reach the deployment
+- SSL works on preview URLs
+
+**What DOESN'T WORK:**
+- Custom domains route to production, not preview
+- Some production features may be limited
+
+### PRODUCTION (Vercel production deployment)
+**What WORKS:**
+- Everything!
+- Custom domains route correctly
+- SSL certificates provision automatically
+- Full domain verification and routing
+
+---
 
 ## Testing Steps (LOCAL)
 
@@ -14,150 +57,169 @@ This checklist is for testing the new server-side domain architecture implementa
 - [x] Navigate to Project Settings → Domain Settings
 - [x] Click "Add Domain"
 - [x] Enter a test domain (e.g., test.yourdomain.com)
-- [FAIL] Verify no errors appear when clicking "Add Domain"
-	- I'm in Wondrous Digital account, lahaie-private-server project.
-	- I deleted the lahaie-private-server.com domain that was in there. 
-	- I tried to re-add it
-	- I got an error "Project not found or access denied."
-- [ ] Confirm domain appears in the list
+- [x] Verify no errors appear when clicking "Add Domain"
+- [x] Confirm domain appears in the list
 
-### 2. Domain Verification
-- [ ] Click the refresh/verify button next to your domain
-- [ ] Watch for the loading spinner
-- [ ] Check that no permission errors appear in the UI
-- [ ] Verify the domain status updates (even if it shows "not verified" due to DNS)
+**Expected:** Domain should be added to database and appear in list immediately
 
-### 3. Database Verification
+### 2. Domain Verification - Existing Verified Domain
+- [x] Click the refresh/verify button next to your domain
+- [x] Watch for the loading spinner
+- [x] Check that no permission errors appear in the UI
+- [!] Domain status should reflect Vercel's actual status
+
+**ISSUE FOUND:** "Domain not found in Vercel" error when domain IS in Vercel
+- Domain: lahaie-private-server.com
+- Status in Vercel: Verified
+- Error: "Domain not found in Vercel. It may need to be added to the project first."
+
+**This indicates either:**
+1. Wrong VERCEL_PROJECT_ID in .env.local
+2. API token doesn't have access to the project
+3. Domain is in a different Vercel project than expected
+
+### 3. Domain Verification - New Unverified Domain
+- [ ] Add a completely new test domain (e.g., test-local.yourdomain.com)
+- [ ] Click verify button
+- [ ] Should show "Not Verified" status
+- [ ] Should populate verification_details with DNS instructions
+
+**Expected:** New domains should show as unverified with DNS configuration instructions
+
+### 4. Database Verification
 After adding and attempting to verify a domain, check that:
-- [ ] Domain record exists in `project_domains` table
-- [ ] `ssl_state` column shows 'PENDING' or appropriate status
-- [ ] `verification_details` column contains data (if verification was attempted)
-- [ ] No RLS errors in Supabase logs
+- [x] Domain record exists in `project_domains` table
+- [x] `ssl_state` column shows 'PENDING' or appropriate status
+- [!] `verification_details` column contains data (if verification was attempted)
+  - **Note:** This is NULL for verified domains (expected)
+  - Should contain DNS instructions for unverified domains
+- [x] No RLS errors in Supabase logs
+  - Check in Supabase Dashboard → Logs → Postgres Logs
+  - Filter for ERROR level messages
+  - Found unrelated error: "deployment_queue" table missing
 
-### 4. Error Handling
-- [ ] Try adding an invalid domain format (e.g., "not-a-domain")
-- [ ] Verify appropriate error message appears
-- [ ] Try adding the same domain twice
-- [ ] Confirm duplicate domain error is shown
+### 5. Error Handling
+- [x] Try adding an invalid domain format (e.g., "not-a-domain")
+  - **Result:** Shows appropriate error message ✓
+- [x] Try adding the same domain twice
+  - **Result:** Shows duplicate domain error ✓
 
-### 5. API Testing
+### 6. API Testing
 Using browser DevTools Network tab:
-- [ ] When verifying a domain, check for POST to `/api/domains/[id]/verify`
-- [ ] Response should be 200 OK (not 403 Forbidden)
-- [ ] When domain updates, check for PUT to `/api/domains/[id]/update`
-- [ ] No authentication errors in responses
+- [ ] When adding a domain:
+  - POST to `/api/projects/[projectId]/domains` should return 200
+  - Domain should be added to Vercel if API configured
+- [ ] When verifying a domain:
+  - POST to `/api/domains/[id]/verify` should return 200
+  - Should check Vercel status and update database
+- [ ] Check responses for authentication errors
+
+**Network requests observed:**
+```
+domains                     200  (Domain addition)
+project_domains?select=*    200  (Fetching updated list)
+status                      200  (Checking domain status)
+```
+
+### 7. Troubleshooting Steps
+If "Domain not found in Vercel" error occurs:
+1. [ ] Check browser console for detailed error logs
+2. [ ] Verify VERCEL_PROJECT_ID matches the project in Vercel dashboard
+3. [ ] Test Vercel API token has correct permissions:
+   ```bash
+   curl -H "Authorization: Bearer YOUR_TOKEN" \
+     https://api.vercel.com/v10/projects/YOUR_PROJECT_ID/domains
+   ```
+4. [ ] Check if domain exists in the correct Vercel project via dashboard
+
+---
 
 ## Testing Steps (PREVIEW)
 
 ### 1. Domain Addition Flow
 - [ ] Navigate to Project Settings → Domain Settings
 - [ ] Click "Add Domain"
-- [ ] Enter a test domain (e.g., test.yourdomain.com)
+- [ ] Add a preview-specific test domain (e.g., preview-test.yourdomain.com)
 - [ ] Verify no errors appear when clicking "Add Domain"
 - [ ] Confirm domain appears in the list
 
+**Expected:** Same as local, but using preview deployment URL
+
 ### 2. Domain Verification
-- [ ] Click the refresh/verify button next to your domain
-- [ ] Watch for the loading spinner
-- [ ] Check that no permission errors appear in the UI
-- [ ] Verify the domain status updates (even if it shows "not verified" due to DNS)
+- [ ] Test with both verified and unverified domains
+- [ ] Verify button should work same as local
+- [ ] Check that Vercel API calls succeed
 
-### 3. Database Verification
-After adding and attempting to verify a domain, check that:
-- [ ] Domain record exists in `project_domains` table
-- [ ] `ssl_state` column shows 'PENDING' or appropriate status
-- [ ] `verification_details` column contains data (if verification was attempted)
-- [ ] No RLS errors in Supabase logs
+**Expected:** Should behave identically to local environment
 
-### 4. Error Handling
-- [ ] Try adding an invalid domain format (e.g., "not-a-domain")
-- [ ] Verify appropriate error message appears
-- [ ] Try adding the same domain twice
-- [ ] Confirm duplicate domain error is shown
+### 3. Preview-Specific Tests
+- [ ] Verify preview deployment URL works (*.vercel.app)
+- [ ] Check that middleware correctly identifies preview environment
+- [ ] Ensure database operations work with preview deployment
 
-### 5. API Testing
-Using browser DevTools Network tab:
-- [ ] When verifying a domain, check for POST to `/api/domains/[id]/verify`
-- [ ] Response should be 200 OK (not 403 Forbidden)
-- [ ] When domain updates, check for PUT to `/api/domains/[id]/update`
-- [ ] No authentication errors in responses
+### 4. API Testing
+- [ ] All API endpoints should be accessible via preview URL
+- [ ] Authentication should work correctly
+- [ ] Vercel API integration should function
 
+---
 
-## Testing Steps (PROD)
+## Testing Steps (PRODUCTION)
 
 ### 1. Domain Addition Flow
 - [ ] Navigate to Project Settings → Domain Settings
-- [ ] Click "Add Domain"
-- [ ] Enter a test domain (e.g., test.yourdomain.com)
-- [ ] Verify no errors appear when clicking "Add Domain"
-- [ ] Confirm domain appears in the list
+- [ ] Add a production domain
+- [ ] Verify domain appears in list
 
-### 2. Domain Verification
-- [ ] Click the refresh/verify button next to your domain
-- [ ] Watch for the loading spinner
-- [ ] Check that no permission errors appear in the UI
-- [ ] Verify the domain status updates (even if it shows "not verified" due to DNS)
+**Expected:** Domain added to both database and Vercel
 
-### 3. Database Verification
-After adding and attempting to verify a domain, check that:
-- [ ] Domain record exists in `project_domains` table
-- [ ] `ssl_state` column shows 'PENDING' or appropriate status
-- [ ] `verification_details` column contains data (if verification was attempted)
-- [ ] No RLS errors in Supabase logs
+### 2. Domain Verification & Routing
+- [ ] Add domain with correct DNS pointing to Vercel
+- [ ] Click verify - should become verified once DNS propagates
+- [ ] Visit the custom domain - should load the correct project
+- [ ] SSL certificate should provision automatically
 
-### 4. Error Handling
-- [ ] Try adding an invalid domain format (e.g., "not-a-domain")
-- [ ] Verify appropriate error message appears
-- [ ] Try adding the same domain twice
-- [ ] Confirm duplicate domain error is shown
+**Expected:** Full end-to-end domain functionality
 
-### 5. API Testing
-Using browser DevTools Network tab:
-- [ ] When verifying a domain, check for POST to `/api/domains/[id]/verify`
-- [ ] Response should be 200 OK (not 403 Forbidden)
-- [ ] When domain updates, check for PUT to `/api/domains/[id]/update`
-- [ ] No authentication errors in responses
+### 3. Production-Specific Tests
+- [ ] Custom domain routing works correctly
+- [ ] SSL certificates provision and renew
+- [ ] Domain shows as verified with SSL "READY" state
+- [ ] Apex and www domains work correctly
+- [ ] Domain redirects function as configured
 
+### 4. Monitoring
+- [ ] Check for any domain-related errors in production logs
+- [ ] Verify SSL renewal happens automatically
+- [ ] Monitor domain verification status over time
 
-## Expected Outcomes
+---
 
-✅ **Success Indicators:**
-- Domains can be added without errors
-- Verification process runs without permission errors
-- Database properly stores SSL state and verification details
-- API routes return 200 OK responses
+## Expected Outcomes by Environment
 
-❌ **Previous Issues (Should NOT Occur):**
-- "Failed to update domain verification" errors
-- RLS policy violations
-- 403 Forbidden responses from API
-- Database updates failing silently
+### ✅ **All Environments Should:**
+- Allow adding/removing domains from database
+- Show correct domain status from Vercel
+- Handle errors gracefully
+- Enforce proper permissions
 
-## Console Commands for Verification
+### ❌ **Common Issues:**
+- "Domain not found in Vercel" - Check project ID and API token
+- RLS errors - Should not occur with server-side architecture
+- SSL pending forever - Normal in local, check DNS in production
 
-Check domain in database:
-```sql
-SELECT id, domain, verified, ssl_state, verification_details 
-FROM project_domains 
-WHERE domain = 'your-test-domain.com';
-```
+## Debug Information to Collect
 
-Check for RLS errors in logs:
-```sql
-SELECT * FROM auth.audit_log 
-WHERE created_at > NOW() - INTERVAL '10 minutes' 
-AND payload::text LIKE '%permission denied%';
-```
+When issues occur, collect:
+1. Browser console errors
+2. Network tab responses (especially error responses)
+3. Supabase logs (Postgres and API logs)
+4. Current environment variables (without exposing secrets)
+5. Vercel project ID from dashboard
+6. Domain status in Vercel dashboard
 
 ## Notes
-- The domain doesn't need to actually verify (DNS can be incorrect)
-- We're testing that the system can update the database without RLS errors
-- SSL state should update even if domain isn't verified
-- Verification details should be stored as JSON
-
-## Report Issues
-If any test fails, please note:
-1. Which step failed
-2. Exact error message (if any)
-3. Browser console errors
-4. Network tab responses
+- Domains need proper DNS only for production routing
+- SSL provisioning only works with public URLs
+- Verification can succeed even without proper DNS
+- Platform admins should have access to all projects

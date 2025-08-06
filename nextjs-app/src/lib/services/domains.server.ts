@@ -151,10 +151,15 @@ export async function checkDomainStatus(domain: string): Promise<VercelDomainSta
   }
   
   console.log(`[VERCEL] Checking domain status for: ${domain}`);
+  console.log(`[VERCEL] Using project ID: ${VERCEL_PROJECT_ID}`);
+  console.log(`[VERCEL] API Token (first 10 chars): ${VERCEL_API_TOKEN?.substring(0, 10)}...`);
 
   try {
+    const url = `/v10/projects/${VERCEL_PROJECT_ID}/domains/${domain}`;
+    console.log(`[VERCEL] Making request to: ${url}`);
+    
     const response = await vercelRequest(
-      `/v10/projects/${VERCEL_PROJECT_ID}/domains/${domain}`,
+      url,
       {
         method: 'GET',
       }
@@ -163,6 +168,17 @@ export async function checkDomainStatus(domain: string): Promise<VercelDomainSta
     if (!response.ok) {
       if (response.status === 404) {
         console.log(`[VERCEL] Domain ${domain} not found in Vercel project`);
+        console.log(`[VERCEL] 404 Response status:`, response.status);
+        console.log(`[VERCEL] 404 Response headers:`, response.headers);
+        
+        // Try to get more info about the 404
+        try {
+          const errorBody = await response.json();
+          console.log(`[VERCEL] 404 Error details:`, errorBody);
+        } catch {
+          console.log(`[VERCEL] Could not parse 404 response body`);
+        }
+        
         return { verified: false, error: 'Domain not found in Vercel. It may need to be added to the project first.' };
       }
       const error = await response.json();
