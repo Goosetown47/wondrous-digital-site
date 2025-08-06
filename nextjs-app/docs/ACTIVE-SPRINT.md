@@ -100,26 +100,6 @@ This sprint takes all our critical items from fixing database security issues, t
 ## ------------------------------------------------ ##
 
 
-#### [Packet] Post Deployment Clean Up & Testing
-**Goal:** Clean up any broken features from our deployment bug fixes and thoroughly test all v0.1.0 functionality.
-
-
-##### Domain System Testing
-**Notes:** This is mission critical. We need to ensure that domains work across the board. If we can't deploy to sub domains and domains, a website builder is no use. 
-- ✅ ⚗️ Test preview domains load correctly (project-slug.sites.wondrousdigital.com)
-	- Fixed: Changed to use admin client to bypass RLS for public site viewing
-- ✅ ⚗️ Test custom domain addition flow
-	- Verified: Domain verification works with Vercel API
-- ✅ ⚗️ Verify domain verification polling works
-- ✅ ⚗️ Check SSL status indicators update properly
-- ✅ ⚗️ Test DNS instruction copy button
-
-##### Account & Project Dropdowns
-- ✅ 🪲 Fix account switching not refreshing page context
-- ✅ 🪲 Fix project switching not automatically showing new project content
-
-##### RLS Testing
-- ✅ ⚗️ Test multi-tenant RLS policies (manually tested and verified)
 
 
 #### [Packet] Domain Architecture Refactor (COMPLETED)
@@ -143,6 +123,67 @@ This sprint takes all our critical items from fixing database security issues, t
 - [✅] 🚀 Create migration for verification_details column (JSONB)
 - [✅] 🚀 Apply migrations to database
 - [✅] ⚗️ Verify columns exist and are properly typed
+
+
+
+#### [Packet] Domain System - Comprehensive Implementation
+**Goal:** Build a robust domain management system that handles all DNS configurations and edge cases
+**Note:** This is mission critical functionality for the website builder platform
+**Deliverable:** Complete domain system with verification, SSL tracking, and comprehensive error handling
+
+##### Domain Addition & Verification Stories
+- [ ] ⚗️ As a user adding a new domain, I can add my apex domain (example.com) and see clear DNS instructions
+- [ ] ⚗️ As a user adding a subdomain, I can add it (sub.example.com) and see CNAME instructions
+- [ ] ⚗️ As a user with both apex and www, I can add both and link them together
+- [ ] ⚗️ As a user checking verification, I see real-time status updates every 10 seconds
+- [ ] ⚗️ As a user with a verified domain, I can see SSL certificate status continuously
+- [ ] ⚗️ As a user with failed verification, I see specific error messages and troubleshooting steps
+
+##### DNS Configuration Stories
+- [ ] ⚗️ As a user using nameservers, I can point my entire domain to Vercel's nameservers
+- [ ] ⚗️ As a user using A records, I can add the correct A record for my apex domain
+- [ ] ⚗️ As a user using CNAME, I can add the correct CNAME for subdomains/www
+- [ ] ⚗️ As a user with DNS propagation delays, I see estimated wait times based on my setup
+- [ ] ⚗️ As a user with incorrect DNS, I get specific feedback on what's wrong
+
+##### Domain Management Stories
+- [ ] ⚗️ As a user with multiple projects, I cannot add the same domain to two projects
+- [ ] ⚗️ As a user removing a domain, it's properly removed from both database and Vercel
+- [ ] ⚗️ As a user with an existing Vercel domain, I can import it to my project
+- [ ] ⚗️ As a user switching primary domains, redirects are set up automatically
+- [ ] ⚗️ As a user with expired domains, I see appropriate warnings
+
+##### WWW Handling Stories
+- [ ] 🚀 As a user adding example.com, I'm prompted to also add www.example.com
+- [ ] 🚀 As a user with both domains, I can choose which redirects to which
+- [ ] 🚀 As a user, I see which is my primary domain clearly marked
+- [ ] 🚀 As a user, apex↔www redirects work seamlessly in production
+
+##### Reserved Domain Stories
+- [ ] ⚗️ As Wondrous Digital account, I can add wondrousdigital.com to my marketing project
+- [ ] ⚗️ As Wondrous Digital account, I can add www.wondrousdigital.com
+- [ ] ⚗️ As any other account, I cannot add wondrousdigital.com (get permission error)
+- [ ] ⚗️ As platform admin, I can grant reserved domain permissions to specific accounts
+
+##### Edge Cases & Error Handling
+- [ ] ⚗️ Domain already exists in another Vercel project → Clear error with options
+- [ ] ⚗️ Domain already in our database → Proper duplicate handling
+- [ ] ⚗️ Domain verification times out → Retry mechanism works
+- [ ] ⚗️ Invalid domain format → Immediate validation feedback
+- [ ] ⚗️ Vercel API down → Graceful degradation with queued operations
+- [ ] ⚗️ User adds domain but doesn't verify → Reminder system after 24 hours
+
+##### Performance & Monitoring
+- [ ] 🚀 Implement domain_verification_logs table for debugging
+- [ ] 🚀 Add SSL status tracking to project_domains table
+- [ ] 🚀 Create domain health dashboard for platform admins
+- [ ] 🚀 Set up alerts for domains losing verification
+
+##### Developer Experience
+- [ ] 📌 Document all domain-related error codes and solutions
+- [ ] 📌 Create troubleshooting guide for common DNS issues
+- [ ] 📌 Add domain system architecture documentation
+- [ ] 📌 Create runbook for domain-related support tickets
 
 
 
@@ -220,64 +261,6 @@ This sprint takes all our critical items from fixing database security issues, t
 
 
 
-#### [Packet] Domain System - Comprehensive Implementation
-**Goal:** Build a robust domain management system that handles all DNS configurations and edge cases
-**Note:** This is mission critical functionality for the website builder platform
-**Deliverable:** Complete domain system with verification, SSL tracking, and comprehensive error handling
-
-##### Domain Addition & Verification Stories
-- [ ] ⚗️ As a user adding a new domain, I can add my apex domain (example.com) and see clear DNS instructions
-- [ ] ⚗️ As a user adding a subdomain, I can add it (sub.example.com) and see CNAME instructions
-- [ ] ⚗️ As a user with both apex and www, I can add both and link them together
-- [ ] ⚗️ As a user checking verification, I see real-time status updates every 10 seconds
-- [ ] ⚗️ As a user with a verified domain, I can see SSL certificate status continuously
-- [ ] ⚗️ As a user with failed verification, I see specific error messages and troubleshooting steps
-
-##### DNS Configuration Stories
-- [ ] ⚗️ As a user using nameservers, I can point my entire domain to Vercel's nameservers
-- [ ] ⚗️ As a user using A records, I can add the correct A record for my apex domain
-- [ ] ⚗️ As a user using CNAME, I can add the correct CNAME for subdomains/www
-- [ ] ⚗️ As a user with DNS propagation delays, I see estimated wait times based on my setup
-- [ ] ⚗️ As a user with incorrect DNS, I get specific feedback on what's wrong
-
-##### Domain Management Stories
-- [ ] ⚗️ As a user with multiple projects, I cannot add the same domain to two projects
-- [ ] ⚗️ As a user removing a domain, it's properly removed from both database and Vercel
-- [ ] ⚗️ As a user with an existing Vercel domain, I can import it to my project
-- [ ] ⚗️ As a user switching primary domains, redirects are set up automatically
-- [ ] ⚗️ As a user with expired domains, I see appropriate warnings
-
-##### WWW Handling Stories
-- [ ] 🚀 As a user adding example.com, I'm prompted to also add www.example.com
-- [ ] 🚀 As a user with both domains, I can choose which redirects to which
-- [ ] 🚀 As a user, I see which is my primary domain clearly marked
-- [ ] 🚀 As a user, apex↔www redirects work seamlessly in production
-
-##### Reserved Domain Stories
-- [ ] ⚗️ As Wondrous Digital account, I can add wondrousdigital.com to my marketing project
-- [ ] ⚗️ As Wondrous Digital account, I can add www.wondrousdigital.com
-- [ ] ⚗️ As any other account, I cannot add wondrousdigital.com (get permission error)
-- [ ] ⚗️ As platform admin, I can grant reserved domain permissions to specific accounts
-
-##### Edge Cases & Error Handling
-- [ ] ⚗️ Domain already exists in another Vercel project → Clear error with options
-- [ ] ⚗️ Domain already in our database → Proper duplicate handling
-- [ ] ⚗️ Domain verification times out → Retry mechanism works
-- [ ] ⚗️ Invalid domain format → Immediate validation feedback
-- [ ] ⚗️ Vercel API down → Graceful degradation with queued operations
-- [ ] ⚗️ User adds domain but doesn't verify → Reminder system after 24 hours
-
-##### Performance & Monitoring
-- [ ] 🚀 Implement domain_verification_logs table for debugging
-- [ ] 🚀 Add SSL status tracking to project_domains table
-- [ ] 🚀 Create domain health dashboard for platform admins
-- [ ] 🚀 Set up alerts for domains losing verification
-
-##### Developer Experience
-- [ ] 📌 Document all domain-related error codes and solutions
-- [ ] 📌 Create troubleshooting guide for common DNS issues
-- [ ] 📌 Add domain system architecture documentation
-- [ ] 📌 Create runbook for domain-related support tickets
 
 
 

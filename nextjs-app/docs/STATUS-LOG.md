@@ -228,6 +228,23 @@ Implemented server-side domain architecture following industry standards. Moved 
 - ✅ 🪲 When I change the project drop down from one to another, the application refreshes and shows that project's content automatically.
 
 
+##### Domain System Testing
+**Notes:** This is mission critical. We need to ensure that domains work across the board. If we can't deploy to sub domains and domains, a website builder is no use. 
+- ✅ ⚗️ Test preview domains load correctly (project-slug.sites.wondrousdigital.com)
+  - Fixed: Changed to use admin client to bypass RLS for public site viewing
+- ✅ ⚗️ Test custom domain addition flow
+  - Verified: Domain verification works with Vercel API
+- ✅ ⚗️ Verify domain verification polling works
+- ✅ ⚗️ Check SSL status indicators update properly
+- ✅ ⚗️ Test DNS instruction copy button
+
+##### Account & Project Dropdowns
+- ✅ 🪲 Fix account switching not refreshing page context
+- ✅ 🪲 Fix project switching not automatically showing new project content
+
+##### RLS Testing
+- ✅ ⚗️ Test multi-tenant RLS policies (manually tested and verified)
+
 
 
 

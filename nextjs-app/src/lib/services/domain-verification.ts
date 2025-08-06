@@ -72,13 +72,21 @@ export async function verifyDomainWithRetry(
     const status = await checkDomainStatus(domain);
 
     // Update database with both verification and SSL status
+    const updateData: Parameters<typeof updateDomainVerification>[1] = {
+      verified: status.verified,
+      ssl_state: status.ssl?.state || 'PENDING'
+    };
+    
+    // Only include verification_details if we have verification data
+    if (status.verification && status.verification.length > 0) {
+      updateData.verification_details = {
+        verification: status.verification
+      };
+    }
+    
     const { error: updateError } = await updateDomainVerification(
       domainId,
-      {
-        verified: status.verified,
-        ssl_state: status.ssl?.state || 'PENDING',
-        verification_details: status.verification ? JSON.stringify(status.verification) : null
-      }
+      updateData
     );
 
     if (updateError) {

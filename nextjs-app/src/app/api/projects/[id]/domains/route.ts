@@ -43,23 +43,53 @@ export async function POST(
       }
     }
 
-    // Check if user has access to this project
-    const { data: project, error: projectError } = await supabase
-      .from('projects')
-      .select(`
-        id,
-        account_id,
-        accounts!inner(
-          id,
-          account_users!inner(
-            user_id,
-            role
-          )
-        )
-      `)
-      .eq('id', projectId)
-      .eq('accounts.account_users.user_id', user.id)
+    // First check if user is a platform admin/staff
+    const { data: platformAccess } = await supabase
+      .from('account_users')
+      .select('role')
+      .eq('account_id', '00000000-0000-0000-0000-000000000000')
+      .eq('user_id', user.id)
+      .in('role', ['admin', 'staff'])
       .single();
+
+    let project;
+    let projectError;
+
+    if (platformAccess) {
+      // Platform admin/staff - they have access to all projects
+      const result = await supabase
+        .from('projects')
+        .select(`
+          id,
+          account_id
+        `)
+        .eq('id', projectId)
+        .single();
+      
+      project = result.data;
+      projectError = result.error;
+    } else {
+      // Regular user - check normal access
+      const result = await supabase
+        .from('projects')
+        .select(`
+          id,
+          account_id,
+          accounts!inner(
+            id,
+            account_users!inner(
+              user_id,
+              role
+            )
+          )
+        `)
+        .eq('id', projectId)
+        .eq('accounts.account_users.user_id', user.id)
+        .single();
+      
+      project = result.data;
+      projectError = result.error;
+    }
 
     if (projectError || !project) {
       return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 });
