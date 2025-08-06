@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { verifyDomainWithRetry, scheduleDomainVerificationRetry, logDomainOperation } from '@/lib/services/domain-verification';
+import { checkDomainStatus } from '@/lib/services/domains.server';
 import { env } from '@/env.mjs';
 
 export async function POST(
@@ -53,9 +54,14 @@ export async function POST(
       );
     }
 
+    // Get fresh status to include configuration info
+    const status = await checkDomainStatus(domain.domain);
+    
     return NextResponse.json({
       verified: result.verified,
+      verification: result.verification, // Include DNS instructions
       ssl: result.ssl,
+      configured: status.configured, // Include configuration status
       error: result.error,
       retryScheduled: result.shouldRetry,
       nextRetryIn: result.nextRetryDelay

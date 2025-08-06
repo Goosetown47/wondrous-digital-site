@@ -52,6 +52,12 @@ export async function verifyDomainWithRetry(
   attemptNumber: number = 1
 ): Promise<{
   verified: boolean;
+  verification?: Array<{
+    type: string;
+    domain: string;
+    value: string;
+    reason?: string;
+  }>;
   ssl?: {
     configured: boolean;
     status: string;
@@ -125,6 +131,7 @@ export async function verifyDomainWithRetry(
 
     return {
       verified: false,
+      verification: status.verification, // Pass DNS instructions to frontend
       ssl: status.ssl ? {
         configured: status.ssl.state === 'READY',
         status: status.ssl.state,

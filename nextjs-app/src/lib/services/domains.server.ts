@@ -72,6 +72,11 @@ export interface VercelDomainStatus {
     error?: string;
   };
   error?: string;
+  configuredBy?: string | null;
+  cnames?: string[];
+  aValues?: string[];
+  configured?: boolean;
+  apexName?: string | null;
 }
 
 /**
@@ -190,13 +195,22 @@ export async function checkDomainStatus(domain: string): Promise<VercelDomainSta
     console.log(`[VERCEL] Domain status for ${domain}:`, {
       verified: data.verified,
       ssl: data.ssl?.state,
-      verification: data.verification?.length || 0
+      verification: data.verification?.length || 0,
+      configuredBy: data.configuredBy,
+      cnames: data.cnames,
+      aValues: data.aValues,
+      configured: data.configured
     });
     
     return {
       verified: data.verified || false,
       verification: data.verification || [],
       ssl: data.ssl || { state: 'PENDING' },
+      configuredBy: data.configuredBy || null,
+      cnames: data.cnames || [],
+      aValues: data.aValues || [],
+      configured: data.configured || false,
+      apexName: data.apexName || null
     };
   } catch (error) {
     console.error('Error checking domain status:', error);

@@ -1,7 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { validateDomainFormat } from '@/lib/services/domains';
+import { addDomainToVercel, removeDomainFromVercel } from '@/lib/services/domains.server';
 import { z } from 'zod';
+
+/**
+ * Helper to determine if a domain is an apex domain
+ */
+function isApexDomain(domain: string): boolean {
+  const parts = domain.split('.');
+  // Check for country-code TLDs like .co.uk
+  const isCountryCodeTLD = /\.(co|com|net|org|gov|edu|ac)\.[a-z]{2}$/.test(domain);
+  
+  if (isCountryCodeTLD) {
+    return parts.length === 3;
+  }
+  return parts.length === 2;
+}
+
+/**
+ * Get the companion domain (apex <-> www)
+ */
+function getCompanionDomain(domain: string): string | null {
+  const parts = domain.split('.');
+  
+  // If it's www.example.com, return example.com
+  if (parts[0] === 'www' && parts.length >= 3) {
+    return parts.slice(1).join('.');
+  }
+  
+  // If it's example.com (apex), return www.example.com
+  if (isApexDomain(domain)) {
+    return `www.${domain}`;
+  }
+  
+  // For other subdomains (app.example.com), no companion
+  return null;
+}
 
 const addDomainSchema = z.object({
   domain: z.string().min(1),
@@ -146,36 +181,213 @@ export async function POST(
       }
     }
 
-    // Add domain to database
-    const { data, error } = await supabase
+    // Check if this is the first domain for the project
+    const { data: existingProjectDomains } = await supabase
       .from('project_domains')
-      .insert({
-        project_id: projectId,
+      .select('id')
+      .eq('project_id', projectId)
+      .limit(1);
+    
+    const isFirstDomain = !existingProjectDomains || existingProjectDomains.length === 0;
+    
+    // Check if this domain has a companion (apex <-> www)
+    const companionDomain = getCompanionDomain(domain);
+    const domainsToAdd = [domain];
+    if (companionDomain) {
+      domainsToAdd.push(companionDomain);
+      console.log(`[DOMAIN] Will add both ${domain} and ${companionDomain}`);
+    }
+
+    // Store all successfully added domains for rollback if needed
+    const addedDomains: Array<{ id: string; domain: string }> = [];
+    
+    // Add all domains (main + companion if applicable)
+    for (const domainToAdd of domainsToAdd) {
+        // Check if companion domain already exists for this project
+        const { data: existingCompanion } = await supabase
+          .from('project_domains')
+          .select('id')
+          .eq('domain', domainToAdd)
+          .eq('project_id', projectId)
+          .single();
+
+        if (existingCompanion) {
+          console.log(`[DOMAIN] ${domainToAdd} already exists for this project, skipping`);
+          continue;
+        }
+
+        // Add domain to database
+        // Set include_www to true for apex domains, false for all others
+        const isMainDomain = domainToAdd === domain;
+        const shouldIncludeWWW = isMainDomain && isApexDomain(domainToAdd);
+        
+        const { data, error } = await supabase
+          .from('project_domains')
+          .insert({
+            project_id: projectId,
+            domain: domainToAdd,
+            verified: false,
+            verified_at: null,
+            include_www: shouldIncludeWWW,
+            is_primary: isFirstDomain && isMainDomain, // Only set primary for the main domain on first addition
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error(`Error adding domain ${domainToAdd}:`, error);
+          // Rollback previously added domains
+          for (const added of addedDomains) {
+            await supabase.from('project_domains').delete().eq('id', added.id);
+          }
+          return NextResponse.json(
+            { error: `Failed to add domain ${domainToAdd}` },
+            { status: 500 }
+          );
+        }
+
+        addedDomains.push(data);
+
+        // Add to Vercel
+        try {
+          await addDomainToVercel(domainToAdd);
+          console.log(`[DOMAIN] Successfully added ${domainToAdd} to Vercel`);
+        } catch (vercelError) {
+          const errorMessage = vercelError instanceof Error ? vercelError.message : String(vercelError);
+          if (!errorMessage.includes('already exists')) {
+            // Rollback all added domains
+            for (const added of addedDomains) {
+              await supabase.from('project_domains').delete().eq('id', added.id);
+              try {
+                await removeDomainFromVercel(added.domain);
+              } catch (e) {
+                console.error(`[DOMAIN] Failed to rollback ${added.domain} from Vercel:`, e);
+              }
+            }
+            
+            console.error(`[DOMAIN] Failed to add ${domainToAdd} to Vercel:`, vercelError);
+            return NextResponse.json(
+              { error: `Failed to add domain to Vercel: ${errorMessage}` },
+              { status: 500 }
+            );
+          }
+          console.log(`[DOMAIN] ${domainToAdd} already exists in Vercel, continuing`);
+        }
+      }
+
+    // Return the primary domain that was requested (with full data including project_id)
+    const primaryDomain = addedDomains.find(d => d.domain === domain);
+    return NextResponse.json(primaryDomain || addedDomains[0]);
+  } catch (error) {
+    console.error('Error in domain addition:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id: projectId } = await params;
+    const supabase = await createSupabaseServerClient();
+    
+    // Get domain ID from URL search params
+    const url = new URL(request.url);
+    const domainId = url.searchParams.get('domainId');
+    
+    if (!domainId) {
+      return NextResponse.json(
+        { error: 'Domain ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    // Verify user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get domain details and verify project access
+    const { data: domain, error: domainError } = await supabase
+      .from('project_domains')
+      .select(`
+        id,
         domain,
-        verified: false,
-        verified_at: null,
-      })
-      .select()
+        project_id,
+        projects!inner(
+          id,
+          account_id
+        )
+      `)
+      .eq('id', domainId)
+      .eq('project_id', projectId)
       .single();
 
-    if (error) {
-      console.error('Error adding domain:', error);
+    if (domainError || !domain) {
       return NextResponse.json(
-        { error: 'Failed to add domain' },
-        { status: 500 }
+        { error: 'Domain not found or access denied' },
+        { status: 404 }
       );
     }
 
-    // Add to Vercel (fire and forget)
-    fetch(`/api/domains/${data.id}/add-to-vercel`, {
-      method: 'POST',
-    }).catch(err => {
-      console.error('[DOMAIN] Failed to add domain to Vercel:', err);
-    });
+    // Check if this domain has a companion (apex <-> www)
+    const companionDomain = getCompanionDomain(domain.domain);
+    const domainsToRemove = [{ id: domainId, domain: domain.domain }];
+    
+    // Find companion domain in database if it exists
+    if (companionDomain) {
+      const { data: companionData } = await supabase
+        .from('project_domains')
+        .select('id, domain')
+        .eq('domain', companionDomain)
+        .eq('project_id', projectId)
+        .single();
+      
+      if (companionData) {
+        domainsToRemove.push({ id: companionData.id, domain: companionData.domain });
+        console.log(`[DOMAIN] Will remove both ${domain.domain} and ${companionDomain}`);
+      }
+    }
 
-    return NextResponse.json(data);
+    // Remove all domains (main + companion if applicable)
+    const removedDomains: string[] = [];
+    for (const domainToRemove of domainsToRemove) {
+      // Remove from Vercel first
+      try {
+        await removeDomainFromVercel(domainToRemove.domain);
+        console.log(`[DOMAIN] Removed ${domainToRemove.domain} from Vercel`);
+      } catch (vercelError) {
+        console.warn(`[DOMAIN] Error removing ${domainToRemove.domain} from Vercel:`, vercelError);
+        // Continue anyway - domain might not exist in Vercel
+      }
+
+      // Remove from database
+      const { error: deleteError } = await supabase
+        .from('project_domains')
+        .delete()
+        .eq('id', domainToRemove.id);
+
+      if (deleteError) {
+        console.error(`[DOMAIN] Failed to delete ${domainToRemove.domain} from database:`, deleteError);
+        // Continue with other domains
+      } else {
+        removedDomains.push(domainToRemove.domain);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: removedDomains.length > 1 
+        ? `Removed ${removedDomains.join(' and ')}` 
+        : 'Domain removed successfully'
+    });
   } catch (error) {
-    console.error('Error in domain addition:', error);
+    console.error('Error in domain deletion:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

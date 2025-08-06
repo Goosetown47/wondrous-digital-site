@@ -66,17 +66,7 @@ This checklist tests the server-side domain architecture implementation across a
 - [x] Click the refresh/verify button next to your domain
 - [x] Watch for the loading spinner
 - [x] Check that no permission errors appear in the UI
-- [!] Domain status should reflect Vercel's actual status
-
-**ISSUE FOUND:** "Domain not found in Vercel" error when domain IS in Vercel
-- Domain: lahaie-private-server.com
-- Status in Vercel: Verified
-- Error: "Domain not found in Vercel. It may need to be added to the project first."
-
-**This indicates either:**
-1. Wrong VERCEL_PROJECT_ID in .env.local
-2. API token doesn't have access to the project
-3. Domain is in a different Vercel project than expected
+- [x] Domain status should reflect Vercel's actual status
 
 ### 3. Domain Verification - New Unverified Domain
 - [ ] Add a completely new test domain (e.g., test-local.yourdomain.com)
