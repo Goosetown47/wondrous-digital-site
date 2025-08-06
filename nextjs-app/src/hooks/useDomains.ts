@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import type { ProjectDomain } from '@/types/database';
 import { toast } from 'sonner';
-import { validateDomainFormat } from '@/lib/services/domains';
 
 // Fetch domains for a project
 export function useDomains(projectId: string | null) {
@@ -30,45 +29,19 @@ export function useAddDomain() {
 
   return useMutation({
     mutationFn: async ({ projectId, domain }: { projectId: string; domain: string }) => {
-      // Validate domain format first
-      const validationError = validateDomainFormat(domain);
-      if (validationError) {
-        throw new Error(validationError);
-      }
+      // Call the API route which handles all validation and permissions
+      const response = await fetch(`/api/projects/${projectId}/domains`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ domain }),
+      });
 
-      // Add to database
-      const { data, error } = await supabase
-        .from('project_domains')
-        .insert({
-          project_id: projectId,
-          domain,
-          verified: false,
-          verified_at: null,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const data = await response.json();
       
-      // Add to Vercel - wait for this to complete
-      console.log(`[DOMAIN] Adding domain to Vercel: ${domain}`);
-      try {
-        const vercelResponse = await fetch(`/api/domains/${data.id}/add-to-vercel`, {
-          method: 'POST',
-        });
-        
-        if (!vercelResponse.ok) {
-          const vercelError = await vercelResponse.json();
-          console.error('[DOMAIN] Failed to add domain to Vercel:', vercelError);
-          
-          // Still return the domain but warn about Vercel
-          toast.warning(`Domain added to database but Vercel configuration failed: ${vercelError.error || 'Unknown error'}`);
-        } else {
-          console.log('[DOMAIN] Successfully added domain to Vercel');
-        }
-      } catch (err) {
-        console.error('[DOMAIN] Failed to add domain to Vercel:', err);
-        toast.warning('Domain added to database but Vercel configuration failed. You may need to configure it manually.');
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to add domain');
       }
 
       return data as ProjectDomain;

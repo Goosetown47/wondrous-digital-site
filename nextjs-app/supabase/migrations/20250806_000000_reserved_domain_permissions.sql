@@ -20,8 +20,9 @@ ALTER TABLE reserved_domain_permissions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Platform admins can manage reserved domain permissions" ON reserved_domain_permissions
   FOR ALL USING (
     auth.uid() IN (
-      SELECT user_id FROM user_roles 
-      WHERE role = 'platform_admin'
+      SELECT user_id FROM account_users 
+      WHERE account_id = '00000000-0000-0000-0000-000000000000'  -- Platform account
+      AND role IN ('admin', 'staff')
     )
   );
 
