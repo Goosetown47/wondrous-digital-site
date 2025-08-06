@@ -55,7 +55,7 @@ export function useAddDomain() {
         // Don't show toast here - we'll handle it with inline validation
         // The error will be passed to the component
       } else {
-        toast.error('Failed to add domain');
+        toast.error(error.message || 'Failed to add domain');
       }
     },
   });

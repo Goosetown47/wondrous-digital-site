@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase/client';
-import type { ProjectDomain } from '@/types/database';
 
 export interface VercelDomainConfig {
   name: string;
@@ -29,24 +28,38 @@ export interface VercelDomainStatus {
 // They are now implemented directly in the API routes to avoid client-side module issues
 
 /**
- * Update domain verification status in database
+ * Update domain verification status via API route
+ * This function now calls the server-side API to bypass RLS restrictions
  */
 export async function updateDomainVerification(
   domainId: string,
-  verified: boolean
-): Promise<void> {
-  const updates: Partial<ProjectDomain> = {
-    verified,
-    verified_at: verified ? new Date().toISOString() : undefined,
-  };
+  updates: {
+    verified?: boolean;
+    ssl_state?: string;
+    verification_details?: Record<string, unknown>;
+  }
+): Promise<{ error: string | null }> {
+  try {
+    const response = await fetch(`/api/domains/${domainId}/update`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updates),
+    });
 
-  // Could add ssl_state to database if needed
-  const { error } = await supabase
-    .from('project_domains')
-    .update(updates)
-    .eq('id', domainId);
+    if (!response.ok) {
+      const data = await response.json();
+      return { error: data.error || 'Failed to update domain verification' };
+    }
 
-  if (error) throw error;
+    return { error: null };
+  } catch (error) {
+    console.error('Error updating domain verification:', error);
+    return { 
+      error: error instanceof Error ? error.message : 'Failed to update domain verification' 
+    };
+  }
 }
 
 /**

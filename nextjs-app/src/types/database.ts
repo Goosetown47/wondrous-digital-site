@@ -107,6 +107,8 @@ export interface ProjectDomain {
   is_primary: boolean;
   verified: boolean;
   verified_at?: string;
+  ssl_state?: string;
+  verification_details?: Record<string, unknown>;
   created_at: string;
 }
 

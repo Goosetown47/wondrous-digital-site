@@ -115,6 +115,9 @@ export function DomainSettings({ projectId, projectSlug }: DomainSettingsProps) 
       onError: (error: Error & { code?: string }) => {
         if (error.code === '23505') {
           setDomainError('This domain is already configured for another project. Please use a different domain.');
+        } else {
+          // Show other errors inline as well
+          setDomainError(error.message || 'Failed to add domain');
         }
       }
     });

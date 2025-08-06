@@ -1,10 +1,24 @@
 import { env } from '@/env.mjs';
+import { createClient } from '@supabase/supabase-js';
+import type { ProjectDomain } from '@/types/database';
 
 // Vercel API configuration
 const VERCEL_API_TOKEN = env.VERCEL_API_TOKEN;
 const VERCEL_PROJECT_ID = env.VERCEL_PROJECT_ID;
 const VERCEL_TEAM_ID = env.VERCEL_TEAM_ID;
 const VERCEL_API_BASE = 'https://api.vercel.com';
+
+// Create Supabase admin client for server-side operations
+const supabaseAdmin = createClient(
+  env.NEXT_PUBLIC_SUPABASE_URL,
+  env.SUPABASE_SERVICE_ROLE_KEY,
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  }
+);
 
 // Helper function for Vercel API requests
 async function vercelRequest(path: string, options: RequestInit = {}) {
@@ -200,5 +214,61 @@ export async function getDomainConfiguration(domain: string) {
   } catch (error) {
     console.error('Error getting domain configuration:', error);
     throw error;
+  }
+}
+
+/**
+ * Update domain verification status in the database
+ * This function uses the admin client to bypass RLS restrictions
+ */
+export async function updateDomainVerification(
+  domainId: string, 
+  updates: Partial<Pick<ProjectDomain, 'verified' | 'ssl_state' | 'verification_details'>>
+): Promise<{ error: string | null }> {
+  console.log(`[DOMAIN] Updating domain verification for ${domainId}:`, updates);
+  
+  try {
+    // Build the updates object
+    const safeUpdates: Record<string, unknown> = {};
+    
+    if (updates.verified !== undefined) {
+      safeUpdates.verified = updates.verified;
+      // Add verified_at timestamp when domain is verified
+      if (updates.verified === true) {
+        safeUpdates.verified_at = new Date().toISOString();
+      }
+    }
+    
+    if (updates.ssl_state !== undefined) {
+      safeUpdates.ssl_state = updates.ssl_state;
+    }
+    
+    if (updates.verification_details !== undefined) {
+      safeUpdates.verification_details = updates.verification_details;
+    }
+    
+    // Only proceed if there are updates to make
+    if (Object.keys(safeUpdates).length === 0) {
+      console.log('[DOMAIN] No updates to apply');
+      return { error: null };
+    }
+    
+    const { error } = await supabaseAdmin
+      .from('project_domains')
+      .update(safeUpdates)
+      .eq('id', domainId);
+
+    if (error) {
+      console.error('[DOMAIN] Failed to update domain verification:', error);
+      return { error: error.message };
+    }
+
+    console.log('[DOMAIN] Successfully updated domain verification');
+    return { error: null };
+  } catch (error) {
+    console.error('[DOMAIN] Error updating domain verification:', error);
+    return { 
+      error: error instanceof Error ? error.message : 'Failed to update domain verification' 
+    };
   }
 }

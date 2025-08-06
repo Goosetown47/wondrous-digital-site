@@ -1,5 +1,4 @@
-import { checkDomainStatus } from './domains.server';
-import { updateDomainVerification } from './domains';
+import { checkDomainStatus, updateDomainVerification } from './domains.server';
 
 // TODO: Use this interface when implementing verification history
 // interface VerificationAttempt {
@@ -72,11 +71,19 @@ export async function verifyDomainWithRetry(
     // Check domain status
     const status = await checkDomainStatus(domain);
 
-    // Update database
-    await updateDomainVerification(
+    // Update database with both verification and SSL status
+    const { error: updateError } = await updateDomainVerification(
       domainId,
-      status.verified
+      {
+        verified: status.verified,
+        ssl_state: status.ssl?.state || 'PENDING',
+        verification_details: status.verification ? JSON.stringify(status.verification) : null
+      }
     );
+
+    if (updateError) {
+      throw new Error(`Failed to update domain verification: ${updateError}`);
+    }
 
     if (status.verified) {
       await logDomainOperation(domainId, 'VERIFY_SUCCESS', 'success', {
