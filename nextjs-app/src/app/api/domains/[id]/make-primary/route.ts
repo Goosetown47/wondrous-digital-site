@@ -15,29 +15,61 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get the domain and verify user has access to its project
-    const { data: domain, error: domainError } = await supabase
-      .from('project_domains')
-      .select(`
-        id,
-        domain,
-        project_id,
-        is_primary,
-        projects!inner(
+    // First check if user is a platform admin/staff
+    const { data: platformAccess } = await supabase
+      .from('account_users')
+      .select('role')
+      .eq('account_id', '00000000-0000-0000-0000-000000000000')
+      .eq('user_id', user.id)
+      .in('role', ['admin', 'staff'])
+      .single();
+
+    let domain;
+    let domainError;
+
+    if (platformAccess) {
+      // Platform admin/staff - they have access to all domains
+      const result = await supabase
+        .from('project_domains')
+        .select(`
           id,
-          account_id,
-          accounts!inner(
+          domain,
+          project_id,
+          is_primary
+        `)
+        .eq('id', domainId)
+        .single();
+      
+      domain = result.data;
+      domainError = result.error;
+    } else {
+      // Regular user - check normal access through project ownership
+      const result = await supabase
+        .from('project_domains')
+        .select(`
+          id,
+          domain,
+          project_id,
+          is_primary,
+          projects!inner(
             id,
-            account_users!inner(
-              user_id,
-              role
+            account_id,
+            accounts!inner(
+              id,
+              account_users!inner(
+                user_id,
+                role
+              )
             )
           )
-        )
-      `)
-      .eq('id', domainId)
-      .eq('projects.accounts.account_users.user_id', user.id)
-      .single();
+        `)
+        .eq('id', domainId)
+        .eq('projects.accounts.account_users.user_id', user.id)
+        .single();
+      
+      domain = result.data;
+      domainError = result.error;
+    }
 
     if (domainError || !domain) {
       return NextResponse.json(

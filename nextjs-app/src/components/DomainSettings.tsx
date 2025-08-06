@@ -15,7 +15,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DNS_PROVIDERS } from '@/lib/dns-providers';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -291,21 +290,21 @@ function DomainCard({
   const getStatusText = () => {
     // Check if we have invalid configuration even if "verified"
     if (dnsConfig?.status?.configuration === 'invalid') {
-      return <span className="text-orange-600 text-sm">Invalid Configuration</span>;
+      return <span className="text-orange-600 text-sm">Invalid DNS Configuration</span>;
     }
     if (domain.verified && dnsConfig?.status?.configuration === 'valid') {
       if (domain.ssl_state === 'READY') {
         return <span className="text-green-600 text-sm font-medium">Active</span>;
       }
-      return <span className="text-blue-600 text-sm">SSL Pending</span>;
+      return <span className="text-blue-600 text-sm">SSL Provisioning</span>;
     }
     if (domain.verified && !dnsConfig?.status?.configuration) {
-      return <span className="text-blue-600 text-sm">Verifying Configuration</span>;
+      return <span className="text-blue-600 text-sm">Checking Configuration</span>;
     }
     if (domainStatus?.error || dnsConfig?.status?.error) {
-      return <span className="text-red-600 text-sm">Setup Required</span>;
+      return <span className="text-red-600 text-sm">DNS Setup Required</span>;
     }
-    return <span className="text-yellow-600 text-sm">Pending Setup</span>;
+    return <span className="text-yellow-600 text-sm">DNS Setup Required</span>;
   };
   
   const getSslIcon = () => {
@@ -412,15 +411,15 @@ function DomainCard({
             {/* Status Details */}
             <div className="text-sm space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">DNS Configuration:</span>
+                <span className="text-muted-foreground">DNS Status:</span>
                 <span className={
                   dnsConfig?.status?.configuration === 'valid' ? 'text-green-600' : 
                   dnsConfig?.status?.configuration === 'invalid' ? 'text-red-600' : 
                   'text-yellow-600'
                 }>
-                  {dnsConfig?.status?.configuration === 'valid' ? 'Valid' : 
-                   dnsConfig?.status?.configuration === 'invalid' ? 'Invalid' : 
-                   'Pending'}
+                  {dnsConfig?.status?.configuration === 'valid' ? 'Configured' : 
+                   dnsConfig?.status?.configuration === 'invalid' ? 'Not Configured' : 
+                   'Awaiting Setup'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -433,59 +432,88 @@ function DomainCard({
                   {dnsConfig?.status?.ssl || domain.ssl_state || 'Pending'}
                 </span>
               </div>
+              
+              {/* Issues Section - only show if there are errors */}
+              {(domainStatus?.error || dnsConfig?.status?.error || dnsConfig?.message) && (
+                <div className="mt-3 pt-3 border-t">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-muted-foreground">Issues:</span>
+                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                  </div>
+                  <div className="space-y-1">
+                    {domainStatus?.error && (
+                      <div className="flex items-start gap-2 text-sm text-red-600">
+                        <span className="text-red-500 mt-0.5">•</span>
+                        <span>{domainStatus.error}</span>
+                      </div>
+                    )}
+                    {dnsConfig?.status?.error && (
+                      <div className="flex items-start gap-2 text-sm text-red-600">
+                        <span className="text-red-500 mt-0.5">•</span>
+                        <span>{dnsConfig.status.error}</span>
+                      </div>
+                    )}
+                    {dnsConfig?.message && (
+                      <div className="flex items-start gap-2 text-sm text-amber-600">
+                        <span className="text-amber-500 mt-0.5">•</span>
+                        <span>{dnsConfig.message}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             
-            {/* WWW Toggle for apex domains */}
-            {canHaveWWW && (
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id={`www-toggle-${domain.id}`}
-                    checked={includeWWW}
-                    onCheckedChange={handleWWWToggle}
-                    disabled={toggleWWW.isPending}
-                  />
-                  <Label
-                    htmlFor={`www-toggle-${domain.id}`}
-                    className="cursor-pointer"
-                  >
-                    <span className="font-medium">Include www.{domain.domain}</span>
-                    <span className="text-sm text-muted-foreground ml-2">(recommended)</span>
-                  </Label>
+            {/* Settings Section */}
+            <div className="p-3 bg-muted/50 rounded-lg space-y-3">
+              <h4 className="text-sm font-medium text-muted-foreground">Settings</h4>
+              
+              {/* WWW Toggle for apex domains */}
+              {canHaveWWW && (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-sm font-medium">Include www subdomain</span>
+                    <span className="text-xs text-muted-foreground block">Recommended for better accessibility</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {toggleWWW.isPending && (
+                      <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                    )}
+                    <Switch
+                      id={`www-toggle-${domain.id}`}
+                      checked={includeWWW}
+                      onCheckedChange={handleWWWToggle}
+                      disabled={toggleWWW.isPending}
+                    />
+                  </div>
                 </div>
-                {toggleWWW.isPending && (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                )}
+              )}
+              
+              {/* Primary Domain Toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-sm font-medium">Primary domain</span>
+                  <span className="text-xs text-muted-foreground block">
+                    {domain.is_primary ? 'This is your main domain' : 'Set as your main domain'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {makePrimary.isPending && (
+                    <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                  )}
+                  <Switch
+                    id={`primary-toggle-${domain.id}`}
+                    checked={domain.is_primary || false}
+                    onCheckedChange={(checked) => {
+                      if (checked && !domain.is_primary) {
+                        makePrimary.mutate(domain.id);
+                      }
+                    }}
+                    disabled={makePrimary.isPending || domain.is_primary}
+                  />
+                </div>
               </div>
-            )}
-            
-            {/* Make Primary Button */}
-            {!domain.is_primary && domain.verified && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => makePrimary.mutate(domain.id)}
-                disabled={makePrimary.isPending}
-                className="w-full"
-              >
-                {makePrimary.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Crown className="h-4 w-4 mr-2" />
-                )}
-                Make Primary Domain
-              </Button>
-            )}
-            
-            {/* Display configuration message if available */}
-            {dnsConfig?.message && (
-              <Alert>
-                <Info className="h-4 w-4" />
-                <AlertDescription className="text-sm">
-                  {dnsConfig.message}
-                </AlertDescription>
-              </Alert>
-            )}
+            </div>
             
             {/* DNS Configuration Section - Always Show */}
             <div className="space-y-3">
