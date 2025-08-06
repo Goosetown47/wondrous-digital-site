@@ -11,12 +11,20 @@ interface DomainStatusProps {
 }
 
 export function DomainStatus({ domainId, domain, verified }: DomainStatusProps) {
-  const { data: status, isLoading, error } = useDomainStatus(verified ? null : domainId);
+  // First get initial status to check SSL state
+  const [shouldPoll, setShouldPoll] = useState(!verified);
+  const { data: status, isLoading, error } = useDomainStatus(shouldPoll ? domainId : null);
   const [elapsedTime, setElapsedTime] = useState(0);
 
   // Use database status if no real-time status available
   const isVerified = status?.verified ?? verified;
   const sslState = status?.ssl?.state;
+  
+  // Continue polling if not verified OR if SSL is not ready
+  useEffect(() => {
+    const needsPolling = !isVerified || (isVerified && sslState !== 'READY');
+    setShouldPoll(needsPolling);
+  }, [isVerified, sslState]);
 
   // Handle errors gracefully
   if (error) {

@@ -137,11 +137,11 @@ export async function middleware(request: NextRequest) {
             .from('project_domains')
             .select(`
               project_id,
-              projects!inner(customer_id)
+              projects!inner(account_id)
             `)
             .eq('domain', domain)
             .eq('verified', true)
-            .eq('projects.customer_id', permission.account_id)
+            .eq('projects.account_id', permission.account_id)
             .single();
             
           if (domainData) {

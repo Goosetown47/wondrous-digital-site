@@ -84,18 +84,36 @@ export async function POST(
       }
     }
 
-    // Check if domain already exists
+    // Check if domain already exists for THIS project
     const { data: existingDomain } = await supabase
       .from('project_domains')
-      .select('id')
+      .select('id, project_id')
       .eq('domain', domain)
       .single();
 
     if (existingDomain) {
-      return NextResponse.json(
-        { error: 'This domain is already in use.' },
-        { status: 409 }
-      );
+      // If it exists for this project, that's okay - maybe they're re-adding
+      if (existingDomain.project_id === projectId) {
+        return NextResponse.json(
+          { error: 'This domain is already configured for this project.' },
+          { status: 409 }
+        );
+      }
+      
+      // If it exists for another project, check if this is a reserved domain
+      if (reservedDomains.includes(domain)) {
+        // For reserved domains with permission, we might want to allow moving between projects
+        // For now, still block it to prevent accidental moves
+        return NextResponse.json(
+          { error: 'This domain is already in use by another project. Please remove it from the other project first.' },
+          { status: 409 }
+        );
+      } else {
+        return NextResponse.json(
+          { error: 'This domain is already in use.' },
+          { status: 409 }
+        );
+      }
     }
 
     // Add domain to database
