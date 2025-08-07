@@ -57,10 +57,21 @@ export async function POST(
     // Get fresh status to include configuration info
     const status = await checkDomainStatus(domain.domain);
     
+    // Override SSL status if DNS is configured
+    let sslInfo = result.ssl;
+    if (status.configured === true && sslInfo) {
+      sslInfo = {
+        ...sslInfo,
+        configured: true,
+        status: 'READY',
+        state: 'READY'
+      };
+    }
+    
     return NextResponse.json({
       verified: result.verified,
       verification: result.verification, // Include DNS instructions
-      ssl: result.ssl,
+      ssl: sslInfo,
       configured: status.configured, // Include configuration status
       error: result.error,
       retryScheduled: result.shouldRetry,

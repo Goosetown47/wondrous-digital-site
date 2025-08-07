@@ -77,10 +77,19 @@ export async function verifyDomainWithRetry(
     // Check domain status
     const status = await checkDomainStatus(domain);
 
+    // Determine SSL status based on DNS configuration
+    let sslState = status.ssl?.state || 'PENDING';
+    
+    // If DNS is properly configured, SSL should be READY
+    // Vercel automatically provisions SSL when DNS is configured correctly
+    if (status.configured === true) {
+      sslState = 'READY';
+    }
+
     // Update database with both verification and SSL status
     const updateData: Parameters<typeof updateDomainVerification>[1] = {
       verified: status.verified,
-      ssl_state: status.ssl?.state || 'PENDING'
+      ssl_state: sslState
     };
     
     // Only include verification_details if we have verification data

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -263,6 +263,7 @@ function DomainCard({
   const [selectedProvider, setSelectedProvider] = useState('godaddy');
   const [showWWWConfirmation, setShowWWWConfirmation] = useState(false);
   const [pendingWWWState, setPendingWWWState] = useState(false);
+  const [isDnsExpanded, setIsDnsExpanded] = useState(true);
   
   const { data: domainStatus } = useDomainStatus(domain.id);
   const { data: dnsConfig } = useDomainDNSConfig(domain.id);
@@ -273,46 +274,36 @@ function DomainCard({
   const canHaveWWW = isApexDomain(domain.domain);
   const includeWWW = domain.include_www ?? true; // Default to true if not set
   
-  // Determine status icon and color based on both ownership and configuration
-  const getStatusIcon = () => {
-    if (domain.verified && domain.ssl_state === 'READY') {
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
+  // Update DNS expanded state when configuration changes
+  useEffect(() => {
+    if (dnsConfig?.status?.configuration === 'valid') {
+      setIsDnsExpanded(false);
     }
-    if (domain.verified && domain.ssl_state !== 'READY') {
-      return <Clock className="h-4 w-4 text-blue-500 animate-pulse" />;
-    }
-    if (domainStatus?.error || dnsConfig?.status?.configuration === 'invalid') {
-      return <XCircle className="h-4 w-4 text-red-500" />;
-    }
-    return <Clock className="h-4 w-4 text-yellow-500 animate-pulse" />;
-  };
+  }, [dnsConfig?.status?.configuration]);
+  
   
   const getStatusText = () => {
-    // Check if we have invalid configuration even if "verified"
-    if (dnsConfig?.status?.configuration === 'invalid') {
-      return <span className="text-orange-600 text-sm">Invalid DNS Configuration</span>;
+    // Show status based on actual configuration state
+    if (dnsConfig?.status?.configuration === 'valid') {
+      // DNS is properly configured - show green badge
+      return <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">Configured</Badge>;
     }
-    if (domain.verified && dnsConfig?.status?.configuration === 'valid') {
-      if (domain.ssl_state === 'READY') {
-        return <span className="text-green-600 text-sm font-medium">Active</span>;
-      }
-      return <span className="text-blue-600 text-sm">SSL Provisioning</span>;
+    if (dnsConfig?.status?.configuration === 'invalid') {
+      // Domain added but DNS not configured - show amber badge
+      return <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100">DNS Setup Required</Badge>;
     }
     if (domain.verified && !dnsConfig?.status?.configuration) {
-      return <span className="text-blue-600 text-sm">Checking Configuration</span>;
+      // Still checking status - show blue badge
+      return <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">Checking Configuration</Badge>;
     }
     if (domainStatus?.error || dnsConfig?.status?.error) {
-      return <span className="text-red-600 text-sm">DNS Setup Required</span>;
+      // Error state - show red badge
+      return <Badge variant="destructive">Configuration Error</Badge>;
     }
-    return <span className="text-yellow-600 text-sm">DNS Setup Required</span>;
+    // Default pending state
+    return <Badge variant="secondary">Pending Setup</Badge>;
   };
   
-  const getSslIcon = () => {
-    if (domain.ssl_state === 'READY') {
-      return <Shield className="h-3 w-3 text-green-500" />;
-    }
-    return <ShieldOff className="h-3 w-3 text-gray-400" />;
-  };
   
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -357,9 +348,7 @@ function DomainCard({
                 Primary
               </Badge>
             )}
-            {getStatusIcon()}
             {getStatusText()}
-            {domain.verified && getSslIcon()}
           </div>
           
           <div className="flex items-center gap-1">
@@ -412,29 +401,54 @@ function DomainCard({
             <div className="text-sm space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">DNS Status:</span>
-                <span className={
-                  dnsConfig?.status?.configuration === 'valid' ? 'text-green-600' : 
-                  dnsConfig?.status?.configuration === 'invalid' ? 'text-red-600' : 
-                  'text-yellow-600'
-                }>
-                  {dnsConfig?.status?.configuration === 'valid' ? 'Configured' : 
-                   dnsConfig?.status?.configuration === 'invalid' ? 'Not Configured' : 
-                   'Awaiting Setup'}
-                </span>
+                <div className="flex items-center gap-2">
+                  {dnsConfig?.status?.configuration === 'valid' ? (
+                    <CheckCircle className="h-3 w-3 text-green-500" />
+                  ) : dnsConfig?.status?.configuration === 'invalid' ? (
+                    <XCircle className="h-3 w-3 text-amber-500" />
+                  ) : (
+                    <Clock className="h-3 w-3 text-blue-500 animate-pulse" />
+                  )}
+                  <span className={
+                    dnsConfig?.status?.configuration === 'valid' ? 'text-green-600' : 
+                    dnsConfig?.status?.configuration === 'invalid' ? 'text-amber-600' : 
+                    'text-blue-600'
+                  }>
+                    {dnsConfig?.status?.configuration === 'valid' ? 'Configured' : 
+                     dnsConfig?.status?.configuration === 'invalid' ? 'Not Configured' : 
+                     'Checking'}
+                  </span>
+                </div>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">SSL Certificate:</span>
-                <span className={
-                  dnsConfig?.status?.ssl === 'READY' ? 'text-green-600' : 
-                  dnsConfig?.status?.ssl === 'ERROR' ? 'text-red-600' :
-                  'text-yellow-600'
-                }>
-                  {dnsConfig?.status?.ssl || domain.ssl_state || 'Pending'}
-                </span>
+                <div className="flex items-center gap-2">
+                  {(() => {
+                    const sslStatus = dnsConfig?.status?.ssl || domain.ssl_state || 'PENDING';
+                    return (
+                      <>
+                        {sslStatus === 'READY' ? (
+                          <Shield className="h-3 w-3 text-green-500" />
+                        ) : sslStatus === 'ERROR' ? (
+                          <ShieldOff className="h-3 w-3 text-red-500" />
+                        ) : (
+                          <Shield className="h-3 w-3 text-gray-400" />
+                        )}
+                        <span className={
+                          sslStatus === 'READY' ? 'text-green-600' : 
+                          sslStatus === 'ERROR' ? 'text-red-600' :
+                          'text-gray-600'
+                        }>
+                          {sslStatus}
+                        </span>
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
               
-              {/* Issues Section - only show if there are errors */}
-              {(domainStatus?.error || dnsConfig?.status?.error || dnsConfig?.message) && (
+              {/* Issues Section - only show if there are actual errors */}
+              {(domainStatus?.error || dnsConfig?.status?.error || (dnsConfig?.message && dnsConfig?.status?.configuration !== 'valid')) && (
                 <div className="mt-3 pt-3 border-t">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-muted-foreground">Issues:</span>
@@ -453,7 +467,7 @@ function DomainCard({
                         <span>{dnsConfig.status.error}</span>
                       </div>
                     )}
-                    {dnsConfig?.message && (
+                    {dnsConfig?.message && dnsConfig?.status?.configuration !== 'valid' && (
                       <div className="flex items-start gap-2 text-sm text-amber-600">
                         <span className="text-amber-500 mt-0.5">•</span>
                         <span>{dnsConfig.message}</span>
@@ -515,10 +529,23 @@ function DomainCard({
               </div>
             </div>
             
-            {/* DNS Configuration Section - Always Show */}
+            {/* DNS Configuration Section - Collapsible */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold">DNS Configuration</h4>
+                <button
+                  onClick={() => setIsDnsExpanded(!isDnsExpanded)}
+                  className="flex items-center gap-2 text-sm font-semibold hover:text-muted-foreground transition-colors"
+                >
+                  <h4>DNS Configuration</h4>
+                  {dnsConfig?.status?.configuration === 'valid' && (
+                    <CheckCircle className="h-3 w-3 text-green-500" />
+                  )}
+                  {isDnsExpanded ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </button>
                 <Select value={selectedProvider} onValueChange={setSelectedProvider}>
                   <SelectTrigger className="w-[180px] h-8">
                     <SelectValue />
@@ -534,6 +561,7 @@ function DomainCard({
               </div>
                 
                 {/* Provider-specific instructions */}
+                {isDnsExpanded && (
                 <div className="space-y-3 text-sm">
                   {/* Dynamic DNS Records from Vercel */}
                   {dnsConfig?.records?.map((record: {
@@ -596,12 +624,6 @@ function DomainCard({
                             <span className="text-xs text-muted-foreground">TTL:</span>
                             <code className="font-mono text-xs">{record.ttl || '300'} seconds</code>
                           </div>
-                          {record.note && (
-                            <div className="flex items-start p-2 bg-blue-50 dark:bg-blue-950 rounded mt-2">
-                              <Info className="h-3 w-3 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
-                              <span className="text-xs text-blue-700 dark:text-blue-300">{record.note}</span>
-                            </div>
-                          )}
                         </div>
                       </div>
                     );
@@ -656,6 +678,7 @@ function DomainCard({
                     <p>• Click the refresh button above to check verification status</p>
                   </div>
                 </div>
+                )}
             </div>
             
             {/* Error Messages */}

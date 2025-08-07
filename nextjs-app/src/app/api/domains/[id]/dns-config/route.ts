@@ -199,6 +199,24 @@ export async function GET(
       error: vercelStatus?.error || null
     };
     
+    // Update SSL status in database if it has changed
+    if (sslStatus !== domain.ssl_state) {
+      console.log('[DNS-CONFIG] Updating SSL status in database:', {
+        domain: domain.domain,
+        oldStatus: domain.ssl_state,
+        newStatus: sslStatus
+      });
+      
+      const { error: updateError } = await supabaseAdmin
+        .from('project_domains')
+        .update({ ssl_state: sslStatus })
+        .eq('id', domainId);
+        
+      if (updateError) {
+        console.error('[DNS-CONFIG] Failed to update SSL status:', updateError);
+      }
+    }
+    
     // Log for debugging
     console.log('[DNS-CONFIG] Status determination:', {
       domain: domain.domain,
