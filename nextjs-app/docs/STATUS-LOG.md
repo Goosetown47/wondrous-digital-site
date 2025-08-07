@@ -41,6 +41,56 @@ This is an ongoing log of everything we do across the application, from bug fixe
 # MOST RECENT LOG
 ## ------------------------------------------------ ##
 
+### LOG (Date: 8/7/2025 @ 2:45am)
+#### Version: v0.1.1 (Development - Domain Debug Enhancement)
+#### Overview Summary
+
+Added comprehensive domain debugging capabilities to diagnose why domains show different statuses on preview vs local environments. Enhanced logging throughout the domain verification flow and created a diagnostic endpoint to help identify project ID mismatches and configuration issues.
+
+#### Log Items
+
+- **Domain Debug Enhancement for Preview Environments**
+  - Identified issue: lahaie-private-server.com shows "DNS Setup Required" on preview but "Configured" on local
+  - Root cause: Preview deployment likely using different VERCEL_PROJECT_ID than local/production
+  - API returns `configuration: "invalid"` on preview despite Vercel dashboard showing "Valid Configuration"
+
+- **Enhanced Logging in domains.server.ts**
+  - Added timestamp, environment, and full project ID logging to checkDomainStatus
+  - Enhanced v6 endpoint logging to show project ID mismatches
+  - Added warnings when domain is configured by different Vercel project
+  - Logs full response data in preview mode for debugging
+
+- **Created Comprehensive Debug Endpoint**
+  - Built `/api/debug/domain-config` endpoint for domain diagnostics
+  - Shows environment configuration with masked sensitive data
+  - Makes parallel calls to both v10 and v6 Vercel endpoints
+  - Provides analysis showing project mismatches and configuration status
+  - Includes helpful summary and recommendations for common issues
+
+- **Updated DNS Config Route**
+  - Added diagnostic information in development/preview environments
+  - Shows project ID, environment, and timestamp in response
+  - Added cache control headers to prevent stale data
+  - Fixed TypeScript errors by properly typing diagnostic data
+
+- **Frontend Diagnostic Display**
+  - Added debug information panel in DomainSettings component
+  - Shows only in development/preview environments
+  - Displays project ID, verification status, and configuration status
+  - Includes link to full diagnostic report
+  - Fixed all TypeScript `any` errors with proper type definitions
+
+- **Technical Implementation**
+  - All TypeScript compilation passes without errors
+  - ESLint passes with no new errors
+  - Pre-commit hooks pass successfully
+  - Changes pushed to bugfix/domain-vercel-addition branch
+
+
+## ------------------------------------------------ ##
+# PREVIOUS LOGS
+## ------------------------------------------------ ##
+
 ### LOG (Date: 8/7/2025 @ 12:00am)
 #### Version: v0.1.1 (Development - Domain UI/UX Improvements)
 #### Overview Summary
@@ -83,11 +133,6 @@ Enhanced domain management UI/UX with improved status indicators, SSL synchroniz
   - Tested expand/collapse functionality works correctly
   - Verified Issues section only shows for actual errors
   - All UI elements display correctly with proper status indicators
-
-
-## ------------------------------------------------ ##
-# PREVIOUS LOGS
-## ------------------------------------------------ ##
 
 ### LOG (Date: 8/6/2025 @ 6:30pm)
 #### Version: v0.1.1 (Development - Primary Domain System & UX Enhancements)
