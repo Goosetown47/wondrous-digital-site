@@ -157,7 +157,6 @@ export async function checkDomainStatus(domain: string): Promise<VercelDomainSta
   
   console.log(`[VERCEL] Checking domain status for: ${domain}`);
   console.log(`[VERCEL] Using project ID: ${VERCEL_PROJECT_ID}`);
-  console.log(`[VERCEL] API Token (first 10 chars): ${VERCEL_API_TOKEN?.substring(0, 10)}...`);
 
   try {
     const url = `/v10/projects/${VERCEL_PROJECT_ID}/domains/${domain}`;
@@ -173,17 +172,6 @@ export async function checkDomainStatus(domain: string): Promise<VercelDomainSta
     if (!response.ok) {
       if (response.status === 404) {
         console.log(`[VERCEL] Domain ${domain} not found in Vercel project`);
-        console.log(`[VERCEL] 404 Response status:`, response.status);
-        console.log(`[VERCEL] 404 Response headers:`, response.headers);
-        
-        // Try to get more info about the 404
-        try {
-          const errorBody = await response.json();
-          console.log(`[VERCEL] 404 Error details:`, errorBody);
-        } catch {
-          console.log(`[VERCEL] Could not parse 404 response body`);
-        }
-        
         return { verified: false, error: 'Domain not found in Vercel. It may need to be added to the project first.' };
       }
       const error = await response.json();
@@ -192,24 +180,70 @@ export async function checkDomainStatus(domain: string): Promise<VercelDomainSta
     }
 
     const data = await response.json();
-    console.log(`[VERCEL] Domain status for ${domain}:`, {
+    
+    // Log the FULL response for debugging
+    console.log(`[VERCEL] Full API response for ${domain}:`, JSON.stringify(data, null, 2));
+    
+    // Log the specific fields we care about
+    console.log(`[VERCEL] API response for ${domain}:`, {
       verified: data.verified,
-      ssl: data.ssl?.state,
-      verification: data.verification?.length || 0,
-      configuredBy: data.configuredBy,
-      cnames: data.cnames,
       aValues: data.aValues,
-      configured: data.configured
+      cnames: data.cnames,
+      ssl: data.ssl?.state
+    });
+    
+    // Determine if DNS is properly configured
+    const parts = domain.split('.');
+    const isApex = parts.length === 2 || 
+      (parts.length === 3 && /^(co|com|net|org|gov|edu|ac)\.[a-z]{2}$/.test(parts.slice(-2).join('.')));
+    
+    // Use the v6 config endpoint to determine if DNS is properly configured
+    // This is the industry standard approach - Vercel's misconfigured field is the source of truth
+    let isConfigured = false;
+    let configData = null;
+    
+    try {
+      console.log(`[VERCEL] Checking domain configuration via v6 endpoint`);
+      configData = await getDomainConfiguration(domain);
+      
+      // If misconfigured is false, the domain IS configured
+      isConfigured = configData && !configData.misconfigured;
+      
+      console.log(`[VERCEL] v6 config result:`, { 
+        misconfigured: configData?.misconfigured, 
+        configured: isConfigured,
+        configuredBy: configData?.configuredBy,
+        error: configData?.error
+      });
+      
+      // Update data with actual DNS values from config if available
+      if (configData?.aValues) {
+        data.aValues = configData.aValues;
+      }
+      if (configData?.cnames) {
+        data.cnames = configData.cnames;
+      }
+    } catch (configError) {
+      console.log(`[VERCEL] Could not check v6 config:`, configError);
+      // If we can't check config, assume not configured
+      isConfigured = false;
+    }
+    
+    console.log(`[VERCEL] Domain ${domain} final status:`, {
+      isApex,
+      configured: isConfigured,
+      aValues: data.aValues,
+      cnames: data.cnames
     });
     
     return {
-      verified: data.verified || false,
+      verified: data.verified || false,  // This just means "added to Vercel"
       verification: data.verification || [],
       ssl: data.ssl || { state: 'PENDING' },
       configuredBy: data.configuredBy || null,
       cnames: data.cnames || [],
       aValues: data.aValues || [],
-      configured: data.configured || false,
+      configured: isConfigured,  // This is the REAL configuration status
       apexName: data.apexName || null
     };
   } catch (error) {
@@ -220,30 +254,51 @@ export async function checkDomainStatus(domain: string): Promise<VercelDomainSta
 
 /**
  * Get DNS configuration for a domain
+ * Uses the v6 endpoint which is the industry standard approach
  */
 export async function getDomainConfiguration(domain: string) {
-  if (!VERCEL_API_TOKEN || !VERCEL_PROJECT_ID) {
+  if (!VERCEL_API_TOKEN) {
     console.warn('Vercel integration not configured. Cannot get domain configuration.');
-    throw new Error('Vercel integration not configured');
+    return { misconfigured: true, error: 'Vercel integration not configured' };
   }
 
   try {
+    // Use v6 endpoint - this is the correct industry standard endpoint
+    // It returns a misconfigured boolean field that tells us if DNS is properly configured
     const response = await vercelRequest(
-      `/v10/projects/${VERCEL_PROJECT_ID}/domains/${domain}/config`,
+      `/v6/domains/${domain}/config`,
       {
         method: 'GET',
       }
     );
 
     if (!response.ok) {
+      if (response.status === 404) {
+        // Domain not found means it's not added to any Vercel project
+        console.log(`[VERCEL] Domain ${domain} not found in Vercel (404 from /v6/domains/${domain}/config)`);
+        return { misconfigured: true, error: 'Domain not found' };
+      }
       const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to get domain configuration');
+      console.error(`[VERCEL] Error getting domain config:`, error);
+      // Return misconfigured: true when there's an error
+      return { misconfigured: true, error: error.error?.message || 'Failed to get domain configuration' };
     }
 
-    return await response.json();
+    const data = await response.json();
+    console.log(`[VERCEL] Domain configuration for ${domain}:`, {
+      misconfigured: data.misconfigured,
+      configuredBy: data.configuredBy,
+      aValues: data.aValues,
+      cnames: data.cnames
+    });
+    return data;
   } catch (error) {
     console.error('Error getting domain configuration:', error);
-    throw error;
+    // Return misconfigured: true on errors
+    return { 
+      misconfigured: true, 
+      error: error instanceof Error ? error.message : 'Failed to get domain configuration' 
+    };
   }
 }
 

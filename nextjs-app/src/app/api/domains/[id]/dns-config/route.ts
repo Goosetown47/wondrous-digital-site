@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { env } from '@/env.mjs';
-import { checkDomainStatus, getDomainConfiguration } from '@/lib/services/domains.server';
+import { checkDomainStatus } from '@/lib/services/domains.server';
 
 // Vercel's current IPs for A records
 const VERCEL_IPS = {
@@ -84,34 +84,21 @@ export async function GET(
       records: []
     };
 
-    // Get additional configuration details from Vercel if available
-    let domainConfig;
-    try {
-      if (vercelStatus && env.VERCEL_API_TOKEN) {
-        domainConfig = await getDomainConfiguration(domain.domain);
-      }
-    } catch (error) {
-      console.error('Error fetching domain configuration:', error);
-      // Continue without config details
-    }
+    // The v6 config endpoint can be used if needed, but status data usually has everything
+    // We've already checked configuration status in checkDomainStatus
 
-    // Get the actual CNAME target from Vercel
-    const cnameValue = vercelStatus?.cnames?.[0];
-    
-    // Extract the actual target from config or status
-    const actualCnameTarget = domainConfig?.cname || cnameValue;
+    // DNS values are STANDARD for all Vercel projects
+    // No need to fetch dynamic values - they're always the same!
 
     if (isApex) {
-      // Apex domain needs A record
-      // Use actual A values from Vercel if available, otherwise use default
-      const aRecordValue = vercelStatus?.aValues?.[0] || VERCEL_IPS.current;
-      
+      // Apex domain needs A record - ALWAYS the same for all Vercel projects
       dnsConfig.records.push({
         type: 'A',
         name: '@',
-        value: aRecordValue,
+        value: VERCEL_IPS.current, // 216.198.79.1
         ttl: 300,
-        purpose: 'points_to_vercel'
+        purpose: 'points_to_vercel',
+        note: 'Point your apex domain to Vercel'
       });
       
       // Only show www CNAME if include_www is true
@@ -119,7 +106,7 @@ export async function GET(
         dnsConfig.records.push({
           type: 'CNAME',
           name: 'www',
-          value: 'cname.vercel-dns.com',
+          value: 'cname.vercel-dns.com', // Standard for ALL Vercel projects
           ttl: 300,
           purpose: 'www_redirect',
           required: true,
@@ -127,20 +114,16 @@ export async function GET(
         });
       }
     } else {
-      // Subdomain needs CNAME
+      // Subdomain needs CNAME - ALWAYS the same for all Vercel projects
       const subdomain = parts[0];
-      
-      // Use actual CNAME target from Vercel if available
-      // Vercel generates unique CNAME targets like "6b9153da6f4d3346.vercel-dns-017.com"
-      const cnameTarget = actualCnameTarget || 'cname.vercel-dns.com';
       
       dnsConfig.records.push({
         type: 'CNAME',
         name: subdomain,
-        value: cnameTarget,
+        value: 'cname.vercel-dns.com', // Standard for ALL Vercel projects
         ttl: 300,
         purpose: 'points_to_vercel',
-        note: actualCnameTarget ? 'Use this exact value provided by Vercel' : 'Default value - Vercel will provide specific target after initial setup'
+        note: 'Point your subdomain to Vercel'
       });
     }
 
@@ -173,26 +156,58 @@ export async function GET(
       }
     }
 
-    // Add configuration status based on Vercel response
+    // Determine configuration status using Vercel's source of truth
+    // The "configured" field from checkDomainStatus uses the v6 endpoint's misconfigured field
+    
+    let configurationStatus: string;
+    
+    // Trust the configured field from checkDomainStatus
+    // It's based on the v6 endpoint's misconfigured field
+    if (vercelStatus?.configured === true) {
+      // DNS is properly configured (misconfigured: false)
+      configurationStatus = 'valid';
+    } else if (vercelStatus?.verified === true) {
+      // Domain is in Vercel but DNS not configured (misconfigured: true)
+      configurationStatus = 'invalid';
+    } else if (vercelStatus?.error) {
+      // Error checking status
+      configurationStatus = 'pending';
+    } else {
+      // Domain not found or not verified
+      configurationStatus = 'pending';
+    }
+    
     dnsConfig.status = {
-      ownership: vercelStatus?.verified || domain.verified ? 'verified' : 'pending',
-      // If domain is added but not configured properly, it's invalid
-      configuration: vercelStatus?.configured ? 'valid' : 
-                    (vercelStatus && !vercelStatus.configured) ? 'invalid' : 'pending',
+      ownership: vercelStatus?.verified ? 'verified' : 'pending',
+      configuration: configurationStatus,
       ssl: vercelStatus?.ssl?.state || domain.ssl_state || 'PENDING',
       configuredBy: vercelStatus?.configuredBy || null,
       error: vercelStatus?.error || null
     };
+    
+    // Log for debugging
+    console.log('[DNS-CONFIG] Status determination:', {
+      domain: domain.domain,
+      isApex,
+      configured: vercelStatus?.configured,
+      configurationStatus,
+      aValues: vercelStatus?.aValues,
+      cnames: vercelStatus?.cnames,
+      ssl: vercelStatus?.ssl?.state,
+      finalStatus: dnsConfig.status
+    });
 
     // Add helpful messages based on actual status
     if (dnsConfig.status.configuration === 'invalid') {
-      dnsConfig.message = 'Invalid DNS configuration. Please add the DNS records shown below to your domain provider.';
-    } else if (!dnsConfig.status.ownership) {
+      dnsConfig.message = 'Invalid DNS configuration. Please update the DNS records to match those shown below.';
+    } else if (dnsConfig.status.ownership !== 'verified') {
       dnsConfig.message = 'Add the DNS records below to verify domain ownership and configure routing.';
-    } else if (dnsConfig.status.ssl !== 'READY') {
-      dnsConfig.message = 'Domain verified. SSL certificate is being provisioned.';
-    } else {
+    } else if (dnsConfig.status.configuration === 'valid' && dnsConfig.status.ssl !== 'READY') {
+      dnsConfig.message = 'Domain verified and configured. SSL certificate is being provisioned.';
+    } else if (dnsConfig.status.configuration === 'valid' && dnsConfig.status.ssl === 'READY') {
       dnsConfig.message = 'Domain is fully configured and active.';
+    } else {
+      dnsConfig.message = 'Domain verification in progress.';
     }
 
     return NextResponse.json(dnsConfig);

@@ -69,10 +69,10 @@ This checklist tests the server-side domain architecture implementation across a
 - [x] Domain status should reflect Vercel's actual status
 
 ### 3. Domain Verification - New Unverified Domain
-- [ ] Add a completely new test domain (e.g., test-local.yourdomain.com)
-- [ ] Click verify button
-- [ ] Should show "Not Verified" status
-- [ ] Should populate verification_details with DNS instructions
+- [x] Add a completely new test domain (e.g., test-local.yourdomain.com)
+- [x] Click verify button
+- [x] Should show "Not Verified" status
+- [x] Should populate verification_details with DNS instructions
 
 **Expected:** New domains should show as unverified with DNS configuration instructions
 
@@ -94,41 +94,66 @@ After adding and attempting to verify a domain, check that:
 - [x] Try adding the same domain twice
   - **Result:** Shows duplicate domain error ✓
 
-### 6. API Testing
+### 6. Primary Domain System
+- [x] First domain added to project should automatically be marked as primary
+- [x] Domain cards should show "Primary" badge for primary domain
+- [x] Settings section should contain primary domain toggle switch
+- [x] Primary domain toggle should be disabled and checked for current primary
+- [x] Non-primary domains should have enabled toggle to make them primary
+- [x] Making domain primary should update all other domains to non-primary
+
+**Expected:** Each project has exactly one primary domain at all times
+
+### 7. UI/UX Testing - Settings & Issues Sections
+- [x] Domain cards should have expandable Settings section with gray background
+- [x] Settings should contain WWW toggle and Primary domain toggle
+- [x] Issues section should appear below settings when domain has problems
+- [x] Issues should show DNS configuration errors and SSL status clearly
+- [x] Toggle switches should work smoothly with loading states
+- [x] Primary domain changes should show toast confirmation
+
+**Expected:** Clean, organized interface with clear status indicators
+
+### 8. API Testing
 Using browser DevTools Network tab:
-- [ ] When adding a domain:
+- [x] When adding a domain:
   - POST to `/api/projects/[projectId]/domains` should return 200
   - Domain should be added to Vercel if API configured
-- [ ] When verifying a domain:
+  - Should include `is_primary: true` for first domain
+- [x] When verifying a domain:
   - POST to `/api/domains/[id]/verify` should return 200
   - Should check Vercel status and update database
-- [ ] Check responses for authentication errors
+- [x] When making domain primary:
+  - POST to `/api/domains/[id]/make-primary` should return 200
+  - Should update primary status for all project domains
+- [x] Check responses for authentication errors
 
 **Network requests observed:**
 ```
 domains                     200  (Domain addition)
 project_domains?select=*    200  (Fetching updated list)
 status                      200  (Checking domain status)
+make-primary               200  (Primary domain updates)
 ```
 
-### 7. Troubleshooting Steps
+### 9. Troubleshooting Steps
 If "Domain not found in Vercel" error occurs:
-1. [ ] Check browser console for detailed error logs
-2. [ ] Verify VERCEL_PROJECT_ID matches the project in Vercel dashboard
-3. [ ] Test Vercel API token has correct permissions:
+1. [x] Check browser console for detailed error logs
+2. [x] Verify VERCEL_PROJECT_ID matches the project in Vercel dashboard
+3. [x] Test Vercel API token has correct permissions:
    ```bash
    curl -H "Authorization: Bearer YOUR_TOKEN" \
      https://api.vercel.com/v10/projects/YOUR_PROJECT_ID/domains
    ```
-4. [ ] Check if domain exists in the correct Vercel project via dashboard
+4. [x] Check if domain exists in the correct Vercel project via dashboard
 
 ---
 
 ## Testing Steps (PREVIEW)
 
 ### 1. Domain Addition Flow
-- [ ] Navigate to Project Settings → Domain Settings
-- [ ] Click "Add Domain"
+- [x] Navigate to Project Settings → Domain Settings
+- [x] Click "Add Domain"
 - [ ] Add a preview-specific test domain (e.g., preview-test.yourdomain.com)
 - [ ] Verify no errors appear when clicking "Add Domain"
 - [ ] Confirm domain appears in the list
@@ -139,15 +164,28 @@ If "Domain not found in Vercel" error occurs:
 - [ ] Test with both verified and unverified domains
 - [ ] Verify button should work same as local
 - [ ] Check that Vercel API calls succeed
+- [ ] Refresh button should always be visible and show accurate status
 
 **Expected:** Should behave identically to local environment
 
-### 3. Preview-Specific Tests
+### 3. Primary Domain System (Preview)
+- [ ] First domain added should automatically be marked as primary
+- [ ] Primary domain toggle should work correctly
+- [ ] Making domain primary should update other domains
+- [ ] UI should show correct primary domain indicators
+
+### 4. UI/UX Testing (Preview)
+- [ ] Settings section should display properly on preview URL
+- [ ] Issues section should show configuration problems
+- [ ] Toggle switches should function correctly
+- [ ] Toast messages should appear for all actions
+
+### 5. Preview-Specific Tests
 - [ ] Verify preview deployment URL works (*.vercel.app)
 - [ ] Check that middleware correctly identifies preview environment
 - [ ] Ensure database operations work with preview deployment
 
-### 4. API Testing
+### 6. API Testing
 - [ ] All API endpoints should be accessible via preview URL
 - [ ] Authentication should work correctly
 - [ ] Vercel API integration should function
@@ -168,17 +206,31 @@ If "Domain not found in Vercel" error occurs:
 - [ ] Click verify - should become verified once DNS propagates
 - [ ] Visit the custom domain - should load the correct project
 - [ ] SSL certificate should provision automatically
+- [ ] Refresh button should show accurate verification status
 
 **Expected:** Full end-to-end domain functionality
 
-### 3. Production-Specific Tests
+### 3. Primary Domain System (Production)
+- [ ] First domain should be automatically set as primary
+- [ ] Primary domain should handle main website traffic
+- [ ] Additional domains should redirect to primary domain
+- [ ] Primary domain toggle should work in production environment
+- [ ] Database should correctly track primary domain status
+
+### 4. UI/UX Production Testing  
+- [ ] Settings section should render correctly on custom domains
+- [ ] Issues section should show real DNS configuration problems
+- [ ] Toggle switches should function with production API calls
+- [ ] Toast notifications should work on custom domains
+
+### 5. Production-Specific Tests
 - [ ] Custom domain routing works correctly
 - [ ] SSL certificates provision and renew
 - [ ] Domain shows as verified with SSL "READY" state
 - [ ] Apex and www domains work correctly
 - [ ] Domain redirects function as configured
 
-### 4. Monitoring
+### 6. Monitoring
 - [ ] Check for any domain-related errors in production logs
 - [ ] Verify SSL renewal happens automatically
 - [ ] Monitor domain verification status over time

@@ -41,13 +41,48 @@ This is an ongoing log of everything we do across the application, from bug fixe
 # MOST RECENT LOG
 ## ------------------------------------------------ ##
 
-### LOG (Date: 8/5/2025 @ 9:45pm)
-#### Version: v0.1.1 (Development - Domain Architecture Refactor)
+### LOG (Date: 8/6/2025 @ 6:30pm)
+#### Version: v0.1.1 (Development - Primary Domain System & UX Enhancements)
 #### Overview Summary
 
-Implemented server-side domain architecture following industry standards. Moved all domain verification operations to server-side with admin privileges to bypass RLS restrictions. Added SSL state and verification details tracking to database.
+Completed primary domain system implementation with major UX improvements. Fixed platform admin access issues, redesigned domain card UI with Settings section, and enhanced error visibility. System now follows industry standards where each project has one primary domain with additional domains as aliases.
 
 #### Log Items
+
+- **Primary Domain System Implementation**
+  - Added automatic primary designation for first domain added to project
+  - Implemented "Make Primary" functionality with toggle-based UI
+  - Created `/api/domains/[id]/make-primary` endpoint with proper platform admin access
+  - Fixed 404 errors by adding platform admin/staff access checks following existing patterns
+  - Removed verification requirement for setting primary domains (allows fixing mistakes immediately)
+
+- **Major UI/UX Redesign**
+  - Redesigned domain card with clean Settings section using grey background box
+  - Replaced "Make Primary Domain" button with intuitive toggle switch
+  - Added dedicated Issues section that only appears when there are actual errors
+  - Improved status text clarity: "DNS Setup Required", "SSL Provisioning", "Checking Configuration"
+  - Consistent toggle alignment and better visual hierarchy throughout
+  - Removed redundant alert messages in favor of organized Issues section with bullet points
+
+- **API & Access Control Improvements**
+  - Fixed make-primary endpoint to support platform admin/staff access
+  - Added platform admin access checks following same pattern as other domain endpoints
+  - Enhanced error handling and user feedback with proper toast messages
+  - Improved status messaging to be more descriptive and user-friendly
+
+- **Testing & Validation**
+  - All manual tests passed: primary badge appears, toggle switches work correctly
+  - Platform admin can now manage domains across all projects without access errors
+  - TypeScript compilation passes without errors
+  - ESLint passes with only pre-existing warnings
+  - UI is more intuitive and scalable for future domain management features
+
+- **Technical Details**
+  - Used Fast Track development cycle mode for rapid iteration
+  - Followed industry pattern of one primary domain + aliases (Webflow, Squarespace model)
+  - Maintained backward compatibility while enhancing functionality
+  - Clean separation of concerns: Settings section for user controls, Issues section for problems
+  - Prepared changes for merge to deployment branch
 
 - **Domain Architecture Refactor** - Completed Full Feature Mode implementation
   - Created `updateDomainVerification` function in `domains.server.ts` using admin Supabase client
