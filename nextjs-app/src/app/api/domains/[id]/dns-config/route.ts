@@ -234,12 +234,12 @@ export async function GET(
       
       diagnosticConfig.diagnostic = {
         environment: process.env.VERCEL_ENV || 'development',
-        projectId: env.VERCEL_PROJECT_ID,
+        projectId: env.VERCEL_PROJECT_ID || 'not-configured',
         timestamp: new Date().toISOString(),
         vercelResponse: {
-          verified: vercelStatus.verified,
-          configured: vercelStatus.configured,
-          error: vercelStatus.error
+          verified: vercelStatus.verified || false,
+          configured: vercelStatus.configured || false,
+          error: vercelStatus.error || null
         }
       };
     }
