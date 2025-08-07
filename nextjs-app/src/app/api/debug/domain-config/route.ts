@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { env } from '@/env.mjs';
 
+// Debug endpoint for domain configuration diagnostics
+// Redeployed: 2025-08-07
+
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
