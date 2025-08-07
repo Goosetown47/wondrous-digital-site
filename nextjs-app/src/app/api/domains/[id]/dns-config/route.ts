@@ -177,10 +177,24 @@ export async function GET(
       configurationStatus = 'pending';
     }
     
+    // Determine SSL status based on configuration
+    // If DNS is configured, SSL is automatically provisioned by Vercel
+    let sslStatus: string;
+    if (vercelStatus?.configured === true) {
+      // DNS is properly configured, Vercel automatically provisions SSL
+      sslStatus = 'READY';
+    } else if (vercelStatus?.verified === true) {
+      // Domain added to Vercel but DNS not configured yet
+      sslStatus = 'PENDING';
+    } else {
+      // Domain not added or error
+      sslStatus = 'PENDING';
+    }
+    
     dnsConfig.status = {
       ownership: vercelStatus?.verified ? 'verified' : 'pending',
       configuration: configurationStatus,
-      ssl: vercelStatus?.ssl?.state || domain.ssl_state || 'PENDING',
+      ssl: sslStatus,
       configuredBy: vercelStatus?.configuredBy || null,
       error: vercelStatus?.error || null
     };
@@ -193,7 +207,7 @@ export async function GET(
       configurationStatus,
       aValues: vercelStatus?.aValues,
       cnames: vercelStatus?.cnames,
-      ssl: vercelStatus?.ssl?.state,
+      ssl: sslStatus,
       finalStatus: dnsConfig.status
     });
 

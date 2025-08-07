@@ -236,11 +236,22 @@ export async function checkDomainStatus(domain: string): Promise<VercelDomainSta
       cnames: data.cnames
     });
     
+    // Determine SSL status based on configuration
+    // Vercel automatically provisions SSL for configured domains
+    let sslState: 'READY' | 'PENDING' | 'ERROR' = 'PENDING';
+    if (isConfigured) {
+      // DNS is properly configured, SSL is automatically provisioned
+      sslState = 'READY';
+    } else if (data.verified) {
+      // Domain added but not configured
+      sslState = 'PENDING';
+    }
+    
     return {
       verified: data.verified || false,  // This just means "added to Vercel"
       verification: data.verification || [],
-      ssl: data.ssl || { state: 'PENDING' },
-      configuredBy: data.configuredBy || null,
+      ssl: { state: sslState },  // SSL status based on configuration
+      configuredBy: configData?.configuredBy || data.configuredBy || null,
       cnames: data.cnames || [],
       aValues: data.aValues || [],
       configured: isConfigured,  // This is the REAL configuration status
