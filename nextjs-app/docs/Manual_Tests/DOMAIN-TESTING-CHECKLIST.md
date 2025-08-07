@@ -12,6 +12,15 @@ This checklist tests the server-side domain architecture implementation across a
   - `VERCEL_PROJECT_ID` - Should match the Vercel project containing your domains
   - `VERCEL_TEAM_ID` - Should be set if using team account
 
+## Environment Variables & Domain Status
+
+### Important Note About Preview Deployments
+Preview deployments may use a different `VERCEL_PROJECT_ID` than your local/production environment. This means:
+- Domains configured in your production Vercel project may show as "DNS Setup Required" on preview
+- This is expected behavior and not a bug
+- The domain management UI should still function correctly
+- To verify which project ID is being used, check browser console for `[VERCEL]` logs
+
 ## Environment Capabilities
 
 ### LOCAL (localhost:3000)
@@ -114,7 +123,44 @@ After adding and attempting to verify a domain, check that:
 
 **Expected:** Clean, organized interface with clear status indicators
 
-### 8. API Testing
+### 8. Status Badge & SSL Synchronization Testing
+- [x] Status badge shows "Configured" (green) when DNS is valid
+- [x] Status badge shows "DNS Setup Required" (amber) when DNS not configured
+- [x] Status badge shows "Checking Configuration" (blue) during verification
+- [x] Status badge shows "Configuration Error" (red) for errors
+- [x] No duplicate status icons appear in domain card header
+- [x] SSL status updates to "READY" automatically when DNS is configured
+- [x] SSL status persists correctly after page reload
+- [x] SSL display checks both API response and database values
+- [x] No need to manually refresh for SSL status to update
+
+**Expected:** Status badges provide clear, consistent feedback without redundancy
+
+### 9. DNS Configuration Collapsible Section
+- [x] DNS Configuration section auto-collapses when domain is configured
+- [x] DNS Configuration section stays expanded for unconfigured domains
+- [x] Click header to manually expand/collapse DNS configuration
+- [x] Green checkmark icon appears next to "DNS Configuration" when configured
+- [x] Expand/collapse arrow changes direction appropriately
+- [x] Provider dropdown remains accessible in collapsed header
+- [x] DNS records display correctly when section is expanded
+- [x] No promotional text about hosting provider appears
+- [x] No confusing helper text about www configuration shows
+
+**Expected:** Smart collapsible behavior that reduces clutter for configured domains
+
+### 10. Issues Section Behavior
+- [x] Issues section only appears when there are actual errors
+- [x] "Domain is fully configured and active" does NOT appear in Issues
+- [x] Issues section is completely hidden for properly configured domains
+- [x] Error messages display with appropriate color coding (red/amber)
+- [!] Multiple issues display as bullet points when present
+	- The bullet points aren't properly aligned with the middle of the text. They're aligned with the bottom of the text line.
+- [x] Issues section appears above DNS Configuration section
+
+**Expected:** Issues section provides actionable feedback only when needed
+
+### 11. API Testing
 Using browser DevTools Network tab:
 - [x] When adding a domain:
   - POST to `/api/projects/[projectId]/domains` should return 200
@@ -123,6 +169,10 @@ Using browser DevTools Network tab:
 - [x] When verifying a domain:
   - POST to `/api/domains/[id]/verify` should return 200
   - Should check Vercel status and update database
+- [ ] When checking DNS configuration:
+  - GET to `/api/domains/[id]/dns-config` should return 200
+  - Should update SSL status in database when configured
+  - Response includes real-time configuration status
 - [x] When making domain primary:
   - POST to `/api/domains/[id]/make-primary` should return 200
   - Should update primary status for all project domains
@@ -133,10 +183,11 @@ Using browser DevTools Network tab:
 domains                     200  (Domain addition)
 project_domains?select=*    200  (Fetching updated list)
 status                      200  (Checking domain status)
+dns-config                  200  (DNS configuration check)
 make-primary               200  (Primary domain updates)
 ```
 
-### 9. Troubleshooting Steps
+### 12. Troubleshooting Steps
 If "Domain not found in Vercel" error occurs:
 1. [x] Check browser console for detailed error logs
 2. [x] Verify VERCEL_PROJECT_ID matches the project in Vercel dashboard
@@ -154,25 +205,30 @@ If "Domain not found in Vercel" error occurs:
 ### 1. Domain Addition Flow
 - [x] Navigate to Project Settings → Domain Settings
 - [x] Click "Add Domain"
-- [ ] Add a preview-specific test domain (e.g., preview-test.yourdomain.com)
-- [ ] Verify no errors appear when clicking "Add Domain"
-- [ ] Confirm domain appears in the list
+- [x] Add a preview-specific test domain (e.g., preview-test.yourdomain.com)
+- [x] Verify no errors appear when clicking "Add Domain"
+- [x] Confirm domain appears in the list
 
 **Expected:** Same as local, but using preview deployment URL
 
 ### 2. Domain Verification
-- [ ] Test with both verified and unverified domains
-- [ ] Verify button should work same as local
-- [ ] Check that Vercel API calls succeed
-- [ ] Refresh button should always be visible and show accurate status
+- [!] Test with both verified and unverified domains
+	- **Note:** Domains may show different status on preview vs local/production
+	- This is expected if preview deployment uses a different `VERCEL_PROJECT_ID`
+	- Example: lahaie-private-server.com shows "DNS Setup Required" on preview but "Configured" on local
+	- This happens because the domain is configured for the production Vercel project, not the preview project
+- [x] Verify button should work same as local
+- [x] Check that Vercel API calls succeed
+- [x] Refresh button should always be visible and show accurate status
 
-**Expected:** Should behave identically to local environment
+**Expected:** UI functionality should work identically to local, but domain status may differ based on which Vercel project is configured
 
 ### 3. Primary Domain System (Preview)
 - [ ] First domain added should automatically be marked as primary
 - [ ] Primary domain toggle should work correctly
 - [ ] Making domain primary should update other domains
 - [ ] UI should show correct primary domain indicators
+- [ ] When the primary domain is deleted, it should 
 
 ### 4. UI/UX Testing (Preview)
 - [ ] Settings section should display properly on preview URL
@@ -180,15 +236,36 @@ If "Domain not found in Vercel" error occurs:
 - [ ] Toggle switches should function correctly
 - [ ] Toast messages should appear for all actions
 
-### 5. Preview-Specific Tests
+### 5. Status Badges & SSL (Preview)
+- [ ] Status badge shows "Configured" (green) for domains with valid DNS
+- [ ] Status badge shows "DNS Setup Required" (amber) for new domains
+- [ ] SSL status automatically updates to "READY" when DNS configured
+- [ ] No manual refresh needed for SSL status synchronization
+- [ ] Status badges render correctly on preview deployment URL
+
+### 6. DNS Configuration UI (Preview)
+- [ ] DNS Configuration section auto-collapses for configured domains
+- [ ] Manual expand/collapse works smoothly
+- [ ] Green checkmark appears for configured domains
+- [ ] No promotional hosting provider text appears
+- [ ] DNS records display properly when expanded
+
+### 7. Issues Section (Preview)
+- [ ] Issues section only shows for domains with real problems
+- [ ] No "fully configured" message appears as an issue
+- [ ] Issues section completely hidden for working domains
+- [ ] Error messages have proper color coding
+
+### 8. Preview-Specific Tests
 - [ ] Verify preview deployment URL works (*.vercel.app)
 - [ ] Check that middleware correctly identifies preview environment
 - [ ] Ensure database operations work with preview deployment
 
-### 6. API Testing
+### 9. API Testing
 - [ ] All API endpoints should be accessible via preview URL
 - [ ] Authentication should work correctly
 - [ ] Vercel API integration should function
+- [ ] DNS config endpoint updates SSL status in database
 
 ---
 
@@ -223,17 +300,31 @@ If "Domain not found in Vercel" error occurs:
 - [ ] Toggle switches should function with production API calls
 - [ ] Toast notifications should work on custom domains
 
-### 5. Production-Specific Tests
+### 5. Production Status & SSL Testing
+- [ ] Status badges show accurate real-time status
+- [ ] SSL automatically shows "READY" when DNS propagates
+- [ ] No manual refresh needed for status updates
+- [ ] Database and API SSL status stay synchronized
+- [ ] Status persists correctly across sessions
+
+### 6. Production DNS Configuration UI
+- [ ] DNS section auto-collapses for live configured domains
+- [ ] Green checkmark shows for verified production domains
+- [ ] No hosting provider promotional text visible
+- [ ] Expand/collapse works on production domain URLs
+
+### 7. Production-Specific Tests
 - [ ] Custom domain routing works correctly
 - [ ] SSL certificates provision and renew
 - [ ] Domain shows as verified with SSL "READY" state
 - [ ] Apex and www domains work correctly
 - [ ] Domain redirects function as configured
 
-### 6. Monitoring
+### 8. Monitoring
 - [ ] Check for any domain-related errors in production logs
 - [ ] Verify SSL renewal happens automatically
 - [ ] Monitor domain verification status over time
+- [ ] Confirm SSL status updates persist in database
 
 ---
 

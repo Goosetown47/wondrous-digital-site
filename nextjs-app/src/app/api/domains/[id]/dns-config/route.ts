@@ -42,9 +42,24 @@ export async function GET(
     // Fetch actual domain status from Vercel
     let vercelStatus;
     try {
+      console.log('[DNS-CONFIG] Checking domain status for:', domain.domain);
+      console.log('[DNS-CONFIG] Environment check:', {
+        hasToken: !!env.VERCEL_API_TOKEN,
+        projectId: env.VERCEL_PROJECT_ID?.substring(0, 8) + '...',
+        teamId: env.VERCEL_TEAM_ID ? 'Set' : 'Not set'
+      });
+      
       vercelStatus = await checkDomainStatus(domain.domain);
+      
+      console.log('[DNS-CONFIG] Vercel status response:', {
+        domain: domain.domain,
+        verified: vercelStatus?.verified,
+        configured: vercelStatus?.configured,
+        error: vercelStatus?.error,
+        ssl: vercelStatus?.ssl
+      });
     } catch (error) {
-      console.error('Error fetching domain status from Vercel:', error);
+      console.error('[DNS-CONFIG] Error fetching domain status from Vercel:', error);
       // Continue with basic config if Vercel check fails
     }
 

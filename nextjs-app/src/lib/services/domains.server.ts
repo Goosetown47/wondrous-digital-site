@@ -204,16 +204,22 @@ export async function checkDomainStatus(domain: string): Promise<VercelDomainSta
     
     try {
       console.log(`[VERCEL] Checking domain configuration via v6 endpoint`);
+      console.log(`[VERCEL] Domain is verified, checking configuration with v6 endpoint...`);
       configData = await getDomainConfiguration(domain);
       
       // If misconfigured is false, the domain IS configured
       isConfigured = configData && !configData.misconfigured;
       
-      console.log(`[VERCEL] v6 config result:`, { 
+      console.log(`[VERCEL] v6 config endpoint full response:`, { 
+        domain,
+        rawResponse: configData,
         misconfigured: configData?.misconfigured, 
         configured: isConfigured,
         configuredBy: configData?.configuredBy,
-        error: configData?.error
+        error: configData?.error,
+        aValues: configData?.aValues,
+        cnames: configData?.cnames,
+        acceptedChallenges: configData?.acceptedChallenges
       });
       
       // Update data with actual DNS values from config if available
