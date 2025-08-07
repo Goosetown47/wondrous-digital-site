@@ -155,8 +155,12 @@ export async function checkDomainStatus(domain: string): Promise<VercelDomainSta
     return { verified: false, error: 'Vercel integration not configured. Please check environment variables.' };
   }
   
-  console.log(`[VERCEL] Checking domain status for: ${domain}`);
-  console.log(`[VERCEL] Using project ID: ${VERCEL_PROJECT_ID}`);
+  const timestamp = new Date().toISOString();
+  console.log(`[VERCEL] Checking domain status for: ${domain} at ${timestamp}`);
+  console.log(`[VERCEL] Environment: ${process.env.VERCEL_ENV || 'development'}, Node: ${process.env.NODE_ENV}`);
+  console.log(`[VERCEL] Using project ID: ${VERCEL_PROJECT_ID} (full)`);
+  console.log(`[VERCEL] Using team ID: ${VERCEL_TEAM_ID || 'none'}`);
+  console.log(`[VERCEL] API Token: ${VERCEL_API_TOKEN.substring(0, 10)}...`);
 
   try {
     const url = `/v10/projects/${VERCEL_PROJECT_ID}/domains/${domain}`;
@@ -212,6 +216,10 @@ export async function checkDomainStatus(domain: string): Promise<VercelDomainSta
       
       console.log(`[VERCEL] v6 config endpoint full response:`, { 
         domain,
+        timestamp: new Date().toISOString(),
+        currentProjectId: VERCEL_PROJECT_ID,
+        configuredByProjectId: configData?.projectId,
+        projectMismatch: configData?.projectId && configData.projectId !== VERCEL_PROJECT_ID,
         rawResponse: configData,
         misconfigured: configData?.misconfigured, 
         configured: isConfigured,
@@ -302,12 +310,30 @@ export async function getDomainConfiguration(domain: string) {
     }
 
     const data = await response.json();
-    console.log(`[VERCEL] Domain configuration for ${domain}:`, {
+    
+    // Enhanced logging for debugging
+    console.log(`[VERCEL] v6 Domain configuration for ${domain}:`, {
       misconfigured: data.misconfigured,
       configuredBy: data.configuredBy,
+      configuredByProjectId: data.projectId,
       aValues: data.aValues,
-      cnames: data.cnames
+      cnames: data.cnames,
+      acceptedChallenges: data.acceptedChallenges,
+      responseHeaders: {
+        cacheControl: response.headers.get('cache-control'),
+        cfCacheStatus: response.headers.get('cf-cache-status'),
+        age: response.headers.get('age'),
+      },
+      fullResponse: process.env.VERCEL_ENV === 'preview' ? data : '(hidden in production)'
     });
+    
+    // If domain is configured by a different project, log that clearly
+    if (data.configuredBy && data.projectId && data.projectId !== VERCEL_PROJECT_ID) {
+      console.warn(`[VERCEL] IMPORTANT: Domain ${domain} is configured by a different project!`);
+      console.warn(`[VERCEL] Current project: ${VERCEL_PROJECT_ID}`);
+      console.warn(`[VERCEL] Domain owned by: ${data.projectId}`);
+    }
+    
     return data;
   } catch (error) {
     console.error('Error getting domain configuration:', error);

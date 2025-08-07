@@ -690,6 +690,52 @@ function DomainCard({
                 </AlertDescription>
               </Alert>
             )}
+            
+            {/* Diagnostic Information (Development/Preview only) */}
+            {(() => {
+              const diagnostic = (dnsConfig as typeof dnsConfig & {
+                diagnostic?: {
+                  environment: string;
+                  projectId: string;
+                  timestamp: string;
+                  vercelResponse: {
+                    verified: boolean;
+                    configured: boolean;
+                    error: string | null;
+                  };
+                };
+              })?.diagnostic;
+              
+              if (!diagnostic) return null;
+              
+              return (
+                <div className="mt-4 p-3 bg-muted/30 rounded-lg space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                    <AlertCircle className="h-3 w-3" />
+                    Debug Information ({diagnostic.environment})
+                  </div>
+                  <div className="space-y-1 text-xs font-mono">
+                    <div>Project ID: {diagnostic.projectId}</div>
+                    <div>Verified: {diagnostic.vercelResponse.verified ? 'Yes' : 'No'}</div>
+                    <div>Configured: {diagnostic.vercelResponse.configured ? 'Yes' : 'No'}</div>
+                    {diagnostic.vercelResponse.error && (
+                      <div className="text-destructive">Error: {diagnostic.vercelResponse.error}</div>
+                    )}
+                    <div className="text-muted-foreground">Updated: {new Date(diagnostic.timestamp).toLocaleTimeString()}</div>
+                  </div>
+                  <div className="pt-2">
+                    <a 
+                      href={`/api/debug/domain-config?domain=${domain.domain}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline"
+                    >
+                      View Full Diagnostic Report →
+                    </a>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

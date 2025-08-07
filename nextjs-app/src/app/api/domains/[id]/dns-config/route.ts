@@ -206,6 +206,9 @@ export async function GET(
       sslStatus = 'PENDING';
     }
     
+    // Include diagnostic info in development/preview environments
+    const isDevelopment = process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'preview';
+    
     dnsConfig.status = {
       ownership: vercelStatus?.verified ? 'verified' : 'pending',
       configuration: configurationStatus,
@@ -213,6 +216,33 @@ export async function GET(
       configuredBy: vercelStatus?.configuredBy || null,
       error: vercelStatus?.error || null
     };
+    
+    // Add diagnostic information in non-production environments
+    if (isDevelopment && vercelStatus) {
+      const diagnosticConfig = dnsConfig as typeof dnsConfig & {
+        diagnostic?: {
+          environment: string;
+          projectId: string;
+          timestamp: string;
+          vercelResponse: {
+            verified: boolean;
+            configured: boolean;
+            error: string | null;
+          };
+        };
+      };
+      
+      diagnosticConfig.diagnostic = {
+        environment: process.env.VERCEL_ENV || 'development',
+        projectId: env.VERCEL_PROJECT_ID,
+        timestamp: new Date().toISOString(),
+        vercelResponse: {
+          verified: vercelStatus.verified,
+          configured: vercelStatus.configured,
+          error: vercelStatus.error
+        }
+      };
+    }
     
     // Update SSL status in database if it has changed
     if (sslStatus !== domain.ssl_state) {
@@ -257,7 +287,14 @@ export async function GET(
       dnsConfig.message = 'Domain verification in progress.';
     }
 
-    return NextResponse.json(dnsConfig);
+    // Return with cache control headers to prevent stale data
+    return NextResponse.json(dnsConfig, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
   } catch (error) {
     console.error('Error fetching DNS config:', error);
     return NextResponse.json(
