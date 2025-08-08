@@ -41,6 +41,43 @@ This is an ongoing log of everything we do across the application, from bug fixe
 # MOST RECENT LOG
 ## ------------------------------------------------ ##
 
+### LOG (Date: 8/7/2025 @ 4:30pm)
+#### Version: v0.1.1 (Development - Domain Removal Fix)
+#### Overview Summary
+
+Fixed critical issue where domains remained orphaned in Vercel account after deletion, causing "already in use" errors when users try to re-add them. Updated domain removal to delete from both project AND account for clean domain management.
+
+#### Log Items
+
+- **Domain Orphan Issue Identified**
+  - User reported "Failed to add domain: already in use" error when re-adding deleted domains
+  - Found that domains remained in Vercel account after deletion from project
+  - Discovered `removeDomainFromVercel` only removes from project, not account
+  - Realized our single-project architecture doesn't need account-level domain persistence
+
+- **Fast Track Fix Implementation**
+  - Updated `removeDomainFromVercel` to remove domains from both project AND account
+  - Added v9 API endpoint call: `DELETE /v9/domains/{domain}` after project removal
+  - Added comprehensive logging for both removal operations
+  - Handles 404 errors gracefully if domain already removed from account
+
+- **Testing & Validation**
+  - Tested domain deletion and re-addition flow successfully
+  - Verified domains are completely removed from Vercel account
+  - No TypeScript or ESLint errors
+  - Preview deployment tested with lahaie-private-server.com domain
+
+- **Architecture Decision**
+  - Confirmed complete removal is correct for our platform architecture
+  - We have ONE Vercel project for all customer websites
+  - No need for domain portability between projects
+  - Aligns with website builder standards (Wix, Squarespace, Webflow)
+
+
+## ------------------------------------------------ ##
+# PREVIOUS LOGS
+## ------------------------------------------------ ##
+
 ### LOG (Date: 8/7/2025 @ 2:45am)
 #### Version: v0.1.1 (Development - Domain Debug Enhancement)
 #### Overview Summary
@@ -85,11 +122,6 @@ Added comprehensive domain debugging capabilities to diagnose why domains show d
   - ESLint passes with no new errors
   - Pre-commit hooks pass successfully
   - Changes pushed to bugfix/domain-vercel-addition branch
-
-
-## ------------------------------------------------ ##
-# PREVIOUS LOGS
-## ------------------------------------------------ ##
 
 ### LOG (Date: 8/7/2025 @ 12:00am)
 #### Version: v0.1.1 (Development - Domain UI/UX Improvements)
