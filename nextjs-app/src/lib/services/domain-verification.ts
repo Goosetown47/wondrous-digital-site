@@ -87,10 +87,9 @@ export async function verifyDomainWithRetry(
     }
 
     // Update database with both verification and SSL status
-    // IMPORTANT: We set verified=true when DNS is configured, not just when domain is added
-    // This is because the middleware requires verified=true to route the domain
+    // We trust Vercel's verification status - if they say the domain is verified, it's ready
     const updateData: Parameters<typeof updateDomainVerification>[1] = {
-      verified: status.configured === true,  // DNS is properly configured
+      verified: status.verified,  // Trust Vercel's domain verification
       ssl_state: sslState
     };
     
@@ -110,13 +109,13 @@ export async function verifyDomainWithRetry(
       throw new Error(`Failed to update domain verification: ${updateError}`);
     }
 
-    // Check if DNS is properly configured (not just added to Vercel)
-    if (status.configured === true) {
+    // Check if domain is verified by Vercel
+    if (status.verified) {
       await logDomainOperation(domainId, 'VERIFY_SUCCESS', 'success', {
         domain,
         attemptNumber,
         ssl: status.ssl,
-        dnsConfigured: true
+        dnsConfigured: status.configured
       });
 
       return {

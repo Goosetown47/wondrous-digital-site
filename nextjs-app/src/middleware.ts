@@ -84,7 +84,21 @@ export async function middleware(request: NextRequest) {
     // Create Supabase admin client for domain lookups (bypasses RLS)
     const supabaseAdmin = createSupabaseAdminClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
-      env.SUPABASE_SERVICE_ROLE_KEY
+      env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+        db: {
+          schema: 'public',
+        },
+        global: {
+          headers: {
+            'x-my-custom-header': 'nextjs-middleware',
+          },
+        },
+      }
     );
     
     // Check if this is a subdomain of wondrousdigital.com (potential preview domain)
