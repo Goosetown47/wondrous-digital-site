@@ -41,6 +41,27 @@ This is an ongoing log of everything we do across the application, from bug fixe
 # MOST RECENT LOG
 ## ------------------------------------------------ ##
 
+### LOG (Date: 8/8/2025 @ 1:30am)
+#### Version: v0.1.1 (Development - Domain Verification Fix)
+#### Overview Summary
+
+Fixed critical issue where custom domains returned 404 even when DNS was properly configured. The database `verified` field was being set based on whether domain exists in Vercel rather than whether DNS is configured. Updated verification logic to align with industry standards - only route traffic when DNS is confirmed.
+
+#### Log Items
+
+- **Issue**: Custom domains (lahaie-private-server.com) showing 404 despite being configured in Vercel
+- **Root Cause**: Database `verified = false` because we checked Vercel's "domain exists" status instead of "DNS configured" status
+- **Fix**: Updated domain-verification.ts to set `verified = status.configured` (DNS ready) instead of `status.verified` (domain exists)
+- **Files Changed**: 
+  - `/src/lib/services/domain-verification.ts` - Lines 93, 114
+  - `/src/app/api/domains/[id]/verify/route.ts` - Line 72
+- **Next Steps**: User needs to click "Verify Domain" button to update database with correct verification status
+
+
+## ------------------------------------------------ ##
+# PREVIOUS LOGS
+## ------------------------------------------------ ##
+
 ### LOG (Date: 8/7/2025 @ 4:30pm)
 #### Version: v0.1.1 (Development - Domain Removal Fix)
 #### Overview Summary
@@ -72,11 +93,6 @@ Fixed critical issue where domains remained orphaned in Vercel account after del
   - We have ONE Vercel project for all customer websites
   - No need for domain portability between projects
   - Aligns with website builder standards (Wix, Squarespace, Webflow)
-
-
-## ------------------------------------------------ ##
-# PREVIOUS LOGS
-## ------------------------------------------------ ##
 
 ### LOG (Date: 8/7/2025 @ 2:45am)
 #### Version: v0.1.1 (Development - Domain Debug Enhancement)
