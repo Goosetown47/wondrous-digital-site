@@ -33,7 +33,7 @@ This is an ongoing log of everything we do across the application, from bug fixe
 ## ------------------------------------------------ ##
 
 **Production Version:** v0.1.1 (Released 8/5/2025 @ 12:00am)
-**Development Version:** v0.1.2 (Next sprint)
+**Development Version:** v0.1.1 (Current sprint - in progress)
 
 
 
@@ -41,13 +41,197 @@ This is an ongoing log of everything we do across the application, from bug fixe
 # MOST RECENT LOG
 ## ------------------------------------------------ ##
 
-### LOG (Date: 8/5/2025 @ 12:00am)
-#### Version: v0.1.1 (Released to Production)
+### LOG (Date: 8/7/2025 @ 4:30pm)
+#### Version: v0.1.1 (Development - Domain Removal Fix)
 #### Overview Summary
 
-Completed v0.1.1 release with critical bug fixes for domain system, navigation context, and library usage tracking. All features tested and deployed to production.
+Fixed critical issue where domains remained orphaned in Vercel account after deletion, causing "already in use" errors when users try to re-add them. Updated domain removal to delete from both project AND account for clean domain management.
 
 #### Log Items
+
+- **Domain Orphan Issue Identified**
+  - User reported "Failed to add domain: already in use" error when re-adding deleted domains
+  - Found that domains remained in Vercel account after deletion from project
+  - Discovered `removeDomainFromVercel` only removes from project, not account
+  - Realized our single-project architecture doesn't need account-level domain persistence
+
+- **Fast Track Fix Implementation**
+  - Updated `removeDomainFromVercel` to remove domains from both project AND account
+  - Added v9 API endpoint call: `DELETE /v9/domains/{domain}` after project removal
+  - Added comprehensive logging for both removal operations
+  - Handles 404 errors gracefully if domain already removed from account
+
+- **Testing & Validation**
+  - Tested domain deletion and re-addition flow successfully
+  - Verified domains are completely removed from Vercel account
+  - No TypeScript or ESLint errors
+  - Preview deployment tested with lahaie-private-server.com domain
+
+- **Architecture Decision**
+  - Confirmed complete removal is correct for our platform architecture
+  - We have ONE Vercel project for all customer websites
+  - No need for domain portability between projects
+  - Aligns with website builder standards (Wix, Squarespace, Webflow)
+
+
+## ------------------------------------------------ ##
+# PREVIOUS LOGS
+## ------------------------------------------------ ##
+
+### LOG (Date: 8/7/2025 @ 2:45am)
+#### Version: v0.1.1 (Development - Domain Debug Enhancement)
+#### Overview Summary
+
+Added comprehensive domain debugging capabilities to diagnose why domains show different statuses on preview vs local environments. Enhanced logging throughout the domain verification flow and created a diagnostic endpoint to help identify project ID mismatches and configuration issues.
+
+#### Log Items
+
+- **Domain Debug Enhancement for Preview Environments**
+  - Identified issue: lahaie-private-server.com shows "DNS Setup Required" on preview but "Configured" on local
+  - Root cause: Preview deployment likely using different VERCEL_PROJECT_ID than local/production
+  - API returns `configuration: "invalid"` on preview despite Vercel dashboard showing "Valid Configuration"
+
+- **Enhanced Logging in domains.server.ts**
+  - Added timestamp, environment, and full project ID logging to checkDomainStatus
+  - Enhanced v6 endpoint logging to show project ID mismatches
+  - Added warnings when domain is configured by different Vercel project
+  - Logs full response data in preview mode for debugging
+
+- **Created Comprehensive Debug Endpoint**
+  - Built `/api/debug/domain-config` endpoint for domain diagnostics
+  - Shows environment configuration with masked sensitive data
+  - Makes parallel calls to both v10 and v6 Vercel endpoints
+  - Provides analysis showing project mismatches and configuration status
+  - Includes helpful summary and recommendations for common issues
+
+- **Updated DNS Config Route**
+  - Added diagnostic information in development/preview environments
+  - Shows project ID, environment, and timestamp in response
+  - Added cache control headers to prevent stale data
+  - Fixed TypeScript errors by properly typing diagnostic data
+
+- **Frontend Diagnostic Display**
+  - Added debug information panel in DomainSettings component
+  - Shows only in development/preview environments
+  - Displays project ID, verification status, and configuration status
+  - Includes link to full diagnostic report
+  - Fixed all TypeScript `any` errors with proper type definitions
+
+- **Technical Implementation**
+  - All TypeScript compilation passes without errors
+  - ESLint passes with no new errors
+  - Pre-commit hooks pass successfully
+  - Changes pushed to bugfix/domain-vercel-addition branch
+
+### LOG (Date: 8/7/2025 @ 12:00am)
+#### Version: v0.1.1 (Development - Domain UI/UX Improvements)
+#### Overview Summary
+
+Enhanced domain management UI/UX with improved status indicators, SSL synchronization, and collapsible DNS configuration. Fixed issues where SSL status wasn't updating automatically when DNS was configured, and cleaned up redundant UI elements for a more streamlined user experience.
+
+#### Log Items
+
+- **Domain Card UI State Fixes**
+  - Fixed status badge to properly show "Configured" (green) when DNS is valid
+  - Removed redundant "Domain is fully configured and active" from Issues section
+  - Issues section now only appears when there are actual errors
+  - Cleaned up redundant status indicators throughout the domain card
+
+- **SSL Status Synchronization**
+  - Implemented automatic SSL status updates when DNS configuration is detected as valid
+  - DNS Config API now persists SSL status to database when configuration changes
+  - Domain verification process checks DNS configuration and updates SSL state accordingly
+  - SSL display in UI now checks both real-time API status and database values
+  - Fixed issue where SSL showed "PENDING" even when DNS was configured
+
+- **DNS Configuration UI Improvements**
+  - Made DNS configuration section collapsible within the main domain card
+  - Auto-collapses when DNS is configured (valid status)
+  - Added green checkmark icon next to "DNS Configuration" title when configured
+  - Added expand/collapse arrow for manual toggling
+  - Removed promotional text references ("Point your apex domain to Vercel")
+  - Removed confusing helper text about www subdomain configuration
+
+- **Technical Implementation**
+  - Used Fast Track development mode for rapid iteration
+  - Fixed React import error (changed React.useEffect to imported useEffect)
+  - Fixed ESLint errors by removing unused functions
+  - All TypeScript compilation and lint checks pass
+  - Server running successfully on port 3001
+
+- **Testing & Validation**
+  - Verified SSL status updates to "READY" when DNS is configured
+  - Confirmed DNS configuration section auto-collapses for configured domains
+  - Tested expand/collapse functionality works correctly
+  - Verified Issues section only shows for actual errors
+  - All UI elements display correctly with proper status indicators
+
+### LOG (Date: 8/6/2025 @ 6:30pm)
+#### Version: v0.1.1 (Development - Primary Domain System & UX Enhancements)
+#### Overview Summary
+
+Completed primary domain system implementation with major UX improvements. Fixed platform admin access issues, redesigned domain card UI with Settings section, and enhanced error visibility. System now follows industry standards where each project has one primary domain with additional domains as aliases.
+
+#### Log Items
+
+- **Primary Domain System Implementation**
+  - Added automatic primary designation for first domain added to project
+  - Implemented "Make Primary" functionality with toggle-based UI
+  - Created `/api/domains/[id]/make-primary` endpoint with proper platform admin access
+  - Fixed 404 errors by adding platform admin/staff access checks following existing patterns
+  - Removed verification requirement for setting primary domains (allows fixing mistakes immediately)
+
+- **Major UI/UX Redesign**
+  - Redesigned domain card with clean Settings section using grey background box
+  - Replaced "Make Primary Domain" button with intuitive toggle switch
+  - Added dedicated Issues section that only appears when there are actual errors
+  - Improved status text clarity: "DNS Setup Required", "SSL Provisioning", "Checking Configuration"
+  - Consistent toggle alignment and better visual hierarchy throughout
+  - Removed redundant alert messages in favor of organized Issues section with bullet points
+
+- **API & Access Control Improvements**
+  - Fixed make-primary endpoint to support platform admin/staff access
+  - Added platform admin access checks following same pattern as other domain endpoints
+  - Enhanced error handling and user feedback with proper toast messages
+  - Improved status messaging to be more descriptive and user-friendly
+
+- **Testing & Validation**
+  - All manual tests passed: primary badge appears, toggle switches work correctly
+  - Platform admin can now manage domains across all projects without access errors
+  - TypeScript compilation passes without errors
+  - ESLint passes with only pre-existing warnings
+  - UI is more intuitive and scalable for future domain management features
+
+- **Technical Details**
+  - Used Fast Track development cycle mode for rapid iteration
+  - Followed industry pattern of one primary domain + aliases (Webflow, Squarespace model)
+  - Maintained backward compatibility while enhancing functionality
+  - Clean separation of concerns: Settings section for user controls, Issues section for problems
+  - Prepared changes for merge to deployment branch
+
+- **Domain Architecture Refactor** - Completed Full Feature Mode implementation
+  - Created `updateDomainVerification` function in `domains.server.ts` using admin Supabase client
+  - Added `/api/domains/[id]/update` API route with proper authentication and authorization
+  - Refactored `domain-verification.ts` to use server-side functions
+  - Updated client-side `domains.ts` to call API routes instead of direct database access
+  - Applied database migration adding `ssl_state` and `verification_details` columns
+  - Created comprehensive documentation in `DOMAIN-ARCHITECTURE.md`
+  - Tested verification flow - domains now properly update without RLS errors
+  - SSL state and verification details are now persisted to database
+
+- **Technical Implementation Details**
+  - Server functions use `createClient` with `SUPABASE_SERVICE_ROLE_KEY` for admin access
+  - API routes validate user authentication and project ownership before allowing updates
+  - Client-side hooks remain read-only, all writes go through API routes
+  - Migration sync issues resolved by pulling remote migrations and renaming local migration
+  - TypeScript types updated to include new database columns
+
+- **Testing Results**
+  - Build passes with no errors
+  - Lint passes (fixed TypeScript any types)
+  - Domain verification API successfully updates database
+  - SSL state transitions properly tracked
+  - No RLS permission errors encountered
 
 - **Industry-Standard Architecture Refactor** (feature/industry-standard-refactor)
   - **Phase 1 - Zustand Store (Single Source of Truth)**:
@@ -204,6 +388,23 @@ Completed v0.1.1 release with critical bug fixes for domain system, navigation c
 - ✅ 🪲 When I change the project drop down from one to another, the application refreshes and shows that project's content automatically.
 
 
+##### Domain System Testing
+**Notes:** This is mission critical. We need to ensure that domains work across the board. If we can't deploy to sub domains and domains, a website builder is no use. 
+- ✅ ⚗️ Test preview domains load correctly (project-slug.sites.wondrousdigital.com)
+  - Fixed: Changed to use admin client to bypass RLS for public site viewing
+- ✅ ⚗️ Test custom domain addition flow
+  - Verified: Domain verification works with Vercel API
+- ✅ ⚗️ Verify domain verification polling works
+- ✅ ⚗️ Check SSL status indicators update properly
+- ✅ ⚗️ Test DNS instruction copy button
+
+##### Account & Project Dropdowns
+- ✅ 🪲 Fix account switching not refreshing page context
+- ✅ 🪲 Fix project switching not automatically showing new project content
+
+##### RLS Testing
+- ✅ ⚗️ Test multi-tenant RLS policies (manually tested and verified)
+
 
 
 
@@ -211,6 +412,24 @@ Completed v0.1.1 release with critical bug fixes for domain system, navigation c
 # STATUS LOG
 ## ------------------------------------------------ ##
 
+
+---
+
+### LOG (Date: 8/5/2025 @ 12:00am)
+#### Version: v0.1.1 (Released to Production)
+#### Overview Summary
+
+Completed v0.1.1 release with critical bug fixes for domain system, navigation context, and library usage tracking. All features tested and deployed to production.
+
+#### Log Items
+
+- Fixed middleware routing bug where `customer_id` was used instead of `account_id`
+- Fixed SSL status polling to continue after verification
+- Fixed error messages to show specific failures instead of generic messages
+- Fixed account/project switching to properly refresh context
+- Fixed library usage increment functionality
+- All domain system testing completed and verified
+- PR #5 merged and deployed to production
 
 ---
 

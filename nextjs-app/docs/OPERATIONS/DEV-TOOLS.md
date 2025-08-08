@@ -531,19 +531,60 @@ mcp__firecrawl-mcp__firecrawl_search     // Search web for info
 
 ### PM2 Commands (via npm scripts)
 ```bash
-# Development server
-npm run dev:start                   # Start in background
-npm run dev:stop                    # Stop server
-npm run dev:restart                 # Restart server
-npm run dev:logs                    # View logs
-npm run dev:status                  # Check status
+# Development server management
+npm run pm2:start                   # Start dev server in background
+npm run pm2:stop                    # Stop the server
+npm run pm2:restart                 # Restart server (after code changes)
+npm run pm2:logs                    # View last 100 lines of logs
+npm run pm2:status                  # Check if server is running
+npm run pm2:delete                  # Remove from PM2 (complete removal)
 
 # Direct PM2 commands
 pm2 list                            # List all processes
-pm2 monit                           # Monitor in real-time
-pm2 flush                           # Clear logs
+pm2 info nextjs-dev                 # Detailed info about our process
+pm2 logs nextjs-dev                 # Stream logs in real-time
+pm2 logs nextjs-dev --lines 50      # Show last 50 lines
+pm2 logs nextjs-dev --err           # Show only error logs
+pm2 logs nextjs-dev --out           # Show only output logs
+pm2 monit                           # Monitor CPU/Memory in real-time
+pm2 flush                           # Clear all log files
+pm2 restart nextjs-dev              # Quick restart
+pm2 stop nextjs-dev                 # Stop the process
+pm2 delete nextjs-dev               # Remove from PM2
 ```
 **When to use**: Long development sessions where you need terminal free
+
+### PM2 Process Info
+- **Process Name**: `nextjs-dev`
+- **Running on**: http://localhost:3000
+- **Auto-restart**: Yes (if crashes)
+- **Logs location**: 
+  - Output: `~/.pm2/logs/nextjs-dev-out.log`
+  - Errors: `~/.pm2/logs/nextjs-dev-error.log`
+
+### Common PM2 Workflows
+```bash
+# After pulling new code
+git pull && npm run pm2:restart
+
+# Check what's happening
+npm run pm2:logs                    # See recent activity
+pm2 logs nextjs-dev --err           # Check for errors
+
+# Debug issues
+pm2 info nextjs-dev                 # See restart count, memory usage
+pm2 monit                           # Real-time monitoring
+
+# Complete fresh start
+npm run pm2:delete                  # Remove process
+rm -rf .next                        # Clear build cache
+npm run pm2:start                   # Start fresh
+```
+**When to use**: 
+- Development without keeping terminal open
+- Need to switch between branches frequently
+- Want persistent logs across restarts
+- Running multiple services simultaneously
 
 ---
 

@@ -1,5 +1,4 @@
-import { checkDomainStatus } from './domains.server';
-import { updateDomainVerification } from './domains';
+import { checkDomainStatus, updateDomainVerification } from './domains.server';
 
 // TODO: Use this interface when implementing verification history
 // interface VerificationAttempt {
@@ -53,6 +52,12 @@ export async function verifyDomainWithRetry(
   attemptNumber: number = 1
 ): Promise<{
   verified: boolean;
+  verification?: Array<{
+    type: string;
+    domain: string;
+    value: string;
+    reason?: string;
+  }>;
   ssl?: {
     configured: boolean;
     status: string;
@@ -72,11 +77,36 @@ export async function verifyDomainWithRetry(
     // Check domain status
     const status = await checkDomainStatus(domain);
 
-    // Update database
-    await updateDomainVerification(
+    // Determine SSL status based on DNS configuration
+    let sslState = status.ssl?.state || 'PENDING';
+    
+    // If DNS is properly configured, SSL should be READY
+    // Vercel automatically provisions SSL when DNS is configured correctly
+    if (status.configured === true) {
+      sslState = 'READY';
+    }
+
+    // Update database with both verification and SSL status
+    const updateData: Parameters<typeof updateDomainVerification>[1] = {
+      verified: status.verified,
+      ssl_state: sslState
+    };
+    
+    // Only include verification_details if we have verification data
+    if (status.verification && status.verification.length > 0) {
+      updateData.verification_details = {
+        verification: status.verification
+      };
+    }
+    
+    const { error: updateError } = await updateDomainVerification(
       domainId,
-      status.verified
+      updateData
     );
+
+    if (updateError) {
+      throw new Error(`Failed to update domain verification: ${updateError}`);
+    }
 
     if (status.verified) {
       await logDomainOperation(domainId, 'VERIFY_SUCCESS', 'success', {
@@ -110,6 +140,7 @@ export async function verifyDomainWithRetry(
 
     return {
       verified: false,
+      verification: status.verification, // Pass DNS instructions to frontend
       ssl: status.ssl ? {
         configured: status.ssl.state === 'READY',
         status: status.ssl.state,

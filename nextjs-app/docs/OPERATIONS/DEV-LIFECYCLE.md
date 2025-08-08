@@ -103,8 +103,9 @@ For critical production issues. This allows rapid response to urgent problems wh
   *Ensures you're starting from a stable baseline*
 
 #### Planning:
-- [ ] Review BACKLOG.md and identify features to work on  
+- [ ] Product Owner (the user) reviews BACKLOG.md and identifies features to work on. 
   *Maintains alignment with product priorities*
+  *You may only view the BACKLOG.md file to see what's there, not edit it*
   
 - [ ] Discuss scope with user and get alignment  
   *Prevents building the wrong thing or overengineering*
@@ -112,8 +113,11 @@ For critical production issues. This allows rapid response to urgent problems wh
 - [ ] Check `/docs/PRDs/PRD Design & Build System.md` for context  
   *Understands how this feature fits into the bigger picture*
   
-- [ ] Create/update feature tasks in ACTIVE-SPRINT.md  
+- [ ] Work with Product Owner (user) to create tasks in ACTIVE-SPRINT.md  
   *Tracks what's being worked on currently*
+  *You may only ADD to the ACTIVE-SPRINT when the product owner confirms to do so based on the list generated in the console before hand*
+  *Also verify where product owner wants you to add items*
+  *Product Owner will manage the ACTIVE-SPRINT document*
   
 - [ ] Start Release Notes draft in `/docs/Release_Notes/`  
   *Documents changes as you go rather than trying to remember later*
@@ -126,7 +130,9 @@ For critical production issues. This allows rapid response to urgent problems wh
 ### 2. Create User Stories
 *Defines clear, testable outcomes that can be verified before deployment.*
 
-In ACTIVE-SPRINT.md, create testable user stories:
+- [ ] Create a list of user stories in the console, and verify with the product owner (user) that these are correct.
+
+Once approved by product owner, In ACTIVE-SPRINT.md, add stories where specified:
 - [ ] Write stories in format: "As a [role], I can [action] so that [benefit]"  
   *Ensures features solve real user needs*
   
@@ -168,7 +174,7 @@ Feature: Domain Management
 - [ ] Write TypeScript with explicit types (no `any` without justification)  
   *Catches bugs at compile time instead of runtime*
   
-- [ ] Write tests alongside features  
+- [ ] !IMPORTANT! Write tests alongside features  
   *Ensures features work correctly and prevents regressions*
   
 - [ ] Focus tests on critical business logic, data transformations, API endpoints, key user flows 
