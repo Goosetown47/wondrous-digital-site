@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { validateDomainFormat } from '@/lib/services/domains';
-import { addDomainToVercel, removeDomainFromVercel } from '@/lib/services/domains.server';
+import { addDomainToVercel, removeDomainFromVercel, checkDomainStatus } from '@/lib/services/domains.server';
 import { z } from 'zod';
 
 /**
@@ -252,6 +252,24 @@ export async function POST(
         try {
           await addDomainToVercel(domainToAdd);
           console.log(`[DOMAIN] Successfully added ${domainToAdd} to Vercel`);
+          
+          // Immediately check if domain is verified in Vercel
+          try {
+            const status = await checkDomainStatus(domainToAdd);
+            if (status.verified) {
+              console.log(`[DOMAIN] ${domainToAdd} is already verified in Vercel, updating database`);
+              await supabase
+                .from('project_domains')
+                .update({ 
+                  verified: true,
+                  verified_at: new Date().toISOString()
+                })
+                .eq('id', data.id);
+            }
+          } catch (verifyError) {
+            console.error(`[DOMAIN] Failed to check verification status for ${domainToAdd}:`, verifyError);
+            // Non-fatal error, continue
+          }
         } catch (vercelError) {
           const errorMessage = vercelError instanceof Error ? vercelError.message : String(vercelError);
           if (!errorMessage.includes('already exists')) {

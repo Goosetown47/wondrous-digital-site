@@ -43,6 +43,56 @@ export async function POST(
       domain.domain,
       1 // First attempt
     );
+    
+    // If domain was verified, also check and verify companion domains
+    if (result.verified) {
+      // Determine companion domain
+      let companionDomain: string | null = null;
+      if (domain.domain.startsWith('www.')) {
+        // If verifying www, also verify apex
+        companionDomain = domain.domain.substring(4);
+      } else if (!domain.domain.includes('www.')) {
+        // If verifying apex, also verify www
+        companionDomain = `www.${domain.domain}`;
+      }
+      
+      if (companionDomain) {
+        console.log(`[DOMAIN] Checking companion domain ${companionDomain} for verification`);
+        
+        // Find companion domain in database
+        const { data: companionData } = await supabaseAdmin
+          .from('project_domains')
+          .select('*')
+          .eq('domain', companionDomain)
+          .eq('project_id', domain.project_id)
+          .single();
+          
+        if (companionData && !companionData.verified) {
+          console.log(`[DOMAIN] Verifying companion domain ${companionDomain}`);
+          
+          // Check if companion is also verified in Vercel
+          try {
+            const companionStatus = await checkDomainStatus(companionDomain);
+            if (companionStatus.verified) {
+              // Update companion domain as verified
+              await supabaseAdmin
+                .from('project_domains')
+                .update({ 
+                  verified: true,
+                  verified_at: new Date().toISOString(),
+                  ssl_state: companionStatus.ssl?.state || 'PENDING'
+                })
+                .eq('id', companionData.id);
+                
+              console.log(`[DOMAIN] Successfully verified companion domain ${companionDomain}`);
+            }
+          } catch (error) {
+            console.error(`[DOMAIN] Failed to verify companion domain ${companionDomain}:`, error);
+            // Non-fatal, continue
+          }
+        }
+      }
+    }
 
     // Schedule retry if needed
     if (!result.verified && result.shouldRetry && result.nextRetryDelay) {
