@@ -231,41 +231,41 @@ If "Domain not found in Vercel" error occurs:
 - [FAIL] (new) When the primary domain is deleted, it should select the next domain to make primary and set it to primary or warn the user when no primary domain is set.
 
 ### 4. UI/UX Testing (Preview)
-- [ ] Settings section should display properly on preview URL
-- [ ] Issues section should show configuration problems
-- [ ] Toggle switches should function correctly
-- [ ] Toast messages should appear for all actions
+- [x] Settings section should display properly on preview URL
+- [x] Issues section should show configuration problems
+- [x] Toggle switches should function correctly
+- [x] Toast messages should appear for all actions
 
 ### 5. Status Badges & SSL (Preview)
-- [ ] Status badge shows "Configured" (green) for domains with valid DNS
-- [ ] Status badge shows "DNS Setup Required" (amber) for new domains
-- [ ] SSL status automatically updates to "READY" when DNS configured
-- [ ] No manual refresh needed for SSL status synchronization
-- [ ] Status badges render correctly on preview deployment URL
+- [x] Status badge shows "Configured" (green) for domains with valid DNS
+- [x] Status badge shows "DNS Setup Required" (amber) for new domains
+- [x] SSL status automatically updates to "READY" when DNS configured
+- [x] No manual refresh needed for SSL status synchronization
+- [x] Status badges render correctly on preview deployment URL
 
 ### 6. DNS Configuration UI (Preview)
-- [ ] DNS Configuration section auto-collapses for configured domains
-- [ ] Manual expand/collapse works smoothly
-- [ ] Green checkmark appears for configured domains
-- [ ] No promotional hosting provider text appears
-- [ ] DNS records display properly when expanded
+- [x] DNS Configuration section auto-collapses for configured domains
+- [x] Manual expand/collapse works smoothly
+- [x] Green checkmark appears for configured domains
+- [x] No promotional hosting provider text appears
+- [x] DNS records display properly when expanded
 
 ### 7. Issues Section (Preview)
-- [ ] Issues section only shows for domains with real problems
-- [ ] No "fully configured" message appears as an issue
-- [ ] Issues section completely hidden for working domains
-- [ ] Error messages have proper color coding
+- [x] Issues section only shows for domains with real problems
+- [x] No "fully configured" message appears as an issue
+- [x] Issues section completely hidden for working domains
+- [x] Error messages have proper color coding
 
 ### 8. Preview-Specific Tests
-- [ ] Verify preview deployment URL works (*.vercel.app)
-- [ ] Check that middleware correctly identifies preview environment
-- [ ] Ensure database operations work with preview deployment
+- [x] Verify preview deployment URL works (*.vercel.app)
+- [x] Check that middleware correctly identifies preview environment
+- [x] Ensure database operations work with preview deployment
 
 ### 9. API Testing
-- [ ] All API endpoints should be accessible via preview URL
-- [ ] Authentication should work correctly
-- [ ] Vercel API integration should function
-- [ ] DNS config endpoint updates SSL status in database
+- [x] All API endpoints should be accessible via preview URL
+- [x] Authentication should work correctly
+- [x] Vercel API integration should function
+- [x] DNS config endpoint updates SSL status in database
 
 ---
 
