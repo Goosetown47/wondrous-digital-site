@@ -224,11 +224,11 @@ If "Domain not found in Vercel" error occurs:
 **Expected:** UI functionality should work identically to local, but domain status may differ based on which Vercel project is configured
 
 ### 3. Primary Domain System (Preview)
-- [ ] First domain added should automatically be marked as primary
-- [ ] Primary domain toggle should work correctly
-- [ ] Making domain primary should update other domains
-- [ ] UI should show correct primary domain indicators
-- [ ] When the primary domain is deleted, it should 
+- [x] First domain added should automatically be marked as primary
+- [x] Primary domain toggle should work correctly
+- [x] Making domain primary should update other domains
+- [x] UI should show correct primary domain indicators
+- [FAIL] (new) When the primary domain is deleted, it should select the next domain to make primary and set it to primary or warn the user when no primary domain is set.
 
 ### 4. UI/UX Testing (Preview)
 - [ ] Settings section should display properly on preview URL

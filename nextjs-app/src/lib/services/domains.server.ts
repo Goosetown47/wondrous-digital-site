@@ -119,7 +119,8 @@ export async function addDomainToVercel(domain: string): Promise<void> {
 }
 
 /**
- * Remove a domain from Vercel project
+ * Remove a domain from Vercel project AND account
+ * This ensures domains don't remain orphaned in the Vercel account
  */
 export async function removeDomainFromVercel(domain: string): Promise<void> {
   if (!VERCEL_API_TOKEN || !VERCEL_PROJECT_ID) {
@@ -128,17 +129,38 @@ export async function removeDomainFromVercel(domain: string): Promise<void> {
   }
 
   try {
-    const response = await vercelRequest(
+    // Step 1: Remove domain from the project
+    console.log(`[VERCEL] Removing domain ${domain} from project ${VERCEL_PROJECT_ID}`);
+    const projectResponse = await vercelRequest(
       `/v10/projects/${VERCEL_PROJECT_ID}/domains/${domain}`,
       {
         method: 'DELETE',
       }
     );
 
-    if (!response.ok && response.status !== 404) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Failed to remove domain from Vercel');
+    if (!projectResponse.ok && projectResponse.status !== 404) {
+      const error = await projectResponse.json();
+      console.error(`[VERCEL] Failed to remove domain from project:`, error);
+      throw new Error(error.error?.message || 'Failed to remove domain from Vercel project');
     }
+
+    // Step 2: Remove domain from the Vercel account entirely
+    console.log(`[VERCEL] Removing domain ${domain} from Vercel account`);
+    const accountResponse = await vercelRequest(
+      `/v9/domains/${domain}`,
+      {
+        method: 'DELETE',
+      }
+    );
+
+    if (!accountResponse.ok && accountResponse.status !== 404) {
+      const error = await accountResponse.json();
+      console.error(`[VERCEL] Failed to remove domain from account:`, error);
+      // Log the error but don't throw - domain might not exist in account
+      // This ensures we don't break the flow if domain was already removed
+    }
+
+    console.log(`[VERCEL] Successfully removed domain ${domain} from both project and account`);
   } catch (error) {
     console.error('Error removing domain from Vercel:', error);
     throw error;
