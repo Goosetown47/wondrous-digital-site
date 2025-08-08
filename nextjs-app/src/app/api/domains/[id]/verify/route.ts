@@ -69,7 +69,7 @@ export async function POST(
     }
     
     return NextResponse.json({
-      verified: result.verified,
+      verified: result.verified,  // This now reflects DNS configuration status
       verification: result.verification, // Include DNS instructions
       ssl: sslInfo,
       configured: status.configured, // Include configuration status
