@@ -41,13 +41,42 @@ This is an ongoing log of everything we do across the application, from bug fixe
 # MOST RECENT LOG
 ## ------------------------------------------------ ##
 
-### LOG (Date: 8/8/2025 @ 1:30am)
-#### Version: v0.1.1 (Development - Domain Verification Fix)
+### LOG (Date: 8/9/2025 @ 4:45pm)
+#### Version: v0.1.1 (Development - Migration Reset & www Fix)
 #### Overview Summary
 
-Fixed critical issue where custom domains returned 404 even when DNS was properly configured. The database `verified` field was being set based on whether domain exists in Vercel rather than whether DNS is configured. Updated verification logic to align with industry standards - only route traffic when DNS is confirmed.
+Reset Supabase migration history to resolve persistent sync issues and fixed www.wondrousdigital.com routing. Complete migration system overhaul with production schema baseline.
 
 #### Log Items
+
+- **Migration History Reset**:
+  - Backed up database before making changes
+  - Archived all existing migrations to `/migrations_archive_20250809/`
+  - Cleared remote migration history in Supabase
+  - Created new baseline migration from production schema export
+  - Successfully applied baseline migration (20250809230000)
+
+- **Schema Corrections**:
+  - Fixed user_profiles table - uses `user_id` as PK, not `id`
+  - Baseline now matches exact production schema
+  - Includes all tables: accounts, projects, pages, user_profiles, etc.
+
+- **www.wondrousdigital.com Fix**:
+  - Added www.wondrousdigital.com to reserved_domain_permissions
+  - Discovered middleware requires both permission AND project_domains entry
+  - Updated middleware to simplify routing for marketing domains
+  - Fix requires deployment to Vercel to take effect
+
+- **Key Learnings**:
+  - Migration file names must match exactly between local and remote
+  - Always use production schema exports for baselines
+  - Middleware runs on Vercel edge, not local dev server
+  - Reserved domains need special handling in middleware
+
+- **Next Steps**:
+  - Deploy middleware changes to fix www subdomain
+  - Monitor for any migration sync issues
+  - Consider documenting migration best practices
 
 - **Issue**: Custom domains (lahaie-private-server.com) showing 404 despite being configured in Vercel
 - **Root Cause**: Database `verified = false` because we checked Vercel's "domain exists" status instead of "DNS configured" status

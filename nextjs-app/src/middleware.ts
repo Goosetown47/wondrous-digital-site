@@ -102,7 +102,8 @@ export async function middleware(request: NextRequest) {
     );
     
     // Check if this is a subdomain of wondrousdigital.com (potential preview domain)
-    if (domain.endsWith('.wondrousdigital.com') && !domain.endsWith('.vercel.app')) {
+    // Exclude www.wondrousdigital.com as it should be handled as a reserved domain
+    if (domain.endsWith('.wondrousdigital.com') && domain !== 'www.wondrousdigital.com' && !domain.endsWith('.vercel.app')) {
       // Extract subdomain
       const subdomain = domain.replace('.wondrousdigital.com', '').split('.').pop() || '';
       
