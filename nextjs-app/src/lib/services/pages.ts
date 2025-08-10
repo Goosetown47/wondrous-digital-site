@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
 import type { Page } from '@/types/database';
 import type { Section } from '@/stores/builderStore';
+import { isAdmin, isStaff } from '@/lib/permissions';
 
 export interface PageWithProject extends Page {
   projects?: {
@@ -26,11 +27,61 @@ export interface UpdatePageData {
 }
 
 /**
+ * Verify user has access to a project (and therefore its pages)
+ * Returns the account_id if access is granted, throws error otherwise
+ */
+async function verifyProjectAccess(projectId: string, userId: string): Promise<string> {
+  // First check if user is platform admin or staff (bypass account restrictions)
+  const isPlatformAdmin = await isAdmin(userId);
+  const isPlatformStaff = await isStaff(userId);
+  
+  if (isPlatformAdmin || isPlatformStaff) {
+    // Get account_id for audit logging even though access is granted
+    const { data: project } = await supabase
+      .from('projects')
+      .select('account_id')
+      .eq('id', projectId)
+      .single();
+    
+    if (!project) {
+      throw new Error('Project not found');
+    }
+    
+    return project.account_id;
+  }
+  
+  // For regular users, verify they have access through account membership
+  const { data: project, error } = await supabase
+    .from('projects')
+    .select(`
+      account_id,
+      accounts!inner(
+        account_users!inner(
+          user_id
+        )
+      )
+    `)
+    .eq('id', projectId)
+    .eq('accounts.account_users.user_id', userId)
+    .single();
+  
+  if (error || !project) {
+    throw new Error('Access denied: You do not have permission to access this project');
+  }
+  
+  return project.account_id;
+}
+
+/**
  * Get a page by project ID and path
+ * Includes account access validation
  */
 export async function getPageByProjectId(projectId: string, path: string = '/') {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
+
+  // Verify user has access to this project
+  await verifyProjectAccess(projectId, user.id);
 
   const { data, error } = await supabase
     .from('pages')
@@ -55,10 +106,14 @@ export async function getPageByProjectId(projectId: string, path: string = '/') 
 
 /**
  * Create a new page
+ * Validates account access before creation
  */
 export async function createPage(pageData: CreatePageData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
+
+  // Verify user has access to this project
+  const accountId = await verifyProjectAccess(pageData.project_id, user.id);
 
   const { data, error } = await supabase
     .from('pages')
@@ -73,25 +128,33 @@ export async function createPage(pageData: CreatePageData) {
 
   if (error) throw error;
   
-  // Log the action
-  await logPageAction('create', data.id, pageData.project_id, { page_path: data.path });
+  // Log the action with the verified account_id
+  await logPageAction('create', data.id, pageData.project_id, accountId, { page_path: data.path });
   
   return data as Page;
 }
 
 /**
  * Update page content
+ * Validates account access before update
  */
 export async function updatePage(pageId: string, updates: UpdatePageData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  // Get the page first to get project_id for logging
+  // Get the page first to get project_id for access verification
   const { data: existingPage } = await supabase
     .from('pages')
     .select('project_id, path')
     .eq('id', pageId)
     .single();
+    
+  if (!existingPage) {
+    throw new Error('Page not found');
+  }
+
+  // Verify user has access to this project
+  const accountId = await verifyProjectAccess(existingPage.project_id, user.id);
 
   const { data, error } = await supabase
     .from('pages')
@@ -106,29 +169,35 @@ export async function updatePage(pageId: string, updates: UpdatePageData) {
   if (error) throw error;
   
   // Log the action
-  if (existingPage) {
-    await logPageAction('update', pageId, existingPage.project_id, { 
-      updates: Object.keys(updates),
-      section_count: updates.sections?.length 
-    });
-  }
+  await logPageAction('update', pageId, existingPage.project_id, accountId, { 
+    updates: Object.keys(updates),
+    section_count: updates.sections?.length 
+  });
   
   return data as Page;
 }
 
 /**
  * Delete a page
+ * Validates account access before deletion
  */
 export async function deletePage(pageId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  // Get page info for logging
+  // Get page info for access verification and logging
   const { data: page } = await supabase
     .from('pages')
     .select('project_id, path, title')
     .eq('id', pageId)
     .single();
+    
+  if (!page) {
+    throw new Error('Page not found');
+  }
+  
+  // Verify user has access to this project
+  const accountId = await verifyProjectAccess(page.project_id, user.id);
   
   const { error } = await supabase
     .from('pages')
@@ -138,12 +207,10 @@ export async function deletePage(pageId: string) {
   if (error) throw error;
   
   // Log the action
-  if (page) {
-    await logPageAction('delete', pageId, page.project_id, { 
-      page_path: page.path,
-      page_title: page.title 
-    });
-  }
+  await logPageAction('delete', pageId, page.project_id, accountId, { 
+    page_path: page.path,
+    page_title: page.title 
+  });
   
   // Return the deleted page info for cache invalidation
   return page;
@@ -151,10 +218,14 @@ export async function deletePage(pageId: string) {
 
 /**
  * List all pages in a project
+ * Validates account access before listing
  */
 export async function listProjectPages(projectId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
+
+  // Verify user has access to this project
+  await verifyProjectAccess(projectId, user.id);
 
   const { data, error } = await supabase
     .from('pages')
@@ -168,6 +239,7 @@ export async function listProjectPages(projectId: string) {
 
 /**
  * Get or create homepage for a project
+ * Validates account access
  */
 export async function getOrCreateHomepage(projectId: string) {
   // First try to get existing homepage
@@ -194,159 +266,242 @@ export async function getOrCreateHomepage(projectId: string) {
 
 /**
  * Set a page as the homepage
+ * Validates account access before update
  */
 export async function setPageAsHomepage(pageId: string, projectId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  // Get the current page details
-  const { data: currentPage, error: pageError } = await supabase
+  // Verify user has access to this project
+  const accountId = await verifyProjectAccess(projectId, user.id);
+
+  // Get all pages to update metadata properly
+  const { data: pages } = await supabase
     .from('pages')
-    .select('*')
+    .select('id, metadata')
+    .eq('project_id', projectId);
+
+  // Update all pages: unset homepage for all except the selected one
+  if (pages) {
+    for (const page of pages) {
+      const updatedMetadata = {
+        ...(page.metadata || {}),
+        isHomepage: page.id === pageId
+      };
+      
+      await supabase
+        .from('pages')
+        .update({ metadata: updatedMetadata })
+        .eq('id', page.id);
+    }
+  }
+
+  // Get the updated page to return
+  const { data, error } = await supabase
+    .from('pages')
+    .select()
     .eq('id', pageId)
     .single();
 
-  if (pageError || !currentPage) throw new Error('Page not found');
-
-  // Get the current homepage if it exists
-  const { data: currentHomepage } = await supabase
-    .from('pages')
-    .select('*')
-    .eq('project_id', projectId)
-    .eq('path', '/')
-    .single();
-
-  // Start a transaction-like operation
-  const updates = [];
-
-  // If there's a current homepage and it's not the same page, move it to a new path
-  if (currentHomepage && currentHomepage.id !== pageId) {
-    // Generate a new path for the old homepage based on its title
-    const oldHomepageSlug = currentHomepage.title?.toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') || 'page';
-    
-    // Find an available path by checking for conflicts
-    let newPathForOldHomepage = `/${oldHomepageSlug}`;
-    let pathSuffix = 1;
-    
-    // Check if path already exists and increment suffix until we find available path
-    while (true) {
-      const { data: existingPage } = await supabase
-        .from('pages')
-        .select('id')
-        .eq('project_id', projectId)
-        .eq('path', newPathForOldHomepage)
-        .single();
-      
-      if (!existingPage) {
-        // Path is available
-        break;
-      }
-      
-      // Path exists, try with suffix
-      pathSuffix++;
-      newPathForOldHomepage = `/${oldHomepageSlug}-${pathSuffix}`;
-    }
-    
-    console.log(`Moving old homepage to path: ${newPathForOldHomepage}`);
-    
-    // Update the old homepage
-    updates.push(
-      supabase
-        .from('pages')
-        .update({
-          path: newPathForOldHomepage,
-          metadata: {
-            ...currentHomepage.metadata,
-            isHomepage: false
-          },
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', currentHomepage.id)
-    );
-  }
-
-  // Update the new homepage
-  updates.push(
-    supabase
-      .from('pages')
-      .update({
-        path: '/',
-        metadata: {
-          ...currentPage.metadata,
-          isHomepage: true
-        },
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', pageId)
-  );
-
-  // Execute all updates
-  console.log(`Executing ${updates.length} homepage updates...`);
-  
-  try {
-    const results = await Promise.all(updates);
-    
-    // Check for errors
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i];
-      if (result.error) {
-        console.error(`Homepage update ${i + 1} failed:`, result.error);
-        throw new Error(`Failed to update homepage: ${result.error.message}`);
-      }
-    }
-    
-    console.log('All homepage updates completed successfully');
-  } catch (error) {
-    console.error('Homepage update operation failed:', error);
-    throw error;
-  }
+  if (error) throw error;
 
   // Log the action
-  await logPageAction('update', pageId, projectId, { 
-    action: 'set_as_homepage',
-    previous_path: currentPage.path
+  await logPageAction('set_homepage', pageId, projectId, accountId, { 
+    previous_homepage: 'unset' 
   });
 
-  // Return the updated page
-  const { data: updatedPage } = await supabase
-    .from('pages')
-    .select('*')
-    .eq('id', pageId)
-    .single();
-
-  return updatedPage as Page;
+  return data as Page;
 }
 
 /**
- * Duplicate a page with a new path
+ * Get page content for preview
+ * Uses published_sections instead of sections
+ * Validates account access
+ */
+export async function getPageForPreview(projectId: string, path: string = '/') {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  // Verify user has access to this project
+  await verifyProjectAccess(projectId, user.id);
+
+  const { data, error } = await supabase
+    .from('pages')
+    .select(`
+      id,
+      project_id,
+      path,
+      title,
+      published_sections,
+      metadata,
+      created_at,
+      updated_at,
+      projects!inner(
+        id,
+        name,
+        account_id
+      )
+    `)
+    .eq('project_id', projectId)
+    .eq('path', path)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    throw error;
+  }
+  
+  if (!data) return null;
+  
+  // Return with sections mapped from published_sections
+  return {
+    ...data,
+    sections: data.published_sections || [],
+    projects: Array.isArray(data.projects) ? data.projects[0] : data.projects
+  } as PageWithProject;
+}
+
+/**
+ * Publish a page (copy sections to published_sections)
+ * Validates account access before publishing
+ */
+export async function publishPage(pageId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  // Get the page to verify access
+  const { data: page } = await supabase
+    .from('pages')
+    .select('project_id, sections')
+    .eq('id', pageId)
+    .single();
+    
+  if (!page) {
+    throw new Error('Page not found');
+  }
+
+  // Verify user has access to this project
+  const accountId = await verifyProjectAccess(page.project_id, user.id);
+
+  // Update published_sections with current sections
+  const { data, error } = await supabase
+    .from('pages')
+    .update({
+      published_sections: page.sections || [],
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', pageId)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  // Log the action
+  await logPageAction('publish', pageId, page.project_id, accountId, { 
+    section_count: page.sections?.length || 0
+  });
+
+  return data as Page;
+}
+
+/**
+ * Get pages by account (for cross-project views)
+ * Only available to platform admins/staff
+ */
+export async function getPagesByAccount(accountId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  // Only platform admins/staff can view across projects
+  const isPlatformAdmin = await isAdmin(user.id);
+  const isPlatformStaff = await isStaff(user.id);
+  
+  if (!isPlatformAdmin && !isPlatformStaff) {
+    throw new Error('Access denied: Platform admin or staff role required');
+  }
+
+  const { data, error } = await supabase
+    .from('pages')
+    .select(`
+      *,
+      projects!inner(
+        id,
+        name,
+        account_id
+      )
+    `)
+    .eq('projects.account_id', accountId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data as PageWithProject[];
+}
+
+/**
+ * Log page actions to audit_logs
+ * Now accepts account_id parameter to avoid extra queries
+ */
+async function logPageAction(
+  action: string,
+  pageId: string,
+  projectId: string,
+  accountId: string,
+  metadata?: Record<string, unknown>
+) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  try {
+    await supabase
+      .from('audit_logs')
+      .insert({
+        account_id: accountId,
+        user_id: user.id,
+        action: `page:${action}`,
+        resource_type: 'page',
+        resource_id: pageId,
+        metadata: {
+          project_id: projectId,
+          ...(metadata || {})
+        }
+      });
+  } catch (error) {
+    console.error('Failed to log page action:', error);
+  }
+}
+
+/**
+ * Duplicate a page
+ * Creates a copy of a page with a new path
  */
 export async function duplicatePage(pageId: string, newPath: string, newTitle?: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
   // Get the original page
-  const { data: originalPage, error: fetchError } = await supabase
+  const { data: originalPage } = await supabase
     .from('pages')
     .select('*')
     .eq('id', pageId)
     .single();
+    
+  if (!originalPage) {
+    throw new Error('Page not found');
+  }
 
-  if (fetchError) throw fetchError;
-  if (!originalPage) throw new Error('Page not found');
+  // Verify user has access to this project
+  const accountId = await verifyProjectAccess(originalPage.project_id, user.id);
 
-  // Create new page with duplicated content
+  // Create the duplicate
   const { data, error } = await supabase
     .from('pages')
     .insert({
       project_id: originalPage.project_id,
       path: newPath,
-      title: newTitle || `${originalPage.title || 'Untitled'} (Copy)`,
+      title: newTitle || `${originalPage.title} (Copy)`,
       sections: originalPage.sections || [],
-      published_sections: originalPage.published_sections || originalPage.sections || [], // Copy published sections or fallback to sections
+      published_sections: originalPage.published_sections || [],
       metadata: {
-        ...(originalPage.metadata as Record<string, unknown> || {}),
+        ...(originalPage.metadata || {}),
         duplicatedFrom: pageId,
         duplicatedAt: new Date().toISOString()
       }
@@ -355,124 +510,52 @@ export async function duplicatePage(pageId: string, newPath: string, newTitle?: 
     .single();
 
   if (error) throw error;
-  
+
   // Log the action
-  await logPageAction('duplicate', data.id, originalPage.project_id, { 
-    originalPageId: pageId,
-    originalPath: originalPage.path,
-    newPath: newPath
+  await logPageAction('duplicate', data.id, originalPage.project_id, accountId, { 
+    source_page_id: pageId,
+    new_path: newPath,
+    new_title: newTitle
   });
-  
-  return data as Page;
-}
-
-/**
- * Publish draft sections to live (published_sections = sections)
- */
-export async function publishPageDraft(pageId: string) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-
-  // Use the database function for publishing
-  const { data, error } = await supabase
-    .rpc('publish_page_draft', { page_id: pageId });
-
-  if (error) throw error;
-
-  // Log the action
-  if (data) {
-    await logPageAction('publish', pageId, data.project_id, { 
-      section_count: data.sections?.length || 0 
-    });
-  }
 
   return data as Page;
 }
 
 /**
- * Save draft sections (sections column only, doesn't affect published)
+ * Save draft content (alias for updatePage that only updates sections)
  */
 export async function saveDraftPage(pageId: string, sections: Section[]) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  return updatePage(pageId, { sections });
+}
 
-  // Get the page first to get project_id for logging
-  const { data: existingPage } = await supabase
-    .from('pages')
-    .select('project_id, path')
-    .eq('id', pageId)
-    .single();
-
-  const { data, error } = await supabase
-    .from('pages')
-    .update({
-      sections: sections,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', pageId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  
-  // Log the action
-  if (existingPage) {
-    await logPageAction('save_draft', pageId, existingPage.project_id, { 
-      section_count: sections.length 
-    });
-  }
-  
-  return data as Page;
+/**
+ * Publish page draft (alias for publishPage)
+ * Kept for backward compatibility
+ */
+export async function publishPageDraft(pageId: string) {
+  return publishPage(pageId);
 }
 
 /**
  * Check if a page has unpublished changes
+ * Compares sections with published_sections
  */
 export async function pageHasUnpublishedChanges(pageId: string): Promise<boolean> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const { data, error } = await supabase
-    .rpc('page_has_unpublished_changes', { page_id: pageId });
-
-  if (error) throw error;
-  
-  return data as boolean;
-}
-
-/**
- * Log page actions for audit trail
- */
-async function logPageAction(
-  action: string, 
-  pageId: string, 
-  projectId: string, 
-  metadata?: Record<string, unknown>
-) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  // Get project's account ID
-  const { data: project } = await supabase
-    .from('projects')
-    .select('account_id')
-    .eq('id', projectId)
+  const { data: page, error } = await supabase
+    .from('pages')
+    .select('sections, published_sections, project_id')
+    .eq('id', pageId)
     .single();
 
-  if (!project?.account_id) return;
+  if (error) throw error;
+  if (!page) return false;
 
-  try {
-    await supabase
-      .from('audit_logs')
-      .insert({
-        account_id: project.account_id,
-        user_id: user.id,
-        action: `page:${action}`,
-        resource_type: 'page',
-        resource_id: pageId,
-        metadata: metadata || {}
-      });
-  } catch (error) {
-    console.error('Failed to log page action:', error);
-  }
+  // Verify user has access (will throw if no access)
+  await verifyProjectAccess(page.project_id, user.id);
+
+  // Compare sections with published_sections
+  return JSON.stringify(page.sections) !== JSON.stringify(page.published_sections);
 }

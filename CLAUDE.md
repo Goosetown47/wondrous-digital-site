@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **Next.js 15 multi-tenant website builder platform**. All active development is in the `/nextjs-app/` directory. The legacy React/Vite app exists but is not in use.
 
-**Production Version:** v0.1.0 (Released 8/1/2025 @ 11pm)
-**Development Version:** v0.1.1 (Active Planning Now)
+**Production Version:** v0.1.1 
+**Development Version:** v0.1.2 
 **Deployment Branch:** `nextjs-pagebuilder-core` (NOT master/main!)
 
 ## 📋 Essential Reading

@@ -10,6 +10,32 @@ This is the full backlog of features we keep and add to as we develop. We will o
 
 
 
+## PACKET LIST
+
+1. Service Layer & API Updates
+2. Domain Configuration System
+3. Database Isolation for Dev/Prod 
+4. Page Management System
+5. Navigation System (needs definition)
+6. Account Management Tools
+7. User Invitation System (I don't think this work is actually done)
+8. XSS & Input Security Hardening
+9. Security Headers & Middleware
+10. Authentication Security Enhancements
+11. API Security & Rate Limiting
+12. Database Security & RLS
+13. Security Monitoring & Compliance
+14. Site Templates & Project Settings
+15. Canvas Builder Improvements
+16. Project Management Tools
+17. Library Architecture
+18. app.wondrousdigital.com DESIGN
+19. Feature Tagging System
+20. Paid Tier System & Stripe Integration
+21. Extra Domain Tasks
+
+
+
 
 # ---------------------------------------------------------------------------------------- #
 # PRIORITY HIGH -------------------------------------------------------------------------- #
@@ -484,7 +510,7 @@ This is the full backlog of features we keep and add to as we develop. We will o
 
 
 
-### Non-Critical (Can defer to v0.1.2+)
+### Ungrouped Tasks
 - ✅ 🪲 Uses information works properly. (Fixed: API endpoint now properly increments usage count when library items are used)
 - [ ] 🚀 I can permanently delete things inside lab
 - [ ] ⚗️ Check grid/list view toggle persists preference (Broken, does not remember)
@@ -492,8 +518,6 @@ This is the full backlog of features we keep and add to as we develop. We will o
 - [ ] 🪲 Page switching does not maintain unsaved changes or give a warning.
 - [❌] ⚗️ Test page status toggle (published/draft)
   - This function doesn't exist
-
-### Technical Debt Identified
 - [ ] [Code quality issues discovered during investigation]
 
 
@@ -516,6 +540,7 @@ This is the full backlog of features we keep and add to as we develop. We will o
 
 #### [Packet] Library Architecture
 - [ ] 🚀 Tags (deferred - basic categories implemented)
+
 
 
 ---

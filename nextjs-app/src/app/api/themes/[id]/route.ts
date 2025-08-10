@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { cookies } from 'next/headers';
 import { env } from '@/env.mjs';
+import { isAdminServer, isStaffServer } from '@/lib/permissions/server-checks';
 
 export async function GET(
   request: NextRequest,
@@ -43,6 +44,19 @@ export async function GET(
     }
 
     console.log('🔍 [API/Themes/Id] Authenticated user:', user.email);
+
+    // Check if user is admin or staff
+    const [isAdmin, isStaff] = await Promise.all([
+      isAdminServer(user.id),
+      isStaffServer(user.id)
+    ]);
+
+    if (!isAdmin && !isStaff) {
+      console.log('❌ [API/Themes/Id] Access denied - user is not admin or staff');
+      return NextResponse.json({ 
+        error: 'Access denied. Admin or staff role required.' 
+      }, { status: 403 });
+    }
 
     // Create service role client (bypasses RLS)
     const serviceClient = createAdminClient();
@@ -123,6 +137,19 @@ export async function PUT(
     if (userError || !user) {
       console.log('❌ [API/Themes/Id] Authentication failed');
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    // Check if user is admin or staff
+    const [isAdmin, isStaff] = await Promise.all([
+      isAdminServer(user.id),
+      isStaffServer(user.id)
+    ]);
+
+    if (!isAdmin && !isStaff) {
+      console.log('❌ [API/Themes/Id] Access denied - user is not admin or staff');
+      return NextResponse.json({ 
+        error: 'Access denied. Admin or staff role required.' 
+      }, { status: 403 });
     }
 
     // Parse request body
@@ -238,6 +265,19 @@ export async function DELETE(
     }
 
     console.log('🔍 [API/Themes/Id] Deleting theme with service role...');
+
+    // Check if user is admin or staff
+    const [isAdmin, isStaff] = await Promise.all([
+      isAdminServer(user.id),
+      isStaffServer(user.id)
+    ]);
+
+    if (!isAdmin && !isStaff) {
+      console.log('❌ [API/Themes/Id] Access denied - user is not admin or staff');
+      return NextResponse.json({ 
+        error: 'Access denied. Admin or staff role required.' 
+      }, { status: 403 });
+    }
 
     // Create service role client (bypasses RLS)
     const serviceClient = createAdminClient();
