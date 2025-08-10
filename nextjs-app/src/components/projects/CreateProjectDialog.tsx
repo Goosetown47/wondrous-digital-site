@@ -5,7 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/auth-provider';
 import { useCreateProject } from '@/hooks/useProjects';
 import { useThemes } from '@/hooks/useThemes';
+import { useHasPermission } from '@/hooks/usePermissions';
 import { updateProject } from '@/lib/services/projects';
+import { validateSlug } from '@/lib/services/slug-validation';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -24,8 +27,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle, AlertTriangle } from 'lucide-react';
 
 interface CreateProjectDialogProps {
   open: boolean;
@@ -37,11 +41,13 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
   const { currentAccount, setCurrentProject } = useAuth();
   const { data: themes, isLoading: themesLoading } = useThemes();
   const { mutate: createProject, isPending } = useCreateProject();
+  const { data: isAdmin } = useHasPermission('system:admin');
   
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [themeId, setThemeId] = useState('none');
   const [customSlug, setCustomSlug] = useState(false);
+  const [slugValidation, setSlugValidation] = useState<ReturnType<typeof validateSlug> | null>(null);
 
   // Auto-generate slug from name
   useEffect(() => {
@@ -61,14 +67,31 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
       setSlug('');
       setThemeId('none');
       setCustomSlug(false);
+      setSlugValidation(null);
     }
   }, [open]);
+
+  // Validate slug whenever it changes
+  useEffect(() => {
+    if (slug) {
+      const validation = validateSlug(slug, isAdmin || false);
+      setSlugValidation(validation);
+    } else {
+      setSlugValidation(null);
+    }
+  }, [slug, isAdmin]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name || !slug || !currentAccount) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    // Check slug validation
+    if (slugValidation && !slugValidation.isValid && !isAdmin) {
+      toast.error(slugValidation.message || 'Invalid slug');
       return;
     }
 
@@ -146,10 +169,36 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                 pattern="[a-z0-9\-]+"
                 title="Only lowercase letters, numbers, and hyphens"
                 required
+                className={cn(
+                  slugValidation && !slugValidation.isValid && !isAdmin && "border-red-500"
+                )}
               />
               <p className="text-sm text-muted-foreground">
                 This will be used in the project URL
               </p>
+              
+              {/* Validation feedback */}
+              {slugValidation && slug && (
+                <>
+                  {!slugValidation.isValid && !isAdmin && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        {slugValidation.message}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  {slugValidation.isReserved && isAdmin && (
+                    <Alert>
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription className="text-yellow-600">
+                        {slugValidation.message}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -188,7 +237,10 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button 
+              type="submit" 
+              disabled={isPending || !!(slugValidation && !slugValidation.isValid && !isAdmin)}
+            >
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

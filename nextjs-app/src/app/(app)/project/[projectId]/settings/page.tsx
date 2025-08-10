@@ -5,12 +5,15 @@ import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/auth-provider';
 import { useProject, useUpdateProject } from '@/hooks/useProjects';
 import { useThemes } from '@/hooks/useThemes';
+import { useHasPermission } from '@/hooks/usePermissions';
 import { DomainSettings } from '@/components/DomainSettings';
+import { validateSlug } from '@/lib/services/slug-validation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -28,10 +31,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Palette, AlertTriangle, Loader2 } from 'lucide-react';
+import { Palette, AlertTriangle, Loader2, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { useArchiveProject } from '@/hooks/useProjects';
+import { cn } from '@/lib/utils';
 
 export default function ProjectSettingsPage() {
   const params = useParams();
@@ -42,6 +46,7 @@ export default function ProjectSettingsPage() {
   const { data: themes } = useThemes();
   const updateProject = useUpdateProject(projectId);
   const archiveProject = useArchiveProject();
+  const { data: isAdmin } = useHasPermission('system:admin');
 
   // Form state
   const [name, setName] = useState('');
@@ -50,7 +55,7 @@ export default function ProjectSettingsPage() {
   const [themeId, setThemeId] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
-  const [slugError, setSlugError] = useState<string | null>(null);
+  const [slugValidation, setSlugValidation] = useState<ReturnType<typeof validateSlug> | null>(null);
 
   // Dialog state
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
@@ -77,8 +82,22 @@ export default function ProjectSettingsPage() {
     }
   }, [name, slug, description, themeId, project]);
 
+  // Validate slug whenever it changes
+  useEffect(() => {
+    if (slug && slug !== project?.slug) {
+      const validation = validateSlug(slug, isAdmin || false);
+      setSlugValidation(validation);
+    } else {
+      setSlugValidation(null);
+    }
+  }, [slug, isAdmin, project?.slug]);
+
   const handleSave = () => {
-    setSlugError(null); // Clear any existing errors
+    // Check slug validation before saving
+    if (slugValidation && !slugValidation.isValid && !isAdmin) {
+      toast.error(slugValidation.message || 'Invalid slug');
+      return;
+    }
     
     updateProject.mutate({
       name,
@@ -97,13 +116,7 @@ export default function ProjectSettingsPage() {
       },
       onError: (error) => {
         if (error instanceof Error) {
-          // Check if this is a slug validation error
-          if (error.message.includes('slug is already in use')) {
-            setSlugError('This slug is already in use. Please choose a different one.');
-          } else {
-            // For other errors, use the toast notification
-            toast.error(error.message);
-          }
+          toast.error(error.message);
         } else {
           toast.error('Failed to update project');
         }
@@ -198,21 +211,37 @@ export default function ProjectSettingsPage() {
                     onChange={(e) => {
                       const newSlug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
                       setSlug(newSlug);
-                      // Clear error when user starts typing
-                      if (slugError) {
-                        setSlugError(null);
-                      }
                     }}
                     pattern="[a-z0-9\-]+"
                     placeholder="my-awesome-project"
-                    className={slugError ? 'border-red-500 focus-visible:ring-red-500' : ''}
+                    className={cn(
+                      slugValidation && !slugValidation.isValid && !isAdmin && "border-red-500"
+                    )}
                   />
-                  {slugError && (
-                    <p className="text-sm text-red-600 flex items-center gap-1">
-                      <AlertTriangle className="h-3 w-3" />
-                      {slugError}
-                    </p>
+                  
+                  {/* Validation feedback */}
+                  {slugValidation && slug !== project.slug && (
+                    <>
+                      {!slugValidation.isValid && !isAdmin && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            {slugValidation.message}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      
+                      {slugValidation.isReserved && isAdmin && (
+                        <Alert>
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription className="text-yellow-600">
+                            {slugValidation.message}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </>
                   )}
+                  
                   {slug && (
                     <div className="rounded-md bg-muted px-3 py-2 text-sm">
                       <p className="font-medium">Preview domain:</p>
@@ -223,7 +252,7 @@ export default function ProjectSettingsPage() {
                     The slug determines your preview domain URL. It must be unique across all projects.
                     To change your slug, edit it here manually - it won't change automatically when you rename your project.
                   </p>
-                  {hasChanges && slug !== project.slug && !slugError && (
+                  {hasChanges && slug !== project.slug && !slugValidation && (
                     <p className="text-sm text-yellow-600 flex items-center gap-1">
                       <AlertTriangle className="h-3 w-3" />
                       Warning: Changing the slug will break existing preview domain links
@@ -251,7 +280,7 @@ export default function ProjectSettingsPage() {
                 <div className="flex justify-end pt-4">
                   <Button
                     onClick={handleSave}
-                    disabled={!hasChanges || updateProject.isPending || !!slugError}
+                    disabled={!hasChanges || updateProject.isPending || !!(slugValidation && !slugValidation.isValid && !isAdmin)}
                   >
                     {updateProject.isPending ? (
                       <>
@@ -320,7 +349,7 @@ export default function ProjectSettingsPage() {
                 <div className="flex justify-end pt-4">
                   <Button
                     onClick={handleSave}
-                    disabled={!hasChanges || updateProject.isPending || !!slugError}
+                    disabled={!hasChanges || updateProject.isPending || !!(slugValidation && !slugValidation.isValid && !isAdmin)}
                   >
                     {updateProject.isPending ? (
                       <>

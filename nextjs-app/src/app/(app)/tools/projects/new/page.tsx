@@ -6,6 +6,7 @@ import { useCreateProject, useProject } from '@/hooks/useProjects';
 import { updateProject } from '@/lib/services/projects';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useThemes } from '@/hooks/useThemes';
+import { useHasPermission } from '@/hooks/usePermissions';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,8 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, AlertCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { validateSlug } from '@/lib/services/slug-validation';
+import { cn } from '@/lib/utils';
 
 function NewProjectPageContent() {
   const router = useRouter();
@@ -29,12 +33,14 @@ function NewProjectPageContent() {
   const { data: themes, isLoading: themesLoading } = useThemes();
   const { data: templateProject } = useProject(templateId || undefined);
   const { mutate: createProject, isPending } = useCreateProject();
+  const { data: isAdmin } = useHasPermission('system:admin');
   
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [accountId, setAccountId] = useState('');
   const [themeId, setThemeId] = useState('none');
   const [customSlug, setCustomSlug] = useState(false);
+  const [slugValidation, setSlugValidation] = useState<ReturnType<typeof validateSlug> | null>(null);
 
   // Auto-generate slug from name
   useEffect(() => {
@@ -57,11 +63,27 @@ function NewProjectPageContent() {
     }
   }, [templateProject]);
 
+  // Validate slug whenever it changes
+  useEffect(() => {
+    if (slug) {
+      const validation = validateSlug(slug, isAdmin || false);
+      setSlugValidation(validation);
+    } else {
+      setSlugValidation(null);
+    }
+  }, [slug, isAdmin]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name || !accountId || !slug) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    // Check slug validation
+    if (slugValidation && !slugValidation.isValid && !isAdmin) {
+      toast.error(slugValidation.message || 'Invalid slug');
       return;
     }
 
@@ -148,10 +170,36 @@ function NewProjectPageContent() {
               pattern="[a-z0-9\-]+"
               title="Only lowercase letters, numbers, and hyphens"
               required
+              className={cn(
+                slugValidation && !slugValidation.isValid && !isAdmin && "border-red-500"
+              )}
             />
             <p className="text-sm text-muted-foreground">
               This will be used in the project URL
             </p>
+            
+            {/* Validation feedback */}
+            {slugValidation && slug && (
+              <>
+                {!slugValidation.isValid && !isAdmin && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {slugValidation.message}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                
+                {slugValidation.isReserved && isAdmin && (
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="text-yellow-600">
+                      {slugValidation.message}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -218,7 +266,10 @@ function NewProjectPageContent() {
           )}
 
           <div className="flex gap-4">
-            <Button type="submit" disabled={isPending}>
+            <Button 
+              type="submit" 
+              disabled={isPending || !!(slugValidation && !slugValidation.isValid && !isAdmin)}
+            >
               {isPending ? 'Creating...' : 'Create Project'}
             </Button>
             <Button

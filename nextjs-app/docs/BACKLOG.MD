@@ -1,61 +1,54 @@
-# BACKLOG
+
+# ---------------------------------------------------------------------------------------- #
+# BACKLOG OVERVIEW
+# ---------------------------------------------------------------------------------------- #
 
 This is the full backlog of features we keep and add to as we develop. We will organize this by category and type. When something is taken from the backlog, it’s moved up to active sprint. We will constantly add, adjust, remove, and prioritize items in this list as part of backlog grooming.
 
-**Production Version:** v0.1.0 (Released 8/1/2025 @ 11pm)
-**Development Version:** v0.1.1 (Active Planning Now)
+**Production Version:** v0.1.1 (Released 8/1/2025 @ 11pm)
+**Development Version:** v0.1.2 (Active Planning Now)
 
 
-## FORMAT
+
+
+# ---------------------------------------------------------------------------------------- #
+# PRIORITY HIGH -------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+
+
+
+#### [Packet] Service Layer & API Updates
+**Goal:** Update all services to be account-aware  
+**Deliverable:** Account-aware service layer
+
+- [ ] 🚀 Update service layers:
+  - [ ] 🚀 Add account context to all queries
+  - [ ] 🚀 Implement permission checks
+  - [ ] 🚀 Add audit logging
+  - [ ] 🚀 Handle multi-account scenarios
+- [ ] 🚀 Update React hooks:
+  - [ ] 🚀 `useAccount()` hook
+  - [ ] 🚀 `useAccountProjects()` hook
+  - [ ] 🚀 `useAccountUsers()` hook
+  - [ ] 🚀 Update existing hooks for account context
+- [ ] 🚀 Error handling:
+  - [ ] 🚀 Permission denied errors
+  - [ ] 🚀 Account not found errors
+  - [ ] 🚀 Proper error messages
+- [ ] 🚀 Testing utilities:
+  - [ ] 🚀 Mock account context
+  - [ ] 🚀 Permission testing helpers
 
 ---
 
-#### Category or Subcategory
-**Goal:** [What are we trying to accomplish]
-**Note:** [Anything we need to know about this packet]
-**Deliverable:** [What is our deliverable?]
 
-- [ ] 🚀 Task
-- [ ] 🪲 Task
-  - [ ] 🪲 Sub Task
+
+
+# ---------------------------------------------------------------------------------------- #
+# PRIORITY LOW -------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
 
 ---
-
-
-## CLASSIFICATIONS
-Use these classifications to identify each type of task. We can expand this list as needed.
-
-🪲 - Bug
-🚩 - Support Ticket Item
-⚙️ - Rework
-⚗️ - Testing / Review / Verify
-✂️ - Cut/Postponed/Cancelled
-🚀 - Feature 
-📌 - Administrative / Operations
-
----
-
-
-## UNDEFINED UPCOMING EPICS
-
-### Scale Content
-- Once we have a fully functioning system that is bullet proof and ready to take in new components, we will add more than a thousand new ones.
-
-### Scale Up Existing Features
-*To be detailed*
-
-### Final Production Features
-*To be detailed*
-
-
-
-
-
-## BACKLOG ITEMS 
-
-
-### PRIORITY 1
----------------
 
 
 #### [Packet] Domain Configuration System
@@ -78,16 +71,7 @@ Use these classifications to identify each type of task. We can expand this list
 - [ ] ⚗️ Verify middleware correctly routes based on domain
 - [ ] ⚗️ Test domain deletion and cleanup processes
 
-##### Production Environment Testing
-- [ ] ⚗️ Verify sites.wondrousdigital.com is properly configured in Vercel
-- [ ] ⚗️ Test *.sites.wondrousdigital.com wildcard certificate
-- [ ] ⚗️ Add a real test domain and verify full flow
-- [ ] ⚗️ Test SSL certificate provisioning for custom domains
-- [ ] ⚗️ Verify DNS propagation messaging is accurate
-
 ##### Vercel API Integration Testing
-- [ ] ⚗️ Test domain addition via Vercel API
-- [ ] ⚗️ Verify domain removal properly cleans up in Vercel
 - [ ] ⚗️ Test API rate limiting and error handling
 - [ ] ⚗️ Verify domain verification polling intervals
 - [ ] ⚗️ Test handling of Vercel API downtime
@@ -114,7 +98,12 @@ Use these classifications to identify each type of task. We can expand this list
 - [ ] 📌 Create customer-facing domain setup guide
 
 
+##### UX Improvements
+- [ ] 🚀 Add helpful suggestions when slug is reserved during project creation
+
+
 ---
+
 
 #### [Packet] Database Isolation (Supabase) 
 **Goal:** Create proper isolation for our production and development databases. 
@@ -184,38 +173,8 @@ Use these classifications to identify each type of task. We can expand this list
 - [ ] 📌 Update CLAUDE.md with new database setup
 
 
---- 
-
-
-#### [Packet] Service Layer & API Updates
-**Goal:** Update all services to be account-aware  
-**Deliverable:** Account-aware service layer
-
-- [ ] 🚀 Update service layers:
-  - [ ] 🚀 Add account context to all queries
-  - [ ] 🚀 Implement permission checks
-  - [ ] 🚀 Add audit logging
-  - [ ] 🚀 Handle multi-account scenarios
-- [ ] 🚀 Update React hooks:
-  - [ ] 🚀 `useAccount()` hook
-  - [ ] 🚀 `useAccountProjects()` hook
-  - [ ] 🚀 `useAccountUsers()` hook
-  - [ ] 🚀 Update existing hooks for account context
-- [ ] 🚀 Error handling:
-  - [ ] 🚀 Permission denied errors
-  - [ ] 🚀 Account not found errors
-  - [ ] 🚀 Proper error messages
-- [ ] 🚀 Testing utilities:
-  - [ ] 🚀 Mock account context
-  - [ ] 🚀 Permission testing helpers
 
 ---
-
-
-
-
-### PRIORITY 2
----------------
 
 
 #### [Packet] Page Management System
@@ -232,6 +191,7 @@ Use these classifications to identify each type of task. We can expand this list
 
 
 ---
+
 
 #### [Packet] Navigation System
 **Goal:** Users can create navigation sections and functionality linking their website together.  
@@ -262,7 +222,9 @@ Use these classifications to identify each type of task. We can expand this list
   - [ ] 🚀 Account limits/quotas
 - [ ] 🚀 Account audit log viewer functional
 
+
 ---
+
 
 #### [Packet] User Invitation System 
 - [ ] ⚗️ VERIFY:
@@ -283,7 +245,201 @@ Use these classifications to identify each type of task. We can expand this list
   - [ ] 🚀 Add inline user profile editing
 
 
+
 ---
+
+
+#### [Packet] XSS & Input Security Hardening
+**Goal:** Implement comprehensive XSS prevention and input sanitization across the platform
+**Note:** Critical for preventing cross-site scripting attacks and ensuring user-generated content is safe
+**Deliverable:** DOMPurify integration, sanitization utilities, and safe rendering practices throughout the application
+
+##### XSS Prevention Implementation
+- [ ] 🚀 Install and configure DOMPurify for content sanitization
+- [ ] 🚀 Create centralized sanitization utility functions
+- [ ] 🪲 Fix innerHTML usage in preview routes (security vulnerability)
+- [ ] 🚀 Implement safe HTML rendering component wrapper
+- [ ] 🚀 Add sanitization to all user input fields
+- [ ] 🚀 Create sanitization rules for different content types
+
+##### Content Security Policy
+- [ ] 🚀 Design CSP rules for the platform
+- [ ] 🚀 Implement CSP headers in middleware
+- [ ] 🚀 Test CSP with inline styles and scripts
+- [ ] 🚀 Create CSP violation reporting endpoint
+- [ ] 🚀 Document CSP exceptions and rationale
+
+##### Input Validation Enhancement
+- [ ] 🚀 Extend Zod schemas with sanitization transforms
+- [ ] 🚀 Add length limits to all text inputs
+- [ ] 🚀 Implement file upload type restrictions
+- [ ] 🚀 Create validation for URLs and external links
+- [ ] ⚗️ Test XSS payloads cannot execute
+
+
+---
+
+
+#### [Packet] Security Headers & Middleware
+**Goal:** Implement industry-standard security headers and protection middleware
+**Note:** Following OWASP recommendations for web application security headers
+**Deliverable:** Comprehensive security headers middleware with CSRF protection
+
+##### Security Headers Implementation
+- [ ] 🚀 Create security headers middleware
+- [ ] 🚀 Implement X-Frame-Options: DENY
+- [ ] 🚀 Add X-Content-Type-Options: nosniff
+- [ ] 🚀 Configure Strict-Transport-Security (HSTS)
+- [ ] 🚀 Set up Referrer-Policy
+- [ ] 🚀 Implement Permissions-Policy
+
+##### CSRF Protection
+- [ ] 🚀 Implement CSRF token generation
+- [ ] 🚀 Add CSRF validation to all state-changing operations
+- [ ] 🚀 Create CSRF token refresh mechanism
+- [ ] 🚀 Add CSRF tokens to all forms
+- [ ] 🚀 Implement double-submit cookie pattern
+
+##### Additional Security Middleware
+- [ ] 🚀 Add request size limits
+- [ ] 🚀 Implement secure cookie settings
+- [ ] 🚀 Create security event logging middleware
+- [ ] ⚗️ Test headers with security scanning tools
+- [ ] 📌 Document security header configuration
+
+
+---
+
+
+#### [Packet] Authentication Security Enhancements
+**Goal:** Implement 2FA, complete password management, and enhance session security
+**Note:** Critical for account security and meeting enterprise security requirements
+**Deliverable:** Full 2FA system, password management features, and hardened authentication
+
+##### Two-Factor Authentication
+- [ ] 🚀 Implement TOTP-based 2FA using speakeasy
+- [ ] 🚀 Create QR code generation for authenticator apps
+- [ ] 🚀 Build 2FA setup flow UI
+- [ ] 🚀 Implement backup codes generation
+- [ ] 🚀 Add 2FA verification to login flow
+- [ ] 🚀 Create 2FA recovery process
+
+##### Password Management Completion
+- [ ] 🚀 Implement password change functionality
+- [ ] 🚀 Add password strength meter to UI
+- [ ] 🚀 Create password history to prevent reuse
+- [ ] 🚀 Implement secure password reset flow
+- [ ] 🚀 Add password expiry for enterprise accounts
+- [ ] 🚀 Create breach detection integration
+
+##### Session Security
+- [ ] 🚀 Implement session timeout controls
+- [ ] 🚀 Add concurrent session limits
+- [ ] 🚀 Create "remember me" functionality securely
+- [ ] 🚀 Implement device tracking and management
+- [ ] 🚀 Add suspicious login detection
+- [ ] ⚗️ Test session fixation prevention
+
+
+---
+
+
+#### [Packet] API Security & Rate Limiting
+**Goal:** Implement comprehensive API security including rate limiting, key management, and request validation
+**Note:** Essential for preventing abuse and ensuring platform stability
+**Deliverable:** Production-ready API security layer with configurable rate limits
+
+##### Rate Limiting Implementation
+- [ ] 🚀 Create global rate limiting middleware
+- [ ] 🚀 Implement per-endpoint rate limits
+- [ ] 🚀 Add user-based rate limiting
+- [ ] 🚀 Create IP-based rate limiting
+- [ ] 🚀 Implement sliding window algorithm
+- [ ] 🚀 Add rate limit headers to responses
+
+##### API Key Management
+- [ ] 🚀 Design API key generation system
+- [ ] 🚀 Create API key management UI
+- [ ] 🚀 Implement key rotation mechanism
+- [ ] 🚀 Add API key scoping/permissions
+- [ ] 🚀 Create usage tracking per API key
+- [ ] 🚀 Build API key revocation system
+
+##### Request Security
+- [ ] 🚀 Implement request signing for sensitive operations
+- [ ] 🚀 Add request replay attack prevention
+- [ ] 🚀 Create webhook signature validation
+- [ ] 🚀 Implement API versioning security
+- [ ] ⚗️ Test rate limiting under load
+- [ ] 📌 Document API security best practices
+
+
+---
+
+
+#### [Packet] Database Security & RLS
+**Goal:** Enable Row Level Security on all tables and ensure complete multi-tenant isolation
+**Note:** Critical for data privacy and preventing cross-tenant data leakage
+**Deliverable:** Comprehensive RLS policies with verified tenant isolation
+
+##### RLS Implementation
+- [ ] 🚀 Audit all tables for RLS requirements
+- [ ] 🚀 Create RLS policies for each table
+- [ ] 🚀 Enable RLS on all user data tables
+- [ ] 🚀 Implement service role patterns where needed
+- [ ] 🚀 Create RLS testing framework
+- [ ] 🚀 Document RLS policy decisions
+
+##### Multi-Tenant Isolation
+- [ ] ⚗️ Test cross-tenant data access prevention
+- [ ] ⚗️ Verify API endpoints respect tenant boundaries
+- [ ] ⚗️ Test admin access patterns
+- [ ] 🚀 Create tenant isolation monitoring
+- [ ] 🚀 Implement data access audit trails
+
+##### Database Security Hardening
+- [ ] 🚀 Review and restrict database functions
+- [ ] 🚀 Implement sensitive data encryption
+- [ ] 🚀 Create database backup encryption
+- [ ] 🚀 Add query performance monitoring
+- [ ] 📌 Document data access patterns
+
+
+---
+
+
+#### [Packet] Security Monitoring & Compliance
+**Goal:** Implement comprehensive security monitoring, audit logging, and compliance features
+**Note:** Required for enterprise customers and regulatory compliance
+**Deliverable:** Full audit trail system with security event monitoring and compliance tools
+
+##### Audit Logging System
+- [ ] 🚀 Extend audit_logs table schema
+- [ ] 🚀 Implement comprehensive audit triggers
+- [ ] 🚀 Create audit log viewer UI
+- [ ] 🚀 Add audit log search and filtering
+- [ ] 🚀 Implement audit log retention policies
+- [ ] 🚀 Create audit log export functionality
+
+##### Security Event Monitoring
+- [ ] 🚀 Create failed login tracking
+- [ ] 🚀 Implement brute force detection
+- [ ] 🚀 Add anomaly detection for access patterns
+- [ ] 🚀 Create security dashboard for admins
+- [ ] 🚀 Implement real-time security alerts
+- [ ] 🚀 Add integration with security tools
+
+##### Compliance Features
+- [ ] 🚀 Implement GDPR data export
+- [ ] 🚀 Create GDPR deletion workflows
+- [ ] 🚀 Add cookie consent management
+- [ ] 🚀 Implement data retention policies
+- [ ] 🚀 Create compliance reporting tools
+- [ ] 📌 Document compliance procedures
+
+
+---
+
 
 #### [Packet] Site Templates & Project Settings
 **Note:** Enables users to quickly start with professional templates and switch templates post-creation with safety controls.
@@ -308,8 +464,8 @@ Use these classifications to identify each type of task. We can expand this list
   - [ ] Include "Blank Site" option
   - [ ] Apply selected template during creation
 
----
 
+---
 
 
 ##### [Packet] Canvas Builder Improvements
@@ -318,8 +474,29 @@ Use these classifications to identify each type of task. We can expand this list
 
 
 
-### PRIORITY LOW
----------------
+
+
+
+
+# ---------------------------------------------------------------------------------------- #
+# UNPRIORITIZED -------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+
+
+
+### Non-Critical (Can defer to v0.1.2+)
+- ✅ 🪲 Uses information works properly. (Fixed: API endpoint now properly increments usage count when library items are used)
+- [ ] 🚀 I can permanently delete things inside lab
+- [ ] ⚗️ Check grid/list view toggle persists preference (Broken, does not remember)
+- [ ] ⚗️ Verify version tracking increments properly
+- [ ] 🪲 Page switching does not maintain unsaved changes or give a warning.
+- [❌] ⚗️ Test page status toggle (published/draft)
+  - This function doesn't exist
+
+### Technical Debt Identified
+- [ ] [Code quality issues discovered during investigation]
+
+
 
 #### [Packet] Project Management Tools
 - **Create project service layer:**
@@ -361,15 +538,89 @@ Use these classifications to identify each type of task. We can expand this list
 **Deliverable:** A set of paid tiers linked to confirmed Stripe payments to enable.
 **Notes:** We will have several plans and add ons that need to be configured and tied to features being turned on and off.
 
+---
+
+#### [Packet] Domain Tasks
+- [ ] ⚗️ Vercel API down → Graceful degradation with queued operations
+- [ ] ⚗️ User adds domain but doesn't verify → Reminder system after 24 hours
+
+##### Performance & Monitoring
+- [ ] 🚀 Implement domain_verification_logs table for debugging
+- [ ] 🚀 Add SSL status tracking to project_domains table
+- [ ] 🚀 Create domain health dashboard for platform admins
+- [ ] 🚀 Set up alerts for domains losing verification
+
+##### Developer Experience
+- [ ] 📌 Document all domain-related error codes and solutions
+- [ ] 📌 Create troubleshooting guide for common DNS issues
+- [ ] 📌 Add domain system architecture documentation
+- [ ] 📌 Create runbook for domain-related support tickets
+
+- [ ] ⚗️ As any other account, I cannot add wondrousdigital.com (get permission error)
+- [ ] ⚗️ As platform admin, I can grant reserved domain permissions to specific accounts
+- [ ] ⚗️ As a user adding a subdomain, I can add it (sub.example.com) and see CNAME instructions
 
 
 
 
-## VAULT
+# ---------------------------------------------------------------------------------------- #
+# VAULT ---------------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
 
 Items we cut or cancel or postpone will be moved here to this section for future evaluation.
 
 
+
+
+
+
+
+# ---------------------------------------------------------------------------------------- #
+# PROCESS & SYSTEM OVERVIEW -------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+
+
+
+## FORMAT
+
+---
+
+#### Category or Subcategory
+**Goal:** [What are we trying to accomplish]
+**Note:** [Anything we need to know about this packet]
+**Deliverable:** [What is our deliverable?]
+
+- [ ] 🚀 Task
+- [ ] 🪲 Task
+  - [ ] 🪲 Sub Task
+
+---
+
+
+## CLASSIFICATIONS
+Use these classifications to identify each type of task. We can expand this list as needed.
+
+🪲 - Bug
+🚩 - Support Ticket Item
+⚙️ - Rework
+⚗️ - Testing / Review / Verify
+✂️ - Cut/Postponed/Cancelled
+🚀 - Feature 
+📌 - Administrative / Operations
+
+---
+
+
+## UNDEFINED UPCOMING EPICS
+
+### Scale Content
+- Once we have a fully functioning system that is bullet proof and ready to take in new components, we will add more than a thousand new ones.
+
+### Scale Up Existing Features
+*To be detailed*
+
+### Final Production Features
+*To be detailed*
 
 
 

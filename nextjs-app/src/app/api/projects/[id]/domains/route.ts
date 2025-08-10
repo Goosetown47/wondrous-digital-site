@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { validateDomainFormat } from '@/lib/services/domains';
 import { addDomainToVercel, removeDomainFromVercel, checkDomainStatus } from '@/lib/services/domains.server';
+import { validateSlug } from '@/lib/services/slug-validation';
 import { z } from 'zod';
 
 /**
@@ -35,6 +36,31 @@ function getCompanionDomain(domain: string): string | null {
   }
   
   // For other subdomains (app.example.com), no companion
+  return null;
+}
+
+/**
+ * Extract subdomain from a full domain
+ * Returns null for apex domains
+ */
+function extractSubdomain(domain: string): string | null {
+  const parts = domain.split('.');
+  
+  // Handle apex domains
+  if (isApexDomain(domain)) {
+    return null;
+  }
+  
+  // For subdomains, return the first part
+  // e.g., "app.example.com" returns "app"
+  // e.g., "staging.app.example.com" returns "staging.app"
+  const isCountryCodeTLD = /\.(co|com|net|org|gov|edu|ac)\.[a-z]{2}$/.test(domain);
+  const apexLength = isCountryCodeTLD ? 3 : 2;
+  
+  if (parts.length > apexLength) {
+    return parts.slice(0, parts.length - apexLength).join('.');
+  }
+  
   return null;
 }
 
@@ -130,7 +156,28 @@ export async function POST(
       return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 });
     }
 
-    // Check if domain is reserved and requires permission
+    // Check subdomain validation for reserved patterns
+    const subdomain = extractSubdomain(domain);
+    const isPlatformAdmin = !!platformAccess;
+    
+    // Check subdomain if it exists
+    if (subdomain) {
+      const subdomainValidation = validateSlug(subdomain, isPlatformAdmin);
+      
+      if (!subdomainValidation.isValid && !isPlatformAdmin) {
+        return NextResponse.json(
+          { error: subdomainValidation.message || 'This subdomain is reserved.' },
+          { status: 403 }
+        );
+      }
+      
+      // Log admin override if applicable
+      if (subdomainValidation.isReserved && subdomainValidation.requiresAdmin && isPlatformAdmin) {
+        console.log('⚠️ Admin override: Adding domain with reserved subdomain:', domain);
+      }
+    }
+    
+    // Also check full domain against reserved list (for apex domains like wondrousdigital.com)
     const reservedDomains = ['wondrousdigital.com', 'www.wondrousdigital.com'];
     if (reservedDomains.includes(domain)) {
       // Check if this account has permission
@@ -141,9 +188,9 @@ export async function POST(
         .eq('domain', domain)
         .single();
         
-      if (!permission) {
+      if (!permission && !isPlatformAdmin) {
         return NextResponse.json(
-          { error: 'This domain is reserved and your account does not have permission to use it.' },
+          { error: 'This name is reserved, please choose a different name. Reach out to support at hello@wondrousdigital.com if you need help.' },
           { status: 403 }
         );
       }
@@ -194,6 +241,19 @@ export async function POST(
     const companionDomain = getCompanionDomain(domain);
     const domainsToAdd = [domain];
     if (companionDomain) {
+      // Also validate the companion domain's subdomain
+      const companionSubdomain = extractSubdomain(companionDomain);
+      if (companionSubdomain) {
+        const companionValidation = validateSlug(companionSubdomain, isPlatformAdmin);
+        
+        if (!companionValidation.isValid && !isPlatformAdmin) {
+          return NextResponse.json(
+            { error: companionValidation.message || 'The companion subdomain is reserved.' },
+            { status: 403 }
+          );
+        }
+      }
+      
       domainsToAdd.push(companionDomain);
       console.log(`[DOMAIN] Will add both ${domain} and ${companionDomain}`);
     }

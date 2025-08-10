@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
 import type { Project, Account } from '@/types/database';
 import { isAdmin, isStaff } from '@/lib/permissions';
+import { validateSlug } from '@/lib/services/slug-validation';
 
 export interface ProjectWithAccount extends Project {
   accounts?: Account;
@@ -103,6 +104,20 @@ export async function createProject(projectData: CreateProjectData) {
   const canCreate = isAdminUser || isStaffUser || isAccountOwner;
   if (!canCreate) throw new Error('Insufficient permissions');
 
+  // Validate slug if provided
+  if (projectData.slug) {
+    const slugValidation = validateSlug(projectData.slug, isAdminUser);
+    
+    if (!slugValidation.isValid) {
+      throw new Error(slugValidation.message || 'Invalid slug');
+    }
+    
+    // Log admin override if applicable
+    if (slugValidation.isReserved && slugValidation.requiresAdmin && isAdminUser) {
+      console.log('⚠️ Admin override: Creating project with reserved slug:', projectData.slug);
+    }
+  }
+
   const insertData = {
     ...projectData,
     created_by: user.id,
@@ -140,8 +155,24 @@ export async function updateProject(projectId: string, updates: UpdateProjectDat
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  // If updating slug, check for uniqueness
+  // Check if user is admin for slug validation
+  const isAdminUser = await isAdmin(user.id);
+
+  // If updating slug, validate it
   if (updates.slug) {
+    // First validate the slug format and reserved status
+    const slugValidation = validateSlug(updates.slug, isAdminUser);
+    
+    if (!slugValidation.isValid) {
+      throw new Error(slugValidation.message || 'Invalid slug');
+    }
+    
+    // Log admin override if applicable
+    if (slugValidation.isReserved && slugValidation.requiresAdmin && isAdminUser) {
+      console.log('⚠️ Admin override: Updating project with reserved slug:', updates.slug);
+    }
+
+    // Then check for uniqueness
     const { data: existingProject } = await supabase
       .from('projects')
       .select('id')
