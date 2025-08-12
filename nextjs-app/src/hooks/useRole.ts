@@ -100,10 +100,9 @@ export function useIsAccountOwner() {
         .select('role')
         .eq('user_id', user.id)
         .eq('account_id', currentAccount.id)
-        .eq('role', 'account_owner')
         .single();
         
-      return !!data;
+      return data?.role === 'account_owner';
     },
     enabled: !!user && !!currentAccount,
   });

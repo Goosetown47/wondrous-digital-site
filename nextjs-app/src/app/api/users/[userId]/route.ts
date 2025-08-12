@@ -224,3 +224,125 @@ export async function PATCH(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  const { userId } = await params;
+  console.log('🔍 [API/Users/UserId] Delete user request:', userId);
+
+  try {
+    // Verify authentication
+    const cookieStore = await cookies();
+    const authClient = createServerClient(
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // Ignore cookie setting errors
+            }
+          },
+        },
+      }
+    );
+
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
+    
+    if (userError || !user) {
+      console.log('❌ [API/Users/UserId] Authentication failed');
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    console.log('🔍 [API/Users/UserId] Delete requested by:', user.email);
+
+    // Create service role client
+    const serviceClient = createAdminClient();
+
+    // Check if current user is admin
+    const { data: currentUserRole } = await serviceClient
+      .from('account_users')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('account_id', '00000000-0000-0000-0000-000000000000')
+      .single();
+
+    if (!currentUserRole || currentUserRole.role !== 'admin') {
+      console.log('❌ [API/Users/UserId] Access denied - not an admin');
+      return NextResponse.json({ error: 'Access denied. Admin role required.' }, { status: 403 });
+    }
+
+    // Prevent self-deletion
+    if (userId === user.id) {
+      console.log('❌ [API/Users/UserId] Cannot delete yourself');
+      return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 });
+    }
+
+    // Get user details before deletion for audit log
+    const { data: targetUser, error: fetchError } = await serviceClient.auth.admin.getUserById(userId);
+    
+    if (fetchError || !targetUser) {
+      console.log('❌ [API/Users/UserId] User not found');
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Check if target user is also an admin (extra safety)
+    const { data: targetUserRole } = await serviceClient
+      .from('account_users')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('account_id', '00000000-0000-0000-0000-000000000000')
+      .single();
+
+    if (targetUserRole && targetUserRole.role === 'admin') {
+      console.log('❌ [API/Users/UserId] Cannot delete admin users');
+      return NextResponse.json({ error: 'Cannot delete admin users' }, { status: 400 });
+    }
+
+    console.log('🔍 [API/Users/UserId] Deleting user:', targetUser.user.email);
+
+    // Log the deletion before actually deleting
+    await serviceClient
+      .from('audit_logs')
+      .insert({
+        account_id: '00000000-0000-0000-0000-000000000000',
+        user_id: user.id,
+        action: 'user.deleted',
+        resource_type: 'user',
+        resource_id: userId,
+        metadata: {
+          deleted_user_email: targetUser.user.email,
+          deleted_by: user.email,
+          deleted_at: new Date().toISOString(),
+        }
+      });
+
+    // Delete the user (this will cascade to related tables)
+    const { error: deleteError } = await serviceClient.auth.admin.deleteUser(userId);
+
+    if (deleteError) {
+      console.error('❌ [API/Users/UserId] Delete error:', deleteError);
+      return NextResponse.json({ error: deleteError.message }, { status: 500 });
+    }
+
+    console.log('✅ [API/Users/UserId] User deleted successfully');
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'User deleted successfully' 
+    });
+
+  } catch (error) {
+    console.error('❌ [API/Users/UserId] Unexpected error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

@@ -9,8 +9,10 @@ import {
   // useBulkUserOperations,
   useUpdateUserRole,
   useRemoveUserFromAccount,
+  useDeleteUser,
 } from '@/hooks/useUsers';
 import { PermissionGate } from '@/components/auth/PermissionGate';
+import { useAuth } from '@/providers/auth-provider';
 import { EnhancedTable } from '@/components/ui/enhanced-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +33,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { UserAccountsDialog } from '@/components/tools/user-accounts-dialog';
 import { 
   Plus, 
@@ -41,11 +49,15 @@ import {
   Shield,
   CheckCircle,
   Users,
+  UserPlus,
+  ChevronDown,
+  Trash2,
 } from 'lucide-react';
 import type { UserWithAccounts } from '@/lib/services/users';
 
 export default function UsersPage() {
   const router = useRouter();
+  const { user: currentUser } = useAuth();
   const { data: users, isLoading } = useUsers();
   // const { 
   //   updateUserRoles, 
@@ -55,6 +67,7 @@ export default function UsersPage() {
   
   const updateUserRole = useUpdateUserRole();
   const removeUserFromAccount = useRemoveUserFromAccount();
+  const deleteUser = useDeleteUser();
 
   const [removeDialog, setRemoveDialog] = useState<{ 
     open: boolean; 
@@ -62,6 +75,11 @@ export default function UsersPage() {
     accountId?: string;
     bulk?: boolean;
     selectedUsers?: UserWithAccounts[];
+  }>({ open: false });
+  
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    user?: UserWithAccounts;
   }>({ open: false });
   
   const [accountsDialog, setAccountsDialog] = useState<{
@@ -266,6 +284,23 @@ export default function UsersPage() {
       className: 'text-red-600 hover:text-red-700',
       show: (user: UserWithAccounts) => user.accounts.length > 0,
     },
+    {
+      label: 'Delete User',
+      icon: Trash2,
+      onClick: (user: UserWithAccounts) => {
+        setDeleteDialog({ open: true, user });
+      },
+      variant: 'ghost' as const,
+      className: 'text-red-600 hover:text-red-700',
+      show: (user: UserWithAccounts) => {
+        // Only show delete for admins, and not for the current user
+        if (!currentUser) return false;
+        const isAdmin = user.accounts.some(
+          acc => acc.account_id === '00000000-0000-0000-0000-000000000000' && acc.role === 'admin'
+        );
+        return !isAdmin && user.id !== currentUser.id;
+      },
+    },
   ];
 
   // Bulk actions configuration
@@ -416,10 +451,25 @@ export default function UsersPage() {
               Manage users across all accounts
             </p>
           </div>
-          <Button onClick={() => router.push('/tools/users/invite')}>
-            <Plus className="mr-2 h-4 w-4" />
-            Invite User
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add User
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => router.push('/tools/users/create')}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Create User
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/tools/users/invite')}>
+                <Mail className="mr-2 h-4 w-4" />
+                Invite User
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <EnhancedTable
@@ -460,6 +510,36 @@ export default function UsersPage() {
                 className="bg-red-600 hover:bg-red-700"
               >
                 Remove {removeDialog.bulk ? 'Users' : 'User'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete User Confirmation Dialog */}
+        <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ open, user: deleteDialog.user })}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete User</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{deleteDialog.user?.email}"?
+                <br /><br />
+                <strong className="text-red-600">This action cannot be undone.</strong>
+                <br /><br />
+                This will permanently delete the user and remove their access to all accounts and resources.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => {
+                  if (deleteDialog.user) {
+                    deleteUser.mutate(deleteDialog.user.id);
+                    setDeleteDialog({ open: false });
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete User
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

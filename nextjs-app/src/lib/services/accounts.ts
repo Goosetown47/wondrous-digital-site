@@ -381,11 +381,11 @@ export async function getAccountStats(accountId: string): Promise<AccountStats> 
       .select('user_id')
       .eq('account_id', accountId),
     
-    // Get total pages
+    // Get total pages (join through projects table)
     supabase
       .from('pages')
-      .select('id')
-      .eq('account_id', accountId),
+      .select('id, projects!inner(account_id)')
+      .eq('projects.account_id', accountId),
     
     // Get recent activity
     supabase

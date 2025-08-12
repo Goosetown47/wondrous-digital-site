@@ -18,6 +18,12 @@
 
 ### Notes:
 
+Test Accounts:
+- admin@wondrousdigital.com \ Password: atz_dek-nky2WBU_jav
+- staff@wondrousdigital.com \ Password: tvt*gdy5aka-UTF2zfu
+- owner@example.com \ Password: afq!HXC7pqk3fgv4rym
+- test-user@example.com \ Password: ukc-zbr5DZT4pfb3yvf
+
 
 
 ## PACKETS ----------------------------------------------------------------------------- ##
@@ -53,8 +59,6 @@ Created the Missing Audit Logs Table 📊
 
 
 ##### Service Layer Account Context Gaps
-
-
 **Update Pages service with full account context**
 The Problem: The Pages service was partially trusting that pages wouldn't be
 accessed across accounts, but it wasn't actively checking. It's like having
@@ -76,34 +80,31 @@ The Key Addition - verifyProjectAccess():
 
 
 
-- [ ] 🚀 Add account filtering to Themes service
-  - [ ] 🚀 Filter themes by account ownership
-  - [ ] 🚀 Ensure theme selection respects account boundaries
-- [ ] 🚀 Add account context to Core components service
-  - [ ] 🚀 Determine if core components need account filtering
-  - [ ] 🚀 Implement appropriate access controls
-- [ ] 🚀 Add account awareness to Library items service
-  - [ ] 🚀 Filter library items by account
-  - [ ] 🚀 Ensure proper isolation of custom components
+- [x] 🚀 Add admin/staff access controls to platform APIs
+  - [x] 🚀 Theme APIs now require admin/staff role (403 for regular users)
+  - [x] 🚀 Core Components APIs restricted to admin/staff only
+  - [x] 🚀 Library APIs restricted to admin/staff only
+  - [x] 🚀 Lab APIs restricted to admin/staff only
+  - [x] 🚀 All APIs return consistent 403 Forbidden for unauthorized access
+  - [x] 🚀 Permission checks happen before database queries (performance)
+  - [x] 🚀 Service role pattern maintained for actual queries
 
 ##### Standardize Error Handling
-- [ ] 🚀 Create consistent permission denied errors
-  - [ ] 🚀 Define standard error format and codes
-  - [ ] 🚀 Update all services to use standard errors
-- [ ] 🚀 Add account not found error handling
-  - [ ] 🚀 Handle cases where account doesn't exist
-  - [ ] 🚀 Provide helpful error messages
-- [ ] 🚀 Ensure consistent error messages across all services
-  - [ ] 🚀 Audit all error returns
-  - [ ] 🚀 Create error message constants
+- [x] 🚀 Create consistent permission denied errors
+  - [x] 🚀 All admin APIs return 403 with "Access denied. Admin or staff role required."
+  - [x] 🚀 Consistent error format across all protected endpoints
+- [x] 🚀 Security-focused error messages
+  - [x] 🚀 Don't reveal why access was denied (security best practice)
+  - [x] 🚀 Log access attempts to audit_logs for monitoring
 
 ##### Testing Infrastructure
-- [ ] 🚀 Create mock account context helpers
-  - [ ] 🚀 Build test utilities for mocking account state
-  - [ ] 🚀 Create fixtures for different account scenarios
-- [ ] 🚀 Add permission testing utilities
-  - [ ] 🚀 Helper functions to test permission boundaries
-  - [ ] 🚀 Test cases for cross-account access attempts
+- [x] 🚀 Created comprehensive API security test suite
+  - [x] 🚀 Tests for unauthenticated access (401 responses)
+  - [x] 🚀 Tests for regular user access (403 responses)
+  - [x] 🚀 Tests for staff access (200 responses)
+  - [x] 🚀 Tests for admin access (200 responses)
+  - [x] 🚀 Verified permission checks happen before DB queries
+  - [x] 🚀 All 20 security tests passing
 
 ##### Already Completed (Found During Scan)
 - ✅ useAccount(), useAccountProjects(), useAccountUsers() hooks exist
@@ -111,6 +112,119 @@ The Key Addition - verifyProjectAccess():
 - ✅ Account switching functionality
 - ✅ Projects service has account filtering
 - ✅ Basic audit logging implementation (just needs table)
+
+##### Service Layer Summary
+**What We Accomplished:**
+1. **Fixed Critical Infrastructure** - Created missing audit_logs table that was causing silent failures
+2. **Secured Admin APIs** - All Lab/Library/Core/Theme APIs now properly restricted to admin/staff only
+3. **Maintained Performance** - Permission checks happen before DB queries, no performance impact
+4. **Added Comprehensive Tests** - 20+ security tests ensure APIs can't be accessed by regular users
+5. **Consistent Security Model** - Backend now enforces same restrictions as UI (no bypassing via API)
+
+**Key Architecture Decision:**
+Instead of making themes/library account-specific, we properly restricted them to admin/staff only.
+This aligns with the platform design where regular users work through the Builder, not direct API access.
+
+
+
+---
+
+#### [Packet] User Creation Features
+**Goal:** Create the ability for admins to create users for accounts manually in the admin tools area.
+
+##### User Stories
+- [x] 🚀 As a platform admin, I can create new users directly so that I can quickly set up test accounts and onboard users without email verification delays
+- [x] 🚀 As a platform admin, I can specify all user details (email, password, name, role) so that users are ready to use immediately  
+- [x] 🚀 As a platform admin, I can assign users to specific accounts during creation so that they have immediate access to the right resources
+- [x] 🚀 As a platform admin, I can choose whether to auto-confirm email so that test users can log in immediately
+- [x] 🚀 As a platform admin, I see validation errors if I enter invalid data so that I create users correctly
+- [x] 🚀 As a platform admin, I see an error if I try to create a user with an existing email (edge case)
+- [x] 🚀 As a platform admin, I can generate a secure random password if needed (edge case)
+- [x] 🚀 As a platform admin, I can delete any user.
+
+##### Implementation Tasks
+- [x] 🚀 Pre-flight checks: Verify environment is clean (0 TypeScript/ESLint errors)
+- [x] 🚀 Create `/app/api/users/create/route.ts` - Admin-only POST endpoint
+- [x] 🚀 Update `/lib/services/users.ts` - Add createUser function
+- [x] 🚀 Create `/app/(app)/tools/users/create/page.tsx` - User creation form
+- [x] 🚀 Update users page - Change "Invite User" button to dropdown with Create/Invite options
+- [x] 🚀 Implement form validation with Zod schemas
+- [x] 🚀 Add password generation functionality
+- [x] 🚀 Add account assignment for non-platform roles
+- [x] 🚀 Add audit logging for user creation
+- [x] 🪲 Fix user profile creation - Profile wasn't being created due to schema mismatch
+- [x] 🚀 Add delete user functionality with proper admin controls
+- [x] 🪲 Fix ESLint error in OPTIONS handler
+- [x] ⚗️ Write unit tests for user creation service and API
+  - [x] Created comprehensive unit tests for createUser service function (7 tests)
+  - [x] Created unit tests for /api/users/create route (8 tests)
+  - [x] All 15 tests passing with proper error handling and edge cases
+  - [x] Fixed TypeScript errors in test files
+  - [x] Fixed ESLint errors (replaced 'any' with proper types)
+- [x] ⚗️ Manual testing with user for all stories
+  - Created comprehensive manual test scenarios: [MANUAL-TEST-SCENARIOS.md](./MANUAL-TEST-SCENARIOS.md)
+  - Covers all user stories and edge cases
+  - Includes API security testing via browser console
+
+##### Found Work During Manual Testing
+- [x] 🪲 Theme API was blocking regular users from viewing themes
+  - Issue: GET /api/themes was restricted to admin/staff only
+  - Fix: Updated theme GET endpoints to allow all authenticated users
+  - Regular users need to view themes to select them in Builder
+  - Only CREATE/UPDATE/DELETE operations remain restricted to admin/staff
+- [x] 🪲 Page updates failing with "0 rows returned" error
+  - Issue: Missing RLS policies on pages and projects tables
+  - Client-side Supabase operations were being blocked by RLS
+  - Fix: Created comprehensive RLS policies for pages and projects tables
+  - Policies check account membership through proper joins
+  - Platform admins have full access, regular users limited to their accounts
+- [x] 🪲 Console error: account_users query returning 406
+  - Issue: useRole hook was incorrectly adding role as URL parameter with .eq('role', 'account_owner')
+  - Fix: Removed the role filter from query, check role value after fetching
+  - File: src/hooks/useRole.ts
+- [x] 🪲 Console error: pages query returning 400
+  - Issue: getAccountStats was querying pages table with non-existent account_id column
+  - Fix: Updated query to join through projects table using projects.account_id
+  - File: src/lib/services/accounts.ts
+
+##### Found Work During Implementation
+- [x] 🪲 User profiles table wasn't being populated on user creation
+  - Issue: API was trying to insert non-existent columns (full_name, onboarding_completed)
+  - Fix: Updated insert to match actual schema (display_name, phone, avatar_url, metadata)
+- [x] 🚀 Delete user functionality requested by user
+  - Added DELETE endpoint with admin-only access
+  - Prevents self-deletion and deletion of other admins
+  - Includes audit logging before deletion
+  - ✅ User tested and confirmed it works in production
+
+##### Test Results Summary (v0.1.2)
+**Unit Tests Created and Passing:**
+- ✅ User Creation Service Tests (7/7 passing)
+  - Successfully create a user
+  - Handle validation errors
+  - Handle duplicate email error
+  - Handle server errors
+  - Handle JSON parsing errors
+  - Handle network errors
+  - Include hint in error message if available
+- ✅ User Creation API Route Tests (8/8 passing)
+  - Create a user successfully
+  - Reject non-admin users
+  - Handle validation errors
+  - Handle duplicate email error
+  - Require account_id for user and account_owner roles
+  - Assign platform roles correctly
+  - Clean up user if account assignment fails
+  - Handle malformed JSON
+- ✅ TypeScript: No errors (npx tsc --noEmit)
+- ✅ ESLint: No errors (npm run lint)
+
+**API Access Control Updates:**
+- ✅ Fixed theme APIs to allow read access for all authenticated users
+  - GET /api/themes - All users can view themes
+  - GET /api/themes/[id] - All users can fetch specific theme
+  - POST/PUT/DELETE - Still restricted to admin/staff only
+- ✅ Other admin APIs remain properly restricted (Lab, Library, Core Components)
 
 
 ---
@@ -195,55 +309,54 @@ The Key Addition - verifyProjectAccess():
 # PROCESS & RULES
 # ------------------------------------------------ #
 
----
+## ---------------------------------------------- ##
+# Sprint Process Guide (for reference)
 
-## Sprint Process Guide
+## Sprint Planning (Start of Sprint)
 
-### Sprint Planning (Start of Sprint)
-
-  1. Review BACKLOG.md → Pull priority items into ACTIVE-SPRINT.md
-  2. Set version number → Decide scope (major.minor.patch)
-  3. Move packets → Cut H4 sections from BACKLOG to ACTIVE-SPRINT
-  4. Order packets → Arrange by priority/dependency
+  1. [User will] Review BACKLOG.md → Pull priority items into ACTIVE-SPRINT.md
+  2. [User will] Set version number → Decide scope (major.minor.patch)
+  3. [User will] Move packets → Cut H4 sections from BACKLOG to ACTIVE-SPRINT
+  4. [User will] Order packets → Arrange by priority/dependency
 
 
-### During Sprint Execution
+## During Sprint Execution
 
-#### Per Packet Workflow:
+### Per Packet Workflow:
 
-  1. Move packet to Current Focus → Work on one packet at a time
-  2. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
-  3. As you discover issues → Add to "Found Work" section:
+  1. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
+  2. As you discover issues → Add to "Found Work" section:
     - Critical → Must fix in current version
     - Non-Critical → Defer to next version
     - Tech Debt → Document for future
-  4. Update STATUS-LOG.md → Log progress after each packet
-  5. Check off tasks → Mark complete in ACTIVE-SPRINT.md
-  6. Move to Sprint Backlog → When packet done, grab next
+  3. Update ACTIVE-STATUS.md → Log progress after each packet
+  4. Check off tasks → Mark complete in ACTIVE-SPRINT.md
+  5. [User will] Move to Sprint Backlog → When packet done, grab next
 
-#### Daily Flow:
+### Daily Flow:
 
   - Start: Check Current Focus in ACTIVE-SPRINT.md
   - Work: Follow DEV-LIFECYCLE for that packet
   - Discover: Add found issues to appropriate section
-  - End: Update STATUS-LOG with progress
+  - End: Update ACTIVE-SPRINT with progress
 
-#### Sprint Completion
+### Sprint Completion
 
   1. All packets done → Verify all tasks checked
   2. Create Release Notes → /docs/Release_Notes/v0.1.1.md
-  3. Archive sprint content → Copy ACTIVE-SPRINT to STATUS-LOG
-  4. Clear ACTIVE-SPRINT.md → Reset for next sprint
-  5. Update version numbers → Production/Development in all docs
+  3. [User will] Archive sprint content → Copy ACTIVE-SPRINT to STATUS-LOG
+  4. [User will] Clear ACTIVE-SPRINT.md → Reset for next sprint
+  5. [User will] Update version numbers → Production/Development in all docs
 
 
-### Key Rules
+## Key Rules
 
-  - ONE packet in Current Focus at a time
   - COMPLETE DEV-LIFECYCLE per packet before moving on
   - DOCUMENT found work immediately
-  - UPDATE STATUS-LOG per packet completion
   - NEVER skip DEV-LIFECYCLE steps
+
+## ---------------------------------------------- ##
+
 
 ---
 

@@ -31,6 +31,17 @@ export interface CreateUserInvitationData {
   invited_by: string;
 }
 
+export interface CreateUserData {
+  email: string;
+  password: string;
+  full_name: string;
+  display_name?: string;
+  role: 'admin' | 'staff' | 'account_owner' | 'user';
+  account_id?: string;
+  auto_confirm_email?: boolean;
+  send_welcome_email?: boolean;
+}
+
 export interface UpdateUserRoleData {
   user_id: string;
   account_id: string;
@@ -332,4 +343,78 @@ export async function getAccountUsers(accountId: string): Promise<UserWithAccoun
       },
     };
   });
+}
+
+/**
+ * Create a new user directly (admin only)
+ */
+export async function createUser(userData: CreateUserData): Promise<{ success: boolean; user?: { id: string; email: string }; error?: string }> {
+  try {
+    const response = await fetch('/api/users/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(userData),
+    });
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError) {
+      console.error('Failed to parse response as JSON:', jsonError);
+      data = { error: 'Invalid response from server' };
+    }
+
+    if (!response.ok) {
+      console.error('User creation API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: data,
+        url: response.url
+      });
+      
+      // Include hint in error message if available
+      let errorMessage = data.error || `Failed to create user (${response.status})`;
+      if (data.hint) {
+        errorMessage += ` - ${data.hint}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return { success: true, user: data.user };
+  } catch (error) {
+    console.error('Error creating user:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to create user' 
+    };
+  }
+}
+
+/**
+ * Delete a user (admin only)
+ */
+export async function deleteUser(userId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch(`/api/users/${userId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to delete user');
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to delete user' 
+    };
+  }
 }

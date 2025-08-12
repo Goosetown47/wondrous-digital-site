@@ -45,18 +45,9 @@ export async function GET(
 
     console.log('🔍 [API/Themes/Id] Authenticated user:', user.email);
 
-    // Check if user is admin or staff
-    const [isAdmin, isStaff] = await Promise.all([
-      isAdminServer(user.id),
-      isStaffServer(user.id)
-    ]);
-
-    if (!isAdmin && !isStaff) {
-      console.log('❌ [API/Themes/Id] Access denied - user is not admin or staff');
-      return NextResponse.json({ 
-        error: 'Access denied. Admin or staff role required.' 
-      }, { status: 403 });
-    }
+    // For GET requests, allow all authenticated users to view themes
+    // They need to be able to select themes for their projects
+    console.log('✅ [API/Themes/Id] GET request - allowing access for authenticated user');
 
     // Create service role client (bypasses RLS)
     const serviceClient = createAdminClient();
