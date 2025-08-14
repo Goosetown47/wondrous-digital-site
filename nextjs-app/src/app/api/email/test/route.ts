@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { buildAppUrl } from '@/lib/utils/app-url';
 import { sendEmail } from '@/lib/services/email';
 import { InvitationEmail } from '@/emails/invitation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
             inviterEmail: user.email || 'test@example.com',
             accountName: "Test Account",
             role: "user",
-            invitationLink: `${process.env.NEXT_PUBLIC_APP_URL}/invitation?token=test-token`,
+            invitationLink: buildAppUrl('/invitation?token=test-token'),
             expiresIn: "7 days"
           }),
         });

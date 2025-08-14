@@ -5,6 +5,7 @@ import { PasswordResetEmail } from '@/emails/password-reset';
 import { z } from 'zod';
 import { render } from '@react-email/components';
 import React from 'react';
+import { buildAppUrl } from '@/lib/utils/app-url';
 
 // Rate limiting store (in production, use Redis or similar)
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/update-password`,
+        redirectTo: buildAppUrl('/auth/update-password'),
       }
     });
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { resendInvitation } from '@/lib/services/invitations';
 import { isAdmin } from '@/lib/permissions';
+import { buildAppUrl } from '@/lib/utils/app-url';
 
 export async function POST(
   request: NextRequest,
@@ -49,7 +50,7 @@ export async function POST(
     
     return NextResponse.json({
       ...newInvitation,
-      inviteUrl: `${process.env.NEXT_PUBLIC_APP_URL || ''}/invitation/${newInvitation.token}`,
+      inviteUrl: buildAppUrl(`/invitation/${newInvitation.token}`),
     });
   } catch (error) {
     console.error('Error resending invitation:', error);

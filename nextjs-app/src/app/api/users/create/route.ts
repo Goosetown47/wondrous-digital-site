@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { buildAppUrl } from '@/lib/utils/app-url';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isAdminServer } from '@/lib/permissions/server-checks';
@@ -319,7 +320,7 @@ export async function POST(req: NextRequest) {
       try {
         // Use Supabase admin to send invite email
         const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(validatedData.email, {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+          redirectTo: buildAppUrl('/dashboard'),
         });
         
         if (inviteError) {

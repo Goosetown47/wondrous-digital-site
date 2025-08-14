@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createInvitation, isEmailInvited, isUserMember } from '@/lib/services/invitations';
 import { isAdmin } from '@/lib/permissions';
+import { buildAppUrl } from '@/lib/utils/app-url';
 
 export async function POST(request: NextRequest) {
   try {
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({
       ...invitation,
-      inviteUrl: `${process.env.NEXT_PUBLIC_APP_URL || ''}/invitation/${invitation.token}`,
+      inviteUrl: buildAppUrl(`/invitation/${invitation.token}`),
     });
   } catch (error) {
     console.error('Error creating invitation:', error);
