@@ -102,12 +102,23 @@ function LoginPageContent() {
           
           if (acceptResponse.ok) {
             console.log('[Login] Successfully accepted invitation');
-            toast.success('Invitation accepted! Redirecting to your account...');
+            toast.success('Invitation accepted! Setting up your profile...');
             
-            // Redirect to the invited account
-            if ('accounts' in pendingInvitation && pendingInvitation.accounts && !Array.isArray(pendingInvitation.accounts)) {
-              const accountSlug = (pendingInvitation.accounts as { slug: string }).slug;
-              window.location.href = `/tools/accounts/${accountSlug}`;
+            // Check if user already has a profile
+            const profileResponse = await fetch('/api/user/profile', {
+              method: 'GET',
+              credentials: 'include',
+            });
+            
+            const profileData = await profileResponse.json();
+            
+            if (!profileData.profile) {
+              // No profile exists, redirect to welcome page for first-time setup
+              window.location.href = `/profile/welcome?account=${pendingInvitation.account_id}`;
+              return;
+            } else {
+              // Profile exists, go directly to dashboard
+              window.location.href = '/dashboard';
               return;
             }
           } else {

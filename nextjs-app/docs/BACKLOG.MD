@@ -235,6 +235,7 @@ Use these classifications to identify each type of task. We can expand this list
 
 
 ### [PACKET] Canvas Builder Improvements
+**Notes:** I want to create an immersive, sleak builder interface that is interactive and really easy to use. I like the way https://www.shadcnblocks.com/blocks structures their blocks and how you can change the format using grid, list, masonry modes. I like that you can click into the block and see it fully. I want to put something like this in a drawer that you can open and close and select to add sections to your pages. I'd like a sidebar on the right side that has a representation of each of the sections on the page that you can hover over to drag and drop, delete, change, lock etc. This is an abstraction of what's on the page for ease of use. Instead of scrolling up and down to drag things which can be clumsy you can just do it in the sidebar. Users should be able to grab an element from the drawer and drag it into place on the sidebar, and then it appears in the canvas and on the sidebar.
 
 - [ ] 🚀 Reorder sections
 
