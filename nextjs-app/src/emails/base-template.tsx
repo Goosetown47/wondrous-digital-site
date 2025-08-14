@@ -24,7 +24,7 @@ export interface BaseEmailTemplateProps {
 export const BaseEmailTemplate: React.FC<BaseEmailTemplateProps> = ({
   preview,
   children,
-  logoUrl = 'https://wondrousdigital.com/logo.png',
+  logoUrl = 'https://app.wondrousdigital.com/images/branding/logo-full.png',
   logoAlt = 'Wondrous Digital',
   footerText = '© 2025 Wondrous Digital. All rights reserved.',
   unsubscribeUrl,
@@ -51,7 +51,7 @@ export const BaseEmailTemplate: React.FC<BaseEmailTemplateProps> = ({
             <Img
               src={logoUrl}
               alt={logoAlt}
-              width="150"
+              width="200"
               height="50"
               style={logo}
             />

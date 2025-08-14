@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
 import type { Account, AccountUser } from '@/types/database';
 import { isAdmin, isStaff } from '@/lib/permissions';
+import { wouldBeSanitized } from '@/lib/sanitization';
 
 export interface AccountWithStats extends Account {
   project_count?: number;
@@ -105,11 +106,41 @@ export async function createAccount(data: CreateAccountData): Promise<Account> {
   const canCreate = await isAdmin(user.id) || await isStaff(user.id);
   if (!canCreate) throw new Error('Insufficient permissions');
 
+  // Validate name for XSS
+  const trimmedName = data.name.trim();
+  if (wouldBeSanitized(trimmedName)) {
+    throw new Error('Account name cannot contain HTML or special characters');
+  }
+
+  // Validate slug
+  const trimmedSlug = data.slug.trim();
+  if (wouldBeSanitized(trimmedSlug)) {
+    throw new Error('Slug cannot contain HTML or special characters');
+  }
+  if (!/^[a-z0-9-]+$/.test(trimmedSlug)) {
+    throw new Error('Slug can only contain lowercase letters, numbers, and hyphens');
+  }
+  if (trimmedSlug.startsWith('-') || trimmedSlug.endsWith('-')) {
+    throw new Error('Slug cannot start or end with hyphen');
+  }
+
+  // Validate settings (including description if present)
+  const validatedSettings = data.settings || {};
+  if (data.settings) {
+    const settings = data.settings as Record<string, unknown>;
+    if (settings.description !== undefined && settings.description !== null) {
+      const description = String(settings.description).trim();
+      if (description && wouldBeSanitized(description)) {
+        throw new Error('Description cannot contain HTML or special characters');
+      }
+    }
+  }
+
   // Check if slug is already taken
   const { data: existingAccount } = await supabase
     .from('accounts')
     .select('id')
-    .eq('slug', data.slug)
+    .eq('slug', trimmedSlug)
     .single();
 
   if (existingAccount) {
@@ -119,10 +150,10 @@ export async function createAccount(data: CreateAccountData): Promise<Account> {
   const { data: account, error } = await supabase
     .from('accounts')
     .insert({
-      name: data.name,
-      slug: data.slug,
+      name: trimmedName,
+      slug: trimmedSlug,
       plan: data.plan,
-      settings: data.settings || {},
+      settings: validatedSettings,
     })
     .select()
     .single();
@@ -158,12 +189,58 @@ export async function updateAccount(id: string, updates: UpdateAccountData): Pro
   const canUpdate = await isAdmin(user.id) || await isStaff(user.id);
   if (!canUpdate) throw new Error('Insufficient permissions');
 
+  // Validate input data
+  const sanitizedUpdates: UpdateAccountData = {};
+  
+  if (updates.name !== undefined) {
+    const trimmedName = updates.name.trim();
+    // Validate that name doesn't contain HTML
+    if (wouldBeSanitized(trimmedName)) {
+      throw new Error('Account name cannot contain HTML or special characters');
+    }
+    sanitizedUpdates.name = trimmedName;
+  }
+  
+  // Validate slug
+  if (updates.slug !== undefined) {
+    const trimmedSlug = updates.slug.trim();
+    // Check for HTML in slug
+    if (wouldBeSanitized(trimmedSlug)) {
+      throw new Error('Slug cannot contain HTML or special characters');
+    }
+    // Validate slug format
+    if (!/^[a-z0-9-]+$/.test(trimmedSlug)) {
+      throw new Error('Slug can only contain lowercase letters, numbers, and hyphens');
+    }
+    if (trimmedSlug.startsWith('-') || trimmedSlug.endsWith('-')) {
+      throw new Error('Slug cannot start or end with hyphen');
+    }
+    sanitizedUpdates.slug = trimmedSlug;
+  }
+  
+  // Copy other fields
+  if (updates.plan !== undefined) {
+    sanitizedUpdates.plan = updates.plan;
+  }
+  
+  // Validate settings (including description)
+  if (updates.settings !== undefined) {
+    const settings = updates.settings as Record<string, unknown>;
+    if (settings.description !== undefined && settings.description !== null) {
+      const description = String(settings.description).trim();
+      if (description && wouldBeSanitized(description)) {
+        throw new Error('Description cannot contain HTML or special characters');
+      }
+    }
+    sanitizedUpdates.settings = updates.settings;
+  }
+
   // If updating slug, check if it's already taken
-  if (updates.slug) {
+  if (sanitizedUpdates.slug) {
     const { data: existingAccount } = await supabase
       .from('accounts')
       .select('id')
-      .eq('slug', updates.slug)
+      .eq('slug', sanitizedUpdates.slug)
       .neq('id', id)
       .single();
 
@@ -174,7 +251,7 @@ export async function updateAccount(id: string, updates: UpdateAccountData): Pro
 
   const { data: account, error } = await supabase
     .from('accounts')
-    .update(updates)
+    .update(sanitizedUpdates)
     .eq('id', id)
     .select()
     .single();

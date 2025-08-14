@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { AccountInvitation } from '@/types/database';
 import { queueEmail } from '@/lib/services/email';
+import { getAppUrl } from '@/lib/utils/app-url';
 
 export interface CreateInvitationParams {
   accountId: string;
@@ -54,7 +55,7 @@ export async function createInvitation(params: CreateInvitationParams): Promise<
   const inviterEmail = inviterResult.data?.user?.email || 'noreply@wondrousdigital.com';
   
   // Queue invitation email
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.wondrousdigital.com';
+  const appUrl = getAppUrl();
   const invitationLink = `${appUrl}/invitation?token=${data.token}`;
   
   await queueEmail({

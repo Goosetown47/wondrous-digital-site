@@ -1,5 +1,6 @@
 import { render } from '@react-email/components';
 import type { ReactElement } from 'react';
+import { getAppUrl } from '@/lib/utils/app-url';
 
 /**
  * Preview an email template in development
@@ -67,7 +68,7 @@ export function getEmailProvider(email: string): string {
  * Generate unsubscribe URL
  */
 export function generateUnsubscribeUrl(userId: string, type: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.wondrousdigital.com';
+  const baseUrl = getAppUrl();
   const token = Buffer.from(`${userId}:${type}`).toString('base64');
   return `${baseUrl}/unsubscribe?token=${token}`;
 }

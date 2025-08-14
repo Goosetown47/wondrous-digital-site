@@ -2,10 +2,364 @@
 # STATUS LOG
 # ---------------------------------------------------------------------------------------- #
 
-**Production Version:** v0.1.1 
-**Development Version:** v0.1.2 
+**Production Version:** v0.1.2 
+**Development Version:** v0.1.3 
 
 This is an ongoing log of everything we do across the application, from bug fixes to whatever. Every time we do a work segment this should be updated. When we’ve created a sprint, the contents of what’s in ACTIVE_SPRINT will be cataloged here as well. This should include any Claude notes to self, things we’ve learned, or done, it should be a comprehensive accounting.
+
+
+
+
+
+
+# -------------------------------------------------------------------------------------- #
+# VERSION 0.1.2 "Critical Infrastructure"
+# -------------------------------------------------------------------------------------- #
+
+### Goal: Complete important infrastructure updates and create a database for dev.
+
+### Notes:
+
+Test Accounts:
+- tyler.lahaie@wondrous.gg \ Password: atz_dek-nky2WBU_jav (Platform Admin)
+- staff@wondrousdigital.com \ Password: tvt*gdy5aka-UTF2zfu (Platform Staff)
+- owner@example.com \ Password: afq!HXC7pqk3fgv4rym (Account Owner)
+- test-user@example.com \ Password: ukc-zbr5DZT4pfb3yvf (Regular User)
+
+
+DEV Database:
+Test Accounts:
+- tyler.lahaie@wondrous.gg \ Password: atz_dek-nky2WBU_jav
+- staff@wondrousdigital.com \ Password: tvt*gdy5aka-UTF2zfu
+- owner@example.com \ Password: afq!HXC7pqk3fgv4rym
+- test-user@example.com \ Password: ukc-zbr5DZT4pfb3yvf
+
+
+
+## PACKETS ----------------------------------------------------------------------------- ##
+
+
+#### [Packet] Service Layer & API Updates
+**Goal:** Complete account-aware implementation gaps and fix critical infrastructure  
+**Deliverable:** Fully account-aware service layer with proper audit logging
+**Note:** Much of the foundation is already built - we're filling in gaps and completing partial implementations
+
+##### Critical Infrastructure Fix
+
+Created the Missing Audit Logs Table 📊
+- [x] 🪲 Create audit_logs table migration (currently missing but referenced in code!)
+  - [x] 🪲 Design table schema based on existing audit service usage
+  - [x] 🪲 Create migration file with proper indexes
+  - [x] 🪲 Test audit logging works after table creation
+
+  The Problem: Your code was trying to write to an audit_logs table that didn't
+  exist! Every time someone created a project, updated a page, or changed
+  settings, the code tried to log it but silently failed.
+
+  What I Did:
+  - Created a proper audit_logs table in your database
+  - Added security policies so users can only see logs for their own accounts
+  - Platform admins can see everything (for support/debugging)
+
+  Why It's Better:
+  - You now have a complete history of who did what and when
+  - Great for security compliance (some customers require this)
+  - Helps with debugging ("Why did this project disappear?")
+  - Enables features like "Activity Feed" for users
+
+
+##### Service Layer Account Context Gaps
+**Update Pages service with full account context**
+The Problem: The Pages service was partially trusting that pages wouldn't be
+accessed across accounts, but it wasn't actively checking. It's like having
+apartment doors that usually stay locked but don't actually verify your key.
+
+The Key Addition - verifyProjectAccess():
+  This function checks:
+  1. Is the user a platform admin? (They can see everything)
+  2. Is the user a member of the account that owns this project?
+  3. If neither, throw "Access Denied"
+
+- [x] 🚀 Update Pages service with full account context
+  - [x] 🚀 Add account_id filtering to all page queries
+  - [x] 🚀 Ensure pages can't be accessed cross-account
+  - [x] 🚀 Update page creation to use account context
+  - [x] 🚀 Added verifyProjectAccess() function for all operations
+  - [x] 🚀 Added missing functions (duplicatePage, publishPageDraft, etc.)
+  - [x] 🚀 Fixed all TypeScript errors and build passes
+
+
+
+- [x] 🚀 Add admin/staff access controls to platform APIs
+  - [x] 🚀 Theme APIs now require admin/staff role (403 for regular users)
+  - [x] 🚀 Core Components APIs restricted to admin/staff only
+  - [x] 🚀 Library APIs restricted to admin/staff only
+  - [x] 🚀 Lab APIs restricted to admin/staff only
+  - [x] 🚀 All APIs return consistent 403 Forbidden for unauthorized access
+  - [x] 🚀 Permission checks happen before database queries (performance)
+  - [x] 🚀 Service role pattern maintained for actual queries
+
+##### Standardize Error Handling
+- [x] 🚀 Create consistent permission denied errors
+  - [x] 🚀 All admin APIs return 403 with "Access denied. Admin or staff role required."
+  - [x] 🚀 Consistent error format across all protected endpoints
+- [x] 🚀 Security-focused error messages
+  - [x] 🚀 Don't reveal why access was denied (security best practice)
+  - [x] 🚀 Log access attempts to audit_logs for monitoring
+
+##### Testing Infrastructure
+- [x] 🚀 Created comprehensive API security test suite
+  - [x] 🚀 Tests for unauthenticated access (401 responses)
+  - [x] 🚀 Tests for regular user access (403 responses)
+  - [x] 🚀 Tests for staff access (200 responses)
+  - [x] 🚀 Tests for admin access (200 responses)
+  - [x] 🚀 Verified permission checks happen before DB queries
+  - [x] 🚀 All 20 security tests passing
+
+##### Already Completed (Found During Scan)
+- ✅ useAccount(), useAccountProjects(), useAccountUsers() hooks exist
+- ✅ Permission system with hasPermission() and requirePermission()
+- ✅ Account switching functionality
+- ✅ Projects service has account filtering
+- ✅ Basic audit logging implementation (just needs table)
+
+##### Service Layer Summary
+**What We Accomplished:**
+1. **Fixed Critical Infrastructure** - Created missing audit_logs table that was causing silent failures
+2. **Secured Admin APIs** - All Lab/Library/Core/Theme APIs now properly restricted to admin/staff only
+3. **Maintained Performance** - Permission checks happen before DB queries, no performance impact
+4. **Added Comprehensive Tests** - 20+ security tests ensure APIs can't be accessed by regular users
+5. **Consistent Security Model** - Backend now enforces same restrictions as UI (no bypassing via API)
+
+**Key Architecture Decision:**
+Instead of making themes/library account-specific, we properly restricted them to admin/staff only.
+This aligns with the platform design where regular users work through the Builder, not direct API access.
+
+
+
+---
+
+#### [Packet] User Creation Features
+**Goal:** Create the ability for admins to create users for accounts manually in the admin tools area.
+
+##### User Stories
+- [x] 🚀 As a platform admin, I can create new users directly so that I can quickly set up test accounts and onboard users without email verification delays
+- [x] 🚀 As a platform admin, I can specify all user details (email, password, name, role) so that users are ready to use immediately  
+- [x] 🚀 As a platform admin, I can assign users to specific accounts during creation so that they have immediate access to the right resources
+- [x] 🚀 As a platform admin, I can choose whether to auto-confirm email so that test users can log in immediately
+- [x] 🚀 As a platform admin, I see validation errors if I enter invalid data so that I create users correctly
+- [x] 🚀 As a platform admin, I see an error if I try to create a user with an existing email (edge case)
+- [x] 🚀 As a platform admin, I can generate a secure random password if needed (edge case)
+- [x] 🚀 As a platform admin, I can delete any user.
+
+##### Implementation Tasks
+- [x] 🚀 Pre-flight checks: Verify environment is clean (0 TypeScript/ESLint errors)
+- [x] 🚀 Create `/app/api/users/create/route.ts` - Admin-only POST endpoint
+- [x] 🚀 Update `/lib/services/users.ts` - Add createUser function
+- [x] 🚀 Create `/app/(app)/tools/users/create/page.tsx` - User creation form
+- [x] 🚀 Update users page - Change "Invite User" button to dropdown with Create/Invite options
+- [x] 🚀 Implement form validation with Zod schemas
+- [x] 🚀 Add password generation functionality
+- [x] 🚀 Add account assignment for non-platform roles
+- [x] 🚀 Add audit logging for user creation
+- [x] 🪲 Fix user profile creation - Profile wasn't being created due to schema mismatch
+- [x] 🚀 Add delete user functionality with proper admin controls
+- [x] 🪲 Fix ESLint error in OPTIONS handler
+- [x] ⚗️ Write unit tests for user creation service and API
+  - [x] Created comprehensive unit tests for createUser service function (7 tests)
+  - [x] Created unit tests for /api/users/create route (8 tests)
+  - [x] All 15 tests passing with proper error handling and edge cases
+  - [x] Fixed TypeScript errors in test files
+  - [x] Fixed ESLint errors (replaced 'any' with proper types)
+- [x] ⚗️ Manual testing with user for all stories
+  - Created comprehensive manual test scenarios: [MANUAL-TEST-SCENARIOS.md](./MANUAL-TEST-SCENARIOS.md)
+  - Covers all user stories and edge cases
+  - Includes API security testing via browser console
+
+##### Found Work During Manual Testing
+- [x] 🪲 Theme API was blocking regular users from viewing themes
+  - Issue: GET /api/themes was restricted to admin/staff only
+  - Fix: Updated theme GET endpoints to allow all authenticated users
+  - Regular users need to view themes to select them in Builder
+  - Only CREATE/UPDATE/DELETE operations remain restricted to admin/staff
+- [x] 🪲 Page updates failing with "0 rows returned" error
+  - Issue: Missing RLS policies on pages and projects tables
+  - Client-side Supabase operations were being blocked by RLS
+  - Fix: Created comprehensive RLS policies for pages and projects tables
+  - Policies check account membership through proper joins
+  - Platform admins have full access, regular users limited to their accounts
+- [x] 🪲 Console error: account_users query returning 406
+  - Issue: useRole hook was incorrectly adding role as URL parameter with .eq('role', 'account_owner')
+  - Fix: Removed the role filter from query, check role value after fetching
+  - File: src/hooks/useRole.ts
+- [x] 🪲 Console error: pages query returning 400
+  - Issue: getAccountStats was querying pages table with non-existent account_id column
+  - Fix: Updated query to join through projects table using projects.account_id
+  - File: src/lib/services/accounts.ts
+
+##### Found Work During Implementation
+- [x] 🪲 User profiles table wasn't being populated on user creation
+  - Issue: API was trying to insert non-existent columns (full_name, onboarding_completed)
+  - Fix: Updated insert to match actual schema (display_name, phone, avatar_url, metadata)
+- [x] 🚀 Delete user functionality requested by user
+  - Added DELETE endpoint with admin-only access
+  - Prevents self-deletion and deletion of other admins
+  - Includes audit logging before deletion
+  - ✅ User tested and confirmed it works in production
+
+##### Test Results Summary (v0.1.2)
+**Unit Tests Created and Passing:**
+- ✅ User Creation Service Tests (7/7 passing)
+  - Successfully create a user
+  - Handle validation errors
+  - Handle duplicate email error
+  - Handle server errors
+  - Handle JSON parsing errors
+  - Handle network errors
+  - Include hint in error message if available
+- ✅ User Creation API Route Tests (8/8 passing)
+  - Create a user successfully
+  - Reject non-admin users
+  - Handle validation errors
+  - Handle duplicate email error
+  - Require account_id for user and account_owner roles
+  - Assign platform roles correctly
+  - Clean up user if account assignment fails
+  - Handle malformed JSON
+- ✅ TypeScript: No errors (npx tsc --noEmit)
+- ✅ ESLint: No errors (npm run lint)
+
+**API Access Control Updates:**
+- ✅ Fixed theme APIs to allow read access for all authenticated users
+  - GET /api/themes - All users can view themes
+  - GET /api/themes/[id] - All users can fetch specific theme
+  - POST/PUT/DELETE - Still restricted to admin/staff only
+- ✅ Other admin APIs remain properly restricted (Lab, Library, Core Components)
+
+
+---
+
+
+#### [Packet] Database Isolation (Supabase) 
+**Goal:** Create a new development database while keeping the existing production database unchanged
+**Strategy:** Current database becomes PRODUCTION-ONLY, new database for DEVELOPMENT
+
+##### Phase 1: Assessment & Backup ✅ COMPLETED
+- [x] 📌 **Document Current Setup**
+  - [x] List all tables in current database
+  - [x] Note which tables have real user data
+  - [x] Check current database size and usage
+  
+- [x] 📌 **Backup Production Database** (In Supabase Dashboard)
+  - [x] ~~Go to Settings → Backups~~ (Not available on current plan)
+  - [x] Created manual backup documentation
+  - [x] Exported database analysis (528 rows total)
+  - [x] All schema preserved in migration files
+
+**Phase 1 Notes:**
+- Created comprehensive database documentation showing all tables and row counts
+- Only 2 real accounts (rest are test data)
+- Backup approach: Relying on daily automatic backup + migration files
+- Risk assessment: Minimal risk due to mostly test data
+- Decision: Proceed without full data export due to Docker requirement
+
+##### Phase 2: Create Development Database ✅ COMPLETED
+- [x] ⚙️ **Create New Supabase Project for Development**
+  - [x] Go to https://app.supabase.com
+  - [x] Click "New Project"
+  - [x] Name: "Wondrous-Digital-App-DEV"
+  - [x] Database Password: anr3fyg.TCJ.czq!dka
+  - [x] Region: us-east-2 (Same as production)
+  - [x] Plan: Free tier
+  - [x] Project ID: hlpvvwlxjzexpgitsjlw
+  - [x] Host: db.hlpvvwlxjzexpgitsjlw.supabase.co
+
+##### Phase 3: Configure Environments ✅ COMPLETED
+- [x] ⚙️ **Create Environment Files**
+  - [x] Created `.env.local` (for development):
+    - Points to DEV database (hlpvvwlxjzexpgitsjlw)
+    - Has all required keys configured
+  - [x] Keep `.env.production.local` (git-ignored, for local prod testing):
+    - Points to PROD database (bpdhbxvsguklkbusqtke)
+    - Properly separated from DEV
+
+- [ ] ⚙️ **Update Vercel Environment Variables**
+  - [ ] Go to Vercel Dashboard → Settings → Environment Variables
+  - [ ] Ensure production variables point to PRODUCTION database
+  - [ ] Add development/preview variables for dev database (if needed)
+
+##### Phase 4: Initialize Dev Database ✅ COMPLETED
+- [x] ⚙️ **Fix Database Connection Issues**
+  - [x] Reset password to remove special characters
+  - [x] Use pooler URL to avoid IPv6 issues
+  - [x] Update Supabase CLI to v2.34.3
+  - [x] Working connection: `postgresql://postgres.hlpvvwlxjzexpgitsjlw:MsDH6QjUsf6vXD3nCeYkBNiF@aws-0-us-east-2.pooler.supabase.com:5432/postgres`
+
+- [x] 🪲 **Fix Missing Unique Constraints**
+  - [x] Identified issue: Tables missing unique constraints for ON CONFLICT
+  - [x] Fixed reserved_domain_permissions (account_id, domain)
+  - [x] Fixed project_domains (domain)
+  - [x] Fixed security_configuration_checks (check_name)
+  - [x] Ran `/scripts/fix-all-constraints.sql` in Supabase Dashboard
+
+- [x] 🚀 **Apply Existing Migrations to Dev Database**
+  - [x] Fixed duplicate migration timestamp issue
+  - [x] Dropped conflicting function (get_recent_audit_logs)
+  - [x] Successfully applied all 19 migrations
+
+- [x] 🚀 **Verify Migration Success**
+  - [x] All tables exist (accounts, projects, pages, audit_logs, user_profiles)
+  - [x] RLS policies applied
+  - [x] Basic queries working
+
+##### Phase 5: Seed Development Data ✅ COMPLETED
+- [x] 📌 **Create Test Data**
+  - [x] Platform admin account (tyler.lahaie@wondrous.gg)
+  - [x] Test organizations (Test Company 1, 2, Demo Agency)
+  - [x] Demo users (staff, owner, test-user)
+  - [x] Created user profiles for all test users
+
+- [x] 📌 **Run Setup Scripts**
+  - Applied `/scripts/fix-account-users-inserts.sql` (Step 5)
+  - Applied `/scripts/fix-user-profiles.sql` (Step 6 - fixed without email column)
+  
+**Note:** Sample projects skipped - will create manually as needed
+
+##### Phase 6: Testing & Validation ✅ COMPLETED
+- [x] ⚗️ **Test Local Development**
+  - [x] Server running on port 3001
+  - [x] Connects to DEV database
+  - [x] API endpoints responding correctly
+  - [x] Foreign keys and RLS policies applied
+
+- [x] ⚗️ **Verify Production Unchanged**
+  - [x] Production schema confirmed (no status column, uses archived_at)
+  - [x] Production and DEV schemas now match
+  - [x] Both use same security model
+
+##### Phase 7: Documentation & Process ✅ COMPLETED
+- [x] 📌 **Update Documentation**
+  - [x] Created DEV-DATABASE-SETUP.md guide
+  - [x] Documented all SQL scripts needed for setup
+  - [x] Fixed RLS policies to match actual schema
+  - [x] Environment variables configured in .env.local
+  
+##### Phase 8: Migration Workflow Established ✅ COMPLETED
+- [x] 📌 **Fix Migration State**
+  - [x] Created migration for has_role() function
+  - [x] Created migration for correct RLS policies
+  - [x] Applied migrations to DEV database
+  - [x] Migrations now reflect PROD's working state
+
+**Database Migration Workflow Notes:**
+1. **Development Process**: Claude creates migration files in `/supabase/migrations/`
+2. **Testing**: Claude applies to DEV using: `npx supabase db push --password "MsDH6QjUsf6vXD3nCeYkBNiF"`
+3. **Production**: User manually applies migrations to PROD via Supabase Dashboard for safety
+4. **Key Passwords**: 
+   - DEV: MsDH6QjUsf6vXD3nCeYkBNiF
+   - PROD: User controls via Dashboard
+5. **Migration Naming**: `YYYYMMDD_HHMMSS_descriptive_name.sql` or sequential numbers for related changes
+
 
 
 
@@ -1540,52 +1894,50 @@ This was a massive update. We rewrote the entire application in NextJS and broug
 
 
 ## ---------------------------------------------- ##
-# Sprint Process Guide
+# Sprint Process Guide (for reference)
 
 ## Sprint Planning (Start of Sprint)
 
-  1. Review BACKLOG.md → Pull priority items into ACTIVE-SPRINT.md
-  2. Set version number → Decide scope (major.minor.patch)
-  3. Move packets → Cut H4 sections from BACKLOG to ACTIVE-SPRINT
-  4. Order packets → Arrange by priority/dependency
+  1. [User will] Review BACKLOG.md → Pull priority items into ACTIVE-SPRINT.md
+  2. [User will] Set version number → Decide scope (major.minor.patch)
+  3. [User will] Move packets → Cut H4 sections from BACKLOG to ACTIVE-SPRINT
+  4. [User will] Order packets → Arrange by priority/dependency
 
 
 ## During Sprint Execution
 
 ### Per Packet Workflow:
 
-  1. Move packet to Current Focus → Work on one packet at a time
-  2. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
-  3. As you discover issues → Add to "Found Work" section:
+  1. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
+  2. As you discover issues → Add to "Found Work" section:
     - Critical → Must fix in current version
     - Non-Critical → Defer to next version
     - Tech Debt → Document for future
-  4. Update STATUS-LOG.md → Log progress after each packet
-  5. Check off tasks → Mark complete in ACTIVE-SPRINT.md
-  6. Move to Sprint Backlog → When packet done, grab next
+  3. Update ACTIVE-STATUS.md → Log progress after each packet
+  4. Check off tasks → Mark complete in ACTIVE-SPRINT.md
+  5. [User will] Move to Sprint Backlog → When packet done, grab next
 
 ### Daily Flow:
 
   - Start: Check Current Focus in ACTIVE-SPRINT.md
   - Work: Follow DEV-LIFECYCLE for that packet
   - Discover: Add found issues to appropriate section
-  - End: Update STATUS-LOG with progress
+  - End: Update ACTIVE-SPRINT with progress
 
 ### Sprint Completion
 
   1. All packets done → Verify all tasks checked
   2. Create Release Notes → /docs/Release_Notes/v0.1.1.md
-  3. Archive sprint content → Copy ACTIVE-SPRINT to STATUS-LOG
-  4. Clear ACTIVE-SPRINT.md → Reset for next sprint
-  5. Update version numbers → Production/Development in all docs
+  3. [User will] Archive sprint content → Copy ACTIVE-SPRINT to STATUS-LOG
+  4. [User will] Clear ACTIVE-SPRINT.md → Reset for next sprint
+  5. [User will] Update version numbers → Production/Development in all docs
 
 
 ## Key Rules
 
-  - ONE packet in Current Focus at a time
   - COMPLETE DEV-LIFECYCLE per packet before moving on
   - DOCUMENT found work immediately
-  - UPDATE STATUS-LOG per packet completion
   - NEVER skip DEV-LIFECYCLE steps
+  - Always use CODE-CHECKLIST
 
 ## ---------------------------------------------- ##

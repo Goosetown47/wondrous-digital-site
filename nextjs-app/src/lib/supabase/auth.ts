@@ -57,4 +57,25 @@ export const authService = {
   onAuthStateChange(callback: Parameters<typeof supabase.auth.onAuthStateChange>[0]) {
     return supabase.auth.onAuthStateChange(callback);
   },
+
+  // Update user password (when already authenticated)
+  async updatePassword(newPassword: string) {
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) throw error;
+    return data;
+  },
+
+  // Verify OTP token (used for password reset)
+  async verifyOtp(tokenHash: string, type: 'recovery' | 'email') {
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type,
+    });
+
+    if (error) throw error;
+    return data;
+  },
 };

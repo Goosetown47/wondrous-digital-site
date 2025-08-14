@@ -50,6 +50,7 @@ export default function NewAccountPage() {
     handleSubmit,
     // watch,
     setValue,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<CreateAccountForm>({
     resolver: zodResolver(createAccountSchema),
@@ -92,8 +93,18 @@ export default function NewAccountPage() {
       // Redirect to the new account's detail page
       router.push(`/tools/accounts/${newAccount.id}`);
     } catch (error) {
-      // Error is handled by the mutation's onError callback
-      console.error('Failed to create account:', error);
+      // Parse error message to set field-specific errors
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create account';
+      
+      // Map error messages to specific fields
+      if (errorMessage.includes('Account name')) {
+        setError('name', { type: 'server', message: errorMessage });
+      } else if (errorMessage.includes('Slug')) {
+        setError('slug', { type: 'server', message: errorMessage });
+      } else if (errorMessage.includes('Description')) {
+        setError('description', { type: 'server', message: errorMessage });
+      }
+      // Toast is already shown by the mutation's onError callback
     }
   };
 

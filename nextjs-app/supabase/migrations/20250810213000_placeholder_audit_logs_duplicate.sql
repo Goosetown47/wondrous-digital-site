@@ -1,0 +1,10 @@
+-- PLACEHOLDER MIGRATION - DO NOT DELETE
+-- This migration exists only to maintain sync between local and remote migrations
+-- 
+-- During troubleshooting on 2025-08-11, this migration was created in the remote
+-- database and marked as applied using `npx supabase migration repair`.
+-- 
+-- The actual audit_logs table creation is handled by:
+-- 20250810000000_create_audit_logs_table.sql
+--
+-- This file prevents "remote migration not found locally" warnings.

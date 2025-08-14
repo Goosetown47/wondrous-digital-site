@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useUpdateAccount } from '@/hooks/useAccounts';
+import { INPUT_LIMITS } from '@/lib/sanitization';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,14 +29,19 @@ import { Save, Loader2 } from 'lucide-react';
 import type { AccountWithStats } from '@/lib/services/accounts';
 
 const updateAccountSchema = z.object({
-  name: z.string().min(1, 'Account name is required').max(100, 'Account name too long'),
+  name: z.string()
+    .min(1, 'Account name is required')
+    .max(INPUT_LIMITS.accountName, `Account name must be less than ${INPUT_LIMITS.accountName} characters`),
   slug: z.string()
     .min(1, 'Slug is required')
-    .max(50, 'Slug too long')
-    .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens')
+    .max(INPUT_LIMITS.accountSlug, `Slug must be less than ${INPUT_LIMITS.accountSlug} characters`)
+    .refine(slug => slug.length > 0, 'Slug is required')
+    .refine(slug => /^[a-z0-9-]+$/.test(slug), 'Slug can only contain lowercase letters, numbers, and hyphens')
     .refine(slug => !slug.startsWith('-') && !slug.endsWith('-'), 'Slug cannot start or end with hyphen'),
   plan: z.enum(['free', 'pro', 'enterprise']),
-  description: z.string().max(500, 'Description too long').optional(),
+  description: z.string()
+    .max(INPUT_LIMITS.projectDescription, `Description must be less than ${INPUT_LIMITS.projectDescription} characters`)
+    .optional(),
 });
 
 type UpdateAccountForm = z.infer<typeof updateAccountSchema>;

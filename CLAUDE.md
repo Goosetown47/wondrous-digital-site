@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **Next.js 15 multi-tenant website builder platform**. All active development is in the `/nextjs-app/` directory. The legacy React/Vite app exists but is not in use.
 
-**Production Version:** v0.1.1 
-**Development Version:** v0.1.2 
+**Production Version:** v0.1.2 
+**Development Version:** v0.1.3 
 **Deployment Branch:** `nextjs-pagebuilder-core` (NOT master/main!)
 
 ## 📋 Essential Reading
@@ -29,7 +29,7 @@ This is a **Next.js 15 multi-tenant website builder platform**. All active devel
 #### We are using 4 documents to manage our tasks, in a modified agile development process.
 1. **[BACKLOG] (./nextjs-app/docs/BACKLOG.md)** - This is our full list of tasks and things we pull from into our active-sprint. Whenever we have new things to add we put them here. This is arranged in priority sections P1, P2, P Low.
 2. **[ACTIVE-SPRINT] (./nextjs-app/docs/ACTIVE-SPRINT.md)** - We pull from our backlog document into our ACTIVE_SPRINT, which maps to a release number. 
-3. **[STATUS-LOG] (./nextjs-app/docs/STATUS-LOG.md)** - This is an ongoing log of everything we do across the application, from bug fixes to whatever. Every time we do a work segment this should be updated.
+3. **[STATUS-LOG] (./nextjs-app/docs/STATUS-LOG.md)** - This is an ongoing log of everything we do across the application, from bug fixes to whatever. The user will update this as we close sprints. Do not update this yourself unless prompted.
 4. **[RELEASE NOTES] (.nextjs-app/docs/Release_Notes/)** - This is where we create a release notes for each release. 
   **Release Notes Format**
   Identify which version this is and set up a “Release Notes” document add to Release_Notes folder.
@@ -40,53 +40,51 @@ This is a **Next.js 15 multi-tenant website builder platform**. All active devel
 
 
 ## ---------------------------------------------- ##
-# Sprint Process Guide
+# Sprint Process Guide (for reference)
 
 ## Sprint Planning (Start of Sprint)
 
-  1. Review BACKLOG.md → Pull priority items into ACTIVE-SPRINT.md
-  2. Set version number → Decide scope (major.minor.patch)
-  3. Move packets → Cut H4 sections from BACKLOG to ACTIVE-SPRINT
-  4. Order packets → Arrange by priority/dependency
+  1. [User will] Review BACKLOG.md → Pull priority items into ACTIVE-SPRINT.md
+  2. [User will] Set version number → Decide scope (major.minor.patch)
+  3. [User will] Move packets → Cut H4 sections from BACKLOG to ACTIVE-SPRINT
+  4. [User will] Order packets → Arrange by priority/dependency
 
 
 ## During Sprint Execution
 
 ### Per Packet Workflow:
 
-  1. Move packet to Current Focus → Work on one packet at a time
-  2. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
-  3. As you discover issues → Add to "Found Work" section:
+  1. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
+  2. As you discover issues → Add to "Found Work" section:
     - Critical → Must fix in current version
     - Non-Critical → Defer to next version
     - Tech Debt → Document for future
-  4. Update STATUS-LOG.md → Log progress after each packet
-  5. Check off tasks → Mark complete in ACTIVE-SPRINT.md
-  6. Move to Sprint Backlog → When packet done, grab next
+  3. Update ACTIVE-STATUS.md → Log progress after each packet
+  4. Check off tasks → Mark complete in ACTIVE-SPRINT.md
+  5. [User will] Move to Sprint Backlog → When packet done, grab next
 
 ### Daily Flow:
 
   - Start: Check Current Focus in ACTIVE-SPRINT.md
   - Work: Follow DEV-LIFECYCLE for that packet
   - Discover: Add found issues to appropriate section
-  - End: Update STATUS-LOG with progress
+  - End: Update ACTIVE-SPRINT with progress
 
 ### Sprint Completion
 
   1. All packets done → Verify all tasks checked
   2. Create Release Notes → /docs/Release_Notes/v0.1.1.md
-  3. Archive sprint content → Copy ACTIVE-SPRINT to STATUS-LOG
-  4. Clear ACTIVE-SPRINT.md → Reset for next sprint
-  5. Update version numbers → Production/Development in all docs
+  3. [User will] Archive sprint content → Copy ACTIVE-SPRINT to STATUS-LOG
+  4. [User will] Clear ACTIVE-SPRINT.md → Reset for next sprint
+  5. [User will] Update version numbers → Production/Development in all docs
 
 
 ## Key Rules
 
-  - ONE packet in Current Focus at a time
   - COMPLETE DEV-LIFECYCLE per packet before moving on
   - DOCUMENT found work immediately
-  - UPDATE STATUS-LOG per packet completion
   - NEVER skip DEV-LIFECYCLE steps
+  - Always use CODE-CHECKLIST
 
 ## ---------------------------------------------- ##
 
@@ -157,29 +155,45 @@ npm run dev:status
 
 # 🗄️ Database Management
 
-### Supabase Configuration
-- Database migrations are in `/nextjs-app/supabase/migrations/`
-- Environment variables required:
-  - `NEXT_PUBLIC_SUPABASE_URL`
-  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-  - `SUPABASE_SERVICE_ROLE_KEY`
+### Database Environments
+- **DEV Database**: hlpvvwlxjzexpgitsjlw (linked to CLI)
+- **PROD Database**: bpdhbxvsguklkbusqtke (manual migrations only)
 
-### Migration Commands
+### Migration Workflow
+1. **Create Migration**: Write SQL file in `/nextjs-app/supabase/migrations/`
+2. **Test in DEV**: Apply using CLI (see commands below)
+3. **Deploy to PROD**: User manually applies via Supabase Dashboard
+
+### Migration Commands (DEV Only)
 ```bash
 # From nextjs-app directory
 cd nextjs-app
 
-# Apply migrations
-npx supabase db push --password 'aTR9dv8Q7J2emyMD'
+# Apply migrations to DEV
+npx supabase db push --password 'MsDH6QjUsf6vXD3nCeYkBNiF'
 
-# Check migration status
-npx supabase migration list --password 'aTR9dv8Q7J2emyMD'
+# Check migration status in DEV
+npx supabase migration list --password 'MsDH6QjUsf6vXD3nCeYkBNiF'
+
+# Create a new migration file
+echo "-- Your SQL here" > supabase/migrations/$(date +%Y%m%d_%H%M%S)_description.sql
 ```
 
 ### Migration Naming Convention
 ```
 YYYYMMDD_HHMMSS_descriptive_name.sql
+# Or for related changes:
+YYYYMMDD_000001_feature_part1.sql
+YYYYMMDD_000002_feature_part2.sql
 ```
+
+### Environment Variables
+- **DEV** (.env.local):
+  - `NEXT_PUBLIC_SUPABASE_URL=https://hlpvvwlxjzexpgitsjlw.supabase.co`
+  - Database Password: MsDH6QjUsf6vXD3nCeYkBNiF
+- **PROD** (.env.production.local):
+  - `NEXT_PUBLIC_SUPABASE_URL=https://bpdhbxvsguklkbusqtke.supabase.co`
+  - Database Password: Controlled by user
 
 ## 🎨 Current Implementation
 

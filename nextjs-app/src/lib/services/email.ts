@@ -100,9 +100,9 @@ export async function sendEmail(options: EmailOptions): Promise<{
     // Get Resend client (may be null in development without API key)
     const client = getResendClient();
     
-    // In development or without API key, log to console instead of sending
-    if (!client || isDevelopment) {
-      console.log('📧 Email (Development Mode):', {
+    // Without API key, log to console instead of sending
+    if (!client) {
+      console.log('📧 Email (Development Mode - No API Key):', {
         to: options.to,
         from: options.from || 'noreply@wondrousdigital.com',
         subject: options.subject,

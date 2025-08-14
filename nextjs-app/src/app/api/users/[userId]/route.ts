@@ -326,7 +326,50 @@ export async function DELETE(
         }
       });
 
-    // Delete the user (this will cascade to related tables)
+    // Manually delete related records first (Supabase cascade doesn't always work with auth.users)
+    console.log('🔍 [API/Users/UserId] Deleting related records...');
+
+    // Delete from account_users
+    const { error: accountUsersError } = await serviceClient
+      .from('account_users')
+      .delete()
+      .eq('user_id', userId);
+
+    if (accountUsersError) {
+      console.error('⚠️ [API/Users/UserId] Error deleting account_users:', accountUsersError);
+      // Continue anyway - might already be deleted
+    } else {
+      console.log('✅ [API/Users/UserId] Deleted from account_users');
+    }
+
+    // Delete from user_profiles
+    const { error: profileError } = await serviceClient
+      .from('user_profiles')
+      .delete()
+      .eq('user_id', userId);
+
+    if (profileError) {
+      console.error('⚠️ [API/Users/UserId] Error deleting user_profiles:', profileError);
+      // Continue anyway - might already be deleted
+    } else {
+      console.log('✅ [API/Users/UserId] Deleted from user_profiles');
+    }
+
+    // Delete from profiles (legacy table if it exists)
+    const { error: legacyProfileError } = await serviceClient
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+
+    if (legacyProfileError) {
+      // This table might not exist or have data, which is fine
+      console.log('ℹ️ [API/Users/UserId] Legacy profiles table not found or no data');
+    } else {
+      console.log('✅ [API/Users/UserId] Deleted from legacy profiles table');
+    }
+
+    // Now delete the user from auth.users
+    console.log('🔍 [API/Users/UserId] Deleting from auth.users...');
     const { error: deleteError } = await serviceClient.auth.admin.deleteUser(userId);
 
     if (deleteError) {
@@ -334,7 +377,7 @@ export async function DELETE(
       return NextResponse.json({ error: deleteError.message }, { status: 500 });
     }
 
-    console.log('✅ [API/Users/UserId] User deleted successfully');
+    console.log('✅ [API/Users/UserId] User deleted successfully from all tables');
 
     return NextResponse.json({ 
       success: true, 

@@ -9,7 +9,7 @@
 2. Navigate to Tools > Users
 3. Click "Create User" button
 4. Test creating users with each role:
-- admin@wondrousdigital.com \ Password: atz_dek-nky2WBU_jav
+- tyler.lahaie@wondrous.gg \ Password: atz_dek-nky2WBU_jav
 - staff@wondrousdigital.com \ Password: tvt*gdy5aka-UTF2zfu
 - owner@example.com \ Password: afq!HXC7pqk3fgv4rym
 - test-user@example.com \ Password: ukc-zbr5DZT4pfb3yvf

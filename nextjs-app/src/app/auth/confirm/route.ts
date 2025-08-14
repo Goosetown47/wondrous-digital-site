@@ -19,7 +19,13 @@ export async function GET(request: NextRequest) {
     });
 
     if (!error) {
-      // Successfully verified - redirect to dashboard
+      // For password recovery, redirect to update-password page
+      if (type === 'recovery') {
+        const updatePasswordUrl = new URL('/auth/update-password', origin);
+        return NextResponse.redirect(updatePasswordUrl);
+      }
+      
+      // For other types, redirect to the specified next page or dashboard
       const redirectTo = new URL(next, origin);
       return NextResponse.redirect(redirectTo);
     }

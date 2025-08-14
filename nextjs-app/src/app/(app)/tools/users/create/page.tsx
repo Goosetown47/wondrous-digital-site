@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { createUser } from '@/lib/services/users';
 import { useAccounts } from '@/hooks/useAccounts';
 import { PermissionGate } from '@/components/auth/PermissionGate';
+import { INPUT_LIMITS } from '@/lib/sanitization';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -34,10 +35,18 @@ import { toast } from 'sonner';
 
 // Form validation schema
 const formSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  full_name: z.string().min(1, 'Full name is required'),
-  display_name: z.string().optional(),
+  email: z.string()
+    .email('Invalid email address')
+    .max(INPUT_LIMITS.email, `Email must be less than ${INPUT_LIMITS.email} characters`),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(INPUT_LIMITS.password, `Password must be less than ${INPUT_LIMITS.password} characters`),
+  full_name: z.string()
+    .min(1, 'Full name is required')
+    .max(INPUT_LIMITS.displayName, `Name must be less than ${INPUT_LIMITS.displayName} characters`),
+  display_name: z.string()
+    .max(INPUT_LIMITS.displayName, `Display name must be less than ${INPUT_LIMITS.displayName} characters`)
+    .optional(),
   role: z.enum(['admin', 'staff', 'account_owner', 'user']),
   account_id: z.string().optional(),
   auto_confirm_email: z.boolean(),
@@ -112,8 +121,8 @@ export default function CreateUserPage() {
       } else {
         setError(result.error || 'Failed to create user');
       }
-    } catch (err) {
-      console.error('Error creating user:', err);
+    } catch {
+      // Error is already logged in the service, just handle it
       setError('An unexpected error occurred');
     } finally {
       setIsSubmitting(false);
