@@ -89,6 +89,7 @@ This base component library will not be user facing ever. Itâ€™s our internal â€
 - [https://ui.aceternity.com/components](https://ui.aceternity.com/components)
 - [https://pro.aceternity.com/components](https://pro.aceternity.com/components)
 - [https://skiper-ui.com/docs/components/](https://skiper-ui.com/docs/components/)
+- https://www.shadcnblocks.com/
 
 ### **Shared Foundation**
 

@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { authService } from '@/lib/supabase/auth';
+import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -69,7 +70,55 @@ function LoginPageContent() {
     try {
       await authService.signIn({ email, password });
       
-      // Check where to redirect the user
+      // After successful sign in, check for pending invitations
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Check for any pending invitations for this user
+        const { data: pendingInvitation } = await supabase
+          .from('account_invitations')
+          .select('token, account_id, role, accounts!inner(slug)')
+          .eq('email', user.email?.toLowerCase())
+          .is('accepted_at', null)
+          .is('declined_at', null)
+          .is('cancelled_at', null)
+          .gt('expires_at', new Date().toISOString())
+          .order('invited_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (pendingInvitation) {
+          console.log('[Login] Found pending invitation for user, accepting...');
+          
+          // Accept the invitation
+          const acceptResponse = await fetch('/api/invitations/accept-after-signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              token: pendingInvitation.token,
+              email: user.email 
+            })
+          });
+          
+          if (acceptResponse.ok) {
+            console.log('[Login] Successfully accepted invitation');
+            toast.success('Invitation accepted! Redirecting to your account...');
+            
+            // Redirect to the invited account
+            if ('accounts' in pendingInvitation && pendingInvitation.accounts && !Array.isArray(pendingInvitation.accounts)) {
+              const accountSlug = (pendingInvitation.accounts as { slug: string }).slug;
+              window.location.href = `/tools/accounts/${accountSlug}`;
+              return;
+            }
+          } else {
+            const errorData = await acceptResponse.json();
+            console.error('[Login] Failed to accept invitation:', errorData.error);
+            // Continue with normal flow even if invitation acceptance fails
+          }
+        }
+      }
+      
+      // If no invitation or invitation acceptance failed, check where to redirect normally
       const response = await fetch('/api/auth/post-login', {
         method: 'POST',
         credentials: 'include',
