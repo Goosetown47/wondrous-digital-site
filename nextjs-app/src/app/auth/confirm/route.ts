@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { EmailOtpType } from '@supabase/supabase-js';
+import { acceptInvitationAfterSignup } from '@/lib/services/invitations';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -45,25 +46,37 @@ export async function GET(request: NextRequest) {
             .single();
           
           if (pendingInvitation && 'accounts' in pendingInvitation && pendingInvitation.accounts && !Array.isArray(pendingInvitation.accounts)) {
-            // Accept the invitation automatically
+            // Accept the invitation using direct service call
             try {
-              const response = await fetch(`${origin}/api/invitations/accept-after-signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                  token: pendingInvitation.token,
-                  email: user.email 
-                }),
-              });
+              const result = await acceptInvitationAfterSignup(
+                pendingInvitation.token,
+                user.email!
+              );
               
-              if (response.ok) {
-                // Redirect to the account they just joined
+              if (result.success) {
+                // Successfully accepted - redirect to the account they just joined
                 const accountSlug = (pendingInvitation.accounts as { slug: string }).slug;
                 const accountUrl = new URL(`/tools/accounts/${accountSlug}`, origin);
+                console.log(`[Invitation] Successfully accepted invitation for ${user.email} to account ${accountSlug}`);
                 return NextResponse.redirect(accountUrl);
+              } else {
+                // Log the failure for monitoring (critical issue that needs attention)
+                console.error('[Critical] Invitation acceptance failed after email confirmation', {
+                  error: result.error,
+                  email: user.email,
+                  invitationToken: pendingInvitation.token,
+                  timestamp: new Date().toISOString()
+                });
+                // Note: We still continue to dashboard rather than showing an error
+                // This ensures the user can at least access the app
               }
             } catch (err) {
-              console.error('Error accepting invitation after email confirmation:', err);
+              console.error('[Critical] Unexpected error accepting invitation after email confirmation:', {
+                error: err instanceof Error ? err.message : 'Unknown error',
+                email: user.email,
+                invitationToken: pendingInvitation.token,
+                timestamp: new Date().toISOString()
+              });
             }
           }
         }
