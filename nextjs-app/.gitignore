@@ -46,3 +46,20 @@ next-env.d.ts
 
 # Database backups
 /backups/
+
+# Local development scripts (often contain sensitive data)
+/scripts/
+*.local.js
+*.local.ts
+*.local.sql
+
+# Test results and reports
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# Local environment overrides
+.env.local
+.env.production.local
+.env.development.local
+.env.test.local
