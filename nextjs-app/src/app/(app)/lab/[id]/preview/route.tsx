@@ -1,4 +1,8 @@
-import { labDraftService } from '@/lib/supabase/lab-drafts';
+import { createServerClient } from '@supabase/ssr';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { cookies } from 'next/headers';
+import { env } from '@/env.mjs';
+import { sanitizeText } from '@/lib/sanitization';
 // import { HeroTwoColumn } from '@/components/sections/hero-two-column'; // TODO: Use for actual rendering
 
 export async function GET(
@@ -7,9 +11,48 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const draft = await labDraftService.getById(id);
     
-    if (!draft) {
+    // Verify authentication
+    const cookieStore = await cookies();
+    const authClient = createServerClient(
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // Ignore cookie setting errors
+            }
+          },
+        },
+      }
+    );
+
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
+    
+    if (userError || !user) {
+      return new Response('Not authenticated', { status: 401 });
+    }
+
+    // Create service role client to bypass RLS for lab drafts
+    const serviceClient = createAdminClient();
+
+    // Get the draft directly from database
+    const { data: draft, error } = await serviceClient
+      .from('lab_drafts')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !draft) {
+      console.error('Error fetching lab draft:', error);
       return new Response('Draft not found', { status: 404 });
     }
 
@@ -25,7 +68,7 @@ export async function GET(
       };
     }
     
-    const heroContent = (draft.content && typeof draft.content === 'object' && 'heroContent' in draft.content) 
+    const rawHeroContent = (draft.content && typeof draft.content === 'object' && 'heroContent' in draft.content) 
       ? ((draft.content as unknown) as HeroSectionContent).heroContent 
       : {
           heading: "Blocks Built With Shadcn & Tailwind",
@@ -34,6 +77,15 @@ export async function GET(
           buttonLink: "#",
           imageUrl: "",
         };
+
+    // Sanitize all user-generated content to prevent XSS
+    const heroContent = {
+      heading: sanitizeText(rawHeroContent.heading),
+      subtext: sanitizeText(rawHeroContent.subtext),
+      buttonText: sanitizeText(rawHeroContent.buttonText),
+      buttonLink: sanitizeText(rawHeroContent.buttonLink),
+      imageUrl: sanitizeText(rawHeroContent.imageUrl),
+    };
 
     const html = `
       <!DOCTYPE html>
@@ -48,6 +100,8 @@ export async function GET(
         <div id="root"></div>
         <script type="module">
           // Simple preview - in production, this would render the actual React component
+          // NOTE: All content is sanitized before being inserted to prevent XSS attacks
+          // Using innerHTML here is safe because we control the template and sanitize all dynamic values
           document.getElementById('root').innerHTML = \`
             <section class="w-full py-12 md:py-24 lg:py-32">
               <div class="container mx-auto px-4 md:px-6">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseClient } from '@/lib/supabase/middleware';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { env } from '@/env.mjs';
+import { applySecurityHeaders } from '@/lib/security-headers';
 
 // Domains that should NOT be treated as customer domains
 const RESERVED_DOMAINS = [
@@ -23,7 +24,15 @@ const RESERVED_SUBDOMAINS = [
 ];
 
 // Public routes that don't require authentication
-const PUBLIC_ROUTES = ['/login', '/signup', '/auth/callback', '/auth/verify-email', '/auth/confirm'];
+const PUBLIC_ROUTES = [
+  '/login', 
+  '/signup', 
+  '/forgot-password',
+  '/auth/callback', 
+  '/auth/verify-email', 
+  '/auth/confirm',
+  '/auth/update-password'
+];
 
 export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
@@ -41,7 +50,9 @@ export async function middleware(request: NextRequest) {
     url.pathname.startsWith('/images/') ||
     url.pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|webp)$/i)
   ) {
-    return NextResponse.next();
+    const response = NextResponse.next();
+    // Apply security headers even to static files
+    return applySecurityHeaders(response);
   }
   
   // Check if this is a reserved domain
@@ -66,14 +77,16 @@ export async function middleware(request: NextRequest) {
         // Redirect to login if not authenticated or session invalid
         const redirectUrl = new URL('/login', request.url);
         redirectUrl.searchParams.set('redirectTo', url.pathname);
-        return NextResponse.redirect(redirectUrl);
+        const response = NextResponse.redirect(redirectUrl);
+        return applySecurityHeaders(response);
       }
       
-      // Return the response with updated cookies
-      return response;
+      // Return the response with updated cookies and security headers
+      return applySecurityHeaders(response);
     }
     
-    return NextResponse.next();
+    const response = NextResponse.next();
+    return applySecurityHeaders(response);
   }
 
   // Handle customer domains and preview domains
@@ -126,7 +139,8 @@ export async function middleware(request: NextRequest) {
           // Rewrite to the dynamic site route
           url.pathname = `/sites/${projectData.id}${url.pathname}`;
           console.log(`[DOMAIN-ROUTING] Preview domain routed to project: ${projectData.id}`);
-          return NextResponse.rewrite(url);
+          const response = NextResponse.rewrite(url);
+          return applySecurityHeaders(response);
         } else {
           console.log(`[DOMAIN-ROUTING] Preview domain not found for slug: ${subdomain}`);
         }
@@ -162,7 +176,8 @@ export async function middleware(request: NextRequest) {
           if (domainData) {
             url.pathname = `/sites/${domainData.project_id}${url.pathname}`;
             console.log(`[DOMAIN-ROUTING] Reserved domain routed to project: ${domainData.project_id}`);
-            return NextResponse.rewrite(url);
+            const response = NextResponse.rewrite(url);
+          return applySecurityHeaders(response);
           } else {
             console.log(`[DOMAIN-ROUTING] No verified domain found for permitted account`);
           }
@@ -214,7 +229,8 @@ export async function middleware(request: NextRequest) {
         // Rewrite to the dynamic site route
         url.pathname = `/sites/${domainData.project_id}${url.pathname}`;
         console.log(`[DOMAIN-ROUTING] Custom domain routed to project: ${domainData.project_id}`);
-        return NextResponse.rewrite(url);
+        const response = NextResponse.rewrite(url);
+        return applySecurityHeaders(response);
       } else {
         console.log(`[DOMAIN-ROUTING] Custom domain not found or not verified: ${domain}`);
       }
@@ -225,7 +241,8 @@ export async function middleware(request: NextRequest) {
 
   // If no domain match, return 404
   console.log(`[DOMAIN-ROUTING] No match found for domain: ${domain}`);
-  return new NextResponse('Not Found', { status: 404 });
+  const response = new NextResponse('Not Found', { status: 404 });
+  return applySecurityHeaders(response);
 }
 
 export const config = {

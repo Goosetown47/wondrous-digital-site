@@ -119,8 +119,8 @@ describe('POST /api/users/create', () => {
       }))
     };
 
-    vi.mocked(createAdminClient).mockReturnValue(mockAdminClient as ReturnType<typeof createAdminClient>);
-    vi.mocked(createSupabaseServerClient).mockResolvedValue(mockServerClient as Awaited<ReturnType<typeof createSupabaseServerClient>>);
+    vi.mocked(createAdminClient).mockReturnValue(mockAdminClient as unknown as ReturnType<typeof createAdminClient>);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(mockServerClient as unknown as Awaited<ReturnType<typeof createSupabaseServerClient>>);
     vi.mocked(isAdminServer).mockResolvedValue(true); // Default to admin user
   });
 

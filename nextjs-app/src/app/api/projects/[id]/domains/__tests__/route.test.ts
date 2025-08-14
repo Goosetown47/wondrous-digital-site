@@ -17,29 +17,46 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { addDomainToVercel, checkDomainStatus } from '@/lib/services/domains.server';
 
 describe('Domain Route - Reserved Subdomain Protection', () => {
-  let mockSupabase: ReturnType<typeof vi.fn>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockSupabase: any;
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     
-    mockSupabase = {
-      auth: {
-        getUser: vi.fn().mockResolvedValue({
-          data: { user: { id: 'user-123' } },
-          error: null,
-        }),
-      },
-      from: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      in: vi.fn().mockReturnThis(),
-      single: vi.fn().mockReturnThis(),
-      insert: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      delete: vi.fn().mockReturnThis(),
+    // Create a chainable mock that returns itself for most methods
+    const createChainableMock = () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mock: any = {
+        auth: {
+          getUser: vi.fn().mockResolvedValue({
+            data: { user: { id: 'user-123' } },
+            error: null,
+          }),
+        },
+        from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        in: vi.fn().mockReturnThis(),
+        single: vi.fn(),
+        insert: vi.fn().mockReturnThis(),
+        limit: vi.fn(),
+        delete: vi.fn().mockReturnThis(),
+      };
+      
+      // Make methods return the mock itself for chaining
+      mock.from.mockReturnValue(mock);
+      mock.select.mockReturnValue(mock);
+      mock.eq.mockReturnValue(mock);
+      mock.in.mockReturnValue(mock);
+      mock.insert.mockReturnValue(mock);
+      mock.delete.mockReturnValue(mock);
+      
+      return mock;
     };
+    
+    mockSupabase = createChainableMock();
 
     vi.mocked(createSupabaseServerClient).mockResolvedValue(mockSupabase);
     vi.mocked(addDomainToVercel).mockResolvedValue(undefined);

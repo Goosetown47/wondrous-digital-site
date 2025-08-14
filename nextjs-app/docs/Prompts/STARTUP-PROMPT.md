@@ -10,7 +10,7 @@ I'm working on the Wondrous Digital platform - a Next.js 15 multi-tenant website
 
 **Environment**: WSL (Windows Subsystem for Linux)
 **Project Location**: `/nextjs-app/` directory (ignore legacy `/src/`)
-**Versions**: Production v0.1.0 | Development v0.1.1
+**Versions**: Production v0.1.2 | Development v0.1.3
 
 ## 📋 MANDATORY: Read These First
 
@@ -21,8 +21,17 @@ I'm working on the Wondrous Digital platform - a Next.js 15 multi-tenant website
 
 ## 🎯 Current Sprint & Tasks
 
-Right now our goal is to debug the domain system in our app. Preview domains are working perfectly. Custom domains are not working yet.
+I have just performed a HARD reset of the DEV database and used an exact copy of PROD database to replace it since we were having so many problems. The operation was successful and now we have an exact duplicate of PROD on DEV, and everything is working as expected. Since we don't have any customers yet, having duplicate data is actually better. Everything is test data at this stage.
 
+Now we can continue with our manual tests for the [PACKET] MVP Security Essentials. 
+
+We were testing our "**As a platform admin**, I can trust that user-generated content (project names, descriptions) is sanitized so that XSS attacks cannot execute" test.
+
+Please READ the ACTIVE-SPRINT log notes to see what we did in detail to reset DEV and migrations to what PROD has.
+
+It's important you use the right DEV database password when using the CLI: MsDH6QjUsf6vXD3nCeYkBNiF
+
+- **Logs**: Get up to speed on everything we've done [STATUS-LOG.md](/nextjs-app/docs/STATUS-LOG.md)
 - **Active Sprint**: Check [ACTIVE-SPRINT.md](/nextjs-app/docs/ACTIVE-SPRINT.md)
 - **Backlog**: Check [BACKLOG.md](/nextjs-app/docs/BACKLOG.md) 
 - **Progress Log**: Check [STATUS-LOG.md](/nextjs-app/docs/STATUS-LOG.md)
@@ -147,7 +156,7 @@ cd ~                              # Use WSL filesystem (faster)
 2. Follow DEV-LIFECYCLE.md process (Full Feature/Fast Track/Emergency)
 3. Use CODE-CHECKLIST.md to verify quality
 4. Reference DEV-TOOLS.md for commands
-5. Update STATUS-LOG.md with progress
+5. Update ACTIVE-SPRINT.md with progress and notes.
 
 **Remember**: We're building a scalable SaaS platform. Quality > Speed. The process exists because shortcuts led to days of fixing errors.
 

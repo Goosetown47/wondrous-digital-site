@@ -1,0 +1,54 @@
+-- Schema Export Instructions
+-- =========================
+-- 
+-- Since we cannot use pg_dump without Docker, here's how to export your schema:
+--
+-- Option 1: Supabase Dashboard (Recommended)
+-- 1. Go to your Supabase project dashboard
+-- 2. Navigate to SQL Editor
+-- 3. Create a new query with this content:
+--
+-- -- Export all table definitions
+-- SELECT 
+--     'CREATE TABLE ' || schemaname || '.' || tablename || ' (' ||
+--     array_to_string(
+--         array_agg(
+--             '"' || column_name || '" ' || data_type || 
+--             CASE WHEN character_maximum_length IS NOT NULL 
+--                  THEN '(' || character_maximum_length || ')' 
+--                  ELSE '' 
+--             END ||
+--             CASE WHEN is_nullable = 'NO' THEN ' NOT NULL' ELSE '' END
+--         ), ', '
+--     ) || ');'
+-- FROM information_schema.columns
+-- WHERE table_schema = 'public'
+-- GROUP BY schemaname, tablename;
+--
+-- 4. Run the query and save the output
+--
+-- Option 2: Use Supabase Migrations
+-- Since you have all migrations in /supabase/migrations/,
+-- these can be applied to a fresh database to recreate the schema.
+--
+-- Your migrations:
+-- - Initial baseline
+-- - Audit logs table
+-- - RLS policies for pages and projects
+-- - Function security fixes
+-- - Trigger removal (today's fix)
+--
+-- Option 3: Manual Backup Summary
+-- Based on our documentation, here's what needs to be backed up:
+--
+-- Tables with user data (528 total rows):
+-- - accounts (6 rows)
+-- - account_users (7 rows)
+-- - projects (12 rows)
+-- - pages (22 rows)
+-- - user_profiles (7 rows)
+-- - audit_logs (462 rows)
+-- - library_items (3 rows)
+-- - lab_drafts (4 rows)
+-- - types (4 rows)
+-- - library_versions (1 row)

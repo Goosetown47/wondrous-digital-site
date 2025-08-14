@@ -368,12 +368,15 @@ export async function createUser(userData: CreateUserData): Promise<{ success: b
     }
 
     if (!response.ok) {
-      console.error('User creation API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        data: data,
-        url: response.url
-      });
+      // Only log unexpected errors, not validation errors
+      if (response.status !== 400) {
+        console.error('User creation API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: data,
+          url: response.url
+        });
+      }
       
       // Include hint in error message if available
       let errorMessage = data.error || `Failed to create user (${response.status})`;

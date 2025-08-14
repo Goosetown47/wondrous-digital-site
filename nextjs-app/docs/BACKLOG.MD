@@ -5,79 +5,241 @@
 
 This is the full backlog of features we keep and add to as we develop. We will organize this by category and type. When something is taken from the backlog, it’s moved up to active sprint. We will constantly add, adjust, remove, and prioritize items in this list as part of backlog grooming.
 
-**Production Version:** v0.1.1 (Released 8/1/2025 @ 11pm)
-**Development Version:** v0.1.2 (Active Planning Now)
+**Production Version:** v0.1.2 (Released 8/1/2025 @ 11pm)
+**Development Version:** v0.1.3 (Active Planning Now)
+
+## CLASSIFICATIONS
+Use these classifications to identify each type of task. We can expand this list as needed.
+
+🪲 - Bug
+🚩 - Support Ticket Item
+⚙️ - Rework
+⚗️ - Testing / Review / Verify
+✂️ - Cut/Postponed/Cancelled
+🚀 - Feature 
+📌 - Administrative / Operations
 
 
+## EPICS ------------------------------------------------------- ##
 
-## PACKET LIST
+### Production Platform Ready (v0.1.0) 
+*This means that the platform is MVP, but rock solid and completely ready for use by the public. We aren't giving it bells and whistles. It is the minimum amount of features possible we can start with to get customers onboarded and things functioning well.*
 
-1. Service Layer & API Updates
-2. Domain Configuration System
-3. Database Isolation for Dev/Prod 
-4. Page Management System
-5. Navigation System (needs definition)
-6. Account Management Tools
-7. User Invitation System (I don't think this work is actually done)
-8. XSS & Input Security Hardening
-9. Security Headers & Middleware
-10. Authentication Security Enhancements
-11. API Security & Rate Limiting
-12. Database Security & RLS
-13. Security Monitoring & Compliance
-14. Site Templates & Project Settings
-15. Canvas Builder Improvements
-16. Project Management Tools
-17. Library Architecture
-18. app.wondrousdigital.com DESIGN
-19. Feature Tagging System
-20. Paid Tier System & Stripe Integration
-21. Extra Domain Tasks
+#### Production Platform Packets 
 
+**Critical Infrastructure** v0.1.2 ✅
+- Service Layer & API Updates
+- Database Isolation for Dev/Prod 
 
+**Security** v0.1.3 ✅
+- MVP Security Essentials (XSS, Headers, RLS, Auth basics for 25 manual users)
 
+**Account Management** v0.1.4 
+- Final Project Management Tools
+- Final Account Management Tools
+- Final User Management Tools
+- User Invitation System (I don't think this work is actually done)
 
-# ---------------------------------------------------------------------------------------- #
-# PRIORITY HIGH -------------------------------------------------------------------------- #
-# ---------------------------------------------------------------------------------------- #
+**Payments & Segmentation** v0.1.5
+- Paid Tier System & Stripe Integration
+- Feature Tagging & Segmentation System
 
-
-
-#### [Packet] Service Layer & API Updates
-**Goal:** Update all services to be account-aware  
-**Deliverable:** Account-aware service layer
-
-- [ ] 🚀 Update service layers:
-  - [ ] 🚀 Add account context to all queries
-  - [ ] 🚀 Implement permission checks
-  - [ ] 🚀 Add audit logging
-  - [ ] 🚀 Handle multi-account scenarios
-- [ ] 🚀 Update React hooks:
-  - [ ] 🚀 `useAccount()` hook
-  - [ ] 🚀 `useAccountProjects()` hook
-  - [ ] 🚀 `useAccountUsers()` hook
-  - [ ] 🚀 Update existing hooks for account context
-- [ ] 🚀 Error handling:
-  - [ ] 🚀 Permission denied errors
-  - [ ] 🚀 Account not found errors
-  - [ ] 🚀 Proper error messages
-- [ ] 🚀 Testing utilities:
-  - [ ] 🚀 Mock account context
-  - [ ] 🚀 Permission testing helpers
+**Final Cleanup** v0.1.6
+- Domain Configuration Hardening
 
 ---
 
+### Website Builder Ready (v0.2.0)
+*This means we have enough content and customization ability seeded into the platform so we can create unique, beautiful websites that wow and delight. This doesn't mean we need hundreds of sections and templates. We need just enough to get started marketing to our first 100 customers and create 3 different themes for vets.*
 
+#### Website Builder Packets
 
+**Navigation** v0.2.1
+- Navigation System (needs definition)
 
-# ---------------------------------------------------------------------------------------- #
-# PRIORITY LOW -------------------------------------------------------------------------- #
-# ---------------------------------------------------------------------------------------- #
+**Content Management** v0.2.2
+- Page Management System
+- Site Templates & Project Settings
+- Basic Canvas Builder Improvements
+
+**Basic Performance Metrics** v0.2.3
+- Basic project performance metrics in an Analytics area
+
+**Dashboard** v0.2.4
+- Clean this up and make it nicer
+- Links to marketing and SEO dashboards OR a link to an upgrade page.
+
+**Content** v0.2.5
+- 5 sections for each category in the builder
+- 5 new, good themes
+- Smart Sections (GoHighLevel Integrations)
+
+**Lab: Theme Creator** v0.2.6
+- More customization on colors
+- Fonts/Typography
+- Special Effects
+
 
 ---
 
+### Final Polish v0.3.0
+*These are the final things we need to do before launch, which include including our logos, giving the UI a little bit more polish and identity, and small improvements*
 
-#### [Packet] Domain Configuration System
+#### Final Polish Packets
+
+**Application Design** v0.3.1
+- app.wondrousdigital.com Theme
+- Light / Dark Mode
+
+**Content** v0.3.2
+- Bug Reporting Button & System
+- Support Ticket System
+- Roadmap / Release Notes Page
+- Account Management Page (For customers)
+
+**Marketing Website** v0.3.3
+- Construct our marketing website using the builder
+- Add all the proper content
+- Create login and sign up links
+
+**Final Testing**
+- Have others test the experience
+- Run some more E2E tests 
+
+
+---
+
+### LAUNCH v1.0.0
+*Once all these epics are complete, we're ready for customers*
+
+
+#### Veterinarian Themes Packets
+*This is about creating our first 3-4 themes we can utilize to get ready to work with customers. This work is not feature work, but actually just using the application to make content*
+
+**Themes**
+- Theme 1 created 
+- Theme 2 created
+- Theme 3 created
+
+**Templates**
+- Template 1 created
+- Template 2 created
+- Template 3 created
+
+
+
+# ---------------------------------------------------------------------------------------- #
+# VERSION 0.1.0 -------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+
+
+
+## Account Management** v0.1.4 ---------------------------------------- ##
+*MVP functionality for manually managing 25 customer accounts*
+
+
+### [PACKET] User Invitation System 
+**Goal:** Complete the invitation acceptance flow and ensure proper email branding
+**Deliverable:** Working end-to-end invitation system for manual user onboarding
+
+- [ ] 🚀 Create /invitation acceptance page UI
+- [ ] 🚀 Wire up invitation acceptance to create user account
+- [ ] 🚀 Connect "Invite User" button in AccountUsers component
+- [ ] ⚗️ Test full invitation flow from send to acceptance
+- [ ] ⚗️ Verify all emails are Wondrous branded via Resend
+
+
+### [PACKET] User Profile Fix
+**Goal:** Fix missing user profiles for existing users
+**Deliverable:** All users have editable profiles
+
+- [ ] 🪲 Create missing user_profiles entries for existing users
+- [ ] 🚀 Add profile creation trigger for new users
+- [ ] ⚗️ Verify profile form elements are accessible
+
+
+### [PACKET] Plan Management for Manual Billing
+**Goal:** Allow admins to manually manage customer plans
+**Deliverable:** Admin interface for plan assignment
+
+- [ ] 🚀 Add plan selector to account settings (admin only)
+  - Plans: FREE, START ($397/month), GROW ($697/month), SCALE ($997/month)
+- [ ] 🚀 Create addons management interface
+  - PERFORM ($459/month)
+- [ ] 🚀 Add one-time fee tracking
+  - Platform Setup Fee ($1500)
+  - SEO Setup Fee ($750)
+- [ ] 🚀 Add billing notes field for manual tracking
+
+
+### [PACKET] Essential Account Management
+**Goal:** Core functionality for managing 25 accounts
+**Deliverable:** Basic account and project management tools
+
+**Account Safety**
+- [ ] 🚀 Require 2-step process for DELETE accounts (suspend first)
+- [ ] 🚀 Require typed "DELETE" confirmation in modal
+
+**Project Details**
+- [ ] 🪲 Fix "Created by" to use user_profiles/display_name
+- [ ] 🚀 Show configured domains in project details
+
+**UI Cleanup**
+- [ ] 🪲 Fix contact information display in Overview tab
+- [ ] 🚀 Move "back" link above HEADER
+- [ ] 🪲 Remove/fix redundant edit button in settings view
+
+**Sign Up**
+- [ ] ✂️ Remove public signup from login form
+
+
+
+### [PACKET] Bug Fixes
+
+- [ ] 🪲 Users table doesn't auto-refresh without a page reload when something changes.
+- [ ] 🪲 The users select div with "change role" and "remove from account" and clear selection options needs to have consistent looking buttons instead of just text or buttons.
+- [ ] 🪲 The users select div with "change role" and "remove from account" and clear selection stays active even when the selected item in the list is no longer there (e.g., I deleted it) (it works if I deselect it) -- It should actively check if something is selected or not, then respond accordingly.
+
+
+
+---
+
+## Payments & Segmentation** v0.1.5 ---------------------------------------- ##
+- Paid Tier System & Stripe Integration
+- Feature Tagging & Segmentation System
+
+
+### [PACKET] Feature Tagging System
+**Goal:** Create a system where we can segment our features and enable them for different tiered customers.
+**Deliverable:** Tag system with template integration that links to paid tiers
+**Notes:** We will be enabling certain sections by paid tier and need to create a way for us to store those tags, link them to paid tiers in terms of visibility/usability. 
+
+- [ ] Brainstorm with Claude and write tasks for this
+
+
+---
+
+### [PACKET] Paid Tier System 
+**Goal:** Finalize the paid tiers for our application and integrate Stripe payments into our app so users can handle their own billing.
+**Deliverable:** A set of paid tiers linked to confirmed Stripe payments to enable.
+**Notes:** We will have several plans and add ons that need to be configured and tied to features being turned on and off.
+
+- [ ] Brainstorm with Claude and write tasks for this
+
+
+
+### [PACKET] Stripe Integration
+
+- [ ] Brainstorm with Claude and write tasks for this
+
+
+
+---
+
+## Final Cleanup** v0.1.6 ---------------------------------------- ##
+- Domain Configuration Hardening
+
+### [PACKET] Domain Configuration System
 **Goal:** Implement production-ready domain management with white-labeled approach
 **Note:** Core functionality is implemented, needs finalization and thorough testing on both dev and production environments.
 **Deliverable:** Fully functional white-labeled domain system with preview domains and custom domain support
@@ -131,95 +293,18 @@ This is the full backlog of features we keep and add to as we develop. We will o
 ---
 
 
-#### [Packet] Database Isolation (Supabase) 
-**Goal:** Create proper isolation for our production and development databases. 
-**Notes:** We currently have one single database powering development and production, which is not ideal and can cause serious issues down the road. We need to have both a development and production database that are completely in sync structurally, but utilize their own content. We need proper processes in place to handle this complexity.
 
-##### Initial Planning & Assessment
-- [ ] 📌 Document current database structure and dependencies
-- [ ] 📌 Audit all environment variables across dev and production
-- [ ] 📌 Create backup of current production database
-- [ ] 📌 Map out all services that connect to the database
-- [ ] 📌 Identify any hardcoded database connections
-
-##### Supabase Project Setup
-- [ ] ⚙️ Create new Supabase project for production
-- [ ] ⚙️ Configure production project settings to match current setup
-- [ ] ⚙️ Set up production authentication providers
-- [ ] ⚙️ Configure production RLS policies
-- [ ] ⚙️ Set up production Edge Functions (if any)
-
-##### Migration Strategy Development
-- [ ] 📌 Create migration script to copy schema from dev to prod
-- [ ] 📌 Document which tables need data migration vs. fresh start
-- [ ] 📌 Create data migration plan for essential data (accounts, users, etc.)
-- [ ] 📌 Plan cutover strategy with minimal downtime
-- [ ] 📌 Create rollback plan in case of issues
-
-##### Environment Configuration
-- [ ] ⚙️ Update .env.local with development database credentials
-- [ ] ⚙️ Create .env.production with production database credentials
-- [ ] ⚙️ Update Vercel environment variables for production
-- [ ] ⚙️ Create environment switching mechanism for local development
-- [ ] ⚙️ Update all service configurations to use correct env vars
-
-##### Schema Synchronization Process
-- [ ] 🚀 Set up migration tracking system (version control)
-- [ ] 🚀 Create CI/CD pipeline for automatic migration deployment
-- [ ] 🚀 Implement pre-deployment migration validation
-- [ ] 🚀 Create migration rollback procedures
-- [ ] 🚀 Document migration naming conventions and process
-
-##### Data Management Procedures
-- [ ] 📌 Create seed data scripts for development
-- [ ] 📌 Implement data anonymization for dev database
-- [ ] 📌 Set up regular production → dev sync process (schema only)
-- [ ] 📌 Create data cleanup scripts for development
-- [ ] 📌 Document data refresh procedures
-
-##### Testing & Validation
-- [ ] ⚗️ Test all migrations on development first
-- [ ] ⚗️ Verify RLS policies work identically in both environments
-- [ ] ⚗️ Test authentication flows in both environments
-- [ ] ⚗️ Validate all API endpoints with new database
-- [ ] ⚗️ Performance test with production-like data volume
-
-##### Monitoring & Maintenance
-- [ ] 🚀 Set up database monitoring for both environments
-- [ ] 🚀 Configure backup schedules for production
-- [ ] 🚀 Implement database health checks
-- [ ] 🚀 Create alerts for schema drift detection
-- [ ] 🚀 Set up query performance monitoring
-
-##### Documentation & Training
-- [ ] 📌 Document environment setup for new developers
-- [ ] 📌 Create runbook for common database operations
-- [ ] 📌 Document emergency procedures
-- [ ] 📌 Create troubleshooting guide
-- [ ] 📌 Update CLAUDE.md with new database setup
+# ---------------------------------------------------------------------------------------- #
+# VERSION 0.2.0 -------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
 
 
 
----
+## Navigation** v0.2.1 ---------------------------------------- ##
+- Navigation System (needs definition)
 
 
-#### [Packet] Page Management System
-
-- **Enhanced Builder Integration:**
-  - [ ] 🚀 Add keyboard shortcuts for page switching
-
-- **Page Features:**
-  - [ ] 🚀 Implement homepage selection (mark any page as homepage)
-  - [ ] 🚀 Create page template selector for new pages
-  - [ ] 🚀 Implement page ordering for navigation
-  - [ ] 🚀 Add custom 404 page configuration
-  - [ ] 🚀 Create page preview functionality
-
-
----
-
-
-#### [Packet] Navigation System
+### [PACKET] Navigation System
 **Goal:** Users can create navigation sections and functionality linking their website together.  
 **Deliverable:** Fully functioning WYSIWYG editing and config for 
 **Notes:** We need to create an industry standard, highly interactive, usable navigation system for customers to be able to connect their websites navigation, perform CRUD on elements, and select from different navigation sections (eventually) that have different complexities of configuration like super drop downs. We need this to work for nav bars, footers, and side nav bar components/sections.
@@ -239,6 +324,124 @@ This is the full backlog of features we keep and add to as we develop. We will o
 ---
 
 
+## Content Management** v0.2.2 ---------------------------------------- ##
+- Page Management System
+- Site Templates & Project Settings
+- Basic Canvas Builder Improvements
+
+
+### [PACKET] Page Management System
+
+- **Enhanced Builder Integration:**
+  - [ ] 🚀 Add keyboard shortcuts for page switching
+
+- **Page Features:**
+  - [ ] 🚀 Implement homepage selection (mark any page as homepage)
+  - [ ] 🚀 Create page template selector for new pages
+  - [ ] 🚀 Implement page ordering for navigation
+  - [ ] 🚀 Add custom 404 page configuration
+  - [ ] 🚀 Create page preview functionality
+
+
+
+### [PACKET] Canvas Builder Improvements
+
+- [ ] 🚀 Reorder sections
+
+
+---
+
+
+## Basic Performance Metrics** v0.2.3 ---------------------------------------- ##
+- Basic project performance metrics in an Analytics area
+
+### [PACKET] Basic Project Performance Data
+
+- [ ] Brainstorm with Claude and write tasks for this
+
+
+### [PACKET] Presentation of data in Analytics Section
+
+- [ ] Brainstorm with Claude and write tasks for this
+
+
+---
+
+
+## Dashboard** v0.2.4 ---------------------------------------- ##
+- Clean this up and make it nicer
+- Links to marketing and SEO dashboards OR a link to an upgrade page.
+
+
+### [PACKET] 
+
+- [ ] Brainstorm with Claude and write tasks for this
+
+
+
+---
+
+
+## Content** v0.2.5 ---------------------------------------- ##
+- 5 sections for each category in the builder
+- 5 new, good themes
+- Smart Sections (GoHighLevel Integrations)
+
+
+### [PACKET] 
+
+- [ ] Brainstorm with Claude and write tasks for this
+
+
+
+---
+
+
+## Lab: Theme Creator** v0.2.6 ---------------------------------------- ##
+- More customization on colors
+- Fonts/Typography
+- Special Effects
+
+### [PACKET] 
+
+- [ ] Brainstorm with Claude and write tasks for this
+
+
+
+
+
+
+# ---------------------------------------------------------------------------------------- #
+# VERSION 0.3.0 -------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+
+
+## Application Design v0.3.1 ---------------------------------------- ##
+- app.wondrousdigital.com Theme
+- Light / Dark Mode
+
+
+#### [Packet] app.wondrousdigital.com DESIGN
+- [ ] 🚀 Apply theming to app itself (deferred to Phase 1D)
+
+- [ ] Brainstorm with Claude and write tasks for this
+
+
+### [PACKET] Light/Dark Mode Toggle
+
+- [ ] Brainstorm with Claude and write tasks for this
+
+
+---
+
+
+## Content v0.3.2 ---------------------------------------- ##
+- Bug Reporting Button & System
+- Support Ticket System
+- Roadmap / Release Notes Page
+- Account Management Page (For customers)
+
+
 #### [Packet] Account Management Tools
 - [ ] 🚀 Export account data (deferred - can be added later)
 - [ ] 🚀 Account features:
@@ -249,43 +452,122 @@ This is the full backlog of features we keep and add to as we develop. We will o
 - [ ] 🚀 Account audit log viewer functional
 
 
+
 ---
 
 
-#### [Packet] User Invitation System 
-- [ ] ⚗️ VERIFY:
-  - [x] ⚗️ Created `account_invitations` table with migration `20250804_000000_add_account_invitations.sql`
-  - [x] ⚗️ Built invitation service layer at `/src/lib/services/invitations.ts`
-  - [x] ⚗️ Created complete API routes for invitation management
-  - [x] ⚗️ Implemented React hooks in `/src/hooks/useInvitations.ts`
-  - [x] ⚗️ Built team management UI at `/src/app/(app)/account/users/page.tsx`
-  - [x] ⚗️ Added pending invitations management with resend/cancel actions
-  - [x] ⚗️ Implemented proper multi-tenant isolation and security
-  - [x] ⚗️ Created `account_users_with_details` view for user display
+## Marketing Website v0.3.3 ---------------------------------------- ##
+- Construct our marketing website using the builder
+- Add all the proper content
+- Create login and sign up links
 
-**Remaining Tasks**:
-  - [ ] 🚀 Email notification system for invitations
-  - [ ] 🚀 Invitation acceptance page UI
-  - [ ] 🚀 Staff assignment UI for platform staff
-  - [ ] 🚀 Add user profile extensibility features
-  - [ ] 🚀 Add inline user profile editing
+
+
 
 
 
 ---
 
 
-#### [Packet] XSS & Input Security Hardening
+## Final Testing ---------------------------------------- ##
+- Have others test the experience 
+- Run some more E2E tests 
+
+
+
+
+
+
+
+
+
+
+
+# ---------------------------------------------------------------------------------------- #
+# UNPRIORITIZED -------------------------------------------------------------------------- #
+# ---------------------------------------------------------------------------------------- #
+
+
+## Future Account Management Features (Post-MVP)
+*Advanced account management features for when we scale beyond 25 manual customers*
+
+### [PACKET] User Activity Logging
+**Goal:** Track and display user actions within accounts
+**Deliverable:** Complete activity audit trail for users
+
+- [ ] 🚀 Design user activity log schema
+- [ ] 🚀 Implement activity tracking middleware
+- [ ] 🚀 Create activity log viewer UI
+- [ ] 🚀 Add filtering and search capabilities
+- [ ] 🚀 Implement retention policies
+
+
+### [PACKET] Staff Role Management
+**Goal:** Enable staff role assignments and permissions
+**Deliverable:** Staff assignment system with proper access controls
+
+- [ ] 🚀 Design staff role hierarchy
+- [ ] 🚀 Create staff assignment UI
+- [ ] 🚀 Implement staff-specific permissions
+- [ ] 🚀 Add staff activity tracking
+- [ ] ⚗️ Test staff access patterns
+
+
+### [PACKET] Multiple Account Memberships
+**Goal:** Allow users to belong to multiple accounts
+**Deliverable:** Account switching and multi-account management
+
+- [ ] 🚀 Implement account switcher UI
+- [ ] 🚀 Create account membership management
+- [ ] 🚀 Add primary account designation
+- [ ] 🚀 Handle cross-account permissions
+- [ ] ⚗️ Test multi-account scenarios
+
+
+### [PACKET] Advanced User Settings
+**Goal:** Comprehensive user preferences and settings
+**Deliverable:** Full user settings management interface
+
+- [ ] 🚀 Create user preferences schema
+- [ ] 🚀 Build settings UI components
+- [ ] 🚀 Implement notification preferences
+- [ ] 🚀 Add security settings (2FA ready)
+- [ ] 🚀 Create API key management
+
+
+### [PACKET] Invitation System Enhancements
+**Goal:** Advanced invitation features for scale
+**Deliverable:** Bulk invitations and invitation management
+
+- [ ] 🚀 Add bulk invitation functionality
+- [ ] 🚀 Create invitation status dashboard
+- [ ] 🚀 Implement invitation reminders
+- [ ] 🚀 Add invitation analytics
+- [ ] 🚀 Create invitation templates
+
+
+### [PACKET] Project Activity Logging
+**Goal:** Track all project-level changes and actions
+**Deliverable:** Complete project audit trail
+
+- [ ] 🚀 Design project activity schema
+- [ ] 🚀 Implement project change tracking
+- [ ] 🚀 Create activity viewer for projects
+- [ ] 🚀 Add activity filtering by type
+- [ ] 📌 Document activity types
+
+
+## Future Security Enhancements (Post-MVP)
+*These security features can be implemented after public launch when opening beyond 25 manual users*
+
+### [PACKET] XSS & Input Security Hardening (Advanced)
 **Goal:** Implement comprehensive XSS prevention and input sanitization across the platform
-**Note:** Critical for preventing cross-site scripting attacks and ensuring user-generated content is safe
-**Deliverable:** DOMPurify integration, sanitization utilities, and safe rendering practices throughout the application
+**Note:** Advanced features beyond MVP requirements
+**Deliverable:** Complete sanitization utilities and CSP implementation
 
 ##### XSS Prevention Implementation
-- [ ] 🚀 Install and configure DOMPurify for content sanitization
 - [ ] 🚀 Create centralized sanitization utility functions
-- [ ] 🪲 Fix innerHTML usage in preview routes (security vulnerability)
 - [ ] 🚀 Implement safe HTML rendering component wrapper
-- [ ] 🚀 Add sanitization to all user input fields
 - [ ] 🚀 Create sanitization rules for different content types
 
 ##### Content Security Policy
@@ -297,25 +579,18 @@ This is the full backlog of features we keep and add to as we develop. We will o
 
 ##### Input Validation Enhancement
 - [ ] 🚀 Extend Zod schemas with sanitization transforms
-- [ ] 🚀 Add length limits to all text inputs
 - [ ] 🚀 Implement file upload type restrictions
 - [ ] 🚀 Create validation for URLs and external links
 - [ ] ⚗️ Test XSS payloads cannot execute
 
 
----
-
-
-#### [Packet] Security Headers & Middleware
+### [PACKET] Security Headers & Middleware (Advanced)
 **Goal:** Implement industry-standard security headers and protection middleware
-**Note:** Following OWASP recommendations for web application security headers
+**Note:** Advanced features beyond MVP requirements
 **Deliverable:** Comprehensive security headers middleware with CSRF protection
 
 ##### Security Headers Implementation
-- [ ] 🚀 Create security headers middleware
-- [ ] 🚀 Implement X-Frame-Options: DENY
-- [ ] 🚀 Add X-Content-Type-Options: nosniff
-- [ ] 🚀 Configure Strict-Transport-Security (HSTS)
+- [ ] 🚀 Create comprehensive security headers middleware
 - [ ] 🚀 Set up Referrer-Policy
 - [ ] 🚀 Implement Permissions-Policy
 
@@ -328,18 +603,14 @@ This is the full backlog of features we keep and add to as we develop. We will o
 
 ##### Additional Security Middleware
 - [ ] 🚀 Add request size limits
-- [ ] 🚀 Implement secure cookie settings
 - [ ] 🚀 Create security event logging middleware
 - [ ] ⚗️ Test headers with security scanning tools
 - [ ] 📌 Document security header configuration
 
 
----
-
-
-#### [Packet] Authentication Security Enhancements
+### [PACKET] Authentication Security Enhancements (Advanced)
 **Goal:** Implement 2FA, complete password management, and enhance session security
-**Note:** Critical for account security and meeting enterprise security requirements
+**Note:** Enterprise security features for public launch
 **Deliverable:** Full 2FA system, password management features, and hardened authentication
 
 ##### Two-Factor Authentication
@@ -354,12 +625,10 @@ This is the full backlog of features we keep and add to as we develop. We will o
 - [ ] 🚀 Implement password change functionality
 - [ ] 🚀 Add password strength meter to UI
 - [ ] 🚀 Create password history to prevent reuse
-- [ ] 🚀 Implement secure password reset flow
 - [ ] 🚀 Add password expiry for enterprise accounts
 - [ ] 🚀 Create breach detection integration
 
-##### Session Security
-- [ ] 🚀 Implement session timeout controls
+##### Session Security (Advanced)
 - [ ] 🚀 Add concurrent session limits
 - [ ] 🚀 Create "remember me" functionality securely
 - [ ] 🚀 Implement device tracking and management
@@ -367,12 +636,9 @@ This is the full backlog of features we keep and add to as we develop. We will o
 - [ ] ⚗️ Test session fixation prevention
 
 
----
-
-
-#### [Packet] API Security & Rate Limiting
+### [PACKET] API Security & Rate Limiting
 **Goal:** Implement comprehensive API security including rate limiting, key management, and request validation
-**Note:** Essential for preventing abuse and ensuring platform stability
+**Note:** Essential for preventing abuse when opening to public
 **Deliverable:** Production-ready API security layer with configurable rate limits
 
 ##### Rate Limiting Implementation
@@ -400,26 +666,19 @@ This is the full backlog of features we keep and add to as we develop. We will o
 - [ ] 📌 Document API security best practices
 
 
----
+### [PACKET] Database Security & RLS (Advanced)
+**Goal:** Advanced database security features
+**Note:** Enhanced security for public launch
+**Deliverable:** Complete database security hardening
 
-
-#### [Packet] Database Security & RLS
-**Goal:** Enable Row Level Security on all tables and ensure complete multi-tenant isolation
-**Note:** Critical for data privacy and preventing cross-tenant data leakage
-**Deliverable:** Comprehensive RLS policies with verified tenant isolation
-
-##### RLS Implementation
+##### RLS Implementation (Advanced)
 - [ ] 🚀 Audit all tables for RLS requirements
 - [ ] 🚀 Create RLS policies for each table
-- [ ] 🚀 Enable RLS on all user data tables
 - [ ] 🚀 Implement service role patterns where needed
 - [ ] 🚀 Create RLS testing framework
 - [ ] 🚀 Document RLS policy decisions
 
-##### Multi-Tenant Isolation
-- [ ] ⚗️ Test cross-tenant data access prevention
-- [ ] ⚗️ Verify API endpoints respect tenant boundaries
-- [ ] ⚗️ Test admin access patterns
+##### Multi-Tenant Isolation (Advanced)
 - [ ] 🚀 Create tenant isolation monitoring
 - [ ] 🚀 Implement data access audit trails
 
@@ -431,10 +690,7 @@ This is the full backlog of features we keep and add to as we develop. We will o
 - [ ] 📌 Document data access patterns
 
 
----
-
-
-#### [Packet] Security Monitoring & Compliance
+### [PACKET] Security Monitoring & Compliance
 **Goal:** Implement comprehensive security monitoring, audit logging, and compliance features
 **Note:** Required for enterprise customers and regulatory compliance
 **Deliverable:** Full audit trail system with security event monitoring and compliance tools
@@ -491,23 +747,6 @@ This is the full backlog of features we keep and add to as we develop. We will o
   - [ ] Apply selected template during creation
 
 
----
-
-
-##### [Packet] Canvas Builder Improvements
-
-- [ ] 🚀 Reorder sections
-
-
-
-
-
-
-
-# ---------------------------------------------------------------------------------------- #
-# UNPRIORITIZED -------------------------------------------------------------------------- #
-# ---------------------------------------------------------------------------------------- #
-
 
 
 ### Ungrouped Tasks
@@ -519,7 +758,6 @@ This is the full backlog of features we keep and add to as we develop. We will o
 - [❌] ⚗️ Test page status toggle (published/draft)
   - This function doesn't exist
 - [ ] [Code quality issues discovered during investigation]
-
 
 
 #### [Packet] Project Management Tools
@@ -536,6 +774,7 @@ This is the full backlog of features we keep and add to as we develop. We will o
   - [ ] 🚀 Users tab showing access - deferred
 
 
+
 ---
 
 #### [Packet] Library Architecture
@@ -543,25 +782,6 @@ This is the full backlog of features we keep and add to as we develop. We will o
 
 
 
----
-
-#### [Packet] app.wondrousdigital.com DESIGN
-- [ ] 🚀 Apply theming to app itself (deferred to Phase 1D)
-
-
----
-
-#### [Packet] Feature Tagging System
-**Goal:** Create a system where we can segment our features and enable them for different tiered customers.
-**Deliverable:** Tag system with template integration that links to paid tiers
-**Notes:** We will be enabling certain sections by paid tier and need to create a way for us to store those tags, link them to paid tiers in terms of visibility/usability. 
-
----
-
-#### [Packet] Paid Tier System & Stripe Integration
-**Goal:** Finalize the paid tiers for our application and integrate Stripe payments into our app so users can handle their own billing.
-**Deliverable:** A set of paid tiers linked to confirmed Stripe payments to enable.
-**Notes:** We will have several plans and add ons that need to be configured and tied to features being turned on and off.
 
 ---
 
@@ -650,52 +870,50 @@ Use these classifications to identify each type of task. We can expand this list
 
 
 ## ---------------------------------------------- ##
-# Sprint Process Guide
+# Sprint Process Guide (for reference)
 
 ## Sprint Planning (Start of Sprint)
 
-  1. Review BACKLOG.md → Pull priority items into ACTIVE-SPRINT.md
-  2. Set version number → Decide scope (major.minor.patch)
-  3. Move packets → Cut H4 sections from BACKLOG to ACTIVE-SPRINT
-  4. Order packets → Arrange by priority/dependency
+  1. [User will] Review BACKLOG.md → Pull priority items into ACTIVE-SPRINT.md
+  2. [User will] Set version number → Decide scope (major.minor.patch)
+  3. [User will] Move packets → Cut H4 sections from BACKLOG to ACTIVE-SPRINT
+  4. [User will] Order packets → Arrange by priority/dependency
 
 
 ## During Sprint Execution
 
 ### Per Packet Workflow:
 
-  1. Move packet to Current Focus → Work on one packet at a time
-  2. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
-  3. As you discover issues → Add to "Found Work" section:
+  1. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
+  2. As you discover issues → Add to "Found Work" section:
     - Critical → Must fix in current version
     - Non-Critical → Defer to next version
     - Tech Debt → Document for future
-  4. Update STATUS-LOG.md → Log progress after each packet
-  5. Check off tasks → Mark complete in ACTIVE-SPRINT.md
-  6. Move to Sprint Backlog → When packet done, grab next
+  3. Update ACTIVE-STATUS.md → Log progress after each packet
+  4. Check off tasks → Mark complete in ACTIVE-SPRINT.md
+  5. [User will] Move to Sprint Backlog → When packet done, grab next
 
 ### Daily Flow:
 
   - Start: Check Current Focus in ACTIVE-SPRINT.md
   - Work: Follow DEV-LIFECYCLE for that packet
   - Discover: Add found issues to appropriate section
-  - End: Update STATUS-LOG with progress
+  - End: Update ACTIVE-SPRINT with progress
 
 ### Sprint Completion
 
   1. All packets done → Verify all tasks checked
   2. Create Release Notes → /docs/Release_Notes/v0.1.1.md
-  3. Archive sprint content → Copy ACTIVE-SPRINT to STATUS-LOG
-  4. Clear ACTIVE-SPRINT.md → Reset for next sprint
-  5. Update version numbers → Production/Development in all docs
+  3. [User will] Archive sprint content → Copy ACTIVE-SPRINT to STATUS-LOG
+  4. [User will] Clear ACTIVE-SPRINT.md → Reset for next sprint
+  5. [User will] Update version numbers → Production/Development in all docs
 
 
 ## Key Rules
 
-  - ONE packet in Current Focus at a time
   - COMPLETE DEV-LIFECYCLE per packet before moving on
   - DOCUMENT found work immediately
-  - UPDATE STATUS-LOG per packet completion
   - NEVER skip DEV-LIFECYCLE steps
+  - Always use CODE-CHECKLIST
 
 ## ---------------------------------------------- ##

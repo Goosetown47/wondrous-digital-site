@@ -2,14 +2,44 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { isAdminServer } from '@/lib/permissions/server-checks';
+import { wouldBeSanitized } from '@/lib/sanitization';
 import { z } from 'zod';
 
-// Validation schema for user creation
+// Validation schema for user creation with XSS protection
 const createUserSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  full_name: z.string().min(1, 'Full name is required'),
-  display_name: z.string().optional(),
+  full_name: z.string()
+    .transform(val => val.trim())
+    .superRefine((val, ctx) => {
+      // Check for HTML first
+      if (wouldBeSanitized(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Full name cannot contain HTML or special characters',
+        });
+        return; // Stop here if HTML detected
+      }
+      // Only check length if no HTML
+      if (val.length < 1) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Full name is required',
+        });
+      }
+    }),
+  display_name: z.string()
+    .transform(val => val?.trim() || '')
+    .optional()
+    .superRefine((val, ctx) => {
+      if (!val || val === '') return;
+      if (wouldBeSanitized(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Display name cannot contain HTML or special characters',
+        });
+      }
+    }),
   role: z.enum(['admin', 'staff', 'account_owner', 'user']),
   account_id: z.string().uuid().optional().nullable(), // Required for account_owner and user roles
   auto_confirm_email: z.boolean().default(true),
@@ -340,8 +370,12 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('❌ [API/Users/Create] Validation error:', error.issues);
+      // Get the first validation error message for a cleaner user experience
+      const firstError = error.issues[0];
+      const errorMessage = firstError?.message || 'Validation failed';
+      
       return NextResponse.json({ 
-        error: 'Validation failed', 
+        error: errorMessage,
         details: error.issues 
       }, { status: 400 });
     }

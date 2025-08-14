@@ -31,9 +31,9 @@ export function useApplyTheme() {
       }
       return themeService.applyToProject(projectId, themeId, overrides);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['project'] });
+      queryClient.invalidateQueries({ queryKey: ['projects', variables.projectId] });
     },
   });
 }

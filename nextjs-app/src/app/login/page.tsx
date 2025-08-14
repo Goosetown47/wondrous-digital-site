@@ -158,7 +158,15 @@ function LoginPageContent() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link 
+                  href="/forgot-password" 
+                  className="text-sm text-primary hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -186,15 +194,7 @@ function LoginPageContent() {
               )}
             </Button>
             
-            <p className="text-sm text-center text-muted-foreground">
-              Don't have an account?{' '}
-              <Link 
-                href="/signup" 
-                className="font-medium text-primary hover:underline"
-              >
-                Sign up
-              </Link>
-            </p>
+            {/* Public signup disabled for MVP - manually created accounts only */}
             
             {/* Resend Verification Section */}
             <Collapsible open={showResend} onOpenChange={setShowResend}>

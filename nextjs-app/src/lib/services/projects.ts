@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase/client';
 import type { Project, Account } from '@/types/database';
 import { isAdmin, isStaff } from '@/lib/permissions';
 import { validateSlug } from '@/lib/services/slug-validation';
+import { wouldBeSanitized } from '@/lib/sanitization';
 
 export interface ProjectWithAccount extends Project {
   accounts?: Account;
@@ -118,8 +119,19 @@ export async function createProject(projectData: CreateProjectData) {
     }
   }
 
+  // Validate that name doesn't contain HTML
+  const trimmedName = projectData.name.trim();
+  if (wouldBeSanitized(trimmedName)) {
+    throw new Error('Project name cannot contain HTML or special characters');
+  }
+  
+  // Don't sanitize slug here - it gets validated by validateSlug
+  // Slug is already validated above by validateSlug
+  
   const insertData = {
     ...projectData,
+    name: trimmedName,
+    slug: projectData.slug,
     created_by: user.id,
     customer_id: user.id // Set to user.id to satisfy foreign key constraint
   };
@@ -158,10 +170,48 @@ export async function updateProject(projectId: string, updates: UpdateProjectDat
   // Check if user is admin for slug validation
   const isAdminUser = await isAdmin(user.id);
 
+  // Validate input data
+  const sanitizedUpdates: UpdateProjectData = {};
+  
+  if (updates.name !== undefined) {
+    const trimmedName = updates.name.trim();
+    // Validate that name doesn't contain HTML
+    if (wouldBeSanitized(trimmedName)) {
+      throw new Error('Project name cannot contain HTML or special characters');
+    }
+    sanitizedUpdates.name = trimmedName;
+  }
+  
+  if (updates.description !== undefined) {
+    if (updates.description) {
+      const trimmedDesc = updates.description.trim();
+      // Validate that description doesn't contain HTML
+      if (wouldBeSanitized(trimmedDesc)) {
+        throw new Error('Description cannot contain HTML or special characters');
+      }
+      sanitizedUpdates.description = trimmedDesc;
+    } else {
+      sanitizedUpdates.description = null;
+    }
+  }
+  
+  if (updates.slug !== undefined) {
+    // Don't sanitize slug - it gets validated by validateSlug
+    sanitizedUpdates.slug = updates.slug;
+  }
+  
+  // Copy over non-text fields without sanitization
+  if (updates.theme_id !== undefined) {
+    sanitizedUpdates.theme_id = updates.theme_id;
+  }
+  if (updates.theme_overrides !== undefined) {
+    sanitizedUpdates.theme_overrides = updates.theme_overrides;
+  }
+
   // If updating slug, validate it
-  if (updates.slug) {
+  if (sanitizedUpdates.slug) {
     // First validate the slug format and reserved status
-    const slugValidation = validateSlug(updates.slug, isAdminUser);
+    const slugValidation = validateSlug(sanitizedUpdates.slug, isAdminUser);
     
     if (!slugValidation.isValid) {
       throw new Error(slugValidation.message || 'Invalid slug');
@@ -169,14 +219,14 @@ export async function updateProject(projectId: string, updates: UpdateProjectDat
     
     // Log admin override if applicable
     if (slugValidation.isReserved && slugValidation.requiresAdmin && isAdminUser) {
-      console.log('⚠️ Admin override: Updating project with reserved slug:', updates.slug);
+      console.log('⚠️ Admin override: Updating project with reserved slug:', sanitizedUpdates.slug);
     }
 
     // Then check for uniqueness
     const { data: existingProject } = await supabase
       .from('projects')
       .select('id')
-      .eq('slug', updates.slug)
+      .eq('slug', sanitizedUpdates.slug)
       .neq('id', projectId) // Exclude current project
       .single();
     
@@ -187,7 +237,7 @@ export async function updateProject(projectId: string, updates: UpdateProjectDat
 
   const { data, error } = await supabase
     .from('projects')
-    .update(updates)
+    .update(sanitizedUpdates)
     .eq('id', projectId)
     .select()
     .single();

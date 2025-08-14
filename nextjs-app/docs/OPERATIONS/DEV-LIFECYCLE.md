@@ -12,49 +12,47 @@ This document outlines our standard development process to ensure consistent qua
 
 ## Sprint Planning (Start of Sprint)
 
-  1. Review BACKLOG.md → Pull priority items into ACTIVE-SPRINT.md
-  2. Set version number → Decide scope (major.minor.patch)
-  3. Move packets → Cut H4 sections from BACKLOG to ACTIVE-SPRINT
-  4. Order packets → Arrange by priority/dependency
+  1. [User will] Review BACKLOG.md → Pull priority items into ACTIVE-SPRINT.md
+  2. [User will] Set version number → Decide scope (major.minor.patch)
+  3. [User will] Move packets → Cut H4 sections from BACKLOG to ACTIVE-SPRINT
+  4. [User will] Order packets → Arrange by priority/dependency
 
 
 ## During Sprint Execution
 
 ### Per Packet Workflow:
 
-  1. Move packet to Current Focus → Work on one packet at a time
-  2. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
-  3. As you discover issues → Add to "Found Work" section:
+  1. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
+  2. As you discover issues → Add to "Found Work" section:
     - Critical → Must fix in current version
     - Non-Critical → Defer to next version
     - Tech Debt → Document for future
-  4. Update STATUS-LOG.md → Log progress after each packet
-  5. Check off tasks → Mark complete in ACTIVE-SPRINT.md
-  6. Move to Sprint Backlog → When packet done, grab next
+  3. Update ACTIVE-STATUS.md → Log progress after each packet
+  4. Check off tasks → Mark complete in ACTIVE-SPRINT.md
+  5. [User will] Move to Sprint Backlog → When packet done, grab next
 
 ### Daily Flow:
 
   - Start: Check Current Focus in ACTIVE-SPRINT.md
   - Work: Follow DEV-LIFECYCLE for that packet
   - Discover: Add found issues to appropriate section
-  - End: Update STATUS-LOG with progress
+  - End: Update ACTIVE-SPRINT with progress
 
 ### Sprint Completion
 
   1. All packets done → Verify all tasks checked
   2. Create Release Notes → /docs/Release_Notes/v0.1.1.md
-  3. Archive sprint content → Copy ACTIVE-SPRINT to STATUS-LOG
-  4. Clear ACTIVE-SPRINT.md → Reset for next sprint
-  5. Update version numbers → Production/Development in all docs
+  3. [User will] Archive sprint content → Copy ACTIVE-SPRINT to STATUS-LOG
+  4. [User will] Clear ACTIVE-SPRINT.md → Reset for next sprint
+  5. [User will] Update version numbers → Production/Development in all docs
 
 
 ## Key Rules
 
-  - ONE packet in Current Focus at a time
   - COMPLETE DEV-LIFECYCLE per packet before moving on
   - DOCUMENT found work immediately
-  - UPDATE STATUS-LOG per packet completion
   - NEVER skip DEV-LIFECYCLE steps
+  - Always use CODE-CHECKLIST
 
 ## ---------------------------------------------- ##
 
@@ -132,7 +130,7 @@ For critical production issues. This allows rapid response to urgent problems wh
 
 - [ ] Create a list of user stories in the console, and verify with the product owner (user) that these are correct.
 
-Once approved by product owner, In ACTIVE-SPRINT.md, add stories where specified:
+Once approved by product owner, In ACTIVE-SPRINT.md, add stories to the MANUAL TESTS section. You will not create a separate document, everything should go into the ACTIVE SPRINT doc.
 - [ ] Write stories in format: "As a [role], I can [action] so that [benefit]"  
   *Ensures features solve real user needs*
   
@@ -196,6 +194,13 @@ Feature: Domain Management
 - [ ] Update TypeScript types  
   *Keeps code in sync with database structure*
 
+> **📌 Database Migration Workflow**  
+> We maintain separate DEV and PROD databases for safety:
+> - **DEV Database**: Claude creates and tests migrations via CLI
+> - **PROD Database**: User manually applies migrations via Supabase Dashboard
+> 
+> This prevents accidental production damage while maintaining version control.
+
 ### 4. Testing & Quality Assurance
 *Verifies features work correctly, securely, and performantly before users see them.*
 
@@ -224,18 +229,6 @@ npm run test:e2e      # Confirms user flows work end-to-end
 - [ ] Run coverage report: `npm run test:coverage`  
   *Identifies untested code paths (focus on quality, not percentage)*
 
-#### E2E Testing with Playwright:
-- [ ] Write tests for each user story  
-  *Verifies features work from the user's perspective*
-  
-- [ ] Test authentication flows  
-  *Ensures users can't access data they shouldn't*
-  
-- [ ] Test error scenarios  
-  *Confirms the app handles problems gracefully*
-  
-- [ ] Run performance checks  
-  *Prevents shipping slow features*
 
 #### Security Checklist:
 - [ ] **Input Validation**
@@ -310,6 +303,9 @@ npm run test:e2e      # Confirms user flows work end-to-end
     *Provides smooth user experience*
 
 #### Manual Testing:
+The user will conduct manual testing in collaboration with CLAUDE. 
+Work with user one by one to check each story off in the ACTIVE-SPRINT/MANUAL TESTS area.
+
 - [ ] Test each user story from ACTIVE-SPRINT.md  
   *Confirms features work as intended*
   
@@ -322,12 +318,6 @@ npm run test:e2e      # Confirms user flows work end-to-end
 - [ ] User marks each story as tested ✓  
   *Gets final approval before deployment*
 
-#### Sentry Monitoring:
-- [ ] Check Sentry for any related errors  
-  *Identifies issues that might not appear in testing*
-  
-- [ ] Set up error alerts if needed  
-  *Ensures quick notification of problems*
 
 ### 5. Pre-Deployment
 *Final verification that features are ready for production.*
@@ -335,9 +325,6 @@ npm run test:e2e      # Confirms user flows work end-to-end
 #### Final checks:
 - [ ] All Vitest tests passing  
   *Confirms unit tests are green*
-  
-- [ ] All Playwright tests passing  
-  *Verifies E2E flows work*
   
 - [ ] Build succeeds: `npm run build`  
   *Ensures code will deploy successfully*
@@ -361,11 +348,11 @@ npm run test:e2e      # Confirms user flows work end-to-end
 - [ ] Update any affected guides in `/docs/`  
   *Keeps documentation current*
   
-- [ ] Update STATUS-LOG.md  
+- [ ] Update ACITVE-SPRINT.md / Sprint Logs section  
   *Maintains record of what was done*
-  
-- [ ] Move completed items from ACTIVE-SPRINT.md  
-  *Keeps sprint tracking accurate*
+
+The USER will update STATUS LOG once the SPRINT is complete with everything in ACTIVE-SPRINT.
+
 
 ### 6. Deployment
 *Ships features to production with confidence.*
@@ -386,10 +373,8 @@ npm run test:e2e      # Confirms user flows work end-to-end
 - [ ] Verify production deployment  
   *Confirms features work in production*
   
-- [ ] Monitor Sentry for new errors (first 30 min)  
-  *Catches any immediate issues*
   
-- [ ] Update STATUS-LOG.md with completion  
+- [ ] Update ACTIVE-SPRINT.md / SPRINT NOTES with completion  
   *Records successful deployment*
 
 #### If issues arise:
@@ -444,7 +429,7 @@ npm run test:e2e      # Confirms user flows work end-to-end
 - [ ] Monitor for any new related errors  
   *Ensures fix didn't cause new issues*
   
-- [ ] Update STATUS-LOG.md  
+- [ ] Update ACTIVE-SPRINT.md / SPRINT NOTES  
   *Maintains record of fixes*
 
 ---
@@ -489,11 +474,82 @@ npm run test:e2e      # Confirms user flows work end-to-end
 - [ ] Create proper fix later using Full Mode  
   *Ensures long-term solution is solid*
   
-- [ ] Post-mortem in STATUS-LOG.md  
+- [ ] Post-mortem in ACTIVE-SPRINT.md / SPRINT NOTES  
   *Learns from the incident to prevent recurrence*
   
 - [ ] Update any alerts or monitoring  
   *Catches similar issues faster next time*
+
+---
+
+## Database Migration Process
+
+### Overview
+We maintain separate DEV and PROD databases to ensure safe development and deployment:
+- **DEV Database** (`hlpvvwlxjzexpgitsjlw`): Used for development and testing
+- **PROD Database** (`bpdhbxvsguklkbusqtke`): Production data, manually managed
+
+### Migration Workflow
+
+#### 1. Creating Migrations (Claude)
+When database changes are needed:
+```bash
+# Create new migration file
+npx supabase migration new descriptive_name
+
+# Edit the migration file in /supabase/migrations/
+# Format: YYYYMMDD_HHMMSS_descriptive_name.sql
+```
+
+#### 2. Testing in DEV (Claude)
+```bash
+# Apply migration to DEV database
+cd nextjs-app
+npx supabase db push --password 'MsDH6QjUsf6vXD3nCeYkBNiF'
+
+# Verify migration applied
+npx supabase migration list --password 'MsDH6QjUsf6vXD3nCeYkBNiF'
+
+# Test the changes in development
+npm run dev
+```
+
+#### 3. Production Deployment (User)
+After DEV testing is successful:
+1. User reviews migration file in `/supabase/migrations/`
+2. User manually applies to PROD via Supabase Dashboard
+3. User verifies production deployment
+
+### Important Notes
+- **Never** apply migrations directly to PROD via CLI
+- **Always** test migrations in DEV first
+- **Document** any complex migrations with rollback instructions
+- **Consider** data migrations separately from schema changes
+
+### Common Migration Scenarios
+
+#### Adding a Table
+```sql
+CREATE TABLE IF NOT EXISTS public.new_table (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add RLS
+ALTER TABLE public.new_table ENABLE ROW LEVEL SECURITY;
+```
+
+#### Adding a Column
+```sql
+ALTER TABLE public.existing_table 
+ADD COLUMN IF NOT EXISTS new_column TEXT;
+```
+
+#### Creating Indexes
+```sql
+CREATE INDEX IF NOT EXISTS idx_table_column 
+ON public.table_name(column_name);
+```
 
 ---
 
@@ -540,9 +596,12 @@ npm run lint:fix
 npm run prettier:check
 npm run prettier:write
 
-# Database
+# Database - DEV Environment
 npx supabase migration new [description]
-npx supabase db push --password 'aTR9dv8Q7J2emyMD'
+npx supabase db push --password 'MsDH6QjUsf6vXD3nCeYkBNiF'  # DEV database
+npx supabase migration list --password 'MsDH6QjUsf6vXD3nCeYkBNiF'  # Check status
+
+# Note: PROD migrations are applied manually via Supabase Dashboard for safety
 ```
 
 ---
