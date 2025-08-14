@@ -31,7 +31,10 @@ const PUBLIC_ROUTES = [
   '/auth/callback', 
   '/auth/verify-email', 
   '/auth/confirm',
-  '/auth/update-password'
+  '/auth/update-password',
+  '/auth/verify-email-pending',
+  '/invitation',
+  '/profile/setup'
 ];
 
 export async function middleware(request: NextRequest) {

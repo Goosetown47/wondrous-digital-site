@@ -5,8 +5,8 @@
 
 This is the full backlog of features we keep and add to as we develop. We will organize this by category and type. When something is taken from the backlog, it’s moved up to active sprint. We will constantly add, adjust, remove, and prioritize items in this list as part of backlog grooming.
 
-**Production Version:** v0.1.2 (Released 8/1/2025 @ 11pm)
-**Development Version:** v0.1.3 (Active Planning Now)
+**Production Version:** v0.1.3 (Released 8/1/2025 @ 11pm)
+**Development Version:** v0.1.4 (Active Planning Now)
 
 ## CLASSIFICATIONS
 Use these classifications to identify each type of task. We can expand this list as needed.
@@ -134,71 +134,6 @@ Use these classifications to identify each type of task. We can expand this list
 
 
 
-## Account Management** v0.1.4 ---------------------------------------- ##
-*MVP functionality for manually managing 25 customer accounts*
-
-
-### [PACKET] User Invitation System 
-**Goal:** Complete the invitation acceptance flow and ensure proper email branding
-**Deliverable:** Working end-to-end invitation system for manual user onboarding
-
-- [ ] 🚀 Create /invitation acceptance page UI
-- [ ] 🚀 Wire up invitation acceptance to create user account
-- [ ] 🚀 Connect "Invite User" button in AccountUsers component
-- [ ] ⚗️ Test full invitation flow from send to acceptance
-- [ ] ⚗️ Verify all emails are Wondrous branded via Resend
-
-
-### [PACKET] User Profile Fix
-**Goal:** Fix missing user profiles for existing users
-**Deliverable:** All users have editable profiles
-
-- [ ] 🪲 Create missing user_profiles entries for existing users
-- [ ] 🚀 Add profile creation trigger for new users
-- [ ] ⚗️ Verify profile form elements are accessible
-
-
-### [PACKET] Plan Management for Manual Billing
-**Goal:** Allow admins to manually manage customer plans
-**Deliverable:** Admin interface for plan assignment
-
-- [ ] 🚀 Add plan selector to account settings (admin only)
-  - Plans: FREE, START ($397/month), GROW ($697/month), SCALE ($997/month)
-- [ ] 🚀 Create addons management interface
-  - PERFORM ($459/month)
-- [ ] 🚀 Add one-time fee tracking
-  - Platform Setup Fee ($1500)
-  - SEO Setup Fee ($750)
-- [ ] 🚀 Add billing notes field for manual tracking
-
-
-### [PACKET] Essential Account Management
-**Goal:** Core functionality for managing 25 accounts
-**Deliverable:** Basic account and project management tools
-
-**Account Safety**
-- [ ] 🚀 Require 2-step process for DELETE accounts (suspend first)
-- [ ] 🚀 Require typed "DELETE" confirmation in modal
-
-**Project Details**
-- [ ] 🪲 Fix "Created by" to use user_profiles/display_name
-- [ ] 🚀 Show configured domains in project details
-
-**UI Cleanup**
-- [ ] 🪲 Fix contact information display in Overview tab
-- [ ] 🚀 Move "back" link above HEADER
-- [ ] 🪲 Remove/fix redundant edit button in settings view
-
-**Sign Up**
-- [ ] ✂️ Remove public signup from login form
-
-
-
-### [PACKET] Bug Fixes
-
-- [ ] 🪲 Users table doesn't auto-refresh without a page reload when something changes.
-- [ ] 🪲 The users select div with "change role" and "remove from account" and clear selection options needs to have consistent looking buttons instead of just text or buttons.
-- [ ] 🪲 The users select div with "change role" and "remove from account" and clear selection stays active even when the selected item in the list is no longer there (e.g., I deleted it) (it works if I deselect it) -- It should actively check if something is selected or not, then respond accordingly.
 
 
 

@@ -55,16 +55,34 @@ export async function getAllAccounts(includeStats = false) {
     return accounts as AccountWithStats[];
   }
 
-  // Fetch additional stats for each account
-  const accountsWithStats = await Promise.all(
-    accounts.map(async (account: { id: string }) => {
-      const stats = await getAccountStats(account.id);
-      return {
-        ...account,
-        ...stats,
-      } as unknown as AccountWithStats;
-    })
-  );
+  // Fetch stats from API endpoint (bypasses RLS)
+  const accountIds = accounts.map((a: { id: string }) => a.id);
+  const statsResponse = await fetch(`/api/accounts/stats?ids=${accountIds.join(',')}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!statsResponse.ok) {
+    console.error('[getAllAccounts] Failed to fetch stats');
+    // Return accounts without stats if the API fails
+    return accounts as AccountWithStats[];
+  }
+
+  const statsMap = await statsResponse.json();
+
+  // Merge stats with accounts
+  const accountsWithStats = accounts.map((account: { id: string }) => ({
+    ...account,
+    ...(statsMap[account.id] || {
+      project_count: 0,
+      active_projects: 0,
+      archived_projects: 0,
+      user_count: 0,
+      total_pages: 0,
+      storage_used: 0,
+      last_activity: null,
+    }),
+  })) as AccountWithStats[];
 
   return accountsWithStats;
 }
@@ -86,8 +104,17 @@ export async function getAccountById(id: string): Promise<AccountWithStats> {
 
   const account = await response.json();
   
-  // Get account stats
-  const stats = await getAccountStats(id);
+  // Get account stats from API (bypasses RLS)
+  const statsResponse = await fetch(`/api/accounts/stats?ids=${id}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  let stats = {};
+  if (statsResponse.ok) {
+    const statsMap = await statsResponse.json();
+    stats = statsMap[id] || {};
+  }
 
   return {
     ...account,
@@ -470,8 +497,7 @@ export async function getAccountStats(accountId: string): Promise<AccountStats> 
       .select('created_at')
       .eq('account_id', accountId)
       .order('created_at', { ascending: false })
-      .limit(1)
-      .single(),
+      .limit(1),
   ]);
 
   const projects = projectsResult.data || [];
@@ -485,7 +511,7 @@ export async function getAccountStats(accountId: string): Promise<AccountStats> 
     user_count: usersResult.data?.length || 0,
     total_pages: pagesResult.data?.length || 0,
     storage_used: 0, // TODO: Calculate actual storage usage
-    last_activity: recentActivityResult.data?.created_at || null,
+    last_activity: recentActivityResult.data?.[0]?.created_at || null,
   };
 }
 

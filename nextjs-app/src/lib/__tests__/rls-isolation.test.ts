@@ -12,12 +12,12 @@ describe('RLS Cross-Tenant Data Isolation', () => {
   let user2Client: ReturnType<typeof createClient>;
   
   // Test data
-  let account1Id: string;
-  let account2Id: string;
-  let user1Id: string;
-  let user2Id: string;
-  let project1Id: string;
-  let project2Id: string;
+  let account1Id: string = '';
+  let account2Id: string = '';
+  let user1Id: string = '';
+  let user2Id: string = '';
+  let project1Id: string = '';
+  let project2Id: string = '';
 
   beforeAll(async () => {
     // Skip in CI or if no database connection
@@ -39,14 +39,14 @@ describe('RLS Cross-Tenant Data Isolation', () => {
       password: 'TestPassword123!',
       email_confirm: true
     });
-    user1Id = userData1?.user?.id;
+    user1Id = userData1?.user?.id || '';
 
     const { data: userData2 } = await serviceClient.auth.admin.createUser({
       email: 'test-user-2@example.com',
       password: 'TestPassword123!',
       email_confirm: true
     });
-    user2Id = userData2?.user?.id;
+    user2Id = userData2?.user?.id || '';
 
     // Create test accounts
     const { data: acc1 } = await serviceClient
@@ -54,14 +54,18 @@ describe('RLS Cross-Tenant Data Isolation', () => {
       .insert({ name: 'Test Account 1' })
       .select()
       .single();
-    account1Id = acc1?.id;
+    if (acc1?.id && typeof acc1.id === 'string') {
+      account1Id = acc1.id;
+    }
 
     const { data: acc2 } = await serviceClient
       .from('accounts')
       .insert({ name: 'Test Account 2' })
       .select()
       .single();
-    account2Id = acc2?.id;
+    if (acc2?.id && typeof acc2.id === 'string') {
+      account2Id = acc2.id;
+    }
 
     // Add users to their respective accounts
     await serviceClient
@@ -82,7 +86,9 @@ describe('RLS Cross-Tenant Data Isolation', () => {
       })
       .select()
       .single();
-    project1Id = proj1?.id;
+    if (proj1?.id && typeof proj1.id === 'string') {
+      project1Id = proj1.id;
+    }
 
     const { data: proj2 } = await serviceClient
       .from('projects')
@@ -94,7 +100,9 @@ describe('RLS Cross-Tenant Data Isolation', () => {
       })
       .select()
       .single();
-    project2Id = proj2?.id;
+    if (proj2?.id && typeof proj2.id === 'string') {
+      project2Id = proj2.id;
+    }
 
     // Create authenticated clients for each user
     user1Client = createClient(supabaseUrl, supabaseAnonKey);
@@ -114,11 +122,31 @@ describe('RLS Cross-Tenant Data Isolation', () => {
     if (!serviceClient) return;
 
     // Clean up test data
-    await serviceClient.from('projects').delete().in('id', [project1Id, project2Id]).catch(() => {});
-    await serviceClient.from('account_users').delete().in('user_id', [user1Id, user2Id]).catch(() => {});
-    await serviceClient.from('accounts').delete().in('id', [account1Id, account2Id]).catch(() => {});
-    await serviceClient.auth.admin.deleteUser(user1Id).catch(() => {});
-    await serviceClient.auth.admin.deleteUser(user2Id).catch(() => {});
+    try {
+      await serviceClient.from('projects').delete().in('id', [project1Id, project2Id]);
+    } catch {
+      // Ignore cleanup errors
+    }
+    try {
+      await serviceClient.from('account_users').delete().in('user_id', [user1Id, user2Id]);
+    } catch {
+      // Ignore cleanup errors
+    }
+    try {
+      await serviceClient.from('accounts').delete().in('id', [account1Id, account2Id]);
+    } catch {
+      // Ignore cleanup errors
+    }
+    try {
+      await serviceClient.auth.admin.deleteUser(user1Id);
+    } catch {
+      // Ignore cleanup errors
+    }
+    try {
+      await serviceClient.auth.admin.deleteUser(user2Id);
+    } catch {
+      // Ignore cleanup errors
+    }
   });
 
   describe('Account Isolation', () => {
@@ -265,7 +293,7 @@ describe('RLS Cross-Tenant Data Isolation', () => {
       const user3Id = userData3?.user?.id;
 
       // User 1 (who is account_owner) tries to add User 3 to their account
-      await user1Client
+      const { error } = await user1Client
         .from('account_users')
         .insert({
           account_id: account1Id,
@@ -277,8 +305,18 @@ describe('RLS Cross-Tenant Data Isolation', () => {
       expect(error).toBeNull();
 
       // Clean up
-      await serviceClient.from('account_users').delete().eq('user_id', user3Id).catch(() => {});
-      await serviceClient.auth.admin.deleteUser(user3Id).catch(() => {});
+      if (user3Id) {
+        try {
+          await serviceClient.from('account_users').delete().eq('user_id', user3Id);
+        } catch {
+          // Ignore cleanup errors
+        }
+        try {
+          await serviceClient.auth.admin.deleteUser(user3Id);
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
     });
 
     it('should prevent users from adding themselves to other accounts', async () => {
@@ -288,7 +326,7 @@ describe('RLS Cross-Tenant Data Isolation', () => {
       }
 
       // User 1 tries to add themselves to Account 2 (should fail)
-      const { data } = await user1Client
+      const { data, error } = await user1Client
         .from('account_users')
         .insert({
           account_id: account2Id,
@@ -346,7 +384,11 @@ describe('RLS Cross-Tenant Data Isolation', () => {
       expect(data).toHaveLength(1);
       expect(data?.[0]?.id).toBe(account1Id);
       expect(data?.[0]?.projects).toHaveLength(1);
-      expect(data?.[0]?.projects?.[0]?.id).toBe(project1Id);
+      const firstProject = data?.[0]?.projects?.[0];
+      expect(firstProject).toBeDefined();
+      if (firstProject && typeof firstProject === 'object' && 'id' in firstProject) {
+        expect((firstProject as { id: string }).id).toBe(project1Id);
+      }
     });
   });
 
@@ -367,10 +409,12 @@ describe('RLS Cross-Tenant Data Isolation', () => {
       const adminId = adminData?.user?.id;
 
       // Update the user to be a platform admin
-      await serviceClient
-        .from('users')
-        .update({ is_platform_admin: true })
-        .eq('id', adminId);
+      if (adminId) {
+        await serviceClient
+          .from('users')
+          .update({ is_platform_admin: true })
+          .eq('id', adminId);
+      }
 
       // Create admin client
       const adminClient = createClient(supabaseUrl, supabaseAnonKey);
@@ -402,7 +446,13 @@ describe('RLS Cross-Tenant Data Isolation', () => {
       expect(projectIds).toContain(project2Id);
 
       // Clean up
-      await serviceClient.auth.admin.deleteUser(adminId).catch(() => {});
+      if (adminId) {
+        try {
+          await serviceClient.auth.admin.deleteUser(adminId);
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
     });
   });
 });

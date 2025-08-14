@@ -158,7 +158,7 @@ describe('Email Service', () => {
       expect(result.data?.id).toMatch(/^dev-\d+$/);
       expect(mockResendInstance.emails.send).not.toHaveBeenCalled();
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        '📧 Email (Development Mode):',
+        '📧 Email (Development Mode - No API Key):',
         expect.objectContaining({
           to: emailOptions.to,
           subject: emailOptions.subject,
@@ -255,7 +255,7 @@ describe('Email Service', () => {
         subject: emailOptions.subject,
         html: emailOptions.html,
         text: undefined,
-        reply_to: emailOptions.replyTo,
+        replyTo: emailOptions.replyTo,
         headers: emailOptions.headers,
         attachments: emailOptions.attachments,
         tags: emailOptions.tags,

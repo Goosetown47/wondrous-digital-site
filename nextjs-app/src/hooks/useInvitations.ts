@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
-import { useAuth } from '@/providers/auth-provider';
 import { toast } from 'sonner';
 
 // Get all invitations for an account
@@ -12,13 +11,7 @@ export function useAccountInvitations(accountId: string | null) {
 
       const { data, error } = await supabase
         .from('account_invitations')
-        .select(`
-          *,
-          inviter:invited_by(
-            email,
-            raw_user_meta_data->full_name
-          )
-        `)
+        .select('*')
         .eq('account_id', accountId)
         .is('accepted_at', null)
         .is('declined_at', null)
@@ -36,7 +29,6 @@ export function useAccountInvitations(accountId: string | null) {
 // Create a new invitation
 export function useCreateInvitation() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -48,69 +40,25 @@ export function useCreateInvitation() {
       email: string;
       role: 'account_owner' | 'user';
     }) => {
-      if (!user) throw new Error('Must be logged in to invite users');
+      const response = await fetch(`/api/accounts/${accountId}/invitations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, role }),
+      });
 
-      // Check if user already exists in the account
-      const { data: existingUser } = await supabase
-        .from('account_users')
-        .select('user_id')
-        .eq('account_id', accountId)
-        .eq('user_id', (
-          await supabase
-            .from('auth.users')
-            .select('id')
-            .eq('email', email)
-            .single()
-        ).data?.id || '')
-        .single();
-
-      if (existingUser) {
-        throw new Error('User is already a member of this account');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send invitation');
       }
 
-      // Check if there's already a pending invitation
-      const { data: existingInvite } = await supabase
-        .from('account_invitations')
-        .select('id')
-        .eq('account_id', accountId)
-        .eq('email', email)
-        .is('accepted_at', null)
-        .is('declined_at', null)
-        .is('cancelled_at', null)
-        .gt('expires_at', new Date().toISOString())
-        .single();
-
-      if (existingInvite) {
-        throw new Error('An invitation has already been sent to this email');
-      }
-
-      // Create the invitation
-      const { data, error } = await supabase
-        .from('account_invitations')
-        .insert({
-          account_id: accountId,
-          email,
-          role,
-          invited_by: user.id,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // TODO: Send invitation email via edge function
-      // For now, we'll just return the data
-
-      return data;
+      return response.json();
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ 
         queryKey: ['account-invitations', variables.accountId] 
       });
-      toast.success('Invitation sent successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
     },
   });
 }
@@ -122,16 +70,24 @@ export function useCancelInvitation() {
   return useMutation({
     mutationFn: async ({
       invitationId,
+      accountId, // eslint-disable-line @typescript-eslint/no-unused-vars
     }: {
       invitationId: string;
       accountId: string;
     }) => {
-      const { error } = await supabase
-        .from('account_invitations')
-        .update({ cancelled_at: new Date().toISOString() })
-        .eq('id', invitationId);
+      const response = await fetch(`/api/invitations/${invitationId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to cancel invitation');
+      }
+
+      return response.json();
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ 
@@ -139,8 +95,8 @@ export function useCancelInvitation() {
       });
       toast.success('Invitation cancelled');
     },
-    onError: () => {
-      toast.error('Failed to cancel invitation');
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to cancel invitation');
     },
   });
 }
@@ -152,32 +108,24 @@ export function useResendInvitation() {
   return useMutation({
     mutationFn: async ({
       invitationId,
+      accountId, // eslint-disable-line @typescript-eslint/no-unused-vars
     }: {
       invitationId: string;
       accountId: string;
     }) => {
-      // Get the original invitation
-      const { data: invitation, error: fetchError } = await supabase
-        .from('account_invitations')
-        .select('*')
-        .eq('id', invitationId)
-        .single();
+      const response = await fetch(`/api/invitations/${invitationId}/resend`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (fetchError || !invitation) throw fetchError || new Error('Invitation not found');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to resend invitation');
+      }
 
-      // Update the expiration date to extend it
-      const { error } = await supabase
-        .from('account_invitations')
-        .update({ 
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
-        })
-        .eq('id', invitationId);
-
-      if (error) throw error;
-
-      // TODO: Resend invitation email via edge function
-
-      return invitation;
+      return response.json();
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ 
@@ -185,8 +133,8 @@ export function useResendInvitation() {
       });
       toast.success('Invitation resent successfully');
     },
-    onError: () => {
-      toast.error('Failed to resend invitation');
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to resend invitation');
     },
   });
 }

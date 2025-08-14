@@ -329,6 +329,48 @@ export async function DELETE(
     // Manually delete related records first (Supabase cascade doesn't always work with auth.users)
     console.log('🔍 [API/Users/UserId] Deleting related records...');
 
+    // Clean up account_invitations first
+    console.log('🔍 [API/Users/UserId] Cleaning up invitations...');
+    
+    // 1. Delete invitations created by this user
+    const { error: invitedByError } = await serviceClient
+      .from('account_invitations')
+      .delete()
+      .eq('invited_by', userId);
+    
+    if (invitedByError) {
+      console.error('⚠️ [API/Users/UserId] Error deleting invitations by user:', invitedByError);
+    } else {
+      console.log('✅ [API/Users/UserId] Deleted invitations created by user');
+    }
+    
+    // 2. Set accepted_by to NULL for invitations they accepted
+    const { error: acceptedByError } = await serviceClient
+      .from('account_invitations')
+      .update({ accepted_by: null })
+      .eq('accepted_by', userId);
+    
+    if (acceptedByError) {
+      console.error('⚠️ [API/Users/UserId] Error updating accepted invitations:', acceptedByError);
+    } else {
+      console.log('✅ [API/Users/UserId] Updated invitations accepted by user');
+    }
+    
+    // 3. Delete pending invitations for their email
+    if (targetUser.user.email) {
+      const { error: pendingInviteError } = await serviceClient
+        .from('account_invitations')
+        .delete()
+        .eq('email', targetUser.user.email.toLowerCase())
+        .is('accepted_at', null);
+      
+      if (pendingInviteError) {
+        console.error('⚠️ [API/Users/UserId] Error deleting pending invitations:', pendingInviteError);
+      } else {
+        console.log('✅ [API/Users/UserId] Deleted pending invitations for user email');
+      }
+    }
+
     // Delete from account_users
     const { error: accountUsersError } = await serviceClient
       .from('account_users')

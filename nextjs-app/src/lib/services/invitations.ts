@@ -245,19 +245,29 @@ export async function isEmailInvited(accountId: string, email: string): Promise<
 export async function isUserMember(accountId: string, email: string): Promise<boolean> {
   const supabase = createAdminClient();
   
-  // First get the user by email
+  // First, find the user by email using the admin API
   const { data: userData } = await supabase.auth.admin.listUsers();
   const user = userData?.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
   
-  if (!user) return false;
+  if (!user) {
+    // No user with this email exists
+    return false;
+  }
   
-  // Check if they're a member
-  const { data } = await supabase
+  const userId = user.id;
+  
+  // Check if this user is a member of the account
+  const { data, error } = await supabase
     .from('account_users')
     .select('id')
     .eq('account_id', accountId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .limit(1);
+  
+  if (error) {
+    console.error('Error checking user membership:', error);
+    return false;
+  }
     
   return (data?.length || 0) > 0;
 }
@@ -288,4 +298,80 @@ export async function resendInvitation(invitationId: string): Promise<AccountInv
     role: original.role,
     invitedBy: original.invited_by,
   });
+}
+
+/**
+ * Accept an invitation after signup (for new users)
+ */
+export async function acceptInvitationAfterSignup(token: string, email: string): Promise<{
+  success: boolean;
+  account_id?: string;
+  role?: string;
+  error?: string;
+}> {
+  const supabase = createAdminClient();
+  
+  // First, verify the invitation exists and matches the email
+  const { data: invitation, error: invError } = await supabase
+    .from('account_invitations')
+    .select('*')
+    .eq('token', token)
+    .eq('email', email.toLowerCase())
+    .single();
+    
+  if (invError || !invitation) {
+    return { success: false, error: 'Invitation not found or email does not match' };
+  }
+  
+  // Check if already accepted
+  if (invitation.accepted_at) {
+    return { success: false, error: 'Invitation already accepted' };
+  }
+  
+  // Check if expired
+  if (new Date(invitation.expires_at) < new Date()) {
+    return { success: false, error: 'Invitation has expired' };
+  }
+  
+  // Get the user by email
+  const { data: userData } = await supabase.auth.admin.listUsers();
+  const user = userData?.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+  
+  if (!user) {
+    return { success: false, error: 'User not found. Please complete signup first.' };
+  }
+  
+  // Add user to the account
+  const { error: addError } = await supabase
+    .from('account_users')
+    .insert({
+      account_id: invitation.account_id,
+      user_id: user.id,
+      role: invitation.role,
+    });
+    
+  if (addError) {
+    // Check if user is already a member
+    if (addError.code === '23505') { // Unique constraint violation
+      return { success: false, error: 'User is already a member of this account' };
+    }
+    throw addError;
+  }
+  
+  // Mark invitation as accepted
+  const { error: updateError } = await supabase
+    .from('account_invitations')
+    .update({ 
+      accepted_at: new Date().toISOString(),
+      accepted_by: user.id 
+    })
+    .eq('id', invitation.id);
+    
+  if (updateError) throw updateError;
+  
+  return {
+    success: true,
+    account_id: invitation.account_id,
+    role: invitation.role,
+  };
 }
