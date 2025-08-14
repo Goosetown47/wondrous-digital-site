@@ -1,6 +1,8 @@
+import React from 'react';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { AccountInvitation } from '@/types/database';
-import { queueEmail } from '@/lib/services/email';
+import { sendEmail } from '@/lib/services/email';
+import { InvitationEmail } from '@/emails/invitation';
 import { getAppUrl } from '@/lib/utils/app-url';
 
 export interface CreateInvitationParams {
@@ -54,23 +56,23 @@ export async function createInvitation(params: CreateInvitationParams): Promise<
                       'A team member';
   const inviterEmail = inviterResult.data?.user?.email || 'noreply@wondrousdigital.com';
   
-  // Queue invitation email
+  // Send invitation email immediately
   const appUrl = getAppUrl();
   const invitationLink = `${appUrl}/invitation?token=${data.token}`;
   
-  await queueEmail({
+  await sendEmail({
     to: params.email,
     from: 'Wondrous Digital <invitations@wondrousdigital.com>',
     subject: `${inviterName} invited you to join ${accountName}`,
-    templateId: 'invitation',
-    templateData: {
-      invitee_name: params.email.split('@')[0], // Use email prefix as name
-      inviter_name: inviterName,
-      inviter_email: inviterEmail,
-      account_name: accountName,
-      invitation_link: invitationLink,
+    react: React.createElement(InvitationEmail, {
+      inviteeName: params.email.split('@')[0], // Use email prefix as name
+      inviterName: inviterName,
+      inviterEmail: inviterEmail,
+      accountName: accountName,
       role: params.role,
-    },
+      invitationLink: invitationLink,
+      expiresIn: '48 hours', // Updated from default 7 days
+    }),
   });
   
   return data;

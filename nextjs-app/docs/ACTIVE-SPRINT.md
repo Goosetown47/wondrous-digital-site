@@ -148,6 +148,7 @@ Our initial MVP status launch will be aimed at getting to 25 customers as quickl
 - [ ] 🪲 The users select div with "change role" and "remove from account" and clear selection options needs to have consistent looking buttons instead of just text or buttons
 - [ ] 🪲 The users select div with "change role" and "remove from account" and clear selection stays active even when the selected item in the list is no longer there (e.g., I deleted it) (it works if I deselect it) -- It should actively check if something is selected or not, then respond accordingly
 - [ ] 🪲 Project Settings / General tab: The Preview Domain still has ".sites" in it and we don't use that sub sub domain anymore. The Domains tab is correct
+- [ ] 🪲 Toast notifications often double up (we get two at the same time, duplicates). This happens for many actions across the app.
 
 
 
