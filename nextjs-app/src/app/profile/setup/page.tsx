@@ -123,6 +123,7 @@ function ProfileSetupContent() {
           data: {
             full_name: fullName,
           },
+          emailRedirectTo: window.location.origin, // Redirect to current domain after email confirmation
         },
       });
 
