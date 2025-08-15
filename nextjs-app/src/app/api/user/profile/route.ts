@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
     const profileData = {
       ...body,
       user_id: user.id,
+      profile_completed: body.profile_completed ?? false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

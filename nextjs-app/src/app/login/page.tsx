@@ -104,7 +104,7 @@ function LoginPageContent() {
             console.log('[Login] Successfully accepted invitation');
             toast.success('Invitation accepted! Setting up your profile...');
             
-            // Check if user already has a profile
+            // Check if user already has a profile and if it's completed
             const profileResponse = await fetch('/api/user/profile', {
               method: 'GET',
               credentials: 'include',
@@ -112,12 +112,12 @@ function LoginPageContent() {
             
             const profileData = await profileResponse.json();
             
-            if (!profileData.profile) {
-              // No profile exists, redirect to welcome page for first-time setup
+            if (!profileData.profile || !profileData.profile.profile_completed) {
+              // No profile exists OR profile not completed, redirect to welcome page
               window.location.href = `/profile/welcome?account=${pendingInvitation.account_id}`;
               return;
             } else {
-              // Profile exists, go directly to dashboard
+              // Profile exists and is completed, go directly to dashboard
               window.location.href = '/dashboard';
               return;
             }

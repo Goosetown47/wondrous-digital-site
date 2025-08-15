@@ -128,15 +128,15 @@ function WelcomePageContent() {
           setAccountInfo(accountData);
         }
 
-        // Check if user already has a profile
+        // Check if user already has a completed profile
         const { data: existingProfile } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('user_id', user.id)
           .single();
 
-        if (existingProfile) {
-          // User already has a profile, redirect to dashboard
+        if (existingProfile?.profile_completed) {
+          // User already completed their profile, redirect to dashboard
           router.push('/dashboard');
           return;
         }
@@ -200,9 +200,10 @@ function WelcomePageContent() {
         display_name: skip ? (user.email?.split('@')[0] || 'User') : displayName,
         phone: skip ? null : phone,
         avatar_url: skip ? null : avatarUrl,
+        profile_completed: true,  // Mark as completed even if skipped
         metadata: {
           welcomed: true,
-          profile_completed: !skip
+          setup_skipped: skip
         }
       };
 

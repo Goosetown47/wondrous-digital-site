@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
   display_name TEXT,
   phone TEXT,
   avatar_url TEXT,
+  profile_completed BOOLEAN DEFAULT FALSE,
   metadata JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -79,10 +80,11 @@ CREATE TRIGGER update_user_profiles_updated_at
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.user_profiles (user_id, display_name, metadata)
+  INSERT INTO public.user_profiles (user_id, display_name, profile_completed, metadata)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, '@', 1)),
+    FALSE,  -- Profile not completed by default
     COALESCE(NEW.raw_user_meta_data, '{}')
   )
   ON CONFLICT (user_id) DO NOTHING;
