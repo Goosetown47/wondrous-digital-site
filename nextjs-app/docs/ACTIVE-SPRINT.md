@@ -42,6 +42,13 @@ Our initial MVP status launch will be aimed at getting to 25 customers as quickl
 - [x] 🚀 Integrated Resend for branded invitation emails
 - [x] 🚀 Updated invitation expiration from 7 days to 48 hours
 - [x] 🪲 Fixed UX - replaced "Return Home" buttons with help email message
+- [x] 🪲 Fixed email sending service - switched from queued to direct sending via Resend
+- [x] 🪲 Fixed Supabase redirect URLs for preview deployments
+- [x] 🪲 Fixed invitation acceptance flow - moved to login where session exists
+- [x] 🚀 Created user_profiles table with migration and RLS policies
+- [x] 🚀 Built welcome interstitial page (/profile/welcome) for first-time invited users
+- [x] 🚀 Added personalized dashboard welcome using display_name from user_profiles
+- [x] 🪲 Fixed profile_completed flag to ensure welcome page shows for new users
 
 **Testing Completed:**
 - [x] ⚗️ Tested full invitation flow from send to acceptance
@@ -51,6 +58,7 @@ Our initial MVP status launch will be aimed at getting to 25 customers as quickl
 - [x] ⚗️ Verified role assignment (user vs account_owner)
 - [x] ⚗️ Verified all emails are Wondrous branded via Resend
 - [x] ⚗️ Confirmed database records update correctly
+- [x] ⚗️ End-to-end testing of complete invitation flow in production environment
 
 
 ### [PACKET] Account Owner User Management
@@ -215,7 +223,6 @@ Our initial MVP status launch will be aimed at getting to 25 customers as quickl
 
 ## SPRINT LOGS ----------------------------------------------------------------------------- ##
 
-### Day 1 - User Invitation System Complete
 - ✅ **Completed entire User Invitation System packet**
   - Built complete invitation infrastructure from scratch
   - Created /invitation, /profile/setup, and /auth/verify-email-pending pages
@@ -224,6 +231,44 @@ Our initial MVP status launch will be aimed at getting to 25 customers as quickl
   - Connected AccountUsers component with invitation management UI
   - Updated invitation expiration from 7 days to 48 hours per requirements
   - Improved UX by replacing "Return Home" buttons with help email contact
+
+- ✅ **Fixed critical email delivery issues**
+  - Discovered email queue wasn't processing (no worker/cron job)
+  - Switched from queueEmail() to sendEmail() for immediate delivery
+  - Verified emails now send immediately with proper Resend branding
+
+- ✅ **Fixed Supabase authentication redirects**
+  - Identified Site URL misconfiguration (was localhost:3000)
+  - Updated to production URL for proper email confirmations
+  - Added emailRedirectTo parameter for dynamic preview URLs
+
+- ✅ **Resolved invitation acceptance bug**
+  - Root cause: Server-side /auth/confirm had no session after email verification
+  - Moved invitation acceptance to login flow where session exists
+  - Users now correctly join invited accounts instead of creating new ones
+
+- ✅ **Implemented welcome interstitial for invited users**
+  - Created /profile/welcome page with account context
+  - Shows who invited them, their role, and account details
+  - Profile setup form with display name, phone, avatar upload
+  - "Skip for Now" option for quick access
+  - Created user_profiles table with proper RLS policies
+
+- ✅ **Added personalized dashboard experience**
+  - Dashboard now shows "Welcome, [Name]" using display_name
+  - Fetches from user_profiles with fallback to email prefix
+  - Profile_completed flag ensures welcome page shows once
+
+- 🔧 **Database migrations applied:**
+  - 20250815_000001_create_invitation_system.sql
+  - 20250816_000001_fix_invitation_account_access.sql  
+  - 20250817_000001_fix_account_users_security.sql
+  - 20250818_000001_create_user_profiles.sql (with profile_completed flag)
+
+- ✅ **Production testing completed successfully**
+  - Full end-to-end flow tested on Vercel preview
+  - Invitation → Signup → Email Verification → Welcome → Dashboard
+  - All edge cases working correctly
 
 - ✅ **Thoroughly tested all invitation scenarios**
   - New user signup flow with email verification
