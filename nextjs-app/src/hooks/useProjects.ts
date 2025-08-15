@@ -70,6 +70,9 @@ export function useCreateProject() {
     onSuccess: (data) => {
       // Invalidate all project queries
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      // Invalidate project access queries so dropdowns update
+      queryClient.invalidateQueries({ queryKey: ['account-projects-with-access'] });
+      queryClient.invalidateQueries({ queryKey: ['user-project-count'] });
       toast.success(`Project "${data.name}" created successfully`);
     },
     onError: (error) => {
@@ -92,6 +95,9 @@ export function useUpdateProject(projectId: string) {
       // Invalidate list queries
       queryClient.invalidateQueries({ queryKey: ['projects', 'all'] });
       queryClient.invalidateQueries({ queryKey: ['projects', 'account'] });
+      // Invalidate project access queries so dropdowns update
+      queryClient.invalidateQueries({ queryKey: ['account-projects-with-access'] });
+      queryClient.invalidateQueries({ queryKey: ['user-project-count'] });
       toast.success('Project updated successfully');
     },
     onError: (error) => {
@@ -115,6 +121,9 @@ export function useArchiveProject() {
     mutationFn: archiveProject,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      // Invalidate project access queries so dropdowns update
+      queryClient.invalidateQueries({ queryKey: ['account-projects-with-access'] });
+      queryClient.invalidateQueries({ queryKey: ['user-project-count'] });
       toast.success(`Project "${data.name}" archived`);
     },
     onError: (error) => {
@@ -133,6 +142,9 @@ export function useRestoreProject() {
     mutationFn: restoreProject,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      // Invalidate project access queries so dropdowns update
+      queryClient.invalidateQueries({ queryKey: ['account-projects-with-access'] });
+      queryClient.invalidateQueries({ queryKey: ['user-project-count'] });
       toast.success(`Project "${data.name}" restored`);
     },
     onError: (error) => {
@@ -152,6 +164,9 @@ export function useDeleteProject() {
     onSuccess: () => {
       // Invalidate all project-related queries
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      // Invalidate project access queries so dropdowns update
+      queryClient.invalidateQueries({ queryKey: ['account-projects-with-access'] });
+      queryClient.invalidateQueries({ queryKey: ['user-project-count'] });
       toast.success('Project deleted permanently');
     },
     onError: (error) => {
@@ -174,6 +189,9 @@ export function useCloneProject() {
     }) => cloneProject(sourceProjectId, newName, targetAccountId),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      // Invalidate project access queries so dropdowns update
+      queryClient.invalidateQueries({ queryKey: ['account-projects-with-access'] });
+      queryClient.invalidateQueries({ queryKey: ['user-project-count'] });
       toast.success(`Project cloned as "${data.name}"`);
     },
     onError: (error) => {
@@ -200,7 +218,10 @@ export function useReassignProjectAccount() {
       // Invalidate list queries to refresh the display
       queryClient.invalidateQueries({ queryKey: ['projects', 'all'] });
       queryClient.invalidateQueries({ queryKey: ['projects', 'account'] });
-      toast.success(`Project reassigned to "${data.accounts?.name}"`);
+      // Invalidate project access queries so dropdowns update
+      queryClient.invalidateQueries({ queryKey: ['account-projects-with-access'] });
+      queryClient.invalidateQueries({ queryKey: ['user-project-count'] });
+      toast.success(`Project reassigned to "${data.accounts?.name}"`)
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : 'Failed to reassign project');

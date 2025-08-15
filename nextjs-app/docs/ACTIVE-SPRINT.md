@@ -104,33 +104,13 @@ Our initial MVP status launch will be aimed at getting to 25 customers as quickl
 - [x] 🚀 Created centralized RoleBadge component for UI consistency
 
 
-### [PACKET] User Profile Fix
-**Goal:** Fix missing user profiles for existing users
-**Deliverable:** All users have editable profiles
+### [PACKET] Final Account Fixes & Updates
+*These are the final clean up tasks we need to complete before moving on to the next release*
 
+**User Profiles**
 - [ ] 🪲 Create missing user_profiles entries for existing users
 - [ ] 🚀 Add profile creation trigger for new users
 - [ ] ⚗️ Verify profile form elements are accessible
-
-
-### [PACKET] Plan Management for Manual Billing
-**Goal:** Allow admins to manually manage customer plans
-**Deliverable:** Admin interface for plan assignment
-
-- [ ] 🚀 Add plan selector to account settings (admin only)
-  - Plans: [Basic Web Subscriptions: FREE, BASIC($29/month)], 
-           [Marketing Platform: PRO ($397/month), MAX ($697/month), SCALE ($997/month)]
-- [ ] 🚀 Create addons management interface
-           [GEO/SEO Package: PERFORM ($459/month)]
-- [ ] 🚀 Add one-time fee tracking
-  - Platform Setup Fee ($1500)
-  - SEO Setup Fee ($750)
-- [ ] 🚀 Add billing notes field for manual tracking
-
-
-### [PACKET] Essential Account Management
-**Goal:** Core functionality for managing 25 accounts
-**Deliverable:** Basic account and project management tools
 
 **Account Safety**
 - [ ] 🚀 Require 2-step process for DELETE accounts (suspend first)
@@ -145,33 +125,15 @@ Our initial MVP status launch will be aimed at getting to 25 customers as quickl
 - [ ] 🚀 Move "back" link above HEADER
 - [ ] 🪲 Remove/fix redundant edit button in settings view
 
-**Sign Up**
-- [ ] ✂️ Remove public signup from login form (already disabled but may have leftover link)
-
-
-
-### [PACKET] Tools Area - AccountUsers Component
-**Goal:** Replace placeholder with functional user management
-**Deliverable:** Working user list and management in Tools area
-
-- [ ] 🚀 Implement actual user listing in /tools/accounts/[id]/components/AccountUsers
-- [ ] 🚀 Add role management functionality
-- [ ] 🚀 Connect to invitation system
-- [ ] 🚀 Add remove user functionality
-
-
-### [PACKET] Bug Fixes
-
+**Bug Fixes**
 - [ ] 🪲 Users table doesn't auto-refresh without a page reload when something changes
 - [ ] 🪲 The users select div with "change role" and "remove from account" and clear selection options needs to have consistent looking buttons instead of just text or buttons
 - [ ] 🪲 The users select div with "change role" and "remove from account" and clear selection stays active even when the selected item in the list is no longer there (e.g., I deleted it) (it works if I deselect it) -- It should actively check if something is selected or not, then respond accordingly
 - [ ] 🪲 Project Settings / General tab: The Preview Domain still has ".sites" in it and we don't use that sub sub domain anymore. The Domains tab is correct
 - [ ] 🪲 Toast notifications often double up (we get two at the same time, duplicates). This happens for many actions across the app.
 
-
-
-### [PACKET] Build Warnings
-
+**Build Warnings (DISCUSS THIS)**
+*Do we need to take care of these things? I want to have a discussion*
 - [ ] ⚠ Linting is disabled. (Should it be?)
       ⚠ Warning: Found multiple lockfiles. Selecting
 - [ ] /home/goosetown/package-lock.json. Consider removing the lockfiles at:
@@ -192,6 +154,8 @@ Our initial MVP status launch will be aimed at getting to 25 customers as quickl
      <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (138kiB)
      impacts deserialization performance (consider using Buffer instead and decode
       when needed)
+
+
 
 
 
