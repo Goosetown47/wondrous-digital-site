@@ -357,6 +357,11 @@ The USER will update STATUS LOG once the SPRINT is complete with everything in A
 ### 6. Deployment
 *Ships features to production with confidence.*
 
+#### Manual Migrations
+- [ ] Outline the database migrations the user must manually add to the PROD database in Supabase. 
+- [ ] Confirm with user they've been applied successfully.
+
+
 #### Deploy sequence:
 - [ ] Create PR to `nextjs-pagebuilder-core` branch (NOT master/main!)  
   *This is our deployment branch that Vercel monitors*

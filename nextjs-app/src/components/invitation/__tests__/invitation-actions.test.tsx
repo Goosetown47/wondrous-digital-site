@@ -30,20 +30,20 @@ import { InvitationActions } from '../invitation-actions';
 global.fetch = vi.fn() as unknown as typeof fetch;
 
 describe('InvitationActions', () => {
-  const mockInvitation: InvitationWithAccount = {
-    id: '123',
-    account_id: 'acc-123',
-    email: 'test@example.com',
-    role: 'user',
-    token: 'test-token',
-    invited_by: 'inviter-id',
-    invited_at: new Date().toISOString(),
-    expires_at: new Date(Date.now() + 86400000).toISOString(),
-    accounts: {
-      name: 'Test Account',
-      slug: 'test-account',
-    },
-  };
+  // const mockInvitation: InvitationWithAccount = {
+  //   id: '123',
+  //   account_id: 'acc-123',
+  //   email: 'test@example.com',
+  //   role: 'user',
+  //   token: 'test-token',
+  //   invited_by: 'inviter-id',
+  //   invited_at: new Date().toISOString(),
+  //   expires_at: new Date(Date.now() + 86400000).toISOString(),
+  //   accounts: {
+  //     name: 'Test Account',
+  //     slug: 'test-account',
+  //   },
+  // };
 
   const mockSetIsProcessing = vi.fn();
 
@@ -59,7 +59,6 @@ describe('InvitationActions', () => {
     it('should show "Login to Accept" button', () => {
       render(
         <InvitationActions
-          invitation={mockInvitation}
           token="test-token"
           isProcessing={false}
           setIsProcessing={mockSetIsProcessing}
@@ -72,7 +71,6 @@ describe('InvitationActions', () => {
     it('should redirect to login when accept is clicked', () => {
       render(
         <InvitationActions
-          invitation={mockInvitation}
           token="test-token"
           isProcessing={false}
           setIsProcessing={mockSetIsProcessing}
@@ -91,7 +89,6 @@ describe('InvitationActions', () => {
     it('should show sign up link', () => {
       render(
         <InvitationActions
-          invitation={mockInvitation}
           token="test-token"
           isProcessing={false}
           setIsProcessing={mockSetIsProcessing}
@@ -105,7 +102,6 @@ describe('InvitationActions', () => {
     it('should redirect to signup when sign up is clicked', () => {
       render(
         <InvitationActions
-          invitation={mockInvitation}
           token="test-token"
           isProcessing={false}
           setIsProcessing={mockSetIsProcessing}
@@ -131,7 +127,6 @@ describe('InvitationActions', () => {
     it('should show "Accept Invitation" button', () => {
       render(
         <InvitationActions
-          invitation={mockInvitation}
           token="test-token"
           isProcessing={false}
           setIsProcessing={mockSetIsProcessing}
@@ -145,11 +140,10 @@ describe('InvitationActions', () => {
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
-      });
+      } as Response);
 
       render(
         <InvitationActions
-          invitation={mockInvitation}
           token="test-token"
           isProcessing={false}
           setIsProcessing={mockSetIsProcessing}
@@ -178,11 +172,10 @@ describe('InvitationActions', () => {
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: false,
         json: async () => ({ error: 'Already a member' }),
-      });
+      } as Response);
 
       render(
         <InvitationActions
-          invitation={mockInvitation}
           token="test-token"
           isProcessing={false}
           setIsProcessing={mockSetIsProcessing}
@@ -192,7 +185,7 @@ describe('InvitationActions', () => {
       const acceptButton = screen.getByText('Accept Invitation');
       fireEvent.click(acceptButton);
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const { toast } = await import('sonner');
         expect(toast.error).toHaveBeenCalledWith('Already a member');
       });
@@ -204,11 +197,10 @@ describe('InvitationActions', () => {
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
-      });
+      } as Response);
 
       render(
         <InvitationActions
-          invitation={mockInvitation}
           token="test-token"
           isProcessing={false}
           setIsProcessing={mockSetIsProcessing}
@@ -231,11 +223,10 @@ describe('InvitationActions', () => {
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
-      });
+      } as Response);
 
       render(
         <InvitationActions
-          invitation={mockInvitation}
           token="test-token"
           isProcessing={false}
           setIsProcessing={mockSetIsProcessing}
@@ -264,11 +255,10 @@ describe('InvitationActions', () => {
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: false,
         json: async () => ({ error: 'Cannot decline invitation' }),
-      });
+      } as Response);
 
       render(
         <InvitationActions
-          invitation={mockInvitation}
           token="test-token"
           isProcessing={false}
           setIsProcessing={mockSetIsProcessing}
@@ -278,7 +268,7 @@ describe('InvitationActions', () => {
       const declineButton = screen.getByText('Decline Invitation');
       fireEvent.click(declineButton);
 
-      await waitFor(() => {
+      await waitFor(async () => {
         const { toast } = await import('sonner');
         expect(toast.error).toHaveBeenCalledWith('Cannot decline invitation');
       });
@@ -290,7 +280,6 @@ describe('InvitationActions', () => {
       // When processing is true, the buttons should be disabled
       render(
         <InvitationActions
-          invitation={mockInvitation}
           token="test-token"
           isProcessing={true}
           setIsProcessing={mockSetIsProcessing}

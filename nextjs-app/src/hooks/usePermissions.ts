@@ -33,22 +33,24 @@ export function usePermissions() {
         return allPermissions?.map(p => `${p.resource}:${p.action}`) || [];
       }
 
-      // Get user's role and permissions
+      // Get user's role in the account
       const { data: accountUser } = await supabase
         .from('account_users')
-        .select(`
-          role,
-          roles!inner(
-            permissions
-          )
-        `)
+        .select('role')
         .eq('account_id', currentAccount.id)
         .eq('user_id', user.id)
         .single();
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const roles = (accountUser as any)?.roles;
-      return Array.isArray(roles?.permissions) ? roles.permissions : [];
+      if (!accountUser) return [];
+
+      // Get permissions for that role from the roles table
+      const { data: roleData } = await supabase
+        .from('roles')
+        .select('permissions')
+        .eq('name', accountUser.role)
+        .single();
+
+      return Array.isArray(roleData?.permissions) ? roleData.permissions : [];
     },
     enabled: !!user && !!currentAccount,
   });

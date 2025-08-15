@@ -139,6 +139,87 @@ Use these classifications to identify each type of task. We can expand this list
 - Feature Tagging & Segmentation System
 
 
+### [PACKET] Plan Management for Manual Billing
+**Goal:** Allow admins to manually manage customer plans
+**Deliverable:** Admin interface for plan assignment
+
+I don't exactly know what we need to do to get our plan management billing properly set up for our service. Here is the existing current plan to charge our customers.
+
+
+# Here is the pricing tier structure:
+
+We have 3 segments to it Basic Websites, Smart Marketing Platform, and Addons.
+
+## Basic Websites
+We have two plans that allow users to create simple websites with basic functionality. Great if you just need static content and no smart functionality.
+
+### FREE 
+- Users can create 1 project
+- They can utilize the preview domain, but not add custom domains
+- Only 1 account_owner user, no extra users
+- No data, just the builder
+- No customer service/support
+
+### BASIC ($29/month)
+- Users can create 3 projects
+- They can utilize custom domains
+- Only 1 account_owner user, no extra users
+- They get data enabled so they can view how their projects are doing
+- Basic service/support
+
+## Smart Marketing Platform
+This has a $1500 one time setup fee. We handle setting up your platform for your business so you don't have to worry about it.
+
+### PRO ($397/month)
+- Users get access to 5 projects
+- Unlimited custom domains and subdomains
+- 3 users
+- They get access to our marketing platform and smart website sections
+(We whitelabel a service called GoHighLevel)
+  - They get over 50 different features
+  - 10,000 emails/month
+  - 250 SMS/calls
+  - 100 premium automation executions
+  - 25 workflow AI executions
+  - Unlimited forms/calendar bookings
+  - 1 user accounts
+- Premium Support
+
+### SCALE ($697/month) 
+- Users get access to 10 projects 
+- Unlimited custom domains and subdomains
+- 5 users
+- Smart Marketing Platform Access
+  - 20,000 emails
+  - 750 SMS/calls
+  - 5,000 AI words
+  - 500 premium automation executions
+  - 150 workflow AI executions
+  - Unlimited forms/calendar bookings
+- Premium Support
+
+### MAX ($997/month)
+- Users get 25 projects
+- Unlimited custom domains and subdomains
+- 10 users
+- Smart Marketing Platform Access
+  - 45,000 emails
+  - 1,500 SMS/calls
+  - 10,000 AI words
+  - 1,000 premium automation executions
+  - 300 workflow AI executions
+  - Unlimited forms/calendar bookings
+- Premium Support
+
+
+*Addons* 
+### PERFORM ($459/month)
+*This is optimizing your website for SEO and GEO, which helps you rank higher for LLMs and organic searches. This has a one time setup fee of $750*
+
+- We utilize Search Atlas as a whitelable SEO platform which users will get access to that will improve the rankings of their websites over time.
+
+
+
 ### [PACKET] Feature Tagging System
 **Goal:** Create a system where we can segment our features and enable them for different tiered customers.
 **Deliverable:** Tag system with template integration that links to paid tiers

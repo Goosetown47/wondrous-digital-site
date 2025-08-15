@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAccounts } from '@/hooks/useAccounts';
-import { useUpdateUserRole, useRemoveUserFromAccount } from '@/hooks/useUsers';
+import { useUpdateUserRole, useRemoveUserFromAccount, useAddUserToAccount } from '@/hooks/useUsers';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { RoleBadge } from '@/components/ui/role-badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -35,7 +36,8 @@ export function UserAccountsDialog({ user, open, onOpenChange }: UserAccountsDia
   const { data: allAccounts } = useAccounts();
   const updateUserRole = useUpdateUserRole();
   const removeUserFromAccount = useRemoveUserFromAccount();
-  const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
+  const addUserToAccount = useAddUserToAccount();
+  const [selectedAccounts, setSelectedAccounts] = useState<Array<{ accountId: string; role: 'admin' | 'staff' | 'account_owner' | 'user' }>>([]);
   const [addingAccounts, setAddingAccounts] = useState(false);
 
   if (!user) return null;
@@ -61,10 +63,22 @@ export function UserAccountsDialog({ user, open, onOpenChange }: UserAccountsDia
   };
 
   const handleAddToAccounts = async () => {
-    // TODO: Implement bulk add to accounts
-    console.log('Add to accounts:', selectedAccounts);
-    setSelectedAccounts([]);
-    setAddingAccounts(false);
+    if (selectedAccounts.length === 0 || !user) return;
+
+    try {
+      await addUserToAccount.mutateAsync({
+        userId: user.id,
+        accounts: selectedAccounts.map(({ accountId, role }) => ({
+          account_id: accountId,
+          role,
+        })),
+      });
+      setSelectedAccounts([]);
+      setAddingAccounts(false);
+    } catch (error) {
+      // Error is handled by the mutation's onError
+      console.error('Failed to add user to accounts:', error);
+    }
   };
 
   return (
@@ -92,14 +106,18 @@ export function UserAccountsDialog({ user, open, onOpenChange }: UserAccountsDia
                         onValueChange={(role) => handleRoleChange(account.account_id, role)}
                         disabled={updateUserRole.isPending}
                       >
-                        <SelectTrigger className="w-36 h-8">
-                          <SelectValue />
+                        <SelectTrigger className="w-[180px] h-8">
+                          <SelectValue>
+                            {account.role && <RoleBadge role={account.role as 'admin' | 'staff' | 'account_owner' | 'user'} size="sm" />}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="staff">Staff</SelectItem>
-                          <SelectItem value="account_owner">Account Owner</SelectItem>
-                          <SelectItem value="user">User</SelectItem>
+                          <SelectItem value="user">
+                            <RoleBadge role="user" size="sm" />
+                          </SelectItem>
+                          <SelectItem value="account_owner">
+                            <RoleBadge role="account_owner" size="sm" />
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -141,28 +159,57 @@ export function UserAccountsDialog({ user, open, onOpenChange }: UserAccountsDia
             {addingAccounts && (
               <div className="space-y-3">
                 <ScrollArea className="h-[200px] rounded-md border p-4">
-                  <div className="space-y-2">
-                    {availableAccounts.map((account) => (
-                      <div key={account.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={account.id}
-                          checked={selectedAccounts.includes(account.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedAccounts([...selectedAccounts, account.id]);
-                            } else {
-                              setSelectedAccounts(selectedAccounts.filter(id => id !== account.id));
-                            }
-                          }}
-                        />
-                        <label
-                          htmlFor={account.id}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {account.name}
-                        </label>
-                      </div>
-                    ))}
+                  <div className="space-y-3">
+                    {availableAccounts.map((account) => {
+                      const selected = selectedAccounts.find(a => a.accountId === account.id);
+                      return (
+                        <div key={account.id} className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id={account.id}
+                              checked={!!selected}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedAccounts([...selectedAccounts, { accountId: account.id, role: 'user' }]);
+                                } else {
+                                  setSelectedAccounts(selectedAccounts.filter(a => a.accountId !== account.id));
+                                }
+                              }}
+                            />
+                            <label
+                              htmlFor={account.id}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {account.name}
+                            </label>
+                          </div>
+                          {selected && (
+                            <Select
+                              value={selected.role}
+                              onValueChange={(role: 'admin' | 'staff' | 'account_owner' | 'user') => {
+                                setSelectedAccounts(selectedAccounts.map(a => 
+                                  a.accountId === account.id ? { ...a, role } : a
+                                ));
+                              }}
+                            >
+                              <SelectTrigger className="w-[140px] h-7">
+                                <SelectValue>
+                                  <RoleBadge role={selected.role} size="sm" />
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="user">
+                                  <RoleBadge role="user" size="sm" />
+                                </SelectItem>
+                                <SelectItem value="account_owner">
+                                  <RoleBadge role="account_owner" size="sm" />
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+                      );
+                    })}
                     {availableAccounts.length === 0 && (
                       <p className="text-sm text-muted-foreground text-center py-4">
                         No available accounts to add.

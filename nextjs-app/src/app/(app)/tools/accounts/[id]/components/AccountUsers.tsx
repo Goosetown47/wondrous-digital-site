@@ -8,6 +8,7 @@ import {
   useCancelInvitation, 
   useResendInvitation 
 } from '@/hooks/useInvitations';
+import { useUserProjectCounts, useAccountProjectCount } from '@/hooks/useUserProjectCounts';
 import {
   Card,
   CardContent,
@@ -62,6 +63,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Plus, 
   Users, 
@@ -73,9 +75,17 @@ import {
   UserPlus,
   Clock,
   CheckCircle,
+  ChevronDown,
+  FolderOpen,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface AccountUsersProps {
   accountId: string;
@@ -84,6 +94,8 @@ interface AccountUsersProps {
 export function AccountUsers({ accountId }: AccountUsersProps) {
   const { data: users, isLoading: usersLoading } = useAccountUsers(accountId);
   const { data: invitations, isLoading: invitationsLoading } = useAccountInvitations(accountId);
+  const { data: userProjectCounts } = useUserProjectCounts(accountId);
+  const { data: totalProjects } = useAccountProjectCount(accountId);
   
   const updateRole = useUpdateUserRole();
   const removeUser = useRemoveUser();
@@ -96,6 +108,10 @@ export function AccountUsers({ accountId }: AccountUsersProps) {
   const [inviteRole, setInviteRole] = useState<'user' | 'account_owner'>('user');
   const [inviteError, setInviteError] = useState<string>('');
   const [removeUserDialog, setRemoveUserDialog] = useState<{ open: boolean; userId?: string; userEmail?: string }>({ open: false });
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [bulkActionModalOpen, setBulkActionModalOpen] = useState(false);
+  const [bulkAction, setBulkAction] = useState<'role' | 'remove' | null>(null);
+  const [bulkNewRole, setBulkNewRole] = useState<'user' | 'account_owner'>('user');
 
   const handleInviteUser = async () => {
     if (!inviteEmail) return;
@@ -122,6 +138,15 @@ export function AccountUsers({ accountId }: AccountUsersProps) {
   };
 
   const handleRoleChange = async (userId: string, newRole: 'account_owner' | 'user') => {
+    // If changing from account_owner to user, check if it's the last account_owner
+    if (newRole === 'user') {
+      const accountOwners = users?.filter(u => u.role === 'account_owner') || [];
+      if (accountOwners.length <= 1) {
+        toast.error('Cannot remove the last account owner');
+        return;
+      }
+    }
+    
     try {
       await updateRole.mutateAsync({
         accountId,
@@ -170,6 +195,95 @@ export function AccountUsers({ accountId }: AccountUsersProps) {
       toast.success('Invitation cancelled');
     } catch {
       toast.error('Failed to cancel invitation');
+    }
+  };
+
+  const handleSelectUser = (userId: string) => {
+    const newSelected = new Set(selectedUsers);
+    if (newSelected.has(userId)) {
+      newSelected.delete(userId);
+    } else {
+      newSelected.add(userId);
+    }
+    setSelectedUsers(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedUsers.size === users?.length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(users?.map(u => u.user_id) || []));
+    }
+  };
+
+  const handleBulkRoleChange = async () => {
+    if (selectedUsers.size === 0) return;
+
+    // Check if trying to remove all account owners
+    if (bulkNewRole === 'user') {
+      const selectedAccountOwners = users?.filter(u => 
+        selectedUsers.has(u.user_id) && u.role === 'account_owner'
+      ) || [];
+      const remainingAccountOwners = users?.filter(u => 
+        !selectedUsers.has(u.user_id) && u.role === 'account_owner'
+      ) || [];
+      
+      if (selectedAccountOwners.length > 0 && remainingAccountOwners.length === 0) {
+        toast.error('Cannot remove all account owners');
+        return;
+      }
+    }
+
+    try {
+      const promises = Array.from(selectedUsers).map(userId => 
+        updateRole.mutateAsync({
+          accountId,
+          userId,
+          role: bulkNewRole,
+        })
+      );
+      
+      await Promise.all(promises);
+      toast.success(`Updated ${selectedUsers.size} users successfully`);
+      setSelectedUsers(new Set());
+      setBulkActionModalOpen(false);
+      setBulkAction(null);
+    } catch {
+      toast.error('Failed to update some users');
+    }
+  };
+
+  const handleBulkRemove = async () => {
+    if (selectedUsers.size === 0) return;
+
+    // Check if trying to remove account owners
+    const selectedAccountOwners = users?.filter(u => 
+      selectedUsers.has(u.user_id) && u.role === 'account_owner'
+    ) || [];
+    const remainingAccountOwners = users?.filter(u => 
+      !selectedUsers.has(u.user_id) && u.role === 'account_owner'
+    ) || [];
+    
+    if (selectedAccountOwners.length > 0 && remainingAccountOwners.length === 0) {
+      toast.error('Cannot remove all account owners');
+      return;
+    }
+
+    try {
+      const promises = Array.from(selectedUsers).map(userId => 
+        removeUser.mutateAsync({
+          accountId,
+          userId,
+        })
+      );
+      
+      await Promise.all(promises);
+      toast.success(`Removed ${selectedUsers.size} users successfully`);
+      setSelectedUsers(new Set());
+      setBulkActionModalOpen(false);
+      setBulkAction(null);
+    } catch {
+      toast.error('Failed to remove some users');
     }
   };
 
@@ -281,6 +395,68 @@ export function AccountUsers({ accountId }: AccountUsersProps) {
             </TabsList>
 
             <TabsContent value="members" className="space-y-4">
+              {/* Bulk Actions Toolbar */}
+              {selectedUsers.size > 0 && (
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">
+                      {selectedUsers.size} user{selectedUsers.size > 1 ? 's' : ''} selected
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedUsers(new Set())}
+                    >
+                      Clear selection
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="secondary" size="sm">
+                          <Shield className="mr-2 h-4 w-4" />
+                          Change Role
+                          <ChevronDown className="ml-2 h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setBulkNewRole('account_owner');
+                            setBulkAction('role');
+                            setBulkActionModalOpen(true);
+                          }}
+                        >
+                          <Shield className="mr-2 h-4 w-4" />
+                          Make Account Owner
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setBulkNewRole('user');
+                            setBulkAction('role');
+                            setBulkActionModalOpen(true);
+                          }}
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          Make User
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setBulkAction('remove');
+                        setBulkActionModalOpen(true);
+                      }}
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {usersLoading ? (
                 <div className="space-y-2">
                   {[...Array(3)].map((_, i) => (
@@ -292,8 +468,15 @@ export function AccountUsers({ accountId }: AccountUsersProps) {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-[50px]">
+                          <Checkbox
+                            checked={selectedUsers.size === users.length}
+                            onCheckedChange={handleSelectAll}
+                          />
+                        </TableHead>
                         <TableHead>User</TableHead>
                         <TableHead>Role</TableHead>
+                        <TableHead>Project Access</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Joined</TableHead>
                         <TableHead className="w-[100px]"></TableHead>
@@ -303,9 +486,15 @@ export function AccountUsers({ accountId }: AccountUsersProps) {
                       {users.map((accountUser) => (
                         <TableRow key={accountUser.user_id}>
                           <TableCell>
+                            <Checkbox
+                              checked={selectedUsers.has(accountUser.user_id)}
+                              onCheckedChange={() => handleSelectUser(accountUser.user_id)}
+                            />
+                          </TableCell>
+                          <TableCell>
                             <div>
                               <p className="font-medium">
-                                {accountUser.user?.user_metadata?.full_name || accountUser.user?.email || 'Unknown User'}
+                                {accountUser.profile?.display_name || accountUser.user?.user_metadata?.full_name || accountUser.user?.email || 'Unknown User'}
                               </p>
                               {accountUser.user?.email && (
                                 <p className="text-sm text-muted-foreground">
@@ -315,26 +504,81 @@ export function AccountUsers({ accountId }: AccountUsersProps) {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Select
-                              value={accountUser.role}
-                              onValueChange={(value: 'account_owner' | 'user') => 
-                                handleRoleChange(accountUser.user_id, value)
-                              }
-                              disabled={updateRole.isPending}
-                            >
-                              <SelectTrigger className="w-[140px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="user">User</SelectItem>
-                                <SelectItem value="account_owner">
-                                  <span className="flex items-center gap-1">
-                                    <Shield className="h-3 w-3" />
-                                    Account Owner
-                                  </span>
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <div className="flex items-center gap-2">
+                              {accountUser.role === 'account_owner' ? (
+                                <Badge className="bg-purple-100 text-purple-800">
+                                  <Shield className="mr-1 h-3 w-3" />
+                                  Account Owner
+                                </Badge>
+                              ) : accountUser.role === 'admin' ? (
+                                <Badge className="bg-red-100 text-red-800">
+                                  <Shield className="mr-1 h-3 w-3" />
+                                  Admin
+                                </Badge>
+                              ) : accountUser.role === 'staff' ? (
+                                <Badge className="bg-blue-100 text-blue-800">
+                                  <Shield className="mr-1 h-3 w-3" />
+                                  Staff
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary">
+                                  <Users className="mr-1 h-3 w-3" />
+                                  User
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <TooltipProvider>
+                              {(() => {
+                                const userCount = userProjectCounts?.find(c => c.user_id === accountUser.user_id);
+                                
+                                if (accountUser.role === 'account_owner') {
+                                  return (
+                                    <Badge className="bg-green-100 text-green-800">
+                                      <FolderOpen className="mr-1 h-3 w-3" />
+                                      All Projects
+                                    </Badge>
+                                  );
+                                }
+                                
+                                if (!userCount) {
+                                  return (
+                                    <Badge variant="outline" className="text-muted-foreground">
+                                      Loading...
+                                    </Badge>
+                                  );
+                                }
+                                
+                                if (userCount.project_count === 0) {
+                                  return (
+                                    <Badge variant="outline" className="text-orange-600">
+                                      <FolderOpen className="mr-1 h-3 w-3" />
+                                      No Access
+                                    </Badge>
+                                  );
+                                }
+                                
+                                return (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge variant="outline" className="cursor-help">
+                                        <FolderOpen className="mr-1 h-3 w-3" />
+                                        {userCount.project_count} of {totalProjects || 0} projects
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <div className="space-y-1">
+                                        <p className="font-medium">Accessible Projects:</p>
+                                        {userCount.project_names.map((name, idx) => (
+                                          <p key={idx} className="text-sm">• {name}</p>
+                                        ))}
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                );
+                              })()}
+                            </TooltipProvider>
                           </TableCell>
                           <TableCell>
                             {accountUser.user?.email_confirmed_at ? (
@@ -360,6 +604,17 @@ export function AccountUsers({ accountId }: AccountUsersProps) {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => 
+                                    handleRoleChange(accountUser.user_id, 
+                                      accountUser.role === 'user' ? 'account_owner' : 'user')
+                                  }
+                                  disabled={updateRole.isPending}
+                                >
+                                  <Shield className="mr-2 h-4 w-4" />
+                                  {accountUser.role === 'user' ? 'Make Account Owner' : 'Make User'}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   className="text-destructive"
                                   onClick={() => setRemoveUserDialog({ 
@@ -506,6 +761,40 @@ export function AccountUsers({ accountId }: AccountUsersProps) {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Remove User
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Action Confirmation Dialog */}
+      <AlertDialog open={bulkActionModalOpen} onOpenChange={setBulkActionModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {bulkAction === 'role' ? 'Change roles for selected users?' : 'Remove selected users?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {bulkAction === 'role' ? (
+                <>
+                  You are about to change the role of <strong>{selectedUsers.size} user{selectedUsers.size > 1 ? 's' : ''}</strong> to{' '}
+                  <strong>{bulkNewRole === 'account_owner' ? 'Account Owner' : 'User'}</strong>.
+                  {bulkNewRole === 'account_owner' && ' Account owners have full control over the account and all projects.'}
+                </>
+              ) : (
+                <>
+                  Are you sure you want to remove <strong>{selectedUsers.size} user{selectedUsers.size > 1 ? 's' : ''}</strong> from this account?
+                  They will lose access to all projects and resources.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setBulkAction(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={bulkAction === 'role' ? handleBulkRoleChange : handleBulkRemove}
+              className={bulkAction === 'remove' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
+            >
+              {bulkAction === 'role' ? 'Change Roles' : 'Remove Users'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

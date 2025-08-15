@@ -94,24 +94,26 @@ export async function hasPermission(
   if (userIsAdmin) return true;
   
   // Get user's role in the account
-  const { data: accountUser, error } = await supabaseClient
+  const { data: accountUser, error: accountUserError } = await supabaseClient
     .from('account_users')
-    .select(`
-      role,
-      roles!inner(
-        permissions
-      )
-    `)
+    .select('role')
     .eq('account_id', accountId)
     .eq('user_id', userId)
     .single();
     
-  if (error || !accountUser) return false;
+  if (accountUserError || !accountUser) return false;
+  
+  // Now get the permissions for that role from the roles table
+  const { data: roleData, error: roleError } = await supabaseClient
+    .from('roles')
+    .select('permissions')
+    .eq('name', accountUser.role)
+    .single();
+    
+  if (roleError || !roleData) return false;
   
   // Check if the role has the required permission
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const roles = (accountUser as any).roles;
-  const rolePermissions = Array.isArray(roles?.permissions) ? roles.permissions : [];
+  const rolePermissions = Array.isArray(roleData.permissions) ? roleData.permissions : [];
   return rolePermissions.includes(permission);
 }
 

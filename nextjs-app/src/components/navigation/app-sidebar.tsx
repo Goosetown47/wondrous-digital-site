@@ -45,9 +45,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/providers/auth-provider';
 import { SidebarMenuItemComponent } from './sidebar-menu-item';
 import { useIsStaff, useIsAdmin, useIsAccountOwner } from '@/hooks/useRole';
+import { useUserProfile, useUserRole } from '@/hooks/useUserProfile';
 
 import type { Project } from '@/types/database';
 
@@ -159,6 +161,8 @@ export function AppSidebar() {
   const { data: isStaff, isLoading: isStaffLoading } = useIsStaff();
   const { data: isAdmin, isLoading: isAdminLoading } = useIsAdmin();
   const { data: isAccountOwner, isLoading: isAccountOwnerLoading } = useIsAccountOwner();
+  const { data: userProfile } = useUserProfile();
+  const { data: userRole } = useUserRole();
 
 
   const handleSignOut = async () => {
@@ -286,19 +290,41 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="w-full">
-                  <Avatar className="h-6 w-6">
+                <SidebarMenuButton className="w-full h-auto py-2">
+                  <Avatar className="h-8 w-8">
                     <AvatarFallback>
                       {user?.email ? getUserInitials(user.email) : 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-1 flex-col items-start truncate">
                     <span className="text-sm font-medium">
-                      {user?.email?.split('@')[0] || 'User'}
+                      {userProfile?.display_name || user?.email?.split('@')[0] || 'User'}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate w-full">
-                      {user?.email || 'Loading...'}
-                    </span>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {userRole === 'Admin' && (
+                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4">
+                          Admin
+                        </Badge>
+                      )}
+                      {userRole === 'Staff' && (
+                        <Badge className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0 h-4">
+                          Staff
+                        </Badge>
+                      )}
+                      {userRole === 'Account Owner' && (
+                        <Badge className="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0 h-4">
+                          Owner
+                        </Badge>
+                      )}
+                      {userRole === 'User' && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                          User
+                        </Badge>
+                      )}
+                      <span className="text-xs text-muted-foreground truncate">
+                        {user?.email}
+                      </span>
+                    </div>
                   </div>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>

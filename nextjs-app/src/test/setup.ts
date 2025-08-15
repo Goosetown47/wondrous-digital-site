@@ -4,6 +4,9 @@ import { vi } from 'vitest';
 // Mock environment variables
 vi.stubEnv('NODE_ENV', 'test');
 
+// Mock scrollIntoView for Radix UI components
+Element.prototype.scrollIntoView = vi.fn();
+
 // Add global test utilities
 (global as Record<string, unknown>).vi = vi;
 

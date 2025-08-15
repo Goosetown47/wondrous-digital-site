@@ -160,6 +160,53 @@ export function useRemoveUserFromAccount() {
 }
 
 /**
+ * Hook to add a user to accounts
+ */
+export function useAddUserToAccount() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      userId, 
+      accounts 
+    }: { 
+      userId: string; 
+      accounts: Array<{ account_id: string; role: 'admin' | 'staff' | 'account_owner' | 'user' }> 
+    }) => {
+      const response = await fetch(`/api/users/${userId}/accounts`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accounts,
+          action: 'add',
+        }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to add user to accounts');
+      }
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['user', variables.userId] });
+      
+      // Invalidate account-users for each account
+      variables.accounts.forEach(account => {
+        queryClient.invalidateQueries({ queryKey: ['account-users', account.account_id] });
+      });
+      
+      const accountCount = variables.accounts.length;
+      toast.success(`User added to ${accountCount} account${accountCount !== 1 ? 's' : ''} successfully`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to add user to accounts: ${error.message}`);
+    },
+  });
+}
+
+/**
  * Hook to invite a user to an account
  */
 export function useInviteUser() {

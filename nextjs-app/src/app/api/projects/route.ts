@@ -48,9 +48,21 @@ export async function GET(request: NextRequest) {
     // Create service role client (bypasses RLS)
     const serviceClient = createAdminClient();
 
-    console.log('🔍 [API/Projects] Using service role to query projects...');
+    // Check user's role to determine what projects they can see
+    console.log('🔍 [API/Projects] Checking user permissions...');
     
-    // Build query using service role (bypasses all RLS policies)
+    // Check if user is admin/staff (system-level access)
+    const { data: systemRole } = await serviceClient
+      .from('account_users')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('account_id', '00000000-0000-0000-0000-000000000000')
+      .single();
+    
+    const isAdminOrStaff = systemRole?.role === 'admin' || systemRole?.role === 'staff';
+    console.log('🔍 [API/Projects] Is admin/staff:', isAdminOrStaff);
+
+    // Build base query
     let query = serviceClient
       .from('projects')
       .select(`
@@ -68,21 +80,68 @@ export async function GET(request: NextRequest) {
       query = query.is('archived_at', null);
     }
 
-    const { data: projects, error: projectsError } = await query;
-
-    console.log('🔍 [API/Projects] Service role query result:', {
-      hasData: !!projects,
-      dataLength: projects?.length || 0,
-      error: projectsError?.message || 'none'
-    });
-
-    if (projectsError) {
-      console.error('❌ [API/Projects] Database error:', projectsError);
-      return NextResponse.json({ error: projectsError.message }, { status: 500 });
+    let projects;
+    
+    if (isAdminOrStaff) {
+      // Admin/staff can see ALL projects
+      console.log('🔍 [API/Projects] User is admin/staff - fetching all projects');
+      const { data, error } = await query;
+      if (error) throw error;
+      projects = data;
+    } else {
+      // For non-admin/staff users, we need to filter based on their access
+      console.log('🔍 [API/Projects] User is not admin/staff - checking account memberships');
+      
+      // Get all accounts where user is an account_owner
+      const { data: accountMemberships } = await serviceClient
+        .from('account_users')
+        .select('account_id, role')
+        .eq('user_id', user.id)
+        .neq('account_id', '00000000-0000-0000-0000-000000000000');
+      
+      const ownedAccountIds = accountMemberships
+        ?.filter(m => m.role === 'account_owner')
+        .map(m => m.account_id) || [];
+      
+      const memberAccountIds = accountMemberships
+        ?.filter(m => m.role === 'user')
+        .map(m => m.account_id) || [];
+      
+      console.log('🔍 [API/Projects] Account owner of:', ownedAccountIds.length, 'accounts');
+      console.log('🔍 [API/Projects] Regular member of:', memberAccountIds.length, 'accounts');
+      
+      // Get projects user has explicit access to
+      const { data: projectAccess } = await serviceClient
+        .from('project_users')
+        .select('project_id')
+        .eq('user_id', user.id);
+      
+      const accessibleProjectIds = projectAccess?.map(pa => pa.project_id) || [];
+      console.log('🔍 [API/Projects] Has explicit access to:', accessibleProjectIds.length, 'projects');
+      
+      // Fetch all projects and then filter
+      const { data: allProjects, error } = await query;
+      if (error) throw error;
+      
+      // Filter projects based on user's access
+      projects = allProjects?.filter(project => {
+        // User is account owner - can see all projects in their accounts
+        if (ownedAccountIds.includes(project.account_id)) {
+          return true;
+        }
+        // User is regular member - can only see projects they have explicit access to
+        if (memberAccountIds.includes(project.account_id)) {
+          return accessibleProjectIds.includes(project.id);
+        }
+        // User has no relationship with this account
+        return false;
+      }) || [];
+      
+      console.log('🔍 [API/Projects] Filtered to:', projects.length, 'accessible projects');
     }
 
-    console.log('✅ [API/Projects] Service role query successful!');
-    console.log('📊 [API/Projects] Found projects:', projects?.map(p => p.name) || []);
+    console.log('✅ [API/Projects] Query successful!');
+    console.log('📊 [API/Projects] Returning projects:', projects?.map(p => p.name) || []);
     
     return NextResponse.json(projects || []);
 

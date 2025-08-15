@@ -34,20 +34,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Search, MoreHorizontal, Edit, Copy, Archive, Trash2 } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Edit, Copy, Archive, Trash2, Shield } from 'lucide-react';
 import type { ProjectWithAccount } from '@/lib/services/projects';
 import { AccountSelector } from '@/components/projects/AccountSelector';
+import { ProjectAccessModal } from '@/components/projects/ProjectAccessModal';
+import { useIsAccountOwner } from '@/hooks/useRole';
 
 export default function ProjectsPage() {
   const router = useRouter();
   const { data: projects, isLoading } = useProjects(true); // Include archived
   const { mutate: archiveProject } = useArchiveProject();
   const { mutate: deleteProject } = useDeleteProject();
+  const { data: isAccountOwner } = useIsAccountOwner();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; project?: ProjectWithAccount }>({ open: false });
   const [archiveDialog, setArchiveDialog] = useState<{ open: boolean; project?: ProjectWithAccount }>({ open: false });
+  const [accessModalState, setAccessModalState] = useState<{ open: boolean; project?: ProjectWithAccount }>({ open: false });
 
   // Filter projects based on search and status
   const filteredProjects = projects?.filter(project => {
@@ -210,6 +214,14 @@ export default function ProjectsPage() {
                             <Copy className="mr-2 h-4 w-4" />
                             Clone
                           </DropdownMenuItem>
+                          {isAccountOwner && (
+                            <DropdownMenuItem
+                              onClick={() => setAccessModalState({ open: true, project })}
+                            >
+                              <Shield className="mr-2 h-4 w-4" />
+                              Manage Access
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuSeparator />
                           {!project.archived_at && (
                             <DropdownMenuItem
@@ -274,6 +286,17 @@ export default function ProjectsPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Project Access Modal */}
+        {accessModalState.project && accessModalState.project.account_id && (
+          <ProjectAccessModal
+            projectId={accessModalState.project.id}
+            projectName={accessModalState.project.name}
+            accountId={accessModalState.project.account_id}
+            open={accessModalState.open}
+            onOpenChange={(open) => setAccessModalState({ open })}
+          />
+        )}
       </div>
     </PermissionGate>
   );

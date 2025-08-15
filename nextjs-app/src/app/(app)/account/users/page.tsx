@@ -10,6 +10,8 @@ import {
   useResendInvitation 
 } from '@/hooks/useInvitations';
 import { PermissionGate } from '@/components/auth/PermissionGate';
+import { PERMISSIONS } from '@/lib/permissions/constants';
+import { RoleBadge } from '@/components/ui/role-badge';
 import {
   Table,
   TableBody,
@@ -47,7 +49,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { 
@@ -56,7 +57,6 @@ import {
   MoreHorizontal, 
   RefreshCw, 
   X, 
-  Shield,
   Users
 } from 'lucide-react';
 import {
@@ -67,6 +67,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow } from 'date-fns';
+import { ProjectAccessDropdown } from '@/components/tools/project-access-dropdown';
 
 export default function AccountUsersPage() {
   const { currentAccount, user: currentUser } = useAuth();
@@ -132,7 +133,7 @@ export default function AccountUsersPage() {
   };
 
   return (
-    <PermissionGate permission="account.manage" fallback={
+    <PermissionGate permission={PERMISSIONS.USERS.READ} fallback={
       <div className="container mx-auto p-6">
         <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
         <p>You don't have permission to manage users for this account.</p>
@@ -180,11 +181,21 @@ export default function AccountUsersPage() {
                   <Label htmlFor="role">Role</Label>
                   <Select value={inviteRole} onValueChange={(value: 'user' | 'account_owner') => setInviteRole(value)}>
                     <SelectTrigger id="role">
-                      <SelectValue />
+                      <SelectValue>
+                        {inviteRole && <RoleBadge role={inviteRole} size="sm" />}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="account_owner">Account Owner</SelectItem>
+                      <SelectItem value="user">
+                        <div className="flex items-center gap-2">
+                          <RoleBadge role="user" size="sm" />
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="account_owner">
+                        <div className="flex items-center gap-2">
+                          <RoleBadge role="account_owner" size="sm" />
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-muted-foreground">
@@ -223,6 +234,7 @@ export default function AccountUsersPage() {
                   <TableRow>
                     <TableHead>User</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Project Access</TableHead>
                     <TableHead>Joined</TableHead>
                     <TableHead className="w-[100px]"></TableHead>
                   </TableRow>
@@ -244,16 +256,7 @@ export default function AccountUsersPage() {
                       </TableCell>
                       <TableCell>
                         {currentUser?.id === accountUser.user_id ? (
-                          <Badge variant={accountUser.role === 'account_owner' ? 'default' : 'secondary'}>
-                            {accountUser.role === 'account_owner' ? (
-                              <>
-                                <Shield className="mr-1 h-3 w-3" />
-                                Account Owner
-                              </>
-                            ) : (
-                              'User'
-                            )}
-                          </Badge>
+                          <RoleBadge role={accountUser.role} showIcon={accountUser.role === 'account_owner'} />
                         ) : (
                           <Select
                             value={accountUser.role}
@@ -262,14 +265,33 @@ export default function AccountUsersPage() {
                             }
                             disabled={updateRole.isPending}
                           >
-                            <SelectTrigger className="w-[140px]">
-                              <SelectValue />
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue>
+                                {accountUser.role && <RoleBadge role={accountUser.role} size="sm" />}
+                              </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="user">User</SelectItem>
-                              <SelectItem value="account_owner">Account Owner</SelectItem>
+                              <SelectItem value="user">
+                                <div className="flex items-center gap-2">
+                                  <RoleBadge role="user" size="sm" />
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="account_owner">
+                                <div className="flex items-center gap-2">
+                                  <RoleBadge role="account_owner" size="sm" />
+                                </div>
+                              </SelectItem>
                             </SelectContent>
                           </Select>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {currentAccount && (
+                          <ProjectAccessDropdown 
+                            userId={accountUser.user_id}
+                            accountId={currentAccount.id}
+                            userRole={accountUser.role}
+                          />
                         )}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
@@ -340,9 +362,7 @@ export default function AccountUsersPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={invitation.role === 'account_owner' ? 'default' : 'secondary'}>
-                          {invitation.role === 'account_owner' ? 'Account Owner' : 'User'}
-                        </Badge>
+                        <RoleBadge role={invitation.role} />
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {formatDistanceToNow(new Date(invitation.invited_at), { addSuffix: true })}

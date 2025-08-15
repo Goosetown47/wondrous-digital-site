@@ -147,13 +147,20 @@ export function useUpdateUserRole() {
       userId: string;
       role: AccountUser['role'];
     }) => {
-      const { error } = await supabase
-        .from('account_users')
-        .update({ role })
-        .eq('account_id', accountId)
-        .eq('user_id', userId);
+      const response = await fetch(`/api/accounts/${accountId}/users`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId, role }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update role');
+      }
+
+      return response.json();
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ 
@@ -178,13 +185,19 @@ export function useRemoveUser() {
       accountId: string;
       userId: string;
     }) => {
-      const { error } = await supabase
-        .from('account_users')
-        .delete()
-        .eq('account_id', accountId)
-        .eq('user_id', userId);
+      const response = await fetch(`/api/accounts/${accountId}/users?userId=${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to remove user');
+      }
+
+      return response.json();
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ 

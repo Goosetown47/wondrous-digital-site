@@ -7,7 +7,6 @@ import { format } from 'date-fns';
 import { 
   useUsers, 
   // useBulkUserOperations,
-  useUpdateUserRole,
   useRemoveUserFromAccount,
   useDeleteUser,
 } from '@/hooks/useUsers';
@@ -16,13 +15,6 @@ import { useAuth } from '@/providers/auth-provider';
 import { EnhancedTable } from '@/components/ui/enhanced-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UserAccountsDialog } from '@/components/tools/user-accounts-dialog';
+import { AccountAssignmentDropdown } from '@/components/tools/account-assignment-dropdown';
 import { 
   Plus, 
   Eye, 
@@ -48,7 +41,6 @@ import {
   Mail,
   Shield,
   CheckCircle,
-  Users,
   UserPlus,
   ChevronDown,
   Trash2,
@@ -65,7 +57,6 @@ export default function UsersPage() {
   //   isLoading: bulkLoading 
   // } = useBulkUserOperations();
   
-  const updateUserRole = useUpdateUserRole();
   const removeUserFromAccount = useRemoveUserFromAccount();
   const deleteUser = useDeleteUser();
 
@@ -160,64 +151,11 @@ export default function UsersPage() {
       key: 'accounts',
       title: 'Account Access',
       render: (user: UserWithAccounts) => {
-        const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000000';
-        const platformRole = user.accounts.find(acc => 
-          acc.account_id === PLATFORM_ACCOUNT_ID && ['admin', 'staff'].includes(acc.role)
-        );
-        
-        // Admins have universal access
-        if (platformRole?.role === 'admin') {
-          return <span className="text-sm text-muted-foreground">Universal Access</span>;
-        }
-        
-        // Staff - show assigned accounts or "Manage" button
-        if (platformRole?.role === 'staff') {
-          // TODO: Show specific accounts staff is assigned to
-          return (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setAccountsDialog({ open: true, user })}
-            >
-              Manage Assignments
-            </Button>
-          );
-        }
-        
-        // Account Owners/Users - show accounts with inline management
-        if (user.accounts.length === 0) {
-          return <span className="text-muted-foreground">No accounts</span>;
-        }
-        
-        if (user.accounts.length === 1) {
-          const account = user.accounts[0];
-          return (
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">{account.account_name}</Badge>
-              <RoleSelector 
-                user={user} 
-                accountId={account.account_id} 
-                currentRole={account.role} 
-              />
-            </div>
-          );
-        }
-        
-        // Multiple accounts
         return (
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">
-              <Users className="h-3 w-3 mr-1" />
-              {user.accounts.length} accounts
-            </Badge>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setAccountsDialog({ open: true, user })}
-            >
-              Manage
-            </Button>
-          </div>
+          <AccountAssignmentDropdown 
+            user={user} 
+            onManageClick={() => setAccountsDialog({ open: true, user })}
+          />
         );
       },
     },
@@ -388,58 +326,6 @@ export default function UsersPage() {
     setRemoveDialog({ open: false });
   };
 
-  // Helper function for role badge colors
-  // function getRoleBadgeColor(role: string) {
-  //   switch (role) {
-  //     case 'admin':
-  //       return 'bg-red-100 text-red-700';
-  //     case 'staff':
-  //       return 'bg-orange-100 text-orange-700';
-  //     case 'account_owner':
-  //       return 'bg-blue-100 text-blue-700';
-  //     default:
-  //       return 'bg-gray-100 text-gray-700';
-  //   }
-  // }
-
-  // Role selector component for inline editing
-  const RoleSelector = ({ user, accountId, currentRole }: { 
-    user: UserWithAccounts; 
-    accountId: string; 
-    currentRole: string;
-  }) => {
-    const [isUpdating, setIsUpdating] = useState(false);
-    
-    return (
-      <Select
-        value={currentRole}
-        disabled={isUpdating || updateUserRole.isPending}
-        onValueChange={(newRole) => {
-          setIsUpdating(true);
-          updateUserRole.mutate(
-            {
-              user_id: user.id,
-              account_id: accountId,
-              role: newRole as 'admin' | 'staff' | 'account_owner' | 'user',
-            },
-            {
-              onSettled: () => setIsUpdating(false),
-            }
-          );
-        }}
-      >
-        <SelectTrigger className="w-36 h-8">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="admin">Admin</SelectItem>
-          <SelectItem value="staff">Staff</SelectItem>
-          <SelectItem value="account_owner">Account Owner</SelectItem>
-          <SelectItem value="user">User</SelectItem>
-        </SelectContent>
-      </Select>
-    );
-  };
 
   return (
     <PermissionGate permission="users:read">
