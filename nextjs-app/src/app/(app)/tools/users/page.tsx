@@ -250,7 +250,7 @@ export default function UsersPage() {
         // TODO: Implement bulk role change dialog
         console.log('Change role for', selectedUsers.length, 'users');
       },
-      variant: 'secondary' as const,
+      variant: 'default' as const,
     },
     {
       label: 'Remove from Account',

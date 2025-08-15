@@ -6,6 +6,10 @@ import { wouldBeSanitized } from '@/lib/sanitization';
 
 export interface ProjectWithAccount extends Project {
   accounts?: Account;
+  creator?: {
+    display_name: string;
+    avatar_url?: string | null;
+  } | null;
 }
 
 export interface CreateProjectData {
@@ -67,9 +71,21 @@ export async function getProjectById(projectId: string) {
     `)
     .eq('id', projectId)
     .single();
+  
+  // Fetch creator info separately if created_by exists
+  let creator = null;
+  if (data && data.created_by) {
+    const { data: profileData } = await supabase
+      .from('user_profiles')
+      .select('display_name, avatar_url')
+      .eq('user_id', data.created_by)
+      .single();
+    
+    creator = profileData;
+  }
 
   if (error) throw error;
-  return data as ProjectWithAccount;
+  return { ...data, creator } as ProjectWithAccount;
 }
 
 /**

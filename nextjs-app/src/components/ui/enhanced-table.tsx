@@ -263,7 +263,7 @@ export function EnhancedTable<T>({
           </div>
           <Button
             size="sm"
-            variant="ghost"
+            variant="outline"
             onClick={() => setSelectedItems(new Set())}
             className="ml-auto"
           >

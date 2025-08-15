@@ -1,16 +1,79 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Key, Smartphone, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Key } from 'lucide-react';
+import { supabase } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 
 export function SecuritySettings() {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement password change
+    
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        // If error is about re-authentication, we need to sign in again
+        if (error.message.includes('reauthenticate')) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user?.email) {
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+              email: user.email,
+              password: currentPassword
+            });
+            
+            if (signInError) {
+              toast.error('Current password is incorrect');
+              return;
+            }
+            
+            // Try updating password again after re-authentication
+            const { error: updateError } = await supabase.auth.updateUser({
+              password: newPassword
+            });
+            
+            if (updateError) {
+              throw updateError;
+            }
+          }
+        } else {
+          throw error;
+        }
+      }
+
+      toast.success('Password updated successfully');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update password';
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -33,7 +96,9 @@ export function SecuritySettings() {
                 id="current-password"
                 type="password"
                 placeholder="Enter current password"
-                disabled
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
               />
             </div>
             <div className="grid gap-2">
@@ -41,8 +106,11 @@ export function SecuritySettings() {
               <Input
                 id="new-password"
                 type="password"
-                placeholder="Enter new password"
-                disabled
+                placeholder="Enter new password (min 6 characters)"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={6}
               />
             </div>
             <div className="grid gap-2">
@@ -51,82 +119,16 @@ export function SecuritySettings() {
                 id="confirm-password"
                 type="password"
                 placeholder="Confirm new password"
-                disabled
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
               />
             </div>
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Password change functionality coming soon. For now, use the "Forgot Password" 
-                option on the login page to reset your password.
-              </AlertDescription>
-            </Alert>
-            <Button type="submit" disabled>
-              Update Password
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Updating...' : 'Update Password'}
             </Button>
           </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Smartphone className="h-5 w-5" />
-            Two-Factor Authentication
-          </CardTitle>
-          <CardDescription>
-            Add an extra layer of security to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Two-factor authentication adds an additional layer of security to your account 
-              by requiring both your password and a verification code.
-            </p>
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Two-factor authentication coming soon
-              </AlertDescription>
-            </Alert>
-            <Button disabled>
-              Enable Two-Factor Authentication
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Active Sessions
-          </CardTitle>
-          <CardDescription>
-            Manage your active sessions and sign out from other devices
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="rounded-lg border p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Current Session</p>
-                  <p className="text-sm text-muted-foreground">
-                    Your current browser session
-                  </p>
-                </div>
-                <span className="text-sm text-green-600">Active</span>
-              </div>
-            </div>
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Session management coming soon
-              </AlertDescription>
-            </Alert>
-          </div>
         </CardContent>
       </Card>
     </div>

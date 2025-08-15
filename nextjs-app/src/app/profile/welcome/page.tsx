@@ -161,13 +161,34 @@ function WelcomePageContent() {
       }
 
       const file = event.target.files[0];
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image must be less than 5MB');
+        return;
+      }
+
+      // Get current user for folder path
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Not authenticated');
+      }
+
+      // Use folder structure: {user_id}/avatar.{ext}
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = `${user.id}/avatar.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          upsert: true  // Overwrite existing avatar
+        });
 
       if (uploadError) {
         throw uploadError;
@@ -336,7 +357,7 @@ function WelcomePageContent() {
                   disabled={uploading}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  JPG, PNG or GIF (max 2MB)
+                  JPG, PNG or GIF (max 5MB)
                 </p>
               </div>
             </div>

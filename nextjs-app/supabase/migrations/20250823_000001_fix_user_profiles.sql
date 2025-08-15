@@ -1,11 +1,10 @@
 -- Fix user profiles: create missing entries and add trigger for new users
 
 -- Create user_profiles for all existing users who don't have one
-INSERT INTO user_profiles (user_id, display_name, email, created_at, updated_at)
+INSERT INTO user_profiles (user_id, display_name, created_at, updated_at)
 SELECT 
   au.id,
-  COALESCE(au.user_metadata->>'full_name', au.email),
-  au.email,
+  COALESCE(au.raw_user_meta_data->>'full_name', au.email),
   NOW(),
   NOW()
 FROM auth.users au
@@ -23,14 +22,12 @@ BEGIN
   INSERT INTO user_profiles (
     user_id,
     display_name,
-    email,
     avatar_url,
     created_at,
     updated_at
   ) VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
-    NEW.email,
     NEW.raw_user_meta_data->>'avatar_url',
     NOW(),
     NOW()
@@ -59,7 +56,6 @@ AS $$
 BEGIN
   UPDATE user_profiles
   SET 
-    email = NEW.email,
     display_name = COALESCE(NEW.raw_user_meta_data->>'full_name', user_profiles.display_name),
     avatar_url = COALESCE(NEW.raw_user_meta_data->>'avatar_url', user_profiles.avatar_url),
     updated_at = NOW()

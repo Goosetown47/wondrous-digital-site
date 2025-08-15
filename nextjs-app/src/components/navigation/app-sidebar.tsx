@@ -31,10 +31,7 @@ import {
   Wrench,
   FileText,
   Shield,
-  UserCog,
-  ClipboardList,
   Archive,
-  Briefcase,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -44,7 +41,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/providers/auth-provider';
 import { SidebarMenuItemComponent } from './sidebar-menu-item';
@@ -175,9 +172,16 @@ export function AppSidebar() {
   };
 
   // Get user initials for avatar
-  const getUserInitials = (email: string) => {
-    const parts = email.split('@')[0].split('.');
-    return parts.map(part => part[0]).join('').toUpperCase().slice(0, 2);
+  const getUserInitials = () => {
+    if (userProfile?.display_name) {
+      const parts = userProfile.display_name.split(' ');
+      return parts.map(part => part[0]).join('').toUpperCase().slice(0, 2);
+    }
+    if (user?.email) {
+      const parts = user.email.split('@')[0].split('.');
+      return parts.map(part => part[0]).join('').toUpperCase().slice(0, 2);
+    }
+    return 'U';
   };
 
   return (
@@ -292,8 +296,9 @@ export function AppSidebar() {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton className="w-full h-auto py-2">
                   <Avatar className="h-8 w-8">
+                    <AvatarImage src={userProfile?.avatar_url || undefined} />
                     <AvatarFallback>
-                      {user?.email ? getUserInitials(user.email) : 'U'}
+                      {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-1 flex-col items-start truncate">

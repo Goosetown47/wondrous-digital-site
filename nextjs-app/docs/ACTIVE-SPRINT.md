@@ -108,43 +108,43 @@ Our initial MVP status launch will be aimed at getting to 25 customers as quickl
 *These are the final clean up tasks we need to complete before moving on to the next release*
 
 **User Profiles**
-- [ ] 🪲 Create missing user_profiles entries for existing users
-- [ ] 🚀 Add profile creation trigger for new users
-- [ ] ⚗️ Verify profile form elements are accessible
+- [x] 🪲 Create missing user_profiles entries for existing users
+- [x] 🚀 Add profile creation trigger for new users
+- [x] ⚗️ Verify profile form elements are accessible
 
 **Settings**
-- [ ] ⚠ This section in Settings (this is the link in the dropdown connected to the account at the bottom of the sidebar) has nothing really in it. It's placeholder. We either need to comment it out until we do something, or add some functionality.
-- [ ] ⚠ Check the Security tab. We should remove the two factor auth and active sessions, but should fix the change password functionality.
-- [ ] ⚠ The items in profile should work - a way to change your email and display name.
-- [ ] ⚠ We should make the avatar photo work. We'll need to set up a bucket on supabase to hold the user images.
+- [x] ⚠ This section in Settings (this is the link in the dropdown connected to the account at the bottom of the sidebar) has nothing really in it. It's placeholder. We either need to comment it out until we do something, or add some functionality.
+- [x] ⚠ Check the Security tab. We should remove the two factor auth and active sessions, but should fix the change password functionality.
+- [x] ⚠ The items in profile should work - a way to change your email and display name.
+- [x] ⚠ We should make the avatar photo work. We'll need to set up a bucket on supabase to hold the user images.
 
 **Project Details**
-- [ ] 🪲 Fix "Created by" to use user_profiles/display_name (currently shows raw user ID)
+- [x] 🪲 Fix "Created by" to use user_profiles/display_name (currently shows raw user ID)
+  This is in the Tools/Projects/Settings view. The overview tab has "Created by" b9c3e24e-c5da-491d-90c5-f733d8bd7c77 which isn't helpful info.
 
 **UI Cleanup**
-- [ ] 🪲 Fix contact information display in Overview tab (currently empty/incomplete)
 - [ ] 🚀 Move "back" link above HEADER
-- [ ] 🪲 Remove/fix redundant edit button in settings view
-- [ ] 🪲 Temporarily comment out the Account Management / Account Settings item in sidebar nav as it is unfinished and doesn't have a page. Also it's redundant and in drop-up for the account selector at the bottom.
+- [x] 🪲 Remove/fix redundant edit button in settings view
+- [x] 🪲 Temporarily comment out the Account Management / Account Settings item in sidebar nav as it is unfinished and doesn't have a page. Also it's redundant and in drop-up for the account selector at the bottom.
 
 **Bug Fixes**
-- [ ] 🪲 Users table doesn't auto-refresh without a page reload when something changes
-- [ ] 🪲 The users select div with "change role" and "remove from account" and clear selection options needs to have consistent looking buttons instead of just text or buttons
-- [ ] 🪲 The users select div with "change role" and "remove from account" and clear selection stays active even when the selected item in the list is no longer there (e.g., I deleted it) (it works if I deselect it) -- It should actively check if something is selected or not, then respond accordingly
-- [ ] 🪲 Project Settings / General tab: The Preview Domain still has ".sites" in it and we don't use that sub sub domain anymore. The Domains tab is correct
-- [ ] 🪲 Toast notifications often double up (we get two at the same time, duplicates). This happens for many actions across the app.
-- [ ] 🪲 In library, the unpublished / all toggle looks janky. It's not a real toggle component and should be.
-- [ ] 🪲 In Lab, the pill boxes that contain the tag for what an item is (theme, section, etc.) has dark text on a relatively dark color bg. We should keep the color bg but make the text white or a light version of the color to create proper contrast.
+- [x] 🪲 Users table doesn't auto-refresh without a page reload when something changes
+- [ ] 🪲 [Management/Tools/Users/Multiple Users Selected / Action box] The users select div with "change role" and "remove from account" and clear selection options needs to have consistent looking buttons instead of just text or buttons
+- [x] 🪲 The users select div with "change role" and "remove from account" and clear selection stays active even when the selected item in the list is no longer there (e.g., I deleted it) (it works if I deselect it) -- It should actively check if something is selected or not, then respond accordingly
+- [x] 🪲 Project Settings / General tab: The Preview Domain still has ".sites" in it and we don't use that sub sub domain anymore. The Domains tab is correct
+- [x] 🪲 Toast notifications often double up (we get two at the same time, duplicates). This happens for many actions across the app.
+- [x] 🪲 In library, the unpublished / all toggle looks janky. It's not a real toggle component and should be.
+- [x] 🪲 In Lab, the pill boxes that contain the tag for what an item is (theme, section, etc.) has dark text on a relatively dark color bg. We should keep the color bg but make the text white or a light version of the color to create proper contrast.
 
 **Staff Assignments** 
-- [ ] ✂️ Let's comment out Staff Assignments pages right now. There is "Staff/ My Assignments" and "Management / Tools / Staff Assignments" pages. We can keep them in the codebase but remove them from the navigation. We're going to address these way down the road when we hire employees. Could be a year potentially. Don't delete the functionality or the role, but let's just remove it from the UI or comment it out for later.
+- [x] ✂️ Let's comment out Staff Assignments pages right now. There is "Staff/ My Assignments" and "Management / Tools / Staff Assignments" pages. We can keep them in the codebase but remove them from the navigation. We're going to address these way down the road when we hire employees. Could be a year potentially. Don't delete the functionality or the role, but let's just remove it from the UI or comment it out for later.
 
 
 **Build Warnings (DISCUSS THIS)**
 *Do we need to take care of these things? I want to have a discussion*
-- [ ] ⚠ Linting is disabled. (Should it be?)
+- [x] ⚠ Linting is disabled. (Should it be?)
       ⚠ Warning: Found multiple lockfiles. Selecting
-- [ ] /home/goosetown/package-lock.json. Consider removing the lockfiles at:
+- [x] /home/goosetown/package-lock.json. Consider removing the lockfiles at:
         * /home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/package
      -lock.json
         * /home/goosetown/Claude/Projects/wondrous-digital-site/package-lock.json

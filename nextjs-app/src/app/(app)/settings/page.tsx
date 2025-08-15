@@ -2,7 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { EmailPreferencesForm } from '@/components/settings/EmailPreferencesForm';
+// import { EmailPreferencesForm } from '@/components/settings/EmailPreferencesForm';
 import { ProfileForm } from '@/components/settings/ProfileForm';
 import { SecuritySettings } from '@/components/settings/SecuritySettings';
 import { useAuth } from '@/providers/auth-provider';
@@ -38,9 +38,9 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="email">Email Notifications</TabsTrigger>
+          {/* <TabsTrigger value="email">Email Notifications</TabsTrigger> */}
           <TabsTrigger value="security">Security</TabsTrigger>
         </TabsList>
 
@@ -58,7 +58,7 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="email">
+        {/* <TabsContent value="email">
           <Card>
             <CardHeader>
               <CardTitle>Email Notifications</CardTitle>
@@ -70,7 +70,7 @@ export default function SettingsPage() {
               <EmailPreferencesForm />
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent value="security">
           <Card>
