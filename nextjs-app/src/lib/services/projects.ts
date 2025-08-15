@@ -6,10 +6,6 @@ import { wouldBeSanitized } from '@/lib/sanitization';
 
 export interface ProjectWithAccount extends Project {
   accounts?: Account;
-  creator?: {
-    display_name: string | null;
-    email: string;
-  };
 }
 
 export interface CreateProjectData {
@@ -67,10 +63,6 @@ export async function getProjectById(projectId: string) {
         name,
         slug,
         plan
-      ),
-      creator:user_profiles!projects_created_by_fkey(
-        display_name,
-        email
       )
     `)
     .eq('id', projectId)

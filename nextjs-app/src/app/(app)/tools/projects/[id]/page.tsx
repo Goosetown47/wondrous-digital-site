@@ -194,7 +194,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                   Created By
                 </div>
                 <p className="text-lg font-medium mt-1">
-                  {project.creator?.display_name || project.creator?.email || 'System'}
+                  {project.created_by || 'System'}
                 </p>
               </div>
               <div className="rounded-lg border p-4">

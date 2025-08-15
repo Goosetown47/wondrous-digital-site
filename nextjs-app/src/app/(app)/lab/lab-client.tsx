@@ -31,15 +31,15 @@ export default function LabClient() {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'section':
-        return 'bg-blue-500';
+        return 'bg-blue-500 text-white';
       case 'page':
-        return 'bg-green-500';
+        return 'bg-green-500 text-white';
       case 'site':
-        return 'bg-purple-500';
+        return 'bg-purple-500 text-white';
       case 'theme':
-        return 'bg-orange-500';
+        return 'bg-orange-500 text-white';
       default:
-        return 'bg-gray-500';
+        return 'bg-gray-500 text-white';
     }
   };
 

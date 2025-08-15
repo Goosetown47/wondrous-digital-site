@@ -138,11 +138,11 @@ const getStaffItems = () => [
         href: '/tools/types',
         icon: Package,
       },
-      {
-        title: 'Staff Assignments',
-        href: '/tools/staff-assignments',
-        icon: UserCog,
-      },
+      // {
+      //   title: 'Staff Assignments',
+      //   href: '/tools/staff-assignments',
+      //   icon: UserCog,
+      // },
     ],
   },
 ];
@@ -224,13 +224,13 @@ export function AppSidebar() {
                       icon: Archive,
                     }}
                   />
-                  <SidebarMenuItemComponent 
+                  {/* <SidebarMenuItemComponent 
                     item={{
                       title: 'Account Settings',
                       href: '/account',
                       icon: Briefcase,
                     }}
-                  />
+                  /> */}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -240,7 +240,7 @@ export function AppSidebar() {
         {!isStaffLoading && isStaff && (
           <>
             <Separator className="my-2" />
-            <SidebarGroup>
+            {/* <SidebarGroup>
               <SidebarGroupLabel>Staff</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
@@ -253,7 +253,7 @@ export function AppSidebar() {
                   />
                 </SidebarMenu>
               </SidebarGroupContent>
-            </SidebarGroup>
+            </SidebarGroup> */}
             <Separator className="my-2" />
             <SidebarGroup>
               <SidebarGroupLabel>Management</SidebarGroupLabel>

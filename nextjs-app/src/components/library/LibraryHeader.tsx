@@ -1,9 +1,10 @@
 'use client';
 
-import { Search, Grid3X3, List, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Search, Grid3X3, List } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 
 interface LibraryHeaderProps {
   viewMode: 'grid' | 'list';
@@ -45,21 +46,16 @@ export function LibraryHeader({
 
           <div className="flex items-center gap-2">
             <Label htmlFor="published-toggle" className="text-sm">
-              {showPublished ? 'All' : 'Unpublished Only'}
+              Unpublished Only
             </Label>
-            <Button
+            <Switch
               id="published-toggle"
-              variant="ghost"
-              size="icon"
-              onClick={() => onPublishedChange(!showPublished)}
-              className="h-8 w-8"
-            >
-              {showPublished ? (
-                <ToggleRight className="h-4 w-4" />
-              ) : (
-                <ToggleLeft className="h-4 w-4" />
-              )}
-            </Button>
+              checked={!showPublished}
+              onCheckedChange={(checked) => onPublishedChange(!checked)}
+            />
+            <Label htmlFor="published-toggle" className="text-sm">
+              All
+            </Label>
           </div>
         </div>
 
