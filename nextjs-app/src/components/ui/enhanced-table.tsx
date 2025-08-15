@@ -97,6 +97,20 @@ export function EnhancedTable<T>({
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
 
+  // Clean up selection when data changes - remove items that no longer exist
+  useMemo(() => {
+    const validIds = new Set(data.map(item => getItemId(item)));
+    const newSelected = new Set<string>();
+    selectedItems.forEach(id => {
+      if (validIds.has(id)) {
+        newSelected.add(id);
+      }
+    });
+    if (newSelected.size !== selectedItems.size) {
+      setSelectedItems(newSelected);
+    }
+  }, [data, getItemId, selectedItems]);
+
   // Filter and search data
   const filteredData = useMemo(() => {
     let filtered = [...data];

@@ -111,9 +111,9 @@ export default function AccountUsersPage() {
         userId,
         role: newRole,
       });
-      toast.success('Role updated successfully');
+      // Success toast handled by hook
     } catch {
-      toast.error('Failed to update role');
+      // Error toast handled by hook
     }
   };
 
@@ -125,10 +125,9 @@ export default function AccountUsersPage() {
         accountId: currentAccount.id,
         userId: removeUserDialog.userId,
       });
-      toast.success('User removed successfully');
       setRemoveUserDialog({ open: false });
     } catch {
-      toast.error('Failed to remove user');
+      // Error toast handled by hook
     }
   };
 

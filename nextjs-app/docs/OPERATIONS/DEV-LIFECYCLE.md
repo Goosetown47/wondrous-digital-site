@@ -424,7 +424,11 @@ The USER will update STATUS LOG once the SPRINT is complete with everything in A
 - [ ] Run related test suites  
   *Confirms you didn't break anything else*
 
-### 3. Deploy
+### 3. PreDeploy
+- [ ] If there are any migrations that need to be applied to PROD database, compile a list of what needs manual application for the user and create instructions. 
+
+
+### 4. Deploy
 - [ ] Create focused PR to `nextjs-pagebuilder-core` branch  
   *Target our deployment branch, not master/main*
   

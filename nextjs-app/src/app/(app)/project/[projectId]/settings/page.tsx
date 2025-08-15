@@ -245,7 +245,7 @@ export default function ProjectSettingsPage() {
                   {slug && (
                     <div className="rounded-md bg-muted px-3 py-2 text-sm">
                       <p className="font-medium">Preview domain:</p>
-                      <code className="text-xs">{slug}.sites.wondrousdigital.com</code>
+                      <code className="text-xs">{slug}.wondrousdigital.com</code>
                     </div>
                   )}
                   <p className="text-sm text-muted-foreground">
