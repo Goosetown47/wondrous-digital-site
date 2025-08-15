@@ -243,7 +243,6 @@ export function AppSidebar() {
         
         {!isStaffLoading && isStaff && (
           <>
-            <Separator className="my-2" />
             {/* <SidebarGroup>
               <SidebarGroupLabel>Staff</SidebarGroupLabel>
               <SidebarGroupContent>
