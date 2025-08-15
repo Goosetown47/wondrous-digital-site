@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { cancelInvitation } from '@/lib/services/invitations';
-import { isAdmin } from '@/lib/permissions';
 
 export async function POST(
   request: NextRequest,
@@ -27,10 +26,19 @@ export async function POST(
       return NextResponse.json({ error: 'Invitation not found' }, { status: 404 });
     }
     
-    // Check if user is admin or account owner
-    const userIsAdmin = await isAdmin(user.id);
+    // Check if user is admin/staff (can cancel invitations for any account)
+    const { data: adminCheck } = await supabase
+      .from('account_users')
+      .select('role')
+      .eq('user_id', user.id)
+      .in('role', ['admin', 'staff'])
+      .limit(1)
+      .single();
     
-    if (!userIsAdmin) {
+    const isAdminOrStaff = adminCheck?.role === 'admin' || adminCheck?.role === 'staff';
+    
+    if (!isAdminOrStaff) {
+      // Check if they're an account owner for this specific account
       const { data: accountUser } = await supabase
         .from('account_users')
         .select('role')

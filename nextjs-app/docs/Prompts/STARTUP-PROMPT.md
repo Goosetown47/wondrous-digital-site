@@ -10,7 +10,7 @@ I'm working on the Wondrous Digital platform - a Next.js 15 multi-tenant website
 
 **Environment**: WSL (Windows Subsystem for Linux)
 **Project Location**: `/nextjs-app/` directory (ignore legacy `/src/`)
-**Versions**: Production v0.1.2 | Development v0.1.3
+**Versions**: Production v0.1.3 | Development v0.1.4
 
 ## 📋 MANDATORY: Read These First
 

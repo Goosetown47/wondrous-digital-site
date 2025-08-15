@@ -28,15 +28,24 @@ CREATE TABLE account_invitations (
   UNIQUE(account_id, email)
 );
 
--- account_users_with_details view (for displaying team members)
-CREATE VIEW account_users_with_details AS
-SELECT 
-  au.*,
-  u.email,
-  u.raw_user_meta_data->>'display_name' as display_name,
-  u.raw_user_meta_data->>'avatar_url' as avatar_url
-FROM account_users au
-JOIN auth.users u ON au.user_id = u.id;
+-- get_account_users_with_details function (secure RPC for displaying team members)
+-- Replaced the view with a secure function to prevent exposing auth.users data
+CREATE FUNCTION get_account_users_with_details(p_account_id UUID)
+RETURNS TABLE (
+  account_id UUID,
+  user_id UUID,
+  role TEXT,
+  joined_at TIMESTAMPTZ,
+  invited_by UUID,
+  email TEXT,
+  email_confirmed_at TIMESTAMPTZ,
+  display_name TEXT,
+  avatar_url TEXT,
+  profile_metadata JSONB
+)
+SECURITY DEFINER
+-- This function enforces access control and only returns data 
+-- if the requesting user is a member of the account or is an admin/staff
 ```
 
 ### Service Layer Pattern

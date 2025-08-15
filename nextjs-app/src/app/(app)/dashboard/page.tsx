@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/auth-provider';
 import { useAccountRole } from '@/hooks/useRole';
+import { supabase } from '@/lib/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, FolderOpen, Sparkles, Plus } from 'lucide-react';
@@ -11,12 +12,50 @@ import { CreateProjectDialog } from '@/components/projects/CreateProjectDialog';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { currentAccount, currentProject } = useAuth();
+  const { currentAccount, currentProject, user } = useAuth();
   const { data: accountRole } = useAccountRole();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [displayName, setDisplayName] = useState<string>('');
 
   // Check if user can create projects (account owner or admin)
   const canCreateProjects = accountRole === 'account_owner' || accountRole === 'admin';
+
+  // Fetch user's display name from profile
+  useEffect(() => {
+    async function fetchUserProfile() {
+      if (!user) return;
+      
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('display_name')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (profile?.display_name) {
+          setDisplayName(profile.display_name);
+        } else {
+          // Fallback to email prefix or user metadata
+          setDisplayName(
+            user.user_metadata?.display_name || 
+            user.user_metadata?.full_name ||
+            user.email?.split('@')[0] || 
+            'there'
+          );
+        }
+      } catch {
+        // Fallback to email prefix if profile fetch fails
+        setDisplayName(
+          user.user_metadata?.display_name || 
+          user.user_metadata?.full_name ||
+          user.email?.split('@')[0] || 
+          'there'
+        );
+      }
+    }
+
+    fetchUserProfile();
+  }, [user]);
 
   return (
     <div className="space-y-8">
@@ -24,7 +63,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Welcome to Wondrous Digital
+            Welcome{displayName ? `, ${displayName}` : ' to Wondrous Digital'}
           </h1>
           <p className="text-muted-foreground mt-2">
             Build beautiful websites with our visual builder

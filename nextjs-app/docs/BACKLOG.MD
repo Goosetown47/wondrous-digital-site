@@ -5,8 +5,8 @@
 
 This is the full backlog of features we keep and add to as we develop. We will organize this by category and type. When something is taken from the backlog, it’s moved up to active sprint. We will constantly add, adjust, remove, and prioritize items in this list as part of backlog grooming.
 
-**Production Version:** v0.1.2 (Released 8/1/2025 @ 11pm)
-**Development Version:** v0.1.3 (Active Planning Now)
+**Production Version:** v0.1.3 (Released 8/1/2025 @ 11pm)
+**Development Version:** v0.1.4 (Active Planning Now)
 
 ## CLASSIFICATIONS
 Use these classifications to identify each type of task. We can expand this list as needed.
@@ -134,76 +134,6 @@ Use these classifications to identify each type of task. We can expand this list
 
 
 
-## Account Management** v0.1.4 ---------------------------------------- ##
-*MVP functionality for manually managing 25 customer accounts*
-
-
-### [PACKET] User Invitation System 
-**Goal:** Complete the invitation acceptance flow and ensure proper email branding
-**Deliverable:** Working end-to-end invitation system for manual user onboarding
-
-- [ ] 🚀 Create /invitation acceptance page UI
-- [ ] 🚀 Wire up invitation acceptance to create user account
-- [ ] 🚀 Connect "Invite User" button in AccountUsers component
-- [ ] ⚗️ Test full invitation flow from send to acceptance
-- [ ] ⚗️ Verify all emails are Wondrous branded via Resend
-
-
-### [PACKET] User Profile Fix
-**Goal:** Fix missing user profiles for existing users
-**Deliverable:** All users have editable profiles
-
-- [ ] 🪲 Create missing user_profiles entries for existing users
-- [ ] 🚀 Add profile creation trigger for new users
-- [ ] ⚗️ Verify profile form elements are accessible
-
-
-### [PACKET] Plan Management for Manual Billing
-**Goal:** Allow admins to manually manage customer plans
-**Deliverable:** Admin interface for plan assignment
-
-- [ ] 🚀 Add plan selector to account settings (admin only)
-  - Plans: FREE, START ($397/month), GROW ($697/month), SCALE ($997/month)
-- [ ] 🚀 Create addons management interface
-  - PERFORM ($459/month)
-- [ ] 🚀 Add one-time fee tracking
-  - Platform Setup Fee ($1500)
-  - SEO Setup Fee ($750)
-- [ ] 🚀 Add billing notes field for manual tracking
-
-
-### [PACKET] Essential Account Management
-**Goal:** Core functionality for managing 25 accounts
-**Deliverable:** Basic account and project management tools
-
-**Account Safety**
-- [ ] 🚀 Require 2-step process for DELETE accounts (suspend first)
-- [ ] 🚀 Require typed "DELETE" confirmation in modal
-
-**Project Details**
-- [ ] 🪲 Fix "Created by" to use user_profiles/display_name
-- [ ] 🚀 Show configured domains in project details
-
-**UI Cleanup**
-- [ ] 🪲 Fix contact information display in Overview tab
-- [ ] 🚀 Move "back" link above HEADER
-- [ ] 🪲 Remove/fix redundant edit button in settings view
-
-**Sign Up**
-- [ ] ✂️ Remove public signup from login form
-
-
-
-### [PACKET] Bug Fixes
-
-- [ ] 🪲 Users table doesn't auto-refresh without a page reload when something changes.
-- [ ] 🪲 The users select div with "change role" and "remove from account" and clear selection options needs to have consistent looking buttons instead of just text or buttons.
-- [ ] 🪲 The users select div with "change role" and "remove from account" and clear selection stays active even when the selected item in the list is no longer there (e.g., I deleted it) (it works if I deselect it) -- It should actively check if something is selected or not, then respond accordingly.
-
-
-
----
-
 ## Payments & Segmentation** v0.1.5 ---------------------------------------- ##
 - Paid Tier System & Stripe Integration
 - Feature Tagging & Segmentation System
@@ -216,78 +146,38 @@ Use these classifications to identify each type of task. We can expand this list
 
 - [ ] Brainstorm with Claude and write tasks for this
 
-
 ---
 
-### [PACKET] Paid Tier System 
-**Goal:** Finalize the paid tiers for our application and integrate Stripe payments into our app so users can handle their own billing.
-**Deliverable:** A set of paid tiers linked to confirmed Stripe payments to enable.
-**Notes:** We will have several plans and add ons that need to be configured and tied to features being turned on and off.
+### [PACKET] Feature Management System
+**Goal:** Create a new page in Tools area that let's me manage which paid tiers get which things.
+**Deliverable:** A feature and library content management system
+**Notes:** This will enable staff to active set what features are available to each tier dynamically, and as we bring on new features, segment and test them with specific customers.
+
+
+- [ ] 🚀 New page in tools where we can manage features and library content
+  - Should have tabs to segment content like "features" "site templates" "themes" "sections"
+  - Within each tab, we should have a grid with the tiers on the top horizontal row and the items on the vertical left column, with a checkbox grid for each row. So for any feature I can check or uncheck it from a specific paid tier/addon and it will enable or disable it for the accounts that are in those tiers automatically/dynamically.
 
 - [ ] Brainstorm with Claude and write tasks for this
 
-
+---
 
 ### [PACKET] Stripe Integration
+**Goal:** Finalize the paid tiers for our application and integrate Stripe payments into our app so users can handle their own billing.
+**Deliverable:** A set of paid tiers linked to confirmed Stripe payments to enable.
+**Notes:** We will have several plans and add ons that need to be configured and tied to features being turned on and off. I already have a Stripe account set up and linked to my bank account. I don't really know what to do to integrate it into our application properly.
+
+- [ ] We need to set up the Stripe Payment system and get it integrated into our application (I need help figuring this one out)
 
 - [ ] Brainstorm with Claude and write tasks for this
 
 
 
+
+
+
 ---
 
-## Final Cleanup** v0.1.6 ---------------------------------------- ##
-- Domain Configuration Hardening
-
-### [PACKET] Domain Configuration System
-**Goal:** Implement production-ready domain management with white-labeled approach
-**Note:** Core functionality is implemented, needs finalization and thorough testing on both dev and production environments.
-**Deliverable:** Fully functional white-labeled domain system with preview domains and custom domain support
-
-##### Domain Functionality Finalization
-- [ ] 🚀 Add domain usage analytics tracking (track visits per domain)
-- [ ] 🚀 Implement domain transfer between projects functionality
-- [ ] 🚀 Add bulk domain operations for managing multiple domains
-- [ ] 🚀 Create domain history/audit log for tracking changes
-- [ ] 🚀 Add support for domain redirects (www to non-www, etc.)
-- [ ] 🪲 Fix any edge cases with apex domain handling
-
-##### Development Environment Testing
-- [ ] ⚗️ Test preview domain generation for new projects
-- [ ] ⚗️ Verify *.localhost:3000 works for local multi-tenant testing
-- [ ] ⚗️ Test domain verification flow with mock DNS records
-- [ ] ⚗️ Verify middleware correctly routes based on domain
-- [ ] ⚗️ Test domain deletion and cleanup processes
-
-##### Vercel API Integration Testing
-- [ ] ⚗️ Test API rate limiting and error handling
-- [ ] ⚗️ Verify domain verification polling intervals
-- [ ] ⚗️ Test handling of Vercel API downtime
-
-##### User Experience Improvements
-- [ ] 🚀 Add domain health check dashboard
-- [ ] 🚀 Implement email notifications for domain verification
-- [ ] 🚀 Create troubleshooting guide for common DNS issues
-- [ ] 🚀 Add domain performance metrics (response time, SSL status)
-- [ ] ⚗️ Test copy-to-clipboard for all DNS instructions
-
-##### Security & Edge Cases
-- [ ] ⚗️ Test domain hijacking prevention (verify ownership)
-- [ ] ⚗️ Verify domains can't be added to multiple projects
-- [ ] ⚗️ Test subdomain validation (prevent *.example.com)
-- [ ] ⚗️ Verify proper cleanup when project is deleted
-- [ ] 🪲 Handle international domains (IDN) properly
-
-##### Documentation & Support
-- [ ] 📌 Create video tutorial for domain setup
-- [ ] 📌 Document common DNS provider settings (GoDaddy, Namecheap, Cloudflare)
-- [ ] 📌 Create internal runbook for domain troubleshooting
-- [ ] 📌 Add domain FAQ section to help docs
-- [ ] 📌 Create customer-facing domain setup guide
-
-
-##### UX Improvements
-- [ ] 🚀 Add helpful suggestions when slug is reserved during project creation
 
 
 ---
@@ -345,6 +235,7 @@ Use these classifications to identify each type of task. We can expand this list
 
 
 ### [PACKET] Canvas Builder Improvements
+**Notes:** I want to create an immersive, sleak builder interface that is interactive and really easy to use. I like the way https://www.shadcnblocks.com/blocks structures their blocks and how you can change the format using grid, list, masonry modes. I like that you can click into the block and see it fully. I want to put something like this in a drawer that you can open and close and select to add sections to your pages. I'd like a sidebar on the right side that has a representation of each of the sections on the page that you can hover over to drag and drop, delete, change, lock etc. This is an abstraction of what's on the page for ease of use. Instead of scrolling up and down to drag things which can be clumsy you can just do it in the sidebar. Users should be able to grab an element from the drawer and drag it into place on the sidebar, and then it appears in the canvas and on the sidebar.
 
 - [ ] 🚀 Reorder sections
 
@@ -486,6 +377,58 @@ Use these classifications to identify each type of task. We can expand this list
 # ---------------------------------------------------------------------------------------- #
 # UNPRIORITIZED -------------------------------------------------------------------------- #
 # ---------------------------------------------------------------------------------------- #
+
+
+
+### [PACKET] Domain Configuration System
+**Goal:** Implement production-ready domain management with white-labeled approach
+**Note:** Core functionality is implemented, needs finalization and thorough testing on both dev and production environments.
+**Deliverable:** Fully functional white-labeled domain system with preview domains and custom domain support
+
+##### Domain Functionality Finalization
+- [ ] 🚀 Add domain usage analytics tracking (track visits per domain)
+- [ ] 🚀 Implement domain transfer between projects functionality
+- [ ] 🚀 Add bulk domain operations for managing multiple domains
+- [ ] 🚀 Create domain history/audit log for tracking changes
+- [ ] 🚀 Add support for domain redirects (www to non-www, etc.)
+- [ ] 🪲 Fix any edge cases with apex domain handling
+
+##### Development Environment Testing
+- [ ] ⚗️ Test domain verification flow with mock DNS records
+- [ ] ⚗️ Verify middleware correctly routes based on domain
+- [ ] ⚗️ Test domain deletion and cleanup processes
+
+##### Vercel API Integration Testing
+- [ ] ⚗️ Test API rate limiting and error handling
+- [ ] ⚗️ Verify domain verification polling intervals
+- [ ] ⚗️ Test handling of Vercel API downtime
+
+##### User Experience Improvements
+- [ ] 🚀 Add domain health check dashboard
+- [ ] 🚀 Implement email notifications for domain verification
+- [ ] 🚀 Create troubleshooting guide for common DNS issues
+- [ ] 🚀 Add domain performance metrics (response time, SSL status)
+- [ ] ⚗️ Test copy-to-clipboard for all DNS instructions
+
+##### Security & Edge Cases
+- [ ] ⚗️ Test domain hijacking prevention (verify ownership)
+- [ ] ⚗️ Verify domains can't be added to multiple projects
+- [ ] ⚗️ Test subdomain validation (prevent *.example.com)
+- [ ] ⚗️ Verify proper cleanup when project is deleted
+- [ ] 🪲 Handle international domains (IDN) properly
+
+##### Documentation & Support
+- [ ] 📌 Create video tutorial for domain setup
+- [ ] 📌 Document common DNS provider settings (GoDaddy, Namecheap, Cloudflare)
+- [ ] 📌 Create internal runbook for domain troubleshooting
+- [ ] 📌 Add domain FAQ section to help docs
+- [ ] 📌 Create customer-facing domain setup guide
+
+
+##### UX Improvements
+- [ ] 🚀 Add helpful suggestions when slug is reserved during project creation
+
+
 
 
 ## Future Account Management Features (Post-MVP)

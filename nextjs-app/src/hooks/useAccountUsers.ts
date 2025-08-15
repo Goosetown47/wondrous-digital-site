@@ -14,6 +14,7 @@ interface AccountUserWithDetails extends AccountUser {
   user: {
     id: string;
     email?: string;
+    email_confirmed_at?: string | null;
     user_metadata?: {
       full_name?: string;
     };
@@ -28,16 +29,34 @@ export function useAccountUsers(accountId: string | null) {
     queryFn: async () => {
       if (!accountId) return [];
 
-      // Use the view that includes user details
-      const { data: accountUsers, error: usersError } = await supabase
-        .from('account_users_with_details')
-        .select('*')
-        .eq('account_id', accountId);
+      // Use API endpoint to bypass RLS and get user details
+      const response = await fetch(`/api/accounts/${accountId}/users`, {
+        method: 'GET',
+        credentials: 'include',
+      });
 
-      if (usersError) throw usersError;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to fetch account users');
+      }
+
+      const accountUsers = await response.json();
 
       // Transform the data to match our interface
-      return accountUsers.map(au => ({
+      return accountUsers.map((au: { 
+        account_id: string; 
+        user_id: string; 
+        role: string; 
+        joined_at: string; 
+        invited_by: string; 
+        email?: string;
+        email_confirmed_at?: string | null;
+        display_name?: string | null;
+        avatar_url?: string | null;
+        profile_metadata?: Record<string, unknown>;
+        raw_user_meta_data?: { full_name?: string };
+        user?: { email?: string; user_metadata?: { full_name?: string; display_name?: string } } 
+      }) => ({
         account_id: au.account_id,
         user_id: au.user_id,
         role: au.role,
@@ -46,6 +65,7 @@ export function useAccountUsers(accountId: string | null) {
         user: { 
           id: au.user_id, 
           email: au.email,
+          email_confirmed_at: au.email_confirmed_at,
           user_metadata: {
             full_name: au.display_name || au.raw_user_meta_data?.full_name
           }

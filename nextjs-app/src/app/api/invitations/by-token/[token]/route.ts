@@ -20,35 +20,13 @@ export async function GET(
     const now = new Date();
     const expiresAt = new Date(invitation.expires_at);
     
-    if (invitation.accepted_at) {
-      return NextResponse.json(
-        { error: 'Invitation has already been accepted' },
-        { status: 400 }
-      );
-    }
+    // Return the invitation with status flags for the client to handle
+    const response = {
+      ...invitation,
+      expired: expiresAt < now,
+    };
     
-    if (invitation.declined_at) {
-      return NextResponse.json(
-        { error: 'Invitation has been declined' },
-        { status: 400 }
-      );
-    }
-    
-    if (invitation.cancelled_at) {
-      return NextResponse.json(
-        { error: 'Invitation has been cancelled' },
-        { status: 400 }
-      );
-    }
-    
-    if (expiresAt < now) {
-      return NextResponse.json(
-        { error: 'Invitation has expired' },
-        { status: 400 }
-      );
-    }
-    
-    return NextResponse.json(invitation);
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching invitation:', error);
     return NextResponse.json(

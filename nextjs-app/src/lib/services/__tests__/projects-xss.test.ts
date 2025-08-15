@@ -24,7 +24,16 @@ describe('Project XSS Prevention', () => {
     
     // Setup default mocks
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      data: { user: { id: 'test-user-id', email: 'test@example.com' } as unknown as { id: string; email: string } },
+      data: { 
+        user: { 
+          id: 'test-user-id', 
+          email: 'test@example.com',
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated',
+          created_at: new Date().toISOString()
+        } as import('@supabase/supabase-js').User 
+      },
       error: null,
     });
   });
