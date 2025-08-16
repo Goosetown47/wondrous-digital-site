@@ -10,7 +10,7 @@ I'm working on the Wondrous Digital platform - a Next.js 15 multi-tenant website
 
 **Environment**: WSL (Windows Subsystem for Linux)
 **Project Location**: `/nextjs-app/` directory (ignore legacy `/src/`)
-**Versions**: Production v0.1.3 | Development v0.1.4
+**Versions**: Production v0.1.4 | Development v0.1.5
 
 ## 📋 MANDATORY: Read These First
 
@@ -21,19 +21,9 @@ I'm working on the Wondrous Digital platform - a Next.js 15 multi-tenant website
 
 ## 🎯 Current Sprint & Tasks
 
-We've begun testing our Account Owner User Management packet from our ACTIVE-SPRINT.md. Please scan through our code and get up to date with where we are before we start our test process. Please ensure you read DEV-LIFECYCLE.md we are using the FULL FEATURE mode.
-
-     ☐ Add tests for ProjectAccessModal
-     ☐ Update AccountUsers tests for new features
-     ☐ Add tests for useProjectAccess hook
-     ☐ Add tests for useUserProjectCounts hook
-     ☐ Add tests for useUserProfile hook
-     ☐ Add API integration tests for projects route
-     ☐ Run full test suite and fix failures
-     ☐ Fix existing bugs from Bug Fixes packet
-     ☐ Manual Testing & Quality Assurance
-     ☐ Pre-Deployment checks
-     ☐ Deployment
+We are beginning development on Sprint v0.1.5. 
+Get up to speed by reading our session log here: `/docs/Session_Logs/SESSION-LOG-2025-01-20-v015-sprint-planning.md`
+Then take a look at our ACTIVE-SPRINT.md file to look through our packets and let's get ready to tackle our first packet.
 
 It's important you use the right DEV database password when using the CLI: MsDH6QjUsf6vXD3nCeYkBNiF
 

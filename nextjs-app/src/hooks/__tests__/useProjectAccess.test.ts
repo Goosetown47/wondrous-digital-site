@@ -21,9 +21,30 @@ vi.mock('@/lib/supabase/client', () => ({
 
 // Mock auth provider
 import { useAuth } from '@/providers/auth-provider';
-const mockUser = { id: 'granting-user-id' };
+import type { User } from '@supabase/supabase-js';
+
+const mockUser: User = {
+  id: 'granting-user-id',
+  app_metadata: {},
+  user_metadata: {},
+  aud: 'authenticated',
+  created_at: '2024-01-01T00:00:00.000Z',
+  email: 'test@example.com',
+};
+
 vi.mock('@/providers/auth-provider', () => ({
-  useAuth: vi.fn(() => ({ user: mockUser })),
+  useAuth: vi.fn(() => ({ 
+    user: mockUser,
+    loading: false,
+    accounts: [],
+    isAdmin: false,
+    currentAccount: null,
+    setCurrentAccount: vi.fn(),
+    currentProject: null,
+    setCurrentProject: vi.fn(),
+    signOut: vi.fn(),
+    refreshAccounts: vi.fn(),
+  })),
 }));
 
 describe('useProjectAccess hooks', () => {
@@ -180,7 +201,18 @@ describe('useProjectAccess hooks', () => {
     it('should throw error when user is not logged in', async () => {
       // Mock useAuth to return null user for this test
       const useAuthMock = vi.mocked(useAuth);
-      useAuthMock.mockReturnValueOnce({ user: null, loading: false, signIn: vi.fn(), signOut: vi.fn() });
+      useAuthMock.mockReturnValueOnce({ 
+        user: null, 
+        loading: false, 
+        accounts: [],
+        isAdmin: false,
+        currentAccount: null,
+        setCurrentAccount: vi.fn(),
+        currentProject: null,
+        setCurrentProject: vi.fn(),
+        signOut: vi.fn(),
+        refreshAccounts: vi.fn(),
+      });
 
       const { result } = renderHook(
         () => useGrantProjectAccess(),
@@ -196,7 +228,18 @@ describe('useProjectAccess hooks', () => {
       ).rejects.toThrow('Must be logged in to grant access');
       
       // Restore mock to default
-      useAuthMock.mockReturnValue({ user: mockUser, loading: false, signIn: vi.fn(), signOut: vi.fn() });
+      useAuthMock.mockReturnValue({ 
+        user: mockUser, 
+        loading: false,
+        accounts: [],
+        isAdmin: false,
+        currentAccount: null,
+        setCurrentAccount: vi.fn(),
+        currentProject: null,
+        setCurrentProject: vi.fn(),
+        signOut: vi.fn(),
+        refreshAccounts: vi.fn(),
+      });
     });
 
     it('should invalidate queries after granting access', async () => {

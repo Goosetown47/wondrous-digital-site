@@ -5,8 +5,8 @@
 
 This is the full backlog of features we keep and add to as we develop. We will organize this by category and type. When something is taken from the backlog, it’s moved up to active sprint. We will constantly add, adjust, remove, and prioritize items in this list as part of backlog grooming.
 
-**Production Version:** v0.1.3 (Released 8/1/2025 @ 11pm)
-**Development Version:** v0.1.4 (Active Planning Now)
+**Production Version:** v0.1.4
+**Development Version:** v0.1.5
 
 ## CLASSIFICATIONS
 Use these classifications to identify each type of task. We can expand this list as needed.

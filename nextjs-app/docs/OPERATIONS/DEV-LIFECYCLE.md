@@ -229,6 +229,13 @@ npm run test:e2e      # Confirms user flows work end-to-end
 - [ ] Run coverage report: `npm run test:coverage`  
   *Identifies untested code paths (focus on quality, not percentage)*
 
+###### Test Organization
+- Unit tests: Test individual functions/methods in isolation
+- Integration tests: Test component interactions
+- End-to-end tests: Test complete user workflows
+- Keep test files next to the code they test
+- Aim for 80%+ code coverage, but focus on critical paths
+
 
 #### Security Checklist:
 - [ ] **Input Validation**
