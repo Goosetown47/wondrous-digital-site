@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { sanitizeFormData } from '@/lib/security/sanitize';
 
 export async function POST(request: Request) {
   try {
-    const { accountName, website, description } = await request.json();
+    const rawData = await request.json();
+    
+    // Sanitize input data
+    const { accountName, website, description } = sanitizeFormData(rawData, {
+      accountName: 'plain',
+      website: 'url',
+      description: 'plain',
+    });
     
     if (!accountName) {
       return NextResponse.json(

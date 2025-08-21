@@ -3,6 +3,8 @@ import { createSupabaseClient } from '@/lib/supabase/middleware';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { env } from '@/env.mjs';
 import { applySecurityHeaders } from '@/lib/security-headers';
+import { validateCSRFRequest } from '@/lib/security/csrf';
+import { checkRateLimit, rateLimiters, createRateLimitResponse } from '@/lib/security/rate-limit';
 
 // Domains that should NOT be treated as customer domains
 const RESERVED_DOMAINS = [
@@ -47,9 +49,47 @@ export async function middleware(request: NextRequest) {
   // Extract domain without port
   const domain = hostname.split(':')[0];
   
-  // Skip middleware for API routes and static files
+  // Handle API routes with CSRF protection and rate limiting
+  if (url.pathname.startsWith('/api/')) {
+    // Apply rate limiting based on endpoint
+    let rateLimitConfig = rateLimiters.api;
+    
+    if (url.pathname.startsWith('/api/signup')) {
+      rateLimitConfig = rateLimiters.signup;
+    } else if (url.pathname.startsWith('/api/auth/login')) {
+      rateLimitConfig = rateLimiters.login;
+    } else if (url.pathname.startsWith('/api/auth/reset-password')) {
+      rateLimitConfig = rateLimiters.passwordReset;
+    }
+    
+    const { allowed, resetAt } = await checkRateLimit(request, rateLimitConfig);
+    if (!allowed) {
+      return createRateLimitResponse(resetAt);
+    }
+    
+    // Skip CSRF for specific endpoints
+    const csrfExemptPaths = ['/api/csrf', '/api/auth/callback', '/api/stripe/webhook'];
+    const isExempt = csrfExemptPaths.some(path => url.pathname.startsWith(path));
+    
+    if (!isExempt && request.method !== 'GET') {
+      const isValid = await validateCSRFRequest(request);
+      if (!isValid) {
+        return new NextResponse(
+          JSON.stringify({ error: 'Invalid CSRF token' }),
+          { 
+            status: 403,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    }
+    
+    const response = NextResponse.next();
+    return applySecurityHeaders(response);
+  }
+  
+  // Skip middleware for static files
   if (
-    url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/_next/') ||
     url.pathname.startsWith('/static/') ||
     url.pathname.startsWith('/favicon.ico') ||

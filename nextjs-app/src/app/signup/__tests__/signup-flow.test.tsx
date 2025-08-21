@@ -74,13 +74,17 @@ describe('Signup Flow Navigation', () => {
       render(<SignupPage />);
       
       const emailInput = screen.getByLabelText(/email/i);
-      const submitButton = screen.getByRole('button', { name: /continue/i });
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      const confirmInput = screen.getByLabelText(/confirm password/i);
+      const submitButton = screen.getByRole('button', { name: /create account/i });
       
       fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
+      fireEvent.change(passwordInput, { target: { value: 'Password123!' } });
+      fireEvent.change(confirmInput, { target: { value: 'Password123!' } });
       fireEvent.click(submitButton);
       
       await waitFor(() => {
-        expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
+        expect(screen.getByText(/invalid email address/i)).toBeInTheDocument();
       });
     });
 
@@ -89,7 +93,7 @@ describe('Signup Flow Navigation', () => {
       
       const passwordInput = screen.getByLabelText(/^password/i);
       const confirmInput = screen.getByLabelText(/confirm password/i);
-      const submitButton = screen.getByRole('button', { name: /continue/i });
+      const submitButton = screen.getByRole('button', { name: /create account/i });
       
       fireEvent.change(passwordInput, { target: { value: 'Password123!' } });
       fireEvent.change(confirmInput, { target: { value: 'DifferentPassword!' } });
@@ -132,7 +136,7 @@ describe('Signup Flow Navigation', () => {
       const emailInput = screen.getByLabelText(/email/i);
       const passwordInput = screen.getByLabelText(/^password/i);
       const confirmInput = screen.getByLabelText(/confirm password/i);
-      const submitButton = screen.getByRole('button', { name: /continue/i });
+      const submitButton = screen.getByRole('button', { name: /create account/i });
       
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
       fireEvent.change(passwordInput, { target: { value: 'Password123!' } });
@@ -153,7 +157,7 @@ describe('Signup Flow Navigation', () => {
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
       
       // Simulate form submission
-      const submitButton = screen.getByRole('button', { name: /continue/i });
+      const submitButton = screen.getByRole('button', { name: /create account/i });
       fireEvent.click(submitButton);
       
       await waitFor(() => {
@@ -175,7 +179,7 @@ describe('Signup Flow Navigation', () => {
     it('should show loading state during submission', async () => {
       render(<SignupPage />);
       
-      const submitButton = screen.getByRole('button', { name: /continue/i });
+      const submitButton = screen.getByRole('button', { name: /create account/i });
       
       // Fill form
       const emailInput = screen.getByLabelText(/email/i);
@@ -188,7 +192,9 @@ describe('Signup Flow Navigation', () => {
       
       fireEvent.click(submitButton);
       
-      expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/creating account/i)).toBeInTheDocument();
+      });
     });
   });
 
@@ -212,7 +218,7 @@ describe('Signup Flow Navigation', () => {
       const emailInput = screen.getByLabelText(/email/i);
       const passwordInput = screen.getByLabelText(/^password/i);
       const confirmInput = screen.getByLabelText(/confirm password/i);
-      const submitButton = screen.getByRole('button', { name: /continue/i });
+      const submitButton = screen.getByRole('button', { name: /create account/i });
       
       fireEvent.change(emailInput, { target: { value: 'existing@example.com' } });
       fireEvent.change(passwordInput, { target: { value: 'Password123!' } });
@@ -237,7 +243,7 @@ describe('Signup Flow Navigation', () => {
       
       render(<SignupPage />);
       
-      const submitButton = screen.getByRole('button', { name: /continue/i });
+      const submitButton = screen.getByRole('button', { name: /create account/i });
       fireEvent.click(submitButton);
       
       await waitFor(() => {
@@ -319,7 +325,7 @@ describe('Signup Flow Navigation', () => {
       const emailInput = screen.getByLabelText(/email/i);
       const passwordInput = screen.getByLabelText(/^password/i);
       const confirmInput = screen.getByLabelText(/confirm password/i);
-      const submitButton = screen.getByRole('button', { name: /continue/i });
+      const submitButton = screen.getByRole('button', { name: /create account/i });
       
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
       fireEvent.change(passwordInput, { target: { value: 'Password123!' } });

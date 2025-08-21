@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { sanitizeFormData } from '@/lib/security/sanitize';
 
 export async function POST(request: Request) {
   try {
+    const rawData = await request.json();
+    
+    // Sanitize input data
     const {
       avatarUrl,
       firstName,
@@ -14,7 +18,17 @@ export async function POST(request: Request) {
       timezone,
       location,
       notes,
-    } = await request.json();
+    } = sanitizeFormData(rawData, {
+      avatarUrl: 'url',
+      firstName: 'plain',
+      lastName: 'plain',
+      userHandle: 'plain',
+      phoneNumber: 'plain',
+      jobTitle: 'plain',
+      timezone: 'plain',
+      location: 'plain',
+      notes: 'plain',
+    });
     
     if (!firstName || !lastName) {
       return NextResponse.json(

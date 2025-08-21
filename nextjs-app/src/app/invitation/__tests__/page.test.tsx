@@ -50,7 +50,7 @@ describe('InvitationPage', () => {
       get: vi.fn(() => 'test-token'),
     });
 
-    (global.fetch as jest.Mock).mockImplementationOnce(
+    vi.mocked(global.fetch).mockImplementationOnce(
       () => new Promise(() => {}) // Never resolves to keep loading
     );
 
@@ -85,7 +85,7 @@ describe('InvitationPage', () => {
       expires_at: new Date(Date.now() + 86400000).toISOString(),
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockInvitation,
     });
@@ -109,7 +109,7 @@ describe('InvitationPage', () => {
       expires_at: new Date(Date.now() - 86400000).toISOString(),
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockInvitation,
     });
@@ -131,7 +131,7 @@ describe('InvitationPage', () => {
       accepted_at: new Date().toISOString(),
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockInvitation,
     });
@@ -149,7 +149,7 @@ describe('InvitationPage', () => {
       get: vi.fn(() => 'invalid-token'),
     });
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: false,
       json: async () => ({ error: 'Invitation not found' }),
     });

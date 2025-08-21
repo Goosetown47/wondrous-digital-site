@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card'
 import { Loader2, Mail, Lock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { PasswordStrength } from '@/components/ui/password-strength'
-import { validatePassword } from '@/lib/validation/password'
+import { validatePassword, isValidEmail } from '@/lib/validation/password'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -43,6 +43,12 @@ export default function SignupPage() {
       return
     }
 
+    // Validate email format
+    if (!isValidEmail(email)) {
+      setError('Invalid email address')
+      return
+    }
+
     // Validate password strength
     const passwordValidation = validatePassword(password)
     if (!passwordValidation.isValid) {
@@ -50,6 +56,7 @@ export default function SignupPage() {
       return
     }
 
+    // eslint-disable-next-line security/detect-possible-timing-attacks
     if (password !== confirmPassword) {
       setError('Passwords do not match')
       return
