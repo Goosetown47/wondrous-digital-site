@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     if (flow === 'invitation' && invitationToken) {
       // Verify invitation token
       const { data: invitation, error: inviteError } = await supabase
-        .from('account_invitations')
+        .from('invitations')
         .select('*, accounts(*)')
         .eq('token', invitationToken)
         .single();

@@ -36,6 +36,8 @@ export function SignupStepper({ currentStep, steps }: SignupStepperProps) {
                     ? "border-gray-900 bg-white text-gray-900"
                     : "border-gray-300 bg-white text-gray-400"
                 )}
+                data-completed={isCompleted ? "true" : undefined}
+                data-active={isActive ? "true" : undefined}
               >
                 {isCompleted ? (
                   <Check className="w-5 h-5" strokeWidth={3} />
@@ -63,7 +65,7 @@ export function SignupStepper({ currentStep, steps }: SignupStepperProps) {
 
             {/* Connector Line */}
             {!isLast && (
-              <div className="flex-1 mx-2 md:mx-4">
+              <div className="flex-1 mx-2 md:mx-4 connector">
                 <div
                   className={cn(
                     "h-0.5 transition-all duration-200",
@@ -101,6 +103,8 @@ export function SignupStepperVertical({ currentStep, steps }: SignupStepperProps
                     ? "border-gray-900 bg-white text-gray-900"
                     : "border-gray-300 bg-white text-gray-400"
                 )}
+                data-completed={isCompleted ? "true" : undefined}
+                data-active={isActive ? "true" : undefined}
               >
                 {isCompleted ? (
                   <Check className="w-4 h-4" strokeWidth={3} />

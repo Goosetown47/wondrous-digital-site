@@ -41,7 +41,7 @@ describe('POST /api/stripe/create-checkout-session', () => {
         body: JSON.stringify({
           tier: 'PRO',
           flow: 'invitation',
-          token: 'inv_token_123',
+          invitationToken: 'inv_token_123',
         }),
       });
     });
@@ -274,7 +274,7 @@ describe('POST /api/stripe/create-checkout-session', () => {
         body: JSON.stringify({
           tier: 'PRO',
           flow: 'invitation',
-          token: 'inv_token_123',
+          invitationToken: 'inv_token_123',
         }),
       });
 
