@@ -8,8 +8,7 @@ export interface Account {
   id: string;
   name: string;
   slug: string;
-  plan: 'free' | 'pro' | 'enterprise'; // Legacy field - kept for compatibility
-  tier?: TierName; // New tier system
+  tier: TierName; // Account subscription tier
   stripe_customer_id?: string | null;
   stripe_subscription_id?: string | null;
   subscription_status?: string | null;

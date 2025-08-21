@@ -510,11 +510,12 @@ We maintain separate DEV and PROD databases to ensure safe development and deplo
 #### 1. Creating Migrations (Claude)
 When database changes are needed:
 ```bash
-# Create new migration file
-npx supabase migration new descriptive_name
+# Create new migration file (MUST use 14-digit timestamp format)
+echo "-- Your SQL here" > supabase/migrations/$(date +%Y%m%d%H%M%S)_descriptive_name.sql
 
-# Edit the migration file in /supabase/migrations/
-# Format: YYYYMMDD_HHMMSS_descriptive_name.sql
+# CRITICAL: Format MUST be YYYYMMDDHHMMSS_descriptive_name.sql (14 digits, no underscore)
+# Example: 20250820140000_add_user_roles.sql
+# See /docs/Guides/MIGRATION-NAMING-GUIDE.md for details
 ```
 
 #### 2. Testing in DEV (Claude)
@@ -613,7 +614,8 @@ npm run prettier:check
 npm run prettier:write
 
 # Database - DEV Environment
-npx supabase migration new [description]
+# Create migration (MUST use 14-digit timestamp)
+echo "-- SQL" > supabase/migrations/$(date +%Y%m%d%H%M%S)_description.sql
 npx supabase db push --password 'MsDH6QjUsf6vXD3nCeYkBNiF'  # DEV database
 npx supabase migration list --password 'MsDH6QjUsf6vXD3nCeYkBNiF'  # Check status
 

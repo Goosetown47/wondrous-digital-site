@@ -169,7 +169,7 @@ export async function PATCH(
     // Create service role client (bypasses RLS)
     const serviceClient = createAdminClient();
 
-    // Prepare the user metadata structure
+    // Prepare the user metadata structure - keep phone in metadata for backward compatibility
     const userMetadata = {
       display_name,
       phone,
@@ -190,6 +190,20 @@ export async function PATCH(
     }
 
     console.log('✅ [API/Users/UserId] User updated:', userId);
+    
+    // Also update the user_profiles table with phone_number
+    if (phone) {
+      await serviceClient
+        .from('user_profiles')
+        .upsert({
+          user_id: userId,
+          phone_number: phone,
+          display_name: display_name,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id',
+        });
+    }
 
     // Log the action
     await serviceClient

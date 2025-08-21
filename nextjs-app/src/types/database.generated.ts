@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -513,6 +512,48 @@ export type Database = {
           },
         ]
       }
+      pending_stripe_payments: {
+        Row: {
+          amount_paid: number | null
+          created_at: string | null
+          currency: string | null
+          email: string
+          id: string
+          metadata: Json | null
+          processed_at: string | null
+          stripe_customer_id: string
+          stripe_session_id: string
+          stripe_subscription_id: string | null
+          tier: Database["public"]["Enums"]["tier_name"]
+        }
+        Insert: {
+          amount_paid?: number | null
+          created_at?: string | null
+          currency?: string | null
+          email: string
+          id?: string
+          metadata?: Json | null
+          processed_at?: string | null
+          stripe_customer_id: string
+          stripe_session_id: string
+          stripe_subscription_id?: string | null
+          tier: Database["public"]["Enums"]["tier_name"]
+        }
+        Update: {
+          amount_paid?: number | null
+          created_at?: string | null
+          currency?: string | null
+          email?: string
+          id?: string
+          metadata?: Json | null
+          processed_at?: string | null
+          stripe_customer_id?: string
+          stripe_session_id?: string
+          stripe_subscription_id?: string | null
+          tier?: Database["public"]["Enums"]["tier_name"]
+        }
+        Relationships: []
+      }
       permissions: {
         Row: {
           action: string
@@ -852,6 +893,36 @@ export type Database = {
           },
         ]
       }
+      stripe_webhook_logs: {
+        Row: {
+          created_at: string
+          data: Json
+          error: string | null
+          id: string
+          processed: boolean | null
+          stripe_event_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          error?: string | null
+          id?: string
+          processed?: boolean | null
+          stripe_event_id: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          error?: string | null
+          id?: string
+          processed?: boolean | null
+          stripe_event_id?: string
+          type?: string
+        }
+        Relationships: []
+      }
       themes: {
         Row: {
           created_at: string | null
@@ -1042,6 +1113,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_old_pending_payments: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       decline_invitation: {
         Args: { invitation_token: string }
         Returns: Json
@@ -1130,6 +1205,10 @@ export type Database = {
       }
       page_has_unpublished_changes: {
         Args: { page_id: string }
+        Returns: boolean
+      }
+      process_pending_payment: {
+        Args: { p_account_id: string; p_email: string }
         Returns: boolean
       }
       publish_page_draft: {

@@ -21,11 +21,18 @@ I'm working on the Wondrous Digital platform - a Next.js 15 multi-tenant website
 
 ## 🎯 Current Sprint & Tasks
 
-We are beginning development on Sprint v0.1.5. 
-Get up to speed by reading our session log here: `/docs/Session_Logs/SESSION-LOG-2025-01-20-v015-sprint-planning.md`
-Then take a look at our ACTIVE-SPRINT.md file to look through our packets and let's get ready to tackle our first packet.
+Complete packets 1-2.5 in our sprint.
 
-It's important you use the right DEV database password when using the CLI: MsDH6QjUsf6vXD3nCeYkBNiF
+- 16 TypeScript errors in test files only
+- Some ESLint warnings (style-related)
+- Lighthouse performance optimization pending
+- Look for other tasks.
+- REMOVE the vertical stepper throughout the signup process (UX change)
+
+- COMPLETE all open tasks in packets, then we deploy our work.
+
+
+**Database Password for CLI:** MsDH6QjUsf6vXD3nCeYkBNiF
 
 - **Logs**: Get up to speed on everything we've done [STATUS-LOG.md](/nextjs-app/docs/STATUS-LOG.md)
 - **Active Sprint**: Check [ACTIVE-SPRINT.md](/nextjs-app/docs/ACTIVE-SPRINT.md)

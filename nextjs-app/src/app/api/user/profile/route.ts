@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       {
         user_metadata: {
           display_name: profileData.display_name,
-          phone: profileData.phone,
+          phone: profileData.phone_number || profileData.phone,
           avatar_url: profileData.avatar_url,
         }
       }
@@ -124,7 +124,7 @@ export async function PUT(request: NextRequest) {
       .upsert({
         user_id: user.id,
         display_name,
-        phone,
+        phone_number: phone,
         metadata: {
           ...metadata,
           updated_via: 'onboarding',

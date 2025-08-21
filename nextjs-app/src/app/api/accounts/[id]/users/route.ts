@@ -107,7 +107,7 @@ export async function GET(
     // Fetch user profiles for display names
     const { data: userProfiles } = await serviceClient
       .from('user_profiles')
-      .select('user_id, display_name, phone, avatar_url')
+      .select('user_id, display_name, phone_number, avatar_url')
       .in('user_id', userIds);
 
     // Combine account_users data with auth.users data and profiles
@@ -128,7 +128,7 @@ export async function GET(
                      authUser?.user_metadata?.full_name || 
                      authUser?.email?.split('@')[0] || '',
         avatar_url: profile?.avatar_url || authUser?.user_metadata?.avatar_url || null,
-        phone: profile?.phone || null,
+        phone: profile?.phone_number || null,
         profile_metadata: {},
         raw_user_meta_data: authUser?.user_metadata || {}
       };

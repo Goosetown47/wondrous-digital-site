@@ -34,7 +34,10 @@ const PUBLIC_ROUTES = [
   '/auth/update-password',
   '/auth/verify-email-pending',
   '/invitation',
-  '/profile/setup'
+  '/profile/setup',
+  '/pricing',  // Allow cold visitors to see pricing
+  '/payment/success',  // Allow redirect after successful payment
+  '/payment/cancel'   // Allow redirect after cancelled payment
 ];
 
 export async function middleware(request: NextRequest) {

@@ -38,7 +38,7 @@ const updateAccountSchema = z.object({
     .refine(slug => slug.length > 0, 'Slug is required')
     .refine(slug => /^[a-z0-9-]+$/.test(slug), 'Slug can only contain lowercase letters, numbers, and hyphens')
     .refine(slug => !slug.startsWith('-') && !slug.endsWith('-'), 'Slug cannot start or end with hyphen'),
-  plan: z.enum(['free', 'pro', 'enterprise']),
+  tier: z.enum(['FREE', 'BASIC', 'PRO', 'SCALE', 'MAX']),
   description: z.string()
     .max(INPUT_LIMITS.projectDescription, `Description must be less than ${INPUT_LIMITS.projectDescription} characters`)
     .optional(),
@@ -66,19 +66,19 @@ export function AccountSettings({ account }: AccountSettingsProps) {
     defaultValues: {
       name: account.name,
       slug: account.slug,
-      plan: account.plan,
+      tier: account.tier,
       description: (account.settings as Record<string, unknown>)?.description as string || '',
     },
   });
 
-  const watchPlan = watch('plan');
+  const watchTier = watch('tier');
 
   // Reset form when account data changes (e.g., after refetch)
   useEffect(() => {
     reset({
       name: account.name,
       slug: account.slug,
-      plan: account.plan,
+      tier: account.tier,
       description: (account.settings as Record<string, unknown>)?.description as string || '',
     });
   }, [account, reset]);
@@ -90,7 +90,7 @@ export function AccountSettings({ account }: AccountSettingsProps) {
         updates: {
           name: data.name,
           slug: data.slug,
-          plan: data.plan,
+          tier: data.tier,
           settings: {
             ...account.settings,
             description: data.description,
@@ -111,22 +111,28 @@ export function AccountSettings({ account }: AccountSettingsProps) {
     setIsEditing(false);
   };
 
-  const planDescriptions: Record<'free' | 'pro' | 'enterprise', string> = {
-    free: 'Basic features for small projects',
-    pro: 'Advanced features for growing businesses',
-    enterprise: 'Full features with enterprise support',
+  const tierDescriptions: Record<'FREE' | 'BASIC' | 'PRO' | 'SCALE' | 'MAX', string> = {
+    FREE: 'Basic features for small projects',
+    BASIC: 'Essential features for small businesses',
+    PRO: 'Advanced features for growing businesses',
+    SCALE: 'High-performance features for scaling businesses',
+    MAX: 'Full features with enterprise support',
   };
 
-  const planPricing: Record<'free' | 'pro' | 'enterprise', string> = {
-    free: 'Free',
-    pro: '$29/month',
-    enterprise: 'Contact Sales',
+  const tierPricing: Record<'FREE' | 'BASIC' | 'PRO' | 'SCALE' | 'MAX', string> = {
+    FREE: 'Free',
+    BASIC: '$39/month',
+    PRO: '$89/month',
+    SCALE: '$299/month',
+    MAX: 'Contact Sales',
   };
 
-  const planLimits: Record<'free' | 'pro' | 'enterprise', { projects: string | number; users: string | number; storage: string }> = {
-    free: { projects: 3, users: 2, storage: '1 GB' },
-    pro: { projects: 25, users: 10, storage: '10 GB' },
-    enterprise: { projects: 'Unlimited', users: 'Unlimited', storage: '100 GB' },
+  const tierLimits: Record<'FREE' | 'BASIC' | 'PRO' | 'SCALE' | 'MAX', { projects: string | number; users: string | number; storage: string }> = {
+    FREE: { projects: 1, users: 1, storage: '100 MB' },
+    BASIC: { projects: 3, users: 2, storage: '1 GB' },
+    PRO: { projects: 10, users: 5, storage: '10 GB' },
+    SCALE: { projects: 50, users: 20, storage: '100 GB' },
+    MAX: { projects: 'Unlimited', users: 'Unlimited', storage: '100 GB' },
   };
 
   return (
@@ -251,14 +257,14 @@ export function AccountSettings({ account }: AccountSettingsProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="font-medium">
-                      {account.plan.charAt(0).toUpperCase() + account.plan.slice(1)} Plan
+                      {account.tier} Plan
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      {planDescriptions[account.plan]}
+                      {tierDescriptions[account.tier]}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{planPricing[account.plan]}</p>
+                    <p className="font-medium">{tierPricing[account.tier]}</p>
                   </div>
                 </div>
                 
@@ -269,15 +275,15 @@ export function AccountSettings({ account }: AccountSettingsProps) {
                   <div className="grid grid-cols-3 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">Projects</p>
-                      <p className="font-medium">{planLimits[account.plan].projects}</p>
+                      <p className="font-medium">{tierLimits[account.tier].projects}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Users</p>
-                      <p className="font-medium">{planLimits[account.plan].users}</p>
+                      <p className="font-medium">{tierLimits[account.tier].users}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Storage</p>
-                      <p className="font-medium">{planLimits[account.plan].storage}</p>
+                      <p className="font-medium">{tierLimits[account.tier].storage}</p>
                     </div>
                   </div>
                 </div>
@@ -286,51 +292,77 @@ export function AccountSettings({ account }: AccountSettingsProps) {
               // Edit plan mode
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="plan">Plan *</Label>
+                  <Label htmlFor="tier">Tier *</Label>
                   <Select
-                    value={watchPlan}
-                    onValueChange={(value: 'free' | 'pro' | 'enterprise') => setValue('plan', value, { shouldDirty: true })}
+                    value={watchTier}
+                    onValueChange={(value: 'FREE' | 'BASIC' | 'PRO' | 'SCALE' | 'MAX') => setValue('tier', value, { shouldDirty: true })}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="free">
+                      <SelectItem value="FREE">
                         <div className="flex items-center justify-between w-full">
                           <div>
                             <div className="font-medium">Free Plan</div>
                             <div className="text-sm text-muted-foreground">
-                              {planDescriptions.free}
+                              {tierDescriptions.FREE}
                             </div>
                           </div>
                           <div className="font-medium text-green-600 ml-4">
-                            {planPricing.free}
+                            {tierPricing.FREE}
                           </div>
                         </div>
                       </SelectItem>
-                      <SelectItem value="pro">
+                      <SelectItem value="BASIC">
+                        <div className="flex items-center justify-between w-full">
+                          <div>
+                            <div className="font-medium">Basic Plan</div>
+                            <div className="text-sm text-muted-foreground">
+                              {tierDescriptions.BASIC}
+                            </div>
+                          </div>
+                          <div className="font-medium text-blue-600 ml-4">
+                            {tierPricing.BASIC}
+                          </div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="PRO">
                         <div className="flex items-center justify-between w-full">
                           <div>
                             <div className="font-medium">Pro Plan</div>
                             <div className="text-sm text-muted-foreground">
-                              {planDescriptions.pro}
+                              {tierDescriptions.PRO}
                             </div>
                           </div>
                           <div className="font-medium text-blue-600 ml-4">
-                            {planPricing.pro}
+                            {tierPricing.PRO}
                           </div>
                         </div>
                       </SelectItem>
-                      <SelectItem value="enterprise">
+                      <SelectItem value="SCALE">
                         <div className="flex items-center justify-between w-full">
                           <div>
-                            <div className="font-medium">Enterprise Plan</div>
+                            <div className="font-medium">Scale Plan</div>
                             <div className="text-sm text-muted-foreground">
-                              {planDescriptions.enterprise}
+                              {tierDescriptions.SCALE}
                             </div>
                           </div>
                           <div className="font-medium text-purple-600 ml-4">
-                            {planPricing.enterprise}
+                            {tierPricing.SCALE}
+                          </div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="MAX">
+                        <div className="flex items-center justify-between w-full">
+                          <div>
+                            <div className="font-medium">Max Plan</div>
+                            <div className="text-sm text-muted-foreground">
+                              {tierDescriptions.MAX}
+                            </div>
+                          </div>
+                          <div className="font-medium text-purple-600 ml-4">
+                            {tierPricing.MAX}
                           </div>
                         </div>
                       </SelectItem>
@@ -338,23 +370,23 @@ export function AccountSettings({ account }: AccountSettingsProps) {
                   </Select>
                 </div>
 
-                {watchPlan && (
+                {watchTier && (
                   <div className="p-3 bg-muted rounded-lg">
                     <h5 className="font-medium mb-2">
-                      {watchPlan.charAt(0).toUpperCase() + watchPlan.slice(1)} Plan Limits
+                      {watchTier} Tier Limits
                     </h5>
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
                         <p className="text-muted-foreground">Projects</p>
-                        <p className="font-medium">{planLimits[watchPlan].projects}</p>
+                        <p className="font-medium">{tierLimits[watchTier].projects}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Users</p>
-                        <p className="font-medium">{planLimits[watchPlan].users}</p>
+                        <p className="font-medium">{tierLimits[watchTier].users}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Storage</p>
-                        <p className="font-medium">{planLimits[watchPlan].storage}</p>
+                        <p className="font-medium">{tierLimits[watchTier].storage}</p>
                       </div>
                     </div>
                   </div>

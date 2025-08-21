@@ -91,7 +91,7 @@ export function AccountSelector({
               <div className="flex items-center gap-2">
                 <span className="font-medium">{account.name}</span>
                 <Badge variant="secondary" className="text-xs">
-                  {account.plan}
+                  {account.tier}
                 </Badge>
               </div>
             </SelectItem>

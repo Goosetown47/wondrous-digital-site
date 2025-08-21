@@ -207,16 +207,21 @@ npx supabase db push --password 'MsDH6QjUsf6vXD3nCeYkBNiF'
 # Check migration status in DEV
 npx supabase migration list --password 'MsDH6QjUsf6vXD3nCeYkBNiF'
 
-# Create a new migration file
-echo "-- Your SQL here" > supabase/migrations/$(date +%Y%m%d_%H%M%S)_description.sql
+# Create a new migration file (replace 'description' with your feature name)
+echo "-- Your SQL here" > supabase/migrations/$(date +%Y%m%d%H%M%S)_description.sql
 ```
 
 ### Migration Naming Convention
 ```
-YYYYMMDD_HHMMSS_descriptive_name.sql
-# Or for related changes:
-YYYYMMDD_000001_feature_part1.sql
-YYYYMMDD_000002_feature_part2.sql
+# ALWAYS use full timestamp format to avoid conflicts:
+YYYYMMDDHHMMSS_descriptive_name.sql
+
+# Examples:
+20250820140000_pending_stripe_payments.sql  # Aug 20, 2025 at 2:00 PM
+20250820143000_fix_user_permissions.sql     # Aug 20, 2025 at 2:30 PM
+
+# IMPORTANT: Use 14 digits (no underscores in timestamp)
+# This allows multiple migrations per day without conflicts
 ```
 
 ### Environment Variables

@@ -49,13 +49,24 @@ git pull origin main
 
 #### Naming Convention
 ```
-YYYYMMDD_HHMMSS_descriptive_name.sql
+# REQUIRED FORMAT (14 digits, no underscore in timestamp):
+YYYYMMDDHHMMSS_descriptive_name.sql
+
+# ✅ CORRECT Examples:
+20250820140000_add_stripe_tables.sql       # Aug 20, 2025 at 2:00 PM
+20250820143000_fix_user_permissions.sql    # Aug 20, 2025 at 2:30 PM
+20250820150500_update_rls_policies.sql     # Aug 20, 2025 at 3:05 PM
+
+# ❌ INCORRECT (will cause conflicts):
+20250820_000001_feature.sql  # Only date = max 1 per day!
+20250820_fix_bug.sql         # Missing timestamp
+2025-08-20-14-00-00.sql      # Wrong separators
 ```
 
-Example:
-```
-20250731_050000_add_project_delete_policies.sql
-```
+**Why this format?**
+- Supabase uses the filename prefix as a unique version key
+- Using 14 digits (YYYYMMDDHHMMSS) allows multiple migrations per day
+- Using only 8 digits (YYYYMMDD) limits you to one migration per day
 
 #### Content Structure
 ```sql
