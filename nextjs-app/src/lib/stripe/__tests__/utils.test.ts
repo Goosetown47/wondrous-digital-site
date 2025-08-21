@@ -103,7 +103,7 @@ describe('Stripe Utils', () => {
           eq: vi.fn(() => Promise.resolve({ error: null })),
         })),
         insert: vi.fn(() => Promise.resolve({ error: null })),
-      } as ReturnType<typeof mockSupabase.from>);
+      } as unknown as ReturnType<typeof mockSupabase.from>);
 
       mockStripe.checkout.sessions.create.mockResolvedValue({
         id: 'cs_123',
@@ -145,7 +145,7 @@ describe('Stripe Utils', () => {
           eq: vi.fn(() => Promise.resolve({ error: null })),
         })),
         insert: vi.fn(() => Promise.resolve({ error: null })),
-      } as ReturnType<typeof mockSupabase.from>);
+      } as unknown as ReturnType<typeof mockSupabase.from>);
 
       mockStripe.customers.create.mockResolvedValue({
         id: 'cus_new',
@@ -186,7 +186,7 @@ describe('Stripe Utils', () => {
           eq: vi.fn(() => Promise.resolve({ error: null })),
         })),
         insert: vi.fn(() => Promise.resolve({ error: null })),
-      } as ReturnType<typeof mockSupabase.from>);
+      } as unknown as ReturnType<typeof mockSupabase.from>);
 
       mockStripe.checkout.sessions.create.mockResolvedValue({
         id: 'cs_123',
@@ -227,26 +227,12 @@ describe('Stripe Utils', () => {
       
       const insertMock = vi.fn(() => Promise.resolve({ error: null }));
 
-      mockSupabase.from.mockImplementation((table: string) => {
-        if (table === 'accounts') {
-          return { 
-            update: updateMock,
-            insert: insertMock,
-            select: vi.fn(() => ({ eq: vi.fn(() => ({ single: vi.fn(() => Promise.resolve({ data: null, error: null })) })) }))
-          };
-        }
-        if (table === 'account_billing_history') {
-          return { 
-            insert: insertMock,
-            update: updateMock,
-            select: vi.fn(() => ({ eq: vi.fn(() => ({ single: vi.fn(() => Promise.resolve({ data: null, error: null })) })) }))
-          };
-        }
+      mockSupabase.from.mockImplementation(() => {
         return {
           update: updateMock,
           insert: insertMock,
           select: vi.fn(() => ({ eq: vi.fn(() => ({ single: vi.fn(() => Promise.resolve({ data: null, error: null })) })) }))
-        };
+        } as unknown as ReturnType<typeof mockSupabase.from>;
       });
 
       await updateAccountTier('acc_123', 'PRO', 'cus_123', 'sub_123');
@@ -282,12 +268,12 @@ describe('Stripe Utils', () => {
         select: vi.fn(() => ({ 
           eq: vi.fn(() => ({ 
             single: vi.fn(() => Promise.resolve({ 
-              data: { stripe_customer_id: '' } as { stripe_customer_id: string }, 
+              data: null, 
               error: null 
             })) 
           })) 
         }))
-      } as ReturnType<typeof mockSupabase.from>);
+      } as unknown as ReturnType<typeof mockSupabase.from>);
 
       await expect(updateAccountTier('acc_123', 'PRO', 'cus_123', 'sub_123'))
         .rejects.toThrow('Failed to update account tier: Update failed');
@@ -302,26 +288,12 @@ describe('Stripe Utils', () => {
       
       const insertMock = vi.fn(() => Promise.resolve({ error: null }));
 
-      mockSupabase.from.mockImplementation((table: string) => {
-        if (table === 'accounts') {
-          return { 
-            update: updateMock,
-            insert: insertMock,
-            select: vi.fn(() => ({ eq: vi.fn(() => ({ single: vi.fn(() => Promise.resolve({ data: null, error: null })) })) }))
-          };
-        }
-        if (table === 'account_billing_history') {
-          return { 
-            insert: insertMock,
-            update: updateMock,
-            select: vi.fn(() => ({ eq: vi.fn(() => ({ single: vi.fn(() => Promise.resolve({ data: null, error: null })) })) }))
-          };
-        }
+      mockSupabase.from.mockImplementation(() => {
         return {
           update: updateMock,
           insert: insertMock,
           select: vi.fn(() => ({ eq: vi.fn(() => ({ single: vi.fn(() => Promise.resolve({ data: null, error: null })) })) }))
-        };
+        } as unknown as ReturnType<typeof mockSupabase.from>;
       });
 
       await startGracePeriod('acc_123');
@@ -333,10 +305,11 @@ describe('Stripe Utils', () => {
 
       // Check that grace period is roughly 10 days from now
       const calls = updateMock.mock.calls;
-      if (!calls || !calls[0] || !calls[0][0]) {
+      if (!calls || calls.length === 0 || !calls[0] || calls[0].length === 0) {
         throw new Error('Update mock was not called correctly');
       }
-      const gracePeriodDate = new Date(calls[0][0].grace_period_ends_at);
+      const firstArg = (calls[0] as unknown[])[0] as { grace_period_ends_at: string };
+      const gracePeriodDate = new Date(firstArg.grace_period_ends_at);
       const expectedDate = new Date();
       expectedDate.setDate(expectedDate.getDate() + 10);
       
@@ -349,29 +322,23 @@ describe('Stripe Utils', () => {
         eq: vi.fn(() => Promise.resolve({ error: null })),
       }));
 
-      mockSupabase.from.mockImplementation((table: string) => {
-        if (table === 'accounts') {
-          return { 
-            update: updateMock,
-            insert: vi.fn(() => Promise.resolve({ error: null })),
-            select: vi.fn(() => ({ eq: vi.fn(() => ({ single: vi.fn(() => Promise.resolve({ data: null, error: null })) })) }))
-          };
-        }
+      mockSupabase.from.mockImplementation(() => {
         return { 
-          insert: vi.fn(() => Promise.resolve({ error: null })),
           update: updateMock,
+          insert: vi.fn(() => Promise.resolve({ error: null })),
           select: vi.fn(() => ({ eq: vi.fn(() => ({ single: vi.fn(() => Promise.resolve({ data: null, error: null })) })) }))
-        };
+        } as unknown as ReturnType<typeof mockSupabase.from>;
       });
 
       await startGracePeriod('acc_123', 5);
 
       // Check that grace period is roughly 5 days from now
       const calls = updateMock.mock.calls;
-      if (!calls || !calls[0] || !calls[0][0]) {
+      if (!calls || calls.length === 0 || !calls[0] || calls[0].length === 0) {
         throw new Error('Update mock was not called correctly');
       }
-      const gracePeriodDate = new Date(calls[0][0].grace_period_ends_at);
+      const firstArg = (calls[0] as unknown[])[0] as { grace_period_ends_at: string };
+      const gracePeriodDate = new Date(firstArg.grace_period_ends_at);
       const expectedDate = new Date();
       expectedDate.setDate(expectedDate.getDate() + 5);
       
@@ -388,7 +355,7 @@ describe('Stripe Utils', () => {
         update: updateMock,
         insert: vi.fn(() => Promise.resolve({ error: null })),
         select: vi.fn(() => ({ eq: vi.fn(() => ({ single: vi.fn(() => Promise.resolve({ data: null, error: null })) })) }))
-      });
+      } as unknown as ReturnType<typeof mockSupabase.from>);
 
       await expect(startGracePeriod('acc_123'))
         .rejects.toThrow('Failed to start grace period: Grace period failed');

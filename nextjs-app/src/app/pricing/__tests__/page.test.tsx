@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { useSearchParams } from 'next/navigation';
+import type { ReadonlyURLSearchParams } from 'next/navigation';
 import PricingPage from '../page';
 
 // Mock next/navigation
@@ -75,7 +76,8 @@ describe('PricingPage', () => {
       set: vi.fn(),
       sort: vi.fn(),
     };
-    vi.mocked(useSearchParams).mockReturnValue(mockSearchParams as ReadonlyURLSearchParams);
+    // Type assertion through unknown to satisfy ReadonlyURLSearchParams interface
+    vi.mocked(useSearchParams).mockReturnValue(mockSearchParams as unknown as ReadonlyURLSearchParams);
     
     mockAuth = {
       user: null,

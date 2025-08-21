@@ -211,7 +211,7 @@ export default function AccountDetailsPage() {
               </Button>
               
               {/* Show skip option for invited users */}
-              {user?.user_metadata?.invitation_token && (
+              {Boolean(user?.user_metadata?.invitation_token) && (
                 <Button
                   type="button"
                   variant="outline"

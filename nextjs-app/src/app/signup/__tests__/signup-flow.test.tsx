@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import type { ReadonlyURLSearchParams } from 'next/navigation';
 import SignupPage from '../page';
 
 // Mock Next.js navigation
@@ -29,8 +30,17 @@ vi.mock('@/components/ui/signup-stepper', () => ({
 }));
 
 describe('Signup Flow Navigation', () => {
-  let mockRouter: ReturnType<typeof useRouter>;
-  let mockSearchParams: ReturnType<typeof useSearchParams>;
+  let mockRouter: {
+    push: ReturnType<typeof vi.fn>;
+    replace: ReturnType<typeof vi.fn>;
+    refresh: ReturnType<typeof vi.fn>;
+    back: ReturnType<typeof vi.fn>;
+    forward: ReturnType<typeof vi.fn>;
+    prefetch: ReturnType<typeof vi.fn>;
+  };
+  let mockSearchParams: {
+    get: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -39,13 +49,16 @@ describe('Signup Flow Navigation', () => {
       push: vi.fn(),
       replace: vi.fn(),
       refresh: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
+      prefetch: vi.fn(),
     };
-    vi.mocked(useRouter).mockReturnValue(mockRouter);
+    vi.mocked(useRouter).mockReturnValue(mockRouter as unknown as ReturnType<typeof useRouter>);
     
     mockSearchParams = {
       get: vi.fn(),
     };
-    vi.mocked(useSearchParams).mockReturnValue(mockSearchParams);
+    vi.mocked(useSearchParams).mockReturnValue(mockSearchParams as unknown as ReadonlyURLSearchParams);
   });
 
   describe('Step 1: Create Login', () => {
@@ -88,7 +101,7 @@ describe('Signup Flow Navigation', () => {
     });
 
     it('should pre-fill email from invitation token', () => {
-      mockSearchParams.get.mockImplementation((key: string) => {
+      vi.mocked(mockSearchParams.get).mockImplementation((key: string) => {
         if (key === 'token') return 'inv_token_123';
         if (key === 'email') return 'invited@example.com';
         return null;
@@ -112,7 +125,7 @@ describe('Signup Flow Navigation', () => {
           signUp: mockSignUp,
           getUser: vi.fn(),
         },
-      } as ReturnType<typeof createClient>);
+      } as unknown as ReturnType<typeof createClient>);
       
       render(<SignupPage />);
       
@@ -149,7 +162,7 @@ describe('Signup Flow Navigation', () => {
     });
 
     it('should preserve invitation token through flow', () => {
-      mockSearchParams.get.mockImplementation((key: string) => {
+      vi.mocked(mockSearchParams.get).mockImplementation((key: string) => {
         if (key === 'token') return 'inv_token_123';
         return null;
       });
@@ -192,7 +205,7 @@ describe('Signup Flow Navigation', () => {
           signUp: mockSignUp,
           getUser: vi.fn(),
         },
-      } as ReturnType<typeof createClient>);
+      } as unknown as ReturnType<typeof createClient>);
       
       render(<SignupPage />);
       
@@ -220,7 +233,7 @@ describe('Signup Flow Navigation', () => {
           signUp: mockSignUp,
           getUser: vi.fn(),
         },
-      } as ReturnType<typeof createClient>);
+      } as unknown as ReturnType<typeof createClient>);
       
       render(<SignupPage />);
       
@@ -235,7 +248,7 @@ describe('Signup Flow Navigation', () => {
 
   describe('Warm Prospect Flow', () => {
     it('should handle invitation token', () => {
-      mockSearchParams.get.mockImplementation((key: string) => {
+      vi.mocked(mockSearchParams.get).mockImplementation((key: string) => {
         if (key === 'token') return 'inv_token_123';
         if (key === 'email') return 'invited@example.com';
         return null;
@@ -250,7 +263,7 @@ describe('Signup Flow Navigation', () => {
     });
 
     it('should store invitation token for later use', () => {
-      mockSearchParams.get.mockImplementation((key: string) => {
+      vi.mocked(mockSearchParams.get).mockImplementation((key: string) => {
         if (key === 'token') return 'inv_token_456';
         return null;
       });
@@ -263,7 +276,7 @@ describe('Signup Flow Navigation', () => {
     it('should pass invitation token to account creation', async () => {
       sessionStorage.setItem('invitationToken', 'inv_token_789');
       
-      mockSearchParams.get.mockImplementation((key: string) => {
+      vi.mocked(mockSearchParams.get).mockImplementation((key: string) => {
         if (key === 'token') return 'inv_token_789';
         return null;
       });
@@ -299,7 +312,7 @@ describe('Signup Flow Navigation', () => {
           signUp: mockSignUp,
           getUser: vi.fn(),
         },
-      } as ReturnType<typeof createClient>);
+      } as unknown as ReturnType<typeof createClient>);
       
       render(<SignupPage />);
       
