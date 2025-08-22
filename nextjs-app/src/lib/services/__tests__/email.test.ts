@@ -623,7 +623,7 @@ describe('Email Service', () => {
 
       // Mock update calls for processing and sent status
       let updateCount = 0;
-      mockSupabase.from.mockImplementation((table) => {
+      mockSupabase.from.mockImplementation((table: string) => {
         if (table === 'email_queue' && updateCount < 2) {
           updateCount++;
           return {

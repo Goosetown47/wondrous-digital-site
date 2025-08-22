@@ -80,6 +80,22 @@ export async function POST(request: NextRequest) {
         // For signup flow, the account already exists and ID is in metadata
         if (flow === 'signup' && accountId && !accountId.startsWith('pending_')) {
           console.log(`Processing signup flow payment for account ${accountId}`);
+          
+          // Verify the account actually exists
+          const { data: existingAccount, error: checkError } = await supabase
+            .from('accounts')
+            .select('id, name, tier, stripe_customer_id')
+            .eq('id', accountId)
+            .single();
+          
+          if (checkError || !existingAccount) {
+            console.error('❌ Account not found in database!');
+            console.error('Account ID:', accountId);
+            console.error('Error:', checkError);
+            break;
+          }
+          
+          console.log('✓ Account found in database:', existingAccount);
           // Account exists, just need to update it with Stripe details
         }
         // For cold flow with pending ID, we need to find the actual account
@@ -205,6 +221,20 @@ export async function POST(request: NextRequest) {
               
               console.log('Update data:', JSON.stringify(updateData, null, 2));
               
+              // First check if account exists
+              const { data: beforeUpdate } = await supabase
+                .from('accounts')
+                .select('*')
+                .eq('id', accountId)
+                .single();
+              
+              console.log('Account before update:', beforeUpdate ? JSON.stringify(beforeUpdate, null, 2) : 'NOT FOUND');
+              
+              if (!beforeUpdate) {
+                console.error('❌ Account does not exist! Cannot update.');
+                break;
+              }
+              
               const { data: updatedAccount, error } = await supabase
                 .from('accounts')
                 .update(updateData)
@@ -215,9 +245,24 @@ export async function POST(request: NextRequest) {
               if (error) {
                 console.error('❌ Failed to update account:', error);
                 console.error('Error details:', JSON.stringify(error, null, 2));
+                
+                // Try logging what the service role can see
+                const { data: allAccounts } = await supabase
+                  .from('accounts')
+                  .select('id, name')
+                  .limit(5);
+                console.log('Sample of accounts visible to service role:', allAccounts);
               } else {
                 console.log('✅ Account updated successfully!');
                 console.log('Updated account:', JSON.stringify(updatedAccount, null, 2));
+                
+                // Double-check the update actually persisted
+                const { data: verifyUpdate } = await supabase
+                  .from('accounts')
+                  .select('tier, stripe_customer_id, subscription_status')
+                  .eq('id', accountId)
+                  .single();
+                console.log('Verification read after update:', JSON.stringify(verifyUpdate, null, 2));
               }
             }
           } catch (updateError) {

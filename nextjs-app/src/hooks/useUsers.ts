@@ -424,6 +424,11 @@ export function useDeleteUser() {
 
   return useMutation({
     mutationFn: async (userId: string) => {
+      // First get the user's accounts before deletion
+      const userData = queryClient.getQueryData<UserWithAccounts[]>(['users']);
+      const userToDelete = userData?.find(u => u.id === userId);
+      const accountIds = userToDelete?.accounts.map(a => a.account_id) || [];
+      
       const response = await fetch(`/api/users/${userId}`, {
         method: 'DELETE',
         credentials: 'include',
@@ -434,11 +439,22 @@ export function useDeleteUser() {
         throw new Error(error.error || 'Failed to delete user');
       }
       
-      return response.json();
+      return { ...response.json(), accountIds };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Invalidate users query to refresh the list
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      
+      // Invalidate account-users for all accounts the user belonged to
+      if (data.accountIds && data.accountIds.length > 0) {
+        data.accountIds.forEach((accountId: string) => {
+          queryClient.invalidateQueries({ queryKey: ['account-users', accountId] });
+        });
+      }
+      
+      // Also invalidate the general account-users query (without specific ID)
+      queryClient.invalidateQueries({ queryKey: ['account-users'] });
+      
       toast.success('User deleted successfully');
     },
     onError: (error: Error) => {
