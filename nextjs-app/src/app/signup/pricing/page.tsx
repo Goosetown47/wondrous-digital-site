@@ -238,6 +238,10 @@ export default function SignupPricingPage() {
       setLoading(true);
       setSelectedTier(tier);
 
+      // Check if this is a warm prospect (has invitation token)
+      const invitationToken = sessionStorage.getItem('invitationToken');
+      const isWarmProspect = !!invitationToken;
+
       // Create checkout session with the selected tier
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
@@ -249,6 +253,7 @@ export default function SignupPricingPage() {
           flow: 'signup',
           billingPeriod: isAnnually ? 'yearly' : 'monthly',
           accountId,
+          isWarmProspect, // Pass this to help with success URL
         }),
       });
 

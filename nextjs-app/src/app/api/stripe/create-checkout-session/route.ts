@@ -14,7 +14,8 @@ export async function POST(request: NextRequest) {
       billingPeriod = 'monthly',
       invitationToken,
       email: coldEmail,
-      accountId: providedAccountId 
+      accountId: providedAccountId,
+      isWarmProspect = false 
     } = body as {
       tier: TierName;
       flow: 'cold' | 'invitation' | 'upgrade' | 'signup';
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
       invitationToken?: string;
       email?: string; // For cold signup flow
       accountId?: string; // For signup flow where account already exists
+      isWarmProspect?: boolean; // For signup flow to indicate warm prospect
     };
 
     // Validate tier
@@ -188,14 +190,15 @@ export async function POST(request: NextRequest) {
     // Create or retrieve Stripe customer
     const customerId = await createOrRetrieveCustomer(email, accountId, name);
 
-    // Create checkout session
+    // Create checkout session (pass warm prospect flag for signup flow)
     const session = await createCheckoutSession(
       tier,
       accountId,
       userId,
       customerId,
       flow,
-      billingPeriod
+      billingPeriod,
+      isWarmProspect
     );
 
     return NextResponse.json({ 

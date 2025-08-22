@@ -68,7 +68,8 @@ export async function createCheckoutSession(
   userId: string,
   customerId: string,
   flow: 'cold' | 'invitation' | 'upgrade' | 'signup',
-  billingPeriod: 'monthly' | 'yearly' = 'monthly'
+  billingPeriod: 'monthly' | 'yearly' = 'monthly',
+  isWarmProspect: boolean = false
 ): Promise<Stripe.Checkout.Session> {
   const stripe = getStripe();
   const { getPricesByTier } = await import('./prices');
@@ -101,9 +102,21 @@ export async function createCheckoutSession(
 
   // Determine URLs based on flow
   const baseUrl = getAppUrl();
-  const successUrl = flow === 'signup' 
-    ? `${baseUrl}/signup/success?session_id={CHECKOUT_SESSION_ID}`
-    : STRIPE_CONFIG.getSuccessUrl('{CHECKOUT_SESSION_ID}');
+  
+  // Build success URL with appropriate parameters
+  let successUrl: string;
+  if (flow === 'signup') {
+    // Always include session_id
+    let params = 'session_id={CHECKOUT_SESSION_ID}';
+    // Add flow parameter for warm prospects to maintain correct step display
+    if (isWarmProspect) {
+      params += '&flow=invitation';
+    }
+    successUrl = `${baseUrl}/signup/success?${params}`;
+  } else {
+    successUrl = STRIPE_CONFIG.getSuccessUrl('{CHECKOUT_SESSION_ID}');
+  }
+    
   const cancelUrl = flow === 'signup'
     ? `${baseUrl}/signup/pricing`
     : STRIPE_CONFIG.getCancelUrl();
@@ -122,6 +135,7 @@ export async function createCheckoutSession(
       tier,
       flow,
       billing_period: billingPeriod,
+      is_warm_prospect: isWarmProspect ? 'true' : 'false',
     },
     subscription_data: {
       metadata: {
