@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createInvitation, isEmailInvited, isUserMember } from '@/lib/services/invitations';
+import { getAppUrl } from '@/lib/utils/app-url';
 
 export async function POST(
   request: NextRequest,
@@ -98,7 +99,7 @@ export async function POST(
     });
 
     // Log the invitation URL for testing (remove in production)
-    console.log(`Invitation URL: ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invitation?token=${invitation.token}`);
+    console.log(`Invitation URL: ${getAppUrl()}/invitation?token=${invitation.token}`);
 
     return NextResponse.json(invitation);
   } catch (error) {

@@ -1,6 +1,7 @@
 import { getStripe, STRIPE_CONFIG } from './config';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 // import { createSupabaseServiceClient } from '@/lib/supabase/service';
+import { getAppUrl } from '@/lib/utils/app-url';
 import type { TierName } from '@/types/database';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
@@ -99,7 +100,7 @@ export async function createCheckoutSession(
   ];
 
   // Determine URLs based on flow
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = getAppUrl();
   const successUrl = flow === 'signup' 
     ? `${baseUrl}/signup/success?session_id={CHECKOUT_SESSION_ID}`
     : STRIPE_CONFIG.getSuccessUrl('{CHECKOUT_SESSION_ID}');

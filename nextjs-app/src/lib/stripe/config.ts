@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { getAppUrl } from '@/lib/utils/app-url';
 
 /**
  * Stripe configuration
@@ -43,12 +44,12 @@ export const STRIPE_CONFIG = {
   
   // Success and cancel URLs (will be updated with actual domain)
   getSuccessUrl: (sessionId?: string) => {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const baseUrl = getAppUrl();
     return `${baseUrl}/payment/success${sessionId ? `?session_id=${sessionId}` : ''}`;
   },
   
   getCancelUrl: () => {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const baseUrl = getAppUrl();
     return `${baseUrl}/payment/cancel`;
   },
 } as const;
