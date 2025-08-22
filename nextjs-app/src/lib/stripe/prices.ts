@@ -15,26 +15,26 @@ interface TierPricing {
   setupFeeAmount: number; // In cents
 }
 
-// TEST Mode Stripe Price IDs from the dashboard
+// PRODUCTION Stripe Price IDs from the dashboard
 const PRICE_IDS: Record<Exclude<TierName, 'FREE' | 'BASIC'>, TierPricing> = {
   PRO: {
-    monthlyPriceId: 'price_1RgXKSAyYiuNghuY8997ajmt', // PRO Monthly $397 TEST
-    yearlyPriceId: 'price_1Rws76AyYiuNghuY3ODhD0pD', // PRO Yearly $4,287 TEST
-    setupFeeId: 'price_1RgXJLAyYiuNghuYFkAxotJ4', // Marketing Platform Setup Fee $1,500 TEST
+    monthlyPriceId: 'price_1RgXbeAyYiuNghuYZ17FC9MK', // PRO Monthly $397 PROD
+    yearlyPriceId: 'price_1RwqKuAyYiuNghuY3zj9y8Ho', // PRO Yearly $4,287 PROD
+    setupFeeId: 'price_1RgXeBAyYiuNghuYFSfv8POh', // Marketing Platform Setup Fee $1,500 PROD
     displayPrice: 39700, // $397
     setupFeeAmount: 150000, // $1500
   },
   SCALE: {
-    monthlyPriceId: 'price_1RgXLDAyYiuNghuYO7vO7iwe', // SCALE Monthly $697 TEST
-    yearlyPriceId: 'price_1Rws7gAyYiuNghuYWA1qawwo', // SCALE Yearly $7,527 TEST
-    setupFeeId: 'price_1RgXJLAyYiuNghuYFkAxotJ4', // Marketing Platform Setup Fee $1,500 TEST
+    monthlyPriceId: 'price_1RgXcEAyYiuNghuYKvKDgOBW', // SCALE Monthly $697 PROD
+    yearlyPriceId: 'price_1RwqM3AyYiuNghuYXwuImnnD', // SCALE Yearly $7,527 PROD
+    setupFeeId: 'price_1RgXeBAyYiuNghuYFSfv8POh', // Marketing Platform Setup Fee $1,500 PROD
     displayPrice: 69700, // $697
     setupFeeAmount: 150000, // $1500
   },
   MAX: {
-    monthlyPriceId: 'price_1RgXLqAyYiuNghuYwGyGgHav', // MAX Monthly $997 TEST
-    yearlyPriceId: 'price_1Rws8FAyYiuNghuY3tuqdA2u', // MAX Yearly $10,767 TEST
-    setupFeeId: 'price_1RgXJLAyYiuNghuYFkAxotJ4', // Marketing Platform Setup Fee $1,500 TEST
+    monthlyPriceId: 'price_1RgXclAyYiuNghuYNX728lTl', // MAX Monthly $997 PROD
+    yearlyPriceId: 'price_1RwqNOAyYiuNghuY98u6R6Fu', // MAX Yearly $10,767 PROD
+    setupFeeId: 'price_1RgXeBAyYiuNghuYFSfv8POh', // Marketing Platform Setup Fee $1,500 PROD
     displayPrice: 99700, // $997
     setupFeeAmount: 150000, // $1500
   },
@@ -42,16 +42,16 @@ const PRICE_IDS: Record<Exclude<TierName, 'FREE' | 'BASIC'>, TierPricing> = {
 
 // PERFORM addon pricing (for future use in PACKET 3)
 export const PERFORM_ADDON_PRICING = {
-  monthlyPriceId: 'price_1RgXNcAyYiuNghuYB9txOkxQ', // PERFORM Monthly $459 TEST
-  yearlyPriceId: 'price_1Rws98AyYiuNghuYNF49WAKD', // PERFORM Yearly $4,957 TEST
-  setupFeeId: 'price_1RgXNIAyYiuNghuYaaLOjLOu', // SEO Platform Setup Fee $750 TEST
+  monthlyPriceId: 'price_1RgXdcAyYiuNghuYDXhEEKyM', // PERFORM Monthly $459 PROD
+  yearlyPriceId: 'price_1RwqOAAyYiuNghuYfoOQUaMV', // PERFORM Yearly $4,957 PROD
+  setupFeeId: 'price_1RgXfRAyYiuNghuYVSQpUNRx', // SEO Platform Setup Fee $750 PROD
   displayPrice: 45900, // $459
   setupFeeAmount: 75000, // $750
 };
 
 // BASIC tier pricing (for reference, not currently used)
 export const BASIC_PRICING = {
-  monthlyPriceId: 'price_1Rws46AyYiuNghuYAkCZo5RA', // BASIC Monthly $29 TEST
+  monthlyPriceId: 'price_1RwqOvAyYiuNghuYtWrlZiUw', // BASIC Monthly $29 PROD
   displayPrice: 2900, // $29
 };
 
