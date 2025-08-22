@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +11,7 @@ import { Loader2, Mail, Lock, CheckCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 
-export default function SignupLoginPage() {
+function SignupLoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
@@ -200,5 +200,13 @@ export default function SignupLoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignupLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupLoginPageContent />
+    </Suspense>
   )
 }

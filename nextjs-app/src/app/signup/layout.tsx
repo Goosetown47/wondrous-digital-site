@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import Image from 'next/image'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { SignupStepper } from '@/components/ui/signup-stepper'
@@ -20,7 +20,7 @@ const WARM_PROSPECT_STEPS = [
   { number: 4, title: 'Select your plan & Pay', description: 'Pay' },
 ]
 
-export default function SignupLayout({
+function SignupLayoutContent({
   children,
 }: {
   children: React.ReactNode
@@ -92,5 +92,17 @@ export default function SignupLayout({
         {children}
       </div>
     </div>
+  )
+}
+
+export default function SignupLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <Suspense fallback={null}>
+      <SignupLayoutContent>{children}</SignupLayoutContent>
+    </Suspense>
   )
 }
