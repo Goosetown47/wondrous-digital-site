@@ -89,7 +89,7 @@ function InvitationContent() {
   const handleAcceptNewUser = () => {
     if (!token || !invitation) return;
     // All invited users go through unified signup with pre-filled email
-    router.push(`/signup?token=${token}&email=${invitation.email}`);
+    router.push(`/signup?token=${token}&email=${invitation.email}&flow=invitation`);
   };
 
   const handleAcceptExistingUser = async () => {
