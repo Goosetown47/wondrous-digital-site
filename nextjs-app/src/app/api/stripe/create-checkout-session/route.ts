@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       name = accountUser.accounts.name;
       
     } else if (flow === 'signup' && providedAccountId) {
-      // Signup flow - account already created during signup process
+      // Signup flow - account already created or exists (for warm prospects)
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      // Verify the account exists and user has access to it
+      // Verify the account exists
       const { data: account, error: accountError } = await supabase
         .from('accounts')
         .select('id, name')
@@ -132,25 +132,26 @@ export async function POST(request: NextRequest) {
         .single();
       
       if (accountError || !account) {
+        console.error('[CreateCheckout] Invalid account ID:', providedAccountId, accountError);
         return NextResponse.json(
           { error: 'Invalid account ID' },
           { status: 400 }
         );
       }
       
-      // Verify user is associated with this account
-      const { data: accountUser, error: userAccountError } = await supabase
+      // For warm prospects, they might not be associated with the account yet
+      // Check if user is already associated
+      const { data: accountUser } = await supabase
         .from('account_users')
         .select('user_id, role')
         .eq('account_id', providedAccountId)
         .eq('user_id', user.id)
         .single();
       
-      if (userAccountError || !accountUser) {
-        return NextResponse.json(
-          { error: 'User not associated with this account' },
-          { status: 403 }
-        );
+      // If not associated, this might be a warm prospect who will be added after payment
+      if (!accountUser) {
+        console.log('[CreateCheckout] User not yet associated with account (warm prospect flow)');
+        // Store this in session metadata for the webhook to process
       }
       
       userId = user.id;

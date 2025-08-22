@@ -27,6 +27,16 @@ export default function AccountDetailsPage() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkAuth = async () => {
+    // Check if this is a warm prospect who should skip account creation
+    const flow = new URLSearchParams(window.location.search).get('flow')
+    const invitationToken = sessionStorage.getItem('invitationToken')
+    if (flow === 'invitation' || invitationToken) {
+      console.log('Warm prospect detected, skipping account creation')
+      // Warm prospects skip account creation and go directly to profile
+      router.push('/signup/profile?flow=invitation')
+      return
+    }
+    
     const supabase = createClient()
     const { data: { user }, error } = await supabase.auth.getUser()
     

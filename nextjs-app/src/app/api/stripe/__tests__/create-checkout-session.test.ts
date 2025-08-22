@@ -9,10 +9,15 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('@/lib/stripe/utils', () => ({
   createCheckoutSession: vi.fn(),
+  createOrRetrieveCustomer: vi.fn(),
+  updateAccountTier: vi.fn(),
+  formatCurrency: vi.fn(),
+  getTierPriceDisplay: vi.fn(),
+  verifyWebhookSignature: vi.fn(),
 }));
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { createCheckoutSession } from '@/lib/stripe/utils';
+import { createCheckoutSession, createOrRetrieveCustomer } from '@/lib/stripe/utils';
 
 // Type for our mock Supabase client
 const createMockSupabase = () => ({
@@ -55,6 +60,7 @@ describe('POST /api/stripe/create-checkout-session', () => {
               data: {
                 email: 'invited@example.com',
                 account_id: 'acc_123',
+                invited_by: 'inviter_user_123',
                 accounts: { name: 'Test Account' },
               },
               error: null,
@@ -63,6 +69,9 @@ describe('POST /api/stripe/create-checkout-session', () => {
         })),
       });
 
+      // Mock customer creation/retrieval
+      vi.mocked(createOrRetrieveCustomer).mockResolvedValue('cus_123');
+      
       // Mock checkout session creation
       vi.mocked(createCheckoutSession).mockResolvedValue({
         id: 'cs_123',
@@ -78,14 +87,14 @@ describe('POST /api/stripe/create-checkout-session', () => {
         url: 'https://checkout.stripe.com/session',
       });
 
-      expect(createCheckoutSession).toHaveBeenCalledWith({
-        accountId: 'acc_123',
-        userId: 'inv_token_123',
-        tier: 'PRO',
-        email: 'invited@example.com',
-        name: 'Test Account',
-        flow: 'invitation',
-      });
+      expect(createCheckoutSession).toHaveBeenCalledWith(
+        'PRO',
+        'acc_123',
+        'inviter_user_123', // userId will be the inviter's ID
+        'cus_123',
+        'invitation',
+        'monthly'
+      );
     });
 
     it('should reject invalid invitation token', async () => {
@@ -146,6 +155,9 @@ describe('POST /api/stripe/create-checkout-session', () => {
         })),
       });
 
+      // Mock customer creation/retrieval
+      vi.mocked(createOrRetrieveCustomer).mockResolvedValue('cus_456');
+      
       // Mock checkout session creation
       vi.mocked(createCheckoutSession).mockResolvedValue({
         id: 'cs_456',
@@ -161,14 +173,14 @@ describe('POST /api/stripe/create-checkout-session', () => {
         url: 'https://checkout.stripe.com/upgrade',
       });
 
-      expect(createCheckoutSession).toHaveBeenCalledWith({
-        accountId: 'acc_456',
-        userId: 'user_123',
-        tier: 'SCALE',
-        email: 'user@example.com',
-        name: 'User Account',
-        flow: 'upgrade',
-      });
+      expect(createCheckoutSession).toHaveBeenCalledWith(
+        'SCALE',
+        'acc_456',
+        'user_123',
+        'cus_456',
+        'upgrade',
+        'monthly'
+      );
     });
 
     it('should reject unauthenticated upgrade attempts', async () => {
@@ -215,12 +227,41 @@ describe('POST /api/stripe/create-checkout-session', () => {
   });
 
   describe('Cold flow', () => {
-    it('should return not implemented for direct signups', async () => {
+    it('should process cold signup with email', async () => {
       mockRequest = new NextRequest('http://localhost:3000/api/stripe/create-checkout-session', {
         method: 'POST',
         body: JSON.stringify({
           tier: 'PRO',
-          flow: null,
+          flow: 'cold',
+          email: 'new@example.com',
+        }),
+      });
+
+      // Mock customer creation/retrieval
+      vi.mocked(createOrRetrieveCustomer).mockResolvedValue('cus_cold');
+      
+      // Mock checkout session creation
+      vi.mocked(createCheckoutSession).mockResolvedValue({
+        id: 'cs_cold',
+        url: 'https://checkout.stripe.com/cold',
+      } as Awaited<ReturnType<typeof createCheckoutSession>>);
+
+      const response = await POST(mockRequest);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data).toEqual({
+        sessionId: 'cs_cold',
+        url: 'https://checkout.stripe.com/cold',
+      });
+    });
+
+    it('should reject cold signup without email', async () => {
+      mockRequest = new NextRequest('http://localhost:3000/api/stripe/create-checkout-session', {
+        method: 'POST',
+        body: JSON.stringify({
+          tier: 'PRO',
+          flow: 'cold',
         }),
       });
 
@@ -229,7 +270,7 @@ describe('POST /api/stripe/create-checkout-session', () => {
 
       expect(response.status).toBe(400);
       expect(data).toEqual({ 
-        error: 'Direct signup not yet implemented. Please contact sales.' 
+        error: 'Email is required for signup' 
       });
     });
   });
@@ -263,7 +304,7 @@ describe('POST /api/stripe/create-checkout-session', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data).toEqual({ error: 'Tier is required' });
+      expect(data).toEqual({ error: 'Invalid tier selected' });
     });
   });
 
@@ -285,6 +326,7 @@ describe('POST /api/stripe/create-checkout-session', () => {
               data: {
                 email: 'invited@example.com',
                 account_id: 'acc_123',
+                invited_by: 'inviter_user_123',
                 accounts: { name: 'Test Account' },
               },
               error: null,
@@ -293,6 +335,9 @@ describe('POST /api/stripe/create-checkout-session', () => {
         })),
       });
 
+      // Mock customer creation/retrieval
+      vi.mocked(createOrRetrieveCustomer).mockResolvedValue('cus_789');
+      
       vi.mocked(createCheckoutSession).mockRejectedValue(
         new Error('Stripe API error')
       );

@@ -88,21 +88,16 @@ function InvitationContent() {
 
   const handleAcceptNewUser = () => {
     if (!token || !invitation) return;
-    // For account_owner invitations, redirect to pricing page to complete payment
-    if (invitation.role === 'account_owner') {
-      router.push(`/pricing?flow=invitation&token=${token}`);
-    } else {
-      // For regular user invitations, redirect to profile setup
-      router.push(`/profile/setup?token=${token}`);
-    }
+    // All invited users go through unified signup with pre-filled email
+    router.push(`/signup?token=${token}&email=${invitation.email}`);
   };
 
   const handleAcceptExistingUser = async () => {
     if (!invitation || !token) return;
     
-    // For account_owner invitations, redirect to pricing instead of accepting directly
+    // For account_owner invitations, redirect to signup flow
     if (invitation.role === 'account_owner') {
-      router.push(`/pricing?flow=invitation&token=${token}`);
+      router.push(`/signup?token=${token}&email=${invitation.email}&flow=invitation`);
       return;
     }
     

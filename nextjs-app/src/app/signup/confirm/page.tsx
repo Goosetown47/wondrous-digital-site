@@ -14,6 +14,7 @@ export default function ConfirmEmailPage() {
   const [resending, setResending] = useState(false)
   const [resendSuccess, setResendSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isWarmProspect, setIsWarmProspect] = useState(false)
 
   useEffect(() => {
     // Get email from session storage
@@ -22,9 +23,36 @@ export default function ConfirmEmailPage() {
       setEmail(signupEmail)
     } else {
       // If no email in session, redirect back to signup
-      router.push('/signup')
+      // Preserve flow parameter if it exists
+      const flow = sessionStorage.getItem('signupFlow')
+      router.push(flow === 'invitation' ? '/signup?flow=invitation' : '/signup')
+      return
+    }
+
+    // Check if this is a warm prospect (has invitation token)
+    const token = sessionStorage.getItem('invitationToken')
+    if (token) {
+      setIsWarmProspect(true)
+      // Fetch invitation details to get account_id
+      fetchInvitationDetails(token)
     }
   }, [router])
+
+  const fetchInvitationDetails = async (token: string) => {
+    try {
+      const response = await fetch(`/api/invitations/by-token/${token}`)
+      if (response.ok) {
+        const invitation = await response.json()
+        // Store account_id for warm prospects to use in pricing step
+        if (invitation.account_id) {
+          sessionStorage.setItem('signupAccountId', invitation.account_id)
+          sessionStorage.setItem('signupAccountName', invitation.accounts?.name || '')
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching invitation details:', err)
+    }
+  }
 
   const handleResendEmail = async () => {
     setResending(true)
@@ -65,7 +93,7 @@ export default function ConfirmEmailPage() {
               {email}
             </p>
             <p className="text-lg text-gray-600">
-              Click the link in the email to verify your account and continue setting up your workspace.
+              Click the link in the email to verify your account and continue {isWarmProspect ? 'completing your profile' : 'setting up your workspace'}.
             </p>
           </div>
 
@@ -83,7 +111,7 @@ export default function ConfirmEmailPage() {
               </li>
               <li className="flex items-start">
                 <span className="font-semibold mr-3 text-gray-900">3.</span>
-                <span>You'll be redirected back here to continue setup</span>
+                <span>You'll be redirected back here to {isWarmProspect ? 'complete your profile' : 'continue setup'}</span>
               </li>
             </ol>
           </div>

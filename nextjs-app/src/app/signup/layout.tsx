@@ -2,15 +2,22 @@
 
 import React from 'react'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { SignupStepper } from '@/components/ui/signup-stepper'
 
-const SIGNUP_STEPS = [
+const ALL_SIGNUP_STEPS = [
   { number: 1, title: 'Create login credentials', description: 'Create your private login.' },
   { number: 2, title: 'Confirm email address', description: 'Confirm your email address and login for the 1st time.' },
   { number: 3, title: 'Fill in account details', description: 'Fill in some information about your account.' },
   { number: 4, title: 'Fill in personal details', description: 'Fill in some information about yourself!' },
   { number: 5, title: 'Select your plan & Pay', description: 'Pay' },
+]
+
+const WARM_PROSPECT_STEPS = [
+  { number: 1, title: 'Create login credentials', description: 'Create your private login.' },
+  { number: 2, title: 'Confirm email address', description: 'Confirm your email address and login for the 1st time.' },
+  { number: 3, title: 'Fill in personal details', description: 'Fill in some information about yourself!' },
+  { number: 4, title: 'Select your plan & Pay', description: 'Pay' },
 ]
 
 export default function SignupLayout({
@@ -19,15 +26,33 @@ export default function SignupLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  
+  // Check URL params for flow type - this is the single source of truth
+  const flowParam = searchParams.get('flow')
+  const isWarmProspect = flowParam === 'invitation'
+  
+  // Use appropriate steps based on user type
+  const steps = isWarmProspect ? WARM_PROSPECT_STEPS : ALL_SIGNUP_STEPS
   
   // Determine current step based on pathname
   const getCurrentStep = () => {
     if (pathname === '/signup') return 0
     if (pathname === '/signup/confirm' || pathname === '/signup/login') return 1
-    if (pathname === '/signup/account') return 2
-    if (pathname === '/signup/profile') return 3
-    if (pathname === '/signup/pricing') return 4
-    if (pathname === '/signup/success') return 5
+    
+    if (isWarmProspect) {
+      // For warm prospects, skip account step
+      if (pathname === '/signup/account') return 2 // Should not happen, but handle gracefully
+      if (pathname === '/signup/profile') return 2 // Step 3 for warm prospects
+      if (pathname === '/signup/pricing') return 3 // Step 4 for warm prospects
+      if (pathname === '/signup/success') return 4
+    } else {
+      // For cold prospects, all steps
+      if (pathname === '/signup/account') return 2
+      if (pathname === '/signup/profile') return 3
+      if (pathname === '/signup/pricing') return 4
+      if (pathname === '/signup/success') return 5
+    }
     return 0
   }
 
@@ -55,7 +80,7 @@ export default function SignupLayout({
             <div className="flex-1">
               <SignupStepper 
                 currentStep={currentStep} 
-                steps={SIGNUP_STEPS}
+                steps={steps}
               />
             </div>
           </div>

@@ -136,17 +136,14 @@ This is a large, but critical sprint which will allow us to assign accounts a sp
 - [x] Cold prospect: Can sign up with email/password and complete full onboarding
 - [x] Cold prospect: Sees progress through 5-step process with stepper
 - [x] Cold prospect: Receives encouraging messaging at each step
-- [ ] Warm prospect: Email pre-filled from invitation token
-- [ ] Warm prospect: Can customize invited account details
 - [x] All users: Account created before payment (lead capture)
 - [x] All users: Payment updates existing account (no pending_stripe_payments needed)
 - [x] All users: See confetti and success message after payment
-- [ ] Edge case: Abandoned signup data persists for return
-- [ ] Edge case: Email already exists shows helpful error
+
 
 **Development Tasks:**
 
-#### Phase 1: Component Infrastructure
+#### Component Infrastructure
 - [x] Port stepper component from v0 to `/components/ui/stepper.tsx`
 - [x] Style stepper to match Wondrous Digital brand
 - [x] Make responsive (horizontal desktop, vertical mobile)
@@ -154,7 +151,7 @@ This is a large, but critical sprint which will allow us to assign accounts a sp
 - [x] Add logo and consistent styling across all steps
 - [x] Implement session storage for progress persistence
 
-#### Phase 2: Step 1 - Welcome & Create Login (`/app/signup/page.tsx`)
+#### Welcome & Create Login (`/app/signup/page.tsx`)
 - [x] Add "Welcome." heading with supporting text:
   - "Thanks for joining us."
   - "You're on your way to building a better experience for your customers."
@@ -173,7 +170,7 @@ This is a large, but critical sprint which will allow us to assign accounts a sp
 - [x] Trigger confirmation email
 - [x] Show green checkmarks for completed steps
 
-#### Phase 3: Step 2 - Confirm Email (`/app/signup/confirm/page.tsx`)
+#### Confirm Email (`/app/signup/confirm/page.tsx`)
 - [x] Add "Please Log in" heading with text:
   - "Let's get you logged into the system so we can set you up."
 - [x] Show "Check your email" UI
@@ -182,7 +179,7 @@ This is a large, but critical sprint which will allow us to assign accounts a sp
 - [x] Update stepper to show Step 1 complete (green check)
 - [x] Handle email confirmation route
 
-#### Phase 4: Step 3 - Account Details (`/app/signup/account/page.tsx`)
+#### Account Details (`/app/signup/account/page.tsx`)
 - [x] Add "Tell us about your business" heading with text:
   - "Tell us a little about your business so we can get your account set up properly."
 - [x] Create Account Details Form with fields:
@@ -195,7 +192,7 @@ This is a large, but critical sprint which will allow us to assign accounts a sp
 - [x] Link user to account as account_owner
 - [x] Update stepper (Steps 1-2 complete)
 
-#### Phase 5: Step 4 - Personal Details (`/app/signup/profile/page.tsx`)
+#### Personal Details (`/app/signup/profile/page.tsx`)
 - [x] Add "Tell us about you." heading with text:
   - "This helps us get to know you a bit better."
   - "It will also help you stand out from others using your account."
@@ -207,7 +204,7 @@ This is a large, but critical sprint which will allow us to assign accounts a sp
 - [x] Update user metadata
 - [x] Update stepper (Steps 1-3 complete)
 
-#### Phase 6: Step 5 - Select Plan & Pay (`/app/signup/pricing/page.tsx`)
+#### Select Plan & Pay (`/app/signup/pricing/page.tsx`)
 - [x] Add "Pick a plan that works for you." heading with text:
   - "Every plan gets all the smart marketing features."
   - "Our plans are usage based. You pay for what you use."
@@ -218,7 +215,7 @@ This is a large, but critical sprint which will allow us to assign accounts a sp
 - [x] On success: Update account tier
 - [x] Update stepper (Steps 1-4 complete)
 
-#### Phase 7: Step 6 - Success (`/app/signup/success/page.tsx`)
+#### Success (`/app/signup/success/page.tsx`)
 - [x] Add "Way to go!" heading with text:
   - "You're all set."
 - [x] Show "To the Dashboard!" button
@@ -226,7 +223,7 @@ This is a large, but critical sprint which will allow us to assign accounts a sp
 - [x] Update stepper (all steps complete with green checks)
 - [x] Redirect to dashboard after celebration
 
-#### Phase 8: Backend Updates
+#### Backend Updates
 - [x] Simplify webhook handler (no pending_stripe_payments)
 - [x] Update email confirmation route (no auto account creation)
 - [x] Update invitation flow to redirect to `/signup?token=xxx`
@@ -245,7 +242,7 @@ This is a large, but critical sprint which will allow us to assign accounts a sp
 - [x] Verify dashboard shows correct tier (displays PRO with active status)
 - [x] Verify accounts load successfully (no more 500 errors)
 
-#### Phase 9: Cleanup
+#### Cleanup
 - [x] Remove `/setup` page
 - [x] Remove `/profile/setup` page
 - [x] Remove `/payment/success` "Set Up Your Account" button
@@ -267,9 +264,16 @@ This is a large, but critical sprint which will allow us to assign accounts a sp
 - [ ] Manual Test Session (User will conduct):
   - [x] Cold visitor: Complete full flow
   - [x] Warm invite: Pre-filled email works (verified in code)
-  - [ ] Abandonment: Can return to incomplete signup
   - [x] Payment success: Tier applied correctly
-  - [ ] Payment cancel: Account exists as lead
+  
+
+#### Final Tasks (Manual Tests)
+- [ ] Warm prospect: Email pre-filled from invitation token
+- [ ] Edge case: Abandoned signup data persists for return
+- [ ] Edge case: Email already exists shows helpful error
+- [ ] Warm prospect: Can customize invited account details
+- [ ] Payment cancel: Account exists as lead
+
 
 **Deployment:**
 - [ ] Create PR to `nextjs-pagebuilder-core`

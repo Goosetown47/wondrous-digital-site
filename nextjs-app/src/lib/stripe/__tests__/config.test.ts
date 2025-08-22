@@ -29,6 +29,9 @@ describe('Stripe Config', () => {
     process.env = { ...originalEnv };
     process.env.STRIPE_SECRET_KEY = 'sk_test_123';
     process.env.NEXT_PUBLIC_APP_URL = 'https://test.com';
+    
+    // Reset the Stripe instance cache
+    vi.resetModules();
   });
 
   afterEach(() => {
@@ -49,9 +52,13 @@ describe('Stripe Config', () => {
       expect(stripe1).toBe(stripe2);
     });
 
-    it('should throw error if STRIPE_SECRET_KEY is not set', () => {
+    it('should throw error if STRIPE_SECRET_KEY is not set', async () => {
       delete process.env.STRIPE_SECRET_KEY;
-      expect(() => getStripe()).toThrow('STRIPE_SECRET_KEY is not configured');
+      
+      // Re-import the module to reset the singleton
+      const { getStripe: getStripeFresh } = await import('../config');
+      
+      expect(() => getStripeFresh()).toThrow('STRIPE_SECRET_KEY is not configured');
     });
   });
 

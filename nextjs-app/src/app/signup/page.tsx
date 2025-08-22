@@ -25,11 +25,21 @@ export default function SignupPage() {
   useEffect(() => {
     const token = searchParams.get('token')
     const inviteEmail = searchParams.get('email')
+    const flow = searchParams.get('flow')
     
     if (token && inviteEmail) {
       setEmail(inviteEmail)
       // Store token in session storage for later use
       sessionStorage.setItem('invitationToken', token)
+      // Also store flow for reference
+      if (flow) {
+        sessionStorage.setItem('signupFlow', flow)
+      }
+    } else {
+      // This is a cold prospect - clear any old invitation data
+      // to prevent it from affecting this signup
+      sessionStorage.removeItem('invitationToken')
+      sessionStorage.removeItem('signupFlow')
     }
   }, [searchParams])
 
@@ -75,7 +85,8 @@ export default function SignupPage() {
           emailRedirectTo: `${window.location.origin}/auth/confirm?flow=unified`,
           data: {
             signup_flow: 'unified',
-            invitation_token: sessionStorage.getItem('invitationToken'),
+            // Only include invitation token if this is actually an invitation flow
+            invitation_token: searchParams.get('token') || null,
           }
         }
       })
@@ -88,8 +99,10 @@ export default function SignupPage() {
         // Store email in session storage for the next step
         sessionStorage.setItem('signupEmail', email)
         
-        // Redirect to email confirmation page
-        router.push('/signup/confirm')
+        // Redirect to email confirmation page with flow parameter if present
+        const flow = searchParams.get('flow')
+        const confirmUrl = flow ? `/signup/confirm?flow=${flow}` : '/signup/confirm'
+        router.push(confirmUrl)
       }
     } catch (err) {
       console.error('Signup error:', err)

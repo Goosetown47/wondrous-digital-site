@@ -10,6 +10,14 @@ export default function SignupSuccessPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Clear all signup session data after successful completion
+    sessionStorage.removeItem('invitationToken');
+    sessionStorage.removeItem('signupFlow');
+    sessionStorage.removeItem('signupEmail');
+    sessionStorage.removeItem('signupAccountId');
+    sessionStorage.removeItem('signupAccountName');
+    sessionStorage.removeItem('signupProfileData');
+    
     // Trigger multiple confetti animations for a celebratory effect
     const timer = setTimeout(() => {
       // Fire confetti from the left

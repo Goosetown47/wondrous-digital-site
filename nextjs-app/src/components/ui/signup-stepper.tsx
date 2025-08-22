@@ -65,7 +65,7 @@ export function SignupStepper({ currentStep, steps }: SignupStepperProps) {
 
             {/* Connector Line */}
             {!isLast && (
-              <div className="flex-1 mx-2 md:mx-4 connector">
+              <div className="flex-1 mx-2 md:mx-4">
                 <div
                   className={cn(
                     "h-0.5 transition-all duration-200",

@@ -21,15 +21,15 @@ I'm working on the Wondrous Digital platform - a Next.js 15 multi-tenant website
 
 ## 🎯 Current Sprint & Tasks
 
-Complete packets 1-2.5 in our sprint.
+We are currently working on final manual tests from packet 2.5:
+#### Final Tasks (Manual Tests)
+- [x] Warm prospect: Email pre-filled from invitation token
 
-- 16 TypeScript errors in test files only
-- Some ESLint warnings (style-related)
-- Lighthouse performance optimization pending
-- Look for other tasks.
-- REMOVE the vertical stepper throughout the signup process (UX change)
+We've spun our wheels several times trying to figure out why our warm prospect flow has 5 steps instead of just the 4 that are needed. (We don't need the create account step 3 because the account is already created.) There should only be 4 total steps, but the 5 keep showing up.
 
-- COMPLETE all open tasks in packets, then we deploy our work.
+Please review all our code and identify why this is and how we can fix it.
+
+Read our ACTIVE-SPRINT document to view our remaining tasks and read the logs.
 
 
 **Database Password for CLI:** MsDH6QjUsf6vXD3nCeYkBNiF

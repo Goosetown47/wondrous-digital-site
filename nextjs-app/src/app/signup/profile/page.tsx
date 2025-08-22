@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -43,6 +43,7 @@ const TIMEZONES = [
 
 export default function PersonalDetailsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -70,6 +71,25 @@ export default function PersonalDetailsPage() {
     } else {
       setTimezone('America/New_York') // Default to ET
     }
+    
+    // Restore form data from sessionStorage if user abandoned and came back
+    const savedFormData = sessionStorage.getItem('signupProfileData')
+    if (savedFormData) {
+      try {
+        const data = JSON.parse(savedFormData)
+        if (data.firstName) setFirstName(data.firstName)
+        if (data.lastName) setLastName(data.lastName)
+        if (data.userHandle) setUserHandle(data.userHandle)
+        if (data.phoneNumber) setPhoneNumber(data.phoneNumber)
+        if (data.jobTitle) setJobTitle(data.jobTitle)
+        if (data.timezone) setTimezone(data.timezone)
+        if (data.location) setLocation(data.location)
+        if (data.notes) setNotes(data.notes)
+        console.log('[Profile] Restored form data from abandoned session')
+      } catch (err) {
+        console.error('[Profile] Failed to restore form data:', err)
+      }
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkAuth = async () => {
@@ -82,6 +102,61 @@ export default function PersonalDetailsPage() {
     }
     
     setUser(user)
+    
+    // Restore invitation token to sessionStorage if it exists in user metadata
+    // This ensures the stepper shows correctly for warm prospects
+    if (user.user_metadata?.invitation_token && !sessionStorage.getItem('invitationToken')) {
+      sessionStorage.setItem('invitationToken', user.user_metadata.invitation_token)
+    }
+    
+    // Safety net: Check if warm prospect needs to be linked to account
+    if (user.user_metadata?.invitation_token) {
+      const invitationToken = user.user_metadata.invitation_token
+      
+      // Check if user is already linked to an account
+      const { data: accountUser } = await supabase
+        .from('account_users')
+        .select('account_id')
+        .eq('user_id', user.id)
+        .single()
+      
+      if (!accountUser) {
+        console.log('[Profile] Warm prospect not linked to account, attempting to link...')
+        
+        // Try to accept the invitation
+        try {
+          const response = await fetch(`/api/invitations/by-token/${invitationToken}/accept-after-signup`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: user.email,
+            }),
+          })
+          
+          if (response.ok) {
+            const result = await response.json()
+            if (result.account_id) {
+              console.log('[Profile] Successfully linked to account:', result.account_id)
+              sessionStorage.setItem('signupAccountId', result.account_id)
+              if (result.account_name) {
+                sessionStorage.setItem('signupAccountName', result.account_name)
+              }
+            }
+          } else {
+            console.error('[Profile] Failed to accept invitation:', await response.text())
+          }
+        } catch (err) {
+          console.error('[Profile] Error accepting invitation:', err)
+        }
+      } else {
+        // User is already linked, ensure account ID is in sessionStorage
+        if (!sessionStorage.getItem('signupAccountId')) {
+          sessionStorage.setItem('signupAccountId', accountUser.account_id)
+        }
+      }
+    }
     
     // Pre-fill name from email or metadata
     const emailUsername = user.email?.split('@')[0] || ''
@@ -210,8 +285,10 @@ export default function PersonalDetailsPage() {
         throw new Error(data.error || 'Failed to update profile')
       }
       
-      // Move to Step 5: Payment
-      router.push('/signup/pricing')
+      // Move to Step 5: Payment (Step 4 for warm prospects)
+      const flow = searchParams.get('flow')
+      const pricingUrl = flow ? `/signup/pricing?flow=${flow}` : '/signup/pricing'
+      router.push(pricingUrl)
     } catch (err) {
       console.error('Profile update error:', err)
       setError((err as Error)?.message || 'Failed to update profile')
@@ -222,7 +299,9 @@ export default function PersonalDetailsPage() {
 
   const handleSkip = () => {
     // Allow skipping to payment page
-    router.push('/signup/pricing')
+    const flow = searchParams.get('flow')
+    const pricingUrl = flow ? `/signup/pricing?flow=${flow}` : '/signup/pricing'
+    router.push(pricingUrl)
   }
 
   // Get user initials for avatar fallback

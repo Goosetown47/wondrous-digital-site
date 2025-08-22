@@ -335,6 +335,7 @@ describe('ProjectAccessModal', () => {
         expect(mockRevokeMutate).toHaveBeenCalledWith({
           projectId: mockProjectId,
           userId: 'user-1',
+          accountId: mockAccountId,
         });
       });
 

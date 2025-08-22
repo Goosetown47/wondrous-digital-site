@@ -58,7 +58,7 @@ describe('Stripe Prices', () => {
   describe('TIER_FEATURES', () => {
     it('should have features defined for PRO tier', () => {
       expect(TIER_FEATURES.PRO).toBeDefined();
-      expect(TIER_FEATURES.PRO.name).toBe('Pro');
+      expect(TIER_FEATURES.PRO.name).toBe('Professional');
       expect(TIER_FEATURES.PRO.description).toBeDefined();
       expect(TIER_FEATURES.PRO.features).toBeInstanceOf(Array);
       expect(TIER_FEATURES.PRO.features.length).toBeGreaterThan(0);
@@ -74,7 +74,7 @@ describe('Stripe Prices', () => {
 
     it('should have features defined for MAX tier', () => {
       expect(TIER_FEATURES.MAX).toBeDefined();
-      expect(TIER_FEATURES.MAX.name).toBe('Max');
+      expect(TIER_FEATURES.MAX.name).toBe('Maximum');
       expect(TIER_FEATURES.MAX.description).toBeDefined();
       expect(TIER_FEATURES.MAX.features).toBeInstanceOf(Array);
       expect(TIER_FEATURES.MAX.features.length).toBeGreaterThan(0);

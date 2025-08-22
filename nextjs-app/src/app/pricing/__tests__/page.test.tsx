@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { useSearchParams } from 'next/navigation';
 import type { ReadonlyURLSearchParams } from 'next/navigation';
 import PricingPage from '../page';
@@ -9,21 +9,9 @@ vi.mock('next/navigation', () => ({
   useSearchParams: vi.fn(),
 }));
 
-// Mock auth provider
-vi.mock('@/providers/auth-provider', () => ({
-  useAuth: vi.fn(),
-}));
-
-// Mock components
-vi.mock('@/components/pricing/pricing-grid', () => ({
-  PricingGrid: vi.fn(({ onSelectTier, isLoading, currentTier, isAuthenticated }) => (
-    <div data-testid="pricing-grid">
-      <div>Loading: {isLoading ? 'true' : 'false'}</div>
-      <div>Authenticated: {isAuthenticated ? 'true' : 'false'}</div>
-      <div>Current Tier: {currentTier || 'none'}</div>
-      <button onClick={() => onSelectTier('PRO')}>Select PRO</button>
-    </div>
-  )),
+// Mock pricing addons component
+vi.mock('@/components/pricing/pricing-addons', () => ({
+  PricingAddons: vi.fn(() => <div data-testid="pricing-addons">Pricing Addons</div>),
 }));
 
 // Mock toast
@@ -34,11 +22,19 @@ vi.mock('sonner', () => ({
   },
 }));
 
-import { useAuth } from '@/providers/auth-provider';
 import { toast } from 'sonner';
 
 // Mock fetch
 global.fetch = vi.fn();
+
+// Mock window.location.href
+Object.defineProperty(window, 'location', {
+  value: {
+    href: '',
+    origin: 'http://localhost:3000',
+  },
+  writable: true,
+});
 
 describe('PricingPage', () => {
   let mockSearchParams: {
@@ -56,10 +52,10 @@ describe('PricingPage', () => {
     set: ReturnType<typeof vi.fn>;
     sort: ReturnType<typeof vi.fn>;
   };
-  let mockAuth: ReturnType<typeof useAuth>;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    window.location.href = '';
     
     mockSearchParams = {
       get: vi.fn(),
@@ -78,35 +74,22 @@ describe('PricingPage', () => {
     };
     // Type assertion through unknown to satisfy ReadonlyURLSearchParams interface
     vi.mocked(useSearchParams).mockReturnValue(mockSearchParams as unknown as ReadonlyURLSearchParams);
-    
-    mockAuth = {
-      user: null,
-      currentAccount: null,
-      loading: false,
-      accounts: [],
-      isAdmin: false,
-      setCurrentAccount: vi.fn(),
-      currentProject: null,
-      setCurrentProject: vi.fn(),
-      signOut: vi.fn(),
-      refreshAccounts: vi.fn(),
-    };
-    vi.mocked(useAuth).mockReturnValue(mockAuth as ReturnType<typeof useAuth>);
   });
 
   describe('Cold visitor flow', () => {
-    it('should render pricing grid for unauthenticated users', () => {
+    it('should render pricing page for unauthenticated users', () => {
       render(<PricingPage />);
       
-      expect(screen.getByTestId('pricing-grid')).toBeInTheDocument();
-      expect(screen.getByText('Authenticated: false')).toBeInTheDocument();
+      expect(screen.getByText('Choose the right plan for you')).toBeInTheDocument();
+      expect(screen.getByText('Cancel any time, without any hassle')).toBeInTheDocument();
     });
 
-    it('should show loading state while auth is loading', () => {
-      mockAuth.loading = true;
+    it('should show all pricing tiers', () => {
       render(<PricingPage />);
       
-      expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
+      expect(screen.getByText('PRO')).toBeInTheDocument();
+      expect(screen.getByText('SCALE')).toBeInTheDocument();
+      expect(screen.getByText('MAX')).toBeInTheDocument();
     });
   });
 
@@ -129,7 +112,7 @@ describe('PricingPage', () => {
     it('should show invitation-specific messaging', () => {
       render(<PricingPage />);
       
-      expect(screen.getByText(/Complete Your Account Setup/)).toBeInTheDocument();
+      expect(screen.getByText('Complete your account setup by selecting a plan')).toBeInTheDocument();
     });
   });
 
@@ -139,69 +122,33 @@ describe('PricingPage', () => {
         if (key === 'flow') return 'upgrade';
         return null;
       });
-      
-      mockAuth.user = { 
-        id: 'user_123', 
-        email: 'user@example.com',
-        app_metadata: {},
-        user_metadata: {},
-        aud: 'authenticated',
-        created_at: new Date().toISOString()
-      } as NonNullable<typeof mockAuth.user>;
-      mockAuth.currentAccount = { 
-        id: 'acc_123', 
-        tier: 'PRO' as const,
-        name: 'Test Account',
-        slug: 'test-account',
-        settings: {},
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      } as NonNullable<typeof mockAuth.currentAccount>;
     });
 
-    it('should show current tier for authenticated users', async () => {
+    it('should show standard pricing page for upgrade flow', () => {
       render(<PricingPage />);
       
-      await waitFor(() => {
-        expect(screen.getByText('Current Tier: PRO')).toBeInTheDocument();
-      });
+      // The pricing page doesn't actually show different content for upgrade flow
+      expect(screen.getByText('Choose the right plan for you')).toBeInTheDocument();
     });
 
-    it('should show upgrade messaging', () => {
+    it('should handle upgrade flow parameters', () => {
       render(<PricingPage />);
       
-      expect(screen.getByText(/Upgrade Your Plan/)).toBeInTheDocument();
+      expect(mockSearchParams.get).toHaveBeenCalledWith('flow');
     });
   });
 
   describe('Tier selection', () => {
-    it('should handle tier selection for unauthenticated users', async () => {
-      vi.mocked(global.fetch).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ 
-          sessionId: 'cs_123', 
-          url: 'https://checkout.stripe.com/session' 
-        }),
-      } as Response);
-
+    it('should handle tier selection for cold visitors with email dialog', async () => {
       render(<PricingPage />);
       
-      const selectButton = screen.getByText('Select PRO');
-      selectButton.click();
+      const selectButton = screen.getByText('Get PRO');
+      fireEvent.click(selectButton);
       
+      // Should show email dialog for cold visitors
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          '/api/stripe/create-checkout-session',
-          expect.objectContaining({
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              tier: 'PRO',
-              flow: null,
-              token: undefined,
-            }),
-          })
-        );
+        expect(screen.getByText('Get Started with PRO')).toBeInTheDocument();
+        expect(screen.getByText('Enter your email to continue to checkout. You\'ll create your account after payment.')).toBeInTheDocument();
       });
     });
 
@@ -215,24 +162,27 @@ describe('PricingPage', () => {
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ 
-          sessionId: 'cs_123', 
           url: 'https://checkout.stripe.com/session' 
         }),
       } as Response);
 
       render(<PricingPage />);
       
-      const selectButton = screen.getByText('Select PRO');
-      selectButton.click();
+      const selectButton = screen.getByText('Get PRO');
+      fireEvent.click(selectButton);
       
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
           '/api/stripe/create-checkout-session',
           expect.objectContaining({
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               tier: 'PRO',
               flow: 'invitation',
-              token: 'inv_token_123',
+              billingPeriod: 'monthly',
+              invitationToken: 'inv_token_123',
+              email: undefined,
             }),
           })
         );
@@ -240,15 +190,21 @@ describe('PricingPage', () => {
     });
 
     it('should handle API errors gracefully', async () => {
+      vi.mocked(mockSearchParams.get).mockImplementation((key: string) => {
+        if (key === 'flow') return 'invitation';
+        if (key === 'token') return 'inv_token_123';
+        return null;
+      });
+
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: false,
-        json: async () => ({ error: 'Payment failed' }),
+        json: async () => ({ message: 'Payment failed' }),
       } as Response);
 
       render(<PricingPage />);
       
-      const selectButton = screen.getByText('Select PRO');
-      selectButton.click();
+      const selectButton = screen.getByText('Get PRO');
+      fireEvent.click(selectButton);
       
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith('Payment failed');
@@ -256,57 +212,130 @@ describe('PricingPage', () => {
     });
 
     it('should handle network errors', async () => {
+      vi.mocked(mockSearchParams.get).mockImplementation((key: string) => {
+        if (key === 'flow') return 'invitation';
+        if (key === 'token') return 'inv_token_123';
+        return null;
+      });
+
       vi.mocked(global.fetch).mockRejectedValueOnce(new Error('Network error'));
 
       render(<PricingPage />);
       
-      const selectButton = screen.getByText('Select PRO');
-      selectButton.click();
+      const selectButton = screen.getByText('Get PRO');
+      fireEvent.click(selectButton);
       
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith('Failed to create checkout session');
+        expect(toast.error).toHaveBeenCalledWith('Network error');
+      });
+    });
+    
+    it('should handle email submission for cold visitors', async () => {
+      vi.mocked(global.fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ 
+          url: 'https://checkout.stripe.com/session' 
+        }),
+      } as Response);
+
+      render(<PricingPage />);
+      
+      // Click Get PRO to open email dialog
+      const selectButton = screen.getByText('Get PRO');
+      fireEvent.click(selectButton);
+      
+      // Fill email and submit
+      const emailInput = screen.getByPlaceholderText('you@example.com');
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
+      
+      const continueButton = screen.getByText('Continue to Checkout');
+      fireEvent.click(continueButton);
+      
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          '/api/stripe/create-checkout-session',
+          expect.objectContaining({
+            body: JSON.stringify({
+              tier: 'PRO',
+              flow: 'cold',
+              billingPeriod: 'monthly',
+              invitationToken: undefined,
+              email: 'test@example.com',
+            }),
+          })
+        );
       });
     });
   });
 
-  describe('Page headers', () => {
-    it('should show default header for cold visitors', () => {
+  describe('Billing toggle', () => {
+    it('should show monthly/yearly toggle', () => {
       render(<PricingPage />);
       
-      expect(screen.getByText('Choose Your Plan')).toBeInTheDocument();
-      expect(screen.getByText(/Start building professional websites/)).toBeInTheDocument();
+      expect(screen.getByText('Monthly')).toBeInTheDocument();
+      expect(screen.getByText('Yearly')).toBeInTheDocument();
+      expect(screen.getByText('Save 10%')).toBeInTheDocument();
     });
 
-    it('should show invitation header', () => {
-      vi.mocked(mockSearchParams.get).mockImplementation((key: string) => {
-        if (key === 'flow') return 'invitation';
-        return null;
-      });
-      
+    it('should switch pricing when toggling billing period', () => {
       render(<PricingPage />);
       
-      expect(screen.getByText('Complete Your Account Setup')).toBeInTheDocument();
-      expect(screen.getByText(/Choose a plan to activate your account/)).toBeInTheDocument();
+      // Should show monthly pricing by default - all three tiers
+      const monthlyPrices = screen.getAllByText(/\$\d+/);
+      expect(monthlyPrices.length).toBeGreaterThan(0);
+      
+      // Check that PRO monthly price is displayed
+      expect(monthlyPrices.some(el => el.textContent === '$397')).toBe(true);
+      
+      // Click on the radio button for yearly (not the label)
+      const yearlyRadio = screen.getByRole('radio', { name: /Yearly/ });
+      fireEvent.click(yearlyRadio);
+      
+      // Should show yearly pricing (monthly equivalent)
+      const yearlyPrices = screen.getAllByText(/\$\d+/);
+      expect(yearlyPrices.length).toBeGreaterThan(0);
+      
+      // Check that PRO yearly price (monthly equivalent) is displayed
+      expect(yearlyPrices.some(el => el.textContent === '$357')).toBe(true);
+    });
+  });
+
+  describe('Package features', () => {
+    it('should display PRO package features', () => {
+      render(<PricingPage />);
+      
+      expect(screen.getByText('5 Projects')).toBeInTheDocument();
+      expect(screen.getByText('3 Team Members')).toBeInTheDocument();
+      // Custom Domains appears multiple times (for different tiers)
+      const customDomains = screen.getAllByText('Custom Domains');
+      expect(customDomains.length).toBeGreaterThan(0);
     });
 
-    it('should show upgrade header', () => {
-      vi.mocked(mockSearchParams.get).mockImplementation((key: string) => {
-        if (key === 'flow') return 'upgrade';
-        return null;
-      });
-      
-      mockAuth.user = { 
-        id: 'user_123',
-        app_metadata: {},
-        user_metadata: {},
-        aud: 'authenticated',
-        created_at: new Date().toISOString()
-      } as NonNullable<typeof mockAuth.user>;
-      
+    it('should display SCALE package features', () => {
       render(<PricingPage />);
       
-      expect(screen.getByText('Upgrade Your Plan')).toBeInTheDocument();
-      expect(screen.getByText(/Unlock more features and capabilities/)).toBeInTheDocument();
+      expect(screen.getByText('10 Projects')).toBeInTheDocument();
+      expect(screen.getByText('5 Team Members')).toBeInTheDocument();
+      // Advanced Analytics appears for multiple tiers
+      const analytics = screen.getAllByText('Advanced Analytics');
+      expect(analytics.length).toBeGreaterThan(0);
+    });
+
+    it('should display MAX package features', () => {
+      render(<PricingPage />);
+      
+      expect(screen.getByText('25 Projects')).toBeInTheDocument();
+      // Team members text appears multiple times
+      const teamMembers = screen.getAllByText(/Team Members/);
+      expect(teamMembers.length).toBeGreaterThan(0);
+      expect(screen.getByText('White Label Options')).toBeInTheDocument();
+    });
+
+    it('should show Most Popular badge for SCALE tier', () => {
+      render(<PricingPage />);
+      
+      const badges = screen.getAllByText('Most Popular');
+      expect(badges).toHaveLength(1);
     });
   });
 });

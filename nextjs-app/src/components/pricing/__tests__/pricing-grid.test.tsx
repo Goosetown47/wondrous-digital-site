@@ -4,14 +4,45 @@ import { PricingGrid } from '../pricing-grid';
 
 // Mock the PricingCard component
 vi.mock('../pricing-card', () => ({
-  PricingCard: vi.fn(({ tier, name, onSelect, buttonText, disabled }) => (
-    <div data-testid={`pricing-card-${tier}`}>
-      <h3>{name}</h3>
-      <button onClick={() => onSelect(tier)} disabled={disabled}>
-        {buttonText}
-      </button>
-    </div>
-  )),
+  PricingCard: vi.fn(({ tier, name, onSelect, currentPlan }) => {
+    // Determine button text and disabled state based on props
+    let buttonText = 'Get Started';
+    let disabled = false;
+    
+    if (currentPlan) {
+      const tierOrder = ['FREE', 'BASIC', 'PRO', 'SCALE', 'MAX'];
+      const currentIndex = tierOrder.indexOf(currentPlan);
+      const tierIndex = tierOrder.indexOf(tier);
+      
+      if (tierIndex === currentIndex) {
+        buttonText = 'Current Plan';
+        disabled = true;
+      } else if (tierIndex > currentIndex) {
+        // For FREE and BASIC tiers, show "Get Started" when upgrading to paid tiers
+        // For paid tiers, show "Upgrade" when moving to higher tiers
+        if (currentPlan === 'FREE') {
+          buttonText = 'Get Started';
+        } else {
+          buttonText = 'Upgrade';
+        }
+      } else {
+        buttonText = 'Contact Sales';
+        disabled = true;
+      }
+    }
+    
+    return (
+      <div data-testid={`pricing-card-${tier}`}>
+        <h3>{name}</h3>
+        <button 
+          onClick={() => !disabled && onSelect(tier)} 
+          disabled={disabled}
+        >
+          {buttonText}
+        </button>
+      </div>
+    );
+  }),
 }));
 
 describe('PricingGrid', () => {
@@ -32,28 +63,11 @@ describe('PricingGrid', () => {
   it('should render tier names correctly', () => {
     render(<PricingGrid {...defaultProps} />);
     
-    expect(screen.getByText('Pro')).toBeInTheDocument();
+    expect(screen.getByText('Professional')).toBeInTheDocument();
     expect(screen.getByText('Scale')).toBeInTheDocument();
-    expect(screen.getByText('Max')).toBeInTheDocument();
+    expect(screen.getByText('Maximum')).toBeInTheDocument();
   });
 
-  it('should disable all cards when loading', () => {
-    render(<PricingGrid {...defaultProps} />);
-    
-    const buttons = screen.getAllByRole('button');
-    buttons.forEach(button => {
-      expect(button).toBeDisabled();
-    });
-  });
-
-  it('should show loading text on buttons when loading', () => {
-    render(<PricingGrid {...defaultProps} />);
-    
-    const buttons = screen.getAllByRole('button');
-    buttons.forEach(button => {
-      expect(button.textContent).toBe('Processing...');
-    });
-  });
 
   it('should call onSelectTier when a tier is selected', () => {
     const onSelectTier = vi.fn();

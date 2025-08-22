@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card'
 import { Loader2, Mail, Lock, CheckCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
+
 export default function SignupLoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -30,6 +31,22 @@ export default function SignupLoginPage() {
     const confirmed = searchParams.get('confirmed') === 'true'
     if (confirmed) {
       setEmailConfirmed(true)
+      
+      // For invitation flow, restore token from user metadata if needed
+      // This handles the case where email confirmation opens in a new tab
+      const flow = searchParams.get('flow')
+      if (flow === 'invitation') {
+        const restoreInvitationToken = async () => {
+          if (!sessionStorage.getItem('invitationToken')) {
+            const supabase = createClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user?.user_metadata?.invitation_token) {
+              sessionStorage.setItem('invitationToken', user.user_metadata.invitation_token)
+            }
+          }
+        }
+        restoreInvitationToken()
+      }
     }
   }, [searchParams])
 
@@ -60,10 +77,13 @@ export default function SignupLoginPage() {
       if (data?.user) {
         // Check if user is in the unified signup flow
         if (data.user.user_metadata?.signup_flow === 'unified') {
-          // Check if this is an invitation flow (user joining existing account)
-          if (data.user.user_metadata?.invitation_token) {
-            // For invited users, skip account creation and go to personal details
-            router.push('/signup/profile')
+          // Check flow parameter to determine next step
+          const flow = searchParams.get('flow')
+          
+          if (flow === 'invitation') {
+            // For invited users (warm prospects), skip account creation entirely
+            // The account already exists and was linked during email confirmation
+            router.push(`/signup/profile?flow=invitation`)
           } else {
             // For cold signups, go to account details
             router.push('/signup/account')

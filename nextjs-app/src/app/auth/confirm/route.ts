@@ -7,42 +7,107 @@ import { acceptInvitationAfterSignup } from '@/lib/services/invitations';
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const token_hash = requestUrl.searchParams.get('token_hash');
-  // const code = requestUrl.searchParams.get('code'); // Supabase sometimes uses 'code' instead
+  const code = requestUrl.searchParams.get('code'); // Supabase sometimes uses 'code' instead
   const type = requestUrl.searchParams.get('type') as EmailOtpType | null;
   const next = requestUrl.searchParams.get('next') ?? '/dashboard';
   const flow = requestUrl.searchParams.get('flow'); // Check for unified flow
   const origin = requestUrl.origin;
 
-  // Handle new unified signup flow immediately if flow=unified
-  if (flow === 'unified') {
-    // Redirect to the signup login page
-    const signupLoginUrl = new URL('/signup/login', origin);
-    signupLoginUrl.searchParams.set('confirmed', 'true');
-    return NextResponse.redirect(signupLoginUrl);
-  }
+  const supabase = await createSupabaseServerClient();
+  let verificationError = null;
 
-  if (token_hash && type) {
-    const supabase = await createSupabaseServerClient();
-    
+  // Handle code-based confirmation (new method for email signups)
+  if (code && !type) {
+    console.log('[Auth Confirm] Using exchangeCodeForSession for code:', code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    verificationError = error;
+    if (error) {
+      console.error('[Auth Confirm] exchangeCodeForSession failed:', error);
+    }
+  }
+  // Handle OTP-based confirmation (for recovery, magic links, etc.)
+  else if ((token_hash || code) && type) {
+    console.log('[Auth Confirm] Using verifyOtp with type:', type);
     const { error } = await supabase.auth.verifyOtp({
-      token_hash,
+      token_hash: token_hash || code!, // Use whichever is available
       type,
     });
+    verificationError = error;
+    if (error) {
+      console.error('[Auth Confirm] verifyOtp failed:', error);
+    }
+  } else {
+    console.log('[Auth Confirm] No valid confirmation parameters found');
+    verificationError = new Error('Invalid confirmation parameters');
+  }
 
-    if (!error) {
-      // Get the current user to check for pending invitations
-      const { data: { user } } = await supabase.auth.getUser();
-      // For password recovery, redirect to update-password page
-      if (type === 'recovery') {
-        const updatePasswordUrl = new URL('/auth/update-password', origin);
-        return NextResponse.redirect(updatePasswordUrl);
+  // If verification succeeded
+  if (!verificationError) {
+    // Get the current user to check for pending invitations
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Handle unified signup flow
+    if (flow === 'unified' && user) {
+      console.log(`[Unified Flow] Processing email confirmation for ${user.email}`);
+      
+      // Check if this is a warm prospect with an invitation token
+      const invitationToken = user.user_metadata?.invitation_token;
+      if (invitationToken) {
+        console.log(`[Unified Flow] Found invitation token for warm prospect: ${invitationToken}`);
+        
+        // Get the invitation details
+        const { data: invitation } = await supabase
+          .from('account_invitations')
+          .select('*, accounts!inner(name, slug)')
+          .eq('token', invitationToken)
+          .eq('email', user.email?.toLowerCase())
+          .single();
+        
+        if (invitation) {
+          console.log(`[Unified Flow] Found invitation for account ${invitation.account_id}`);
+          
+          // Accept the invitation and link user to account
+          try {
+            const result = await acceptInvitationAfterSignup(
+              invitationToken,
+              user.email!
+            );
+            
+            if (result.success) {
+              console.log(`[Unified Flow] Successfully linked user to account ${invitation.account_id}`);
+              
+              // Store account info in session for the pricing step
+              // Note: This won't work across tabs, but we handle that in the login page
+            } else {
+              console.error('[Unified Flow] Failed to accept invitation:', result.error);
+            }
+          } catch (err) {
+            console.error('[Unified Flow] Error accepting invitation:', err);
+          }
+        }
       }
       
-      // For email confirmation, check for cold signup with account creation or pending invitation
-      if (type === 'signup' || type === 'email') {
-        
-        // Legacy flow - Check if there's a pending invitation in the database
-        if (user) {
+      // Redirect to the signup login page
+      const signupLoginUrl = new URL('/signup/login', origin);
+      signupLoginUrl.searchParams.set('confirmed', 'true');
+      // If this is a warm prospect, add flow parameter
+      if (invitationToken) {
+        signupLoginUrl.searchParams.set('flow', 'invitation');
+      }
+      return NextResponse.redirect(signupLoginUrl);
+    }
+    
+    // For password recovery, redirect to update-password page
+    if (type === 'recovery') {
+      const updatePasswordUrl = new URL('/auth/update-password', origin);
+      return NextResponse.redirect(updatePasswordUrl);
+    }
+    
+    // For email confirmation, check for cold signup with account creation or pending invitation
+    if (type === 'signup' || type === 'email') {
+      
+      // Legacy flow - Check if there's a pending invitation in the database
+      if (user) {
           // Check if user already has an account
           const { data: existingAccount } = await supabase
             .from('account_users')
@@ -231,7 +296,6 @@ export async function GET(request: NextRequest) {
       const redirectTo = new URL(next, origin);
       return NextResponse.redirect(redirectTo);
     }
-  }
 
   // Verification failed - redirect to login with error
   const loginUrl = new URL('/login', origin);

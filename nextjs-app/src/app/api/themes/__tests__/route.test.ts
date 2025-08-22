@@ -83,7 +83,7 @@ describe('Theme API Routes', () => {
       expect(data.error).toBe('Not authenticated');
     });
 
-    it('should return 403 when user is not admin or staff', async () => {
+    it('should return themes when user is authenticated (regular users allowed)', async () => {
       const mockAuthClient = {
         auth: {
           getUser: vi.fn().mockResolvedValue({ 
@@ -96,14 +96,24 @@ describe('Theme API Routes', () => {
       vi.mocked(isAdminServer).mockResolvedValue(false);
       vi.mocked(isStaffServer).mockResolvedValue(false);
 
+      const mockServiceClient = {
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              order: vi.fn(() => Promise.resolve({ data: [], error: null })),
+            })),
+          })),
+        })),
+      };
+      vi.mocked(createAdminClient).mockReturnValue(mockServiceClient as unknown as ReturnType<typeof createAdminClient>);
+
       const request = new NextRequest('http://localhost:3000/api/themes');
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(403);
-      expect(data.error).toBe('Access denied. Admin or staff role required.');
-      expect(isAdminServer).toHaveBeenCalledWith('regular-user-id');
-      expect(isStaffServer).toHaveBeenCalledWith('regular-user-id');
+      // Themes GET allows all authenticated users
+      expect(response.status).toBe(200);
+      expect(Array.isArray(data)).toBe(true);
     });
 
     it('should return themes when user is admin', async () => {

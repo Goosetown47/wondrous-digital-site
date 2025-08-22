@@ -67,12 +67,8 @@ describe('Security Headers', () => {
 
     it('should set HSTS header in production', () => {
       const originalEnv = process.env.NODE_ENV;
-      // Use Object.defineProperty to override readonly property
-      Object.defineProperty(process.env, 'NODE_ENV', {
-        value: 'production',
-        writable: true,
-        configurable: true,
-      });
+      // Use vi.stubEnv to mock NODE_ENV
+      vi.stubEnv('NODE_ENV', 'production');
 
       applySecurityHeaders(mockResponse as unknown as NextResponse);
       
@@ -82,21 +78,14 @@ describe('Security Headers', () => {
       );
 
       // Restore original value
-      Object.defineProperty(process.env, 'NODE_ENV', {
-        value: originalEnv,
-        writable: true,
-        configurable: true,
-      });
+      vi.unstubAllEnvs();
+      vi.stubEnv('NODE_ENV', originalEnv);
     });
 
     it('should not set HSTS header in development', () => {
       const originalEnv = process.env.NODE_ENV;
-      // Use Object.defineProperty to override readonly property
-      Object.defineProperty(process.env, 'NODE_ENV', {
-        value: 'development',
-        writable: true,
-        configurable: true,
-      });
+      // Use vi.stubEnv to mock NODE_ENV
+      vi.stubEnv('NODE_ENV', 'development');
 
       applySecurityHeaders(mockResponse as unknown as NextResponse);
       
@@ -107,11 +96,8 @@ describe('Security Headers', () => {
       expect(hstsCall).toBeUndefined();
 
       // Restore original value
-      Object.defineProperty(process.env, 'NODE_ENV', {
-        value: originalEnv,
-        writable: true,
-        configurable: true,
-      });
+      vi.unstubAllEnvs();
+      vi.stubEnv('NODE_ENV', originalEnv);
     });
 
     it('should return the response object', () => {

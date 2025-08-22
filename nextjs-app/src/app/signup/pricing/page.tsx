@@ -66,12 +66,19 @@ export default function SignupPricingPage() {
       const storedAccountId = sessionStorage.getItem('signupAccountId');
       if (storedAccountId) {
         setAccountId(storedAccountId);
+        console.log('[SignupPricing] Using stored account ID:', storedAccountId);
         return;
       }
 
       // If no stored account ID, try to get from user's account
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        // Restore invitation token to sessionStorage if it exists in user metadata
+        // This ensures the stepper shows correctly for warm prospects
+        if (user.user_metadata?.invitation_token && !sessionStorage.getItem('invitationToken')) {
+          sessionStorage.setItem('invitationToken', user.user_metadata.invitation_token);
+        }
+        
         const { data: accountUser } = await supabase
           .from('account_users')
           .select('account_id')
@@ -80,6 +87,31 @@ export default function SignupPricingPage() {
         
         if (accountUser) {
           setAccountId(accountUser.account_id);
+          console.log('[SignupPricing] Found account ID from account_users:', accountUser.account_id);
+          // Also store it for future use
+          sessionStorage.setItem('signupAccountId', accountUser.account_id);
+        } else {
+          console.log('[SignupPricing] No account found for user');
+          
+          // Last resort: If warm prospect, try to get account from invitation
+          if (user.user_metadata?.invitation_token) {
+            console.log('[SignupPricing] Checking invitation for account...');
+            const { data: invitation } = await supabase
+              .from('account_invitations')
+              .select('account_id, accounts!inner(name)')
+              .eq('token', user.user_metadata.invitation_token)
+              .eq('email', user.email?.toLowerCase())
+              .single();
+            
+            if (invitation) {
+              console.log('[SignupPricing] Found account from invitation:', invitation.account_id);
+              setAccountId(invitation.account_id);
+              sessionStorage.setItem('signupAccountId', invitation.account_id);
+              if ('accounts' in invitation && invitation.accounts && !Array.isArray(invitation.accounts)) {
+                sessionStorage.setItem('signupAccountName', (invitation.accounts as { name: string }).name);
+              }
+            }
+          }
         }
       }
     };
