@@ -60,13 +60,31 @@ export default function ConfirmEmailPage() {
     setResendSuccess(false)
 
     try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
-      })
+      // Check if this is an invitation flow
+      const token = sessionStorage.getItem('invitationToken')
+      
+      if (token) {
+        // Use custom invitation resend for warm prospects
+        const response = await fetch('/api/invitations/resend', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        })
 
-      if (error) throw error
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || 'Failed to resend invitation')
+        }
+      } else {
+        // Use standard Supabase resend for cold signups
+        const supabase = createClient()
+        const { error } = await supabase.auth.resend({
+          type: 'signup',
+          email: email,
+        })
+
+        if (error) throw error
+      }
 
       setResendSuccess(true)
       // Reset success message after 5 seconds
