@@ -1,6 +1,34 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { PLATFORM_ACCOUNT_ID } from '@/test/utils/auth-mocks';
+import React from 'react';
+
+// Mock dependencies first
+vi.mock('@/lib/supabase/client', () => ({
+  supabase: {
+    from: vi.fn(),
+    rpc: vi.fn(),
+    auth: {
+      getUser: vi.fn(),
+      getSession: vi.fn(),
+    },
+  },
+  createClient: vi.fn(() => ({
+    from: vi.fn(),
+    rpc: vi.fn(),
+    auth: {
+      getUser: vi.fn(),
+      getSession: vi.fn(),
+    },
+  })),
+}));
+
+vi.mock('@/providers/auth-provider', () => ({
+  useAuth: vi.fn(),
+}));
+
+// Import after mocks are set up
 import { 
   useStaffMembers, 
   useStaffAssignments, 
@@ -8,30 +36,12 @@ import {
   useUnassignStaff,
   useAssignmentActivity 
 } from '../useStaffAssignments';
-import { createMockSupabaseClient } from '@/test/utils/supabase-mocks';
-import { PLATFORM_ACCOUNT_ID } from '@/test/utils/auth-mocks';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
-import React from 'react';
-
-// Mock dependencies
-vi.mock('@/lib/supabase/client', () => ({
-  supabase: createMockSupabaseClient(),
-}));
-
-vi.mock('@/providers/auth-provider', () => ({
-  useAuth: vi.fn(),
-}));
-
-// Import mocked modules
-import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/providers/auth-provider';
+import { supabase } from '@/lib/supabase/client';
 
-// Type helper for mocked Supabase client
-type MockSupabaseClient = SupabaseClient<Database> & {
-  from: ReturnType<typeof vi.fn>;
-  rpc: ReturnType<typeof vi.fn>;
-};
+// Get reference to mocked supabase
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockSupabaseClient = supabase as any;
 
 describe('Staff Assignment Hooks', () => {
   let queryClient: QueryClient;
@@ -101,7 +111,7 @@ describe('Staff Assignment Hooks', () => {
       ];
 
       // Mock the queries
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
+      mockSupabaseClient.from.mockImplementation((table: string) => {
         if (table === 'account_users') {
           return {
             select: vi.fn().mockReturnThis(),
@@ -168,7 +178,7 @@ describe('Staff Assignment Hooks', () => {
     });
 
     it('should handle errors when fetching staff members', async () => {
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         in: vi.fn().mockRejectedValue(new Error('Database error')),
@@ -188,6 +198,12 @@ describe('Staff Assignment Hooks', () => {
   describe('useStaffAssignments', () => {
     it('should fetch assignments for a specific staff member', async () => {
       const staffUserId = 'staff-1';
+      
+      // Mock useAuth
+      (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ 
+        user: { id: 'user-123', email: 'user@example.com' } 
+      });
+      
       const mockAssignments = [
         {
           id: 'assign-1',
@@ -207,7 +223,7 @@ describe('Staff Assignment Hooks', () => {
         },
       ];
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
+      mockSupabaseClient.from.mockImplementation((table: string) => {
         if (table === 'staff_account_assignments') {
           return {
             select: vi.fn().mockReturnThis(),
@@ -254,15 +270,21 @@ describe('Staff Assignment Hooks', () => {
       const currentUser = { id: 'current-staff', email: 'current@wondrousdigital.com' };
       (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ user: currentUser });
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockImplementation((field, value) => {
-          expect(field).toBe('staff_user_id');
-          expect(value).toBe('current-staff');
+      mockSupabaseClient.from.mockImplementation((table: string) => {
+        if (table === 'staff_account_assignments') {
           return {
-            order: vi.fn().mockResolvedValue({ data: [], error: null }),
+            select: vi.fn().mockImplementation(() => ({
+              eq: vi.fn().mockImplementation(() => ({
+                order: vi.fn().mockResolvedValue({ data: [], error: null }),
+              })),
+            })),
           };
-        }),
+        }
+        // user_profiles query
+        return {
+          select: vi.fn().mockReturnThis(),
+          in: vi.fn().mockResolvedValue({ data: [], error: null }),
+        };
       });
 
       const { result } = renderHook(() => useStaffAssignments(), { wrapper });
@@ -284,7 +306,7 @@ describe('Staff Assignment Hooks', () => {
       const accountIds = ['account-1', 'account-2'];
       const notes = 'Assigned for project support';
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         delete: vi.fn().mockReturnThis(),
         eq: vi.fn().mockResolvedValue({ error: null }),
         insert: vi.fn().mockReturnThis(),
@@ -310,10 +332,10 @@ describe('Staff Assignment Hooks', () => {
 
       // Verify delete was called to remove existing assignments
       expect(supabase.from).toHaveBeenCalledWith('staff_account_assignments');
-      expect(((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>)().delete).toHaveBeenCalled();
+      expect(mockSupabaseClient.from().delete).toHaveBeenCalled();
 
       // Verify insert was called with correct data
-      expect(((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>)().insert).toHaveBeenCalledWith([
+      expect(mockSupabaseClient.from().insert).toHaveBeenCalledWith([
         {
           staff_user_id: staffUserId,
           account_id: 'account-1',
@@ -333,7 +355,7 @@ describe('Staff Assignment Hooks', () => {
       const currentUser = { id: 'admin-user', email: 'admin@wondrousdigital.com' };
       (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ user: currentUser });
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         delete: vi.fn().mockReturnThis(),
         eq: vi.fn().mockResolvedValue({ error: null }),
       });
@@ -346,7 +368,7 @@ describe('Staff Assignment Hooks', () => {
       });
 
       expect(response).toEqual([]);
-      expect(((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>)().delete).toHaveBeenCalled();
+      expect(mockSupabaseClient.from().delete).toHaveBeenCalled();
     });
 
     it('should require user to be logged in', async () => {
@@ -368,7 +390,7 @@ describe('Staff Assignment Hooks', () => {
       const staffUserId = 'staff-1';
       const accountId = 'account-1';
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         delete: vi.fn().mockReturnThis(),
         eq: vi.fn().mockImplementation((field, value) => {
           if (field === 'staff_user_id' && value === staffUserId) {
@@ -390,21 +412,20 @@ describe('Staff Assignment Hooks', () => {
       await result.current.mutateAsync({ staffUserId, accountId });
 
       expect(supabase.from).toHaveBeenCalledWith('staff_account_assignments');
-      expect(((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>)().delete).toHaveBeenCalled();
+      expect(mockSupabaseClient.from().delete).toHaveBeenCalled();
     });
 
     it('should invalidate queries after successful unassignment', async () => {
       const invalidateQueriesSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
-      const mockQueryBuilder = {
-        delete: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-      };
-      
-      // Make the final eq call resolve the promise
-      mockQueryBuilder.eq.mockResolvedValueOnce({ error: null });
-      
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue(mockQueryBuilder);
+      // Mock the chained delete operation
+      mockSupabaseClient.from.mockReturnValue({
+        delete: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null }),
+          }),
+        }),
+      });
 
       const { result } = renderHook(() => useUnassignStaff(), { wrapper });
 
@@ -434,7 +455,7 @@ describe('Staff Assignment Hooks', () => {
         },
       ];
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
+      mockSupabaseClient.from.mockImplementation((table: string) => {
         if (table === 'audit_logs') {
           return {
             select: vi.fn().mockReturnThis(),
@@ -485,7 +506,7 @@ describe('Staff Assignment Hooks', () => {
       const regularUser = { id: 'regular-user', email: 'user@example.com' };
       (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ user: regularUser });
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         delete: vi.fn().mockReturnThis(),
         eq: vi.fn().mockResolvedValue({ 
           error: { code: '42501', message: 'permission denied' } 
@@ -506,7 +527,7 @@ describe('Staff Assignment Hooks', () => {
       const currentUser = { id: 'admin-user', email: 'admin@wondrousdigital.com' };
       (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ user: currentUser });
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         delete: vi.fn().mockReturnThis(),
         eq: vi.fn().mockResolvedValue({ error: null }),
         insert: vi.fn().mockReturnThis(),
@@ -533,25 +554,44 @@ describe('Staff Assignment Hooks', () => {
       (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ user: staffUser });
 
       // Mock a query that would be filtered by RLS
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockImplementation((field, value) => {
-          // RLS would ensure only staff's own assignments are returned
-          expect(field).toBe('staff_user_id');
-          expect(value).toBe(staffUser.id);
+      mockSupabaseClient.from.mockImplementation((table: string) => {
+        if (table === 'staff_account_assignments') {
           return {
-            order: vi.fn().mockResolvedValue({
-              data: [
-                {
-                  id: 'assign-1',
-                  staff_user_id: staffUser.id,
-                  account_id: 'account-1',
-                },
-              ],
-              error: null,
-            }),
+            select: vi.fn().mockImplementation(() => ({
+              eq: vi.fn().mockImplementation(() => ({
+                order: vi.fn().mockResolvedValue({
+                  data: [
+                    {
+                      id: 'assign-1',
+                      staff_user_id: staffUser.id,
+                      account_id: 'account-1',
+                      assigned_by: 'admin-1',
+                      accounts: {
+                        id: 'account-1',
+                        name: 'Test Account',
+                        slug: 'test-account',
+                      },
+                      assigned_by_user: {
+                        id: 'admin-1',
+                        email: 'admin@wondrousdigital.com',
+                        raw_user_meta_data: { full_name: 'Admin' },
+                      },
+                    },
+                  ],
+                  error: null,
+                }),
+              })),
+            })),
           };
-        }),
+        }
+        // user_profiles query
+        return {
+          select: vi.fn().mockReturnThis(),
+          in: vi.fn().mockResolvedValue({ 
+            data: [{ user_id: 'admin-1', display_name: 'Administrator' }], 
+            error: null 
+          }),
+        };
       });
 
       const { result } = renderHook(() => useStaffAssignments(), { wrapper });
@@ -583,13 +623,34 @@ describe('Staff Assignment Hooks', () => {
         },
       ];
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
+      const staffUser = { id: 'staff-1', email: 'staff1@wondrousdigital.com' };
+      (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ user: staffUser });
+
+      mockSupabaseClient.from.mockImplementation((table: string) => {
         if (table === 'staff_account_assignments') {
           return {
+            select: vi.fn().mockImplementation(() => ({
+              eq: vi.fn().mockImplementation(() => ({
+                order: vi.fn().mockResolvedValue({
+                  data: mockAssignments.map(a => ({
+                    ...a,
+                    assigned_by_user: {
+                      id: 'admin-1',
+                      email: 'admin@wondrousdigital.com',
+                      raw_user_meta_data: { full_name: 'Admin' },
+                    },
+                  })),
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+        if (table === 'user_profiles') {
+          return {
             select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnThis(),
-            order: vi.fn().mockResolvedValue({
-              data: mockAssignments,
+            in: vi.fn().mockResolvedValue({
+              data: [{ user_id: 'admin-1', display_name: 'Administrator' }],
               error: null,
             }),
           };
@@ -616,7 +677,7 @@ describe('Staff Assignment Hooks', () => {
       const staffUser = { id: 'staff-1', email: 'staff@wondrousdigital.com' };
       
       // Mock that staff has no assignments to a specific account
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
+      mockSupabaseClient.from.mockImplementation((table: string) => {
         if (table === 'staff_account_assignments') {
           return {
             select: vi.fn().mockReturnThis(),

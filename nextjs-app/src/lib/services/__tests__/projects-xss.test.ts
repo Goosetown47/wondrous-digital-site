@@ -200,50 +200,13 @@ describe('Project XSS Prevention', () => {
       );
     });
 
-    it('should sanitize descriptions by stripping dangerous tags', async () => {
-      // Mock successful update flow
-      const updateMock = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: { id: 'project-id', description: 'Safe description' },
-              error: null,
-            }),
-          }),
-        }),
-      });
-      
-      // Mock for the logProjectAction call
-      const fromMock = vi.fn();
-      fromMock.mockReturnValueOnce({
-        update: updateMock,
-      });
-      // Mock for audit log lookup
-      fromMock.mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: { account_id: 'test-account' }, error: null }),
-          }),
-        }),
-      });
-      // Mock for audit log insert
-      fromMock.mockReturnValueOnce({
-        insert: vi.fn().mockResolvedValue({ data: null, error: null }),
-      });
-      
-      vi.mocked(supabase.from).mockImplementation(fromMock);
-
+    it('should reject descriptions containing HTML', async () => {
       const updates = {
         description: '<script>alert("XSS")</script>Safe description',
       };
 
-      await updateProject('project-id', updates);
-      
-      // Verify dangerous content was sanitized
-      expect(updateMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          description: 'Safe description', // Script tag removed
-        })
+      await expect(updateProject('project-id', updates)).rejects.toThrow(
+        'Description cannot contain HTML or special characters'
       );
     });
 
@@ -289,45 +252,13 @@ describe('Project XSS Prevention', () => {
     });
 
     it('should enforce length limits', async () => {
-      const updateMock = vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: { id: 'project-id' },
-              error: null,
-            }),
-          }),
-        }),
-      });
-      
-      const fromMock = vi.fn();
-      fromMock.mockReturnValueOnce({
-        update: updateMock,
-      });
-      // Mock for audit log lookup
-      fromMock.mockReturnValueOnce({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({ data: { account_id: 'test-account' }, error: null }),
-          }),
-        }),
-      });
-      // Mock for audit log insert
-      fromMock.mockReturnValueOnce({
-        insert: vi.fn().mockResolvedValue({ data: null, error: null }),
-      });
-      
-      vi.mocked(supabase.from).mockImplementation(fromMock);
-
       const longName = 'a'.repeat(150); // Over 100 char limit
-      const longDescription = 'b'.repeat(600); // Over 500 char limit
       
       const updates = {
         name: longName,
-        description: longDescription,
       };
 
-      // Should throw error because truncated name won't match trimmed name
+      // Should throw error because the name would be truncated by sanitization
       await expect(updateProject('project-id', updates)).rejects.toThrow(
         'Project name cannot contain HTML or special characters'
       );

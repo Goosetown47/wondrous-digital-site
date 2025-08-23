@@ -14,14 +14,14 @@ export interface AccountWithStats extends Account {
 export interface CreateAccountData {
   name: string;
   slug: string;
-  plan: 'free' | 'pro' | 'enterprise';
+  tier: 'FREE' | 'BASIC' | 'PRO' | 'SCALE' | 'MAX';
   settings?: Record<string, unknown>;
 }
 
 export interface UpdateAccountData {
   name?: string;
   slug?: string;
-  plan?: 'free' | 'pro' | 'enterprise';
+  tier?: 'FREE' | 'BASIC' | 'PRO' | 'SCALE' | 'MAX';
   settings?: Record<string, unknown>;
 }
 
@@ -179,7 +179,7 @@ export async function createAccount(data: CreateAccountData): Promise<Account> {
     .insert({
       name: trimmedName,
       slug: trimmedSlug,
-      plan: data.plan,
+      tier: data.tier,
       settings: validatedSettings,
     })
     .select()
@@ -198,7 +198,7 @@ export async function createAccount(data: CreateAccountData): Promise<Account> {
       resource_id: account.id,
       metadata: {
         account_name: account.name,
-        plan: account.plan,
+        tier: account.tier,
       },
     });
 
@@ -246,8 +246,8 @@ export async function updateAccount(id: string, updates: UpdateAccountData): Pro
   }
   
   // Copy other fields
-  if (updates.plan !== undefined) {
-    sanitizedUpdates.plan = updates.plan;
+  if (updates.tier !== undefined) {
+    sanitizedUpdates.tier = updates.tier;
   }
   
   // Validate settings (including description)

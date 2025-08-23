@@ -35,7 +35,7 @@ const createAccountSchema = z.object({
     .max(50, 'Slug too long')
     .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens')
     .refine(slug => !slug.startsWith('-') && !slug.endsWith('-'), 'Slug cannot start or end with hyphen'),
-  plan: z.enum(['free', 'pro', 'enterprise']).describe('Please select a plan'),
+  tier: z.enum(['FREE', 'BASIC', 'PRO', 'SCALE', 'MAX']).describe('Please select a tier'),
   description: z.string().max(500, 'Description too long').optional(),
 });
 
@@ -57,7 +57,7 @@ export default function NewAccountPage() {
     defaultValues: {
       name: '',
       slug: '',
-      plan: 'free',
+      tier: 'FREE',
       description: '',
     },
   });
@@ -86,7 +86,7 @@ export default function NewAccountPage() {
       const newAccount = await createAccount.mutateAsync({
         name: data.name,
         slug: data.slug,
-        plan: data.plan,
+        tier: data.tier,
         settings: data.description ? { description: data.description } : {},
       });
       
@@ -203,16 +203,16 @@ export default function NewAccountPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="plan">Plan *</Label>
+                  <Label htmlFor="tier">Tier *</Label>
                   <Select
-                    onValueChange={(value: 'free' | 'pro' | 'enterprise') => setValue('plan', value)}
-                    defaultValue="free"
+                    onValueChange={(value: 'FREE' | 'BASIC' | 'PRO' | 'SCALE' | 'MAX') => setValue('tier', value)}
+                    defaultValue="FREE"
                   >
-                    <SelectTrigger className={errors.plan ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select a plan" />
+                    <SelectTrigger className={errors.tier ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="Select a tier" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="free">
+                      <SelectItem value="FREE">
                         <div className="flex items-center justify-between w-full">
                           <div>
                             <div className="font-medium">Free Plan</div>
@@ -225,7 +225,7 @@ export default function NewAccountPage() {
                           </div>
                         </div>
                       </SelectItem>
-                      <SelectItem value="pro">
+                      <SelectItem value="PRO">
                         <div className="flex items-center justify-between w-full">
                           <div>
                             <div className="font-medium">Pro Plan</div>
@@ -238,7 +238,7 @@ export default function NewAccountPage() {
                           </div>
                         </div>
                       </SelectItem>
-                      <SelectItem value="enterprise">
+                      <SelectItem value="MAX">
                         <div className="flex items-center justify-between w-full">
                           <div>
                             <div className="font-medium">Enterprise Plan</div>
@@ -253,8 +253,8 @@ export default function NewAccountPage() {
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  {errors.plan && (
-                    <p className="text-sm text-red-600">{errors.plan.message}</p>
+                  {errors.tier && (
+                    <p className="text-sm text-red-600">{errors.tier.message}</p>
                   )}
                 </div>
               </CardContent>

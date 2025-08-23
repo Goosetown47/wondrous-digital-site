@@ -1,11 +1,21 @@
 import type { Section } from '@/stores/builderStore';
 
+// Tier types
+export type TierName = 'FREE' | 'BASIC' | 'PRO' | 'SCALE' | 'MAX';
+
 // Multi-tenant entities
 export interface Account {
   id: string;
   name: string;
   slug: string;
-  plan: 'free' | 'pro' | 'enterprise';
+  tier: TierName; // Account subscription tier
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  subscription_status?: string | null;
+  setup_fee_paid?: boolean;
+  setup_fee_paid_at?: string | null;
+  grace_period_ends_at?: string | null;
+  has_perform_addon?: boolean;
   settings: Record<string, unknown>;
   created_at: string;
   updated_at: string;
@@ -167,6 +177,34 @@ export interface EmailPreferences {
   updated_at: string;
 }
 
+// Billing and tier management
+export interface TierFeatures {
+  id: string;
+  tier: TierName;
+  max_projects: number;
+  max_users: number;
+  custom_domains: boolean;
+  marketing_platform: boolean;
+  seo_platform: boolean;
+  features: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AccountBillingHistory {
+  id: string;
+  account_id: string;
+  event_type: string; // 'payment', 'tier_change', 'addon_change', 'refund', etc.
+  old_tier?: TierName | null;
+  new_tier?: TierName | null;
+  amount_cents?: number | null;
+  currency?: string;
+  stripe_event_id?: string | null;
+  stripe_invoice_id?: string | null;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+}
+
 // Database response types
 export interface Database {
   public: {
@@ -240,6 +278,16 @@ export interface Database {
         Row: EmailPreferences;
         Insert: Omit<EmailPreferences, 'created_at' | 'updated_at'>;
         Update: Partial<Omit<EmailPreferences, 'user_id' | 'created_at' | 'updated_at'>>;
+      };
+      tier_features: {
+        Row: TierFeatures;
+        Insert: Omit<TierFeatures, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<TierFeatures, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      account_billing_history: {
+        Row: AccountBillingHistory;
+        Insert: Omit<AccountBillingHistory, 'id' | 'created_at'>;
+        Update: never; // Billing history should never be updated
       };
     };
   };

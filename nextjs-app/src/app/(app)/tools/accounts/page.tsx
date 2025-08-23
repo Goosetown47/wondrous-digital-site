@@ -84,14 +84,17 @@ export default function AccountsPage() {
       key: 'plan',
       title: 'Plan',
       render: (account: AccountWithStats) => {
-        const planColors = {
+        const planColors: Record<string, string> = {
           free: 'bg-gray-100 text-gray-700',
+          basic: 'bg-green-100 text-green-700',
           pro: 'bg-blue-100 text-blue-700',
-          enterprise: 'bg-purple-100 text-purple-700',
+          scale: 'bg-indigo-100 text-indigo-700',
+          max: 'bg-purple-100 text-purple-700',
         };
+        const tierKey = account.tier?.toLowerCase() || 'free';
         return (
-          <Badge className={planColors[account.plan] || planColors.free}>
-            {account.plan.charAt(0).toUpperCase() + account.plan.slice(1)}
+          <Badge className={planColors[tierKey] || planColors.free}>
+            {account.tier || 'FREE'}
           </Badge>
         );
       },
@@ -229,9 +232,10 @@ export default function AccountsPage() {
       key: 'plan',
       label: 'Plan',
       options: [
-        { label: 'Free', value: 'free', count: accounts?.filter(a => a.plan === 'free').length },
-        { label: 'Pro', value: 'pro', count: accounts?.filter(a => a.plan === 'pro').length },
-        { label: 'Enterprise', value: 'enterprise', count: accounts?.filter(a => a.plan === 'enterprise').length },
+        { label: 'Free', value: 'FREE', count: accounts?.filter(a => a.tier === 'FREE').length },
+        { label: 'Pro', value: 'PRO', count: accounts?.filter(a => a.tier === 'PRO').length },
+        { label: 'Scale', value: 'SCALE', count: accounts?.filter(a => a.tier === 'SCALE').length },
+        { label: 'Max', value: 'MAX', count: accounts?.filter(a => a.tier === 'MAX').length },
       ],
     },
     {

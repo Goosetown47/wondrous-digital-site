@@ -28,10 +28,12 @@ function ProfileSetupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
+  const sessionId = searchParams.get('session_id'); // Stripe session ID for cold signups
   
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [invitation, setInvitation] = useState<InvitationData | null>(null);
+  const [stripeEmail, setStripeEmail] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   
   // Form fields
@@ -39,17 +41,22 @@ function ProfileSetupContent() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [accountName, setAccountName] = useState(''); // For cold signups
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!token) {
-      setError('No invitation token provided');
+    if (!token && !sessionId) {
+      setError('No invitation token or payment session provided');
       setLoading(false);
       return;
     }
     
-    loadInvitation();
-  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (token) {
+      loadInvitation();
+    } else if (sessionId) {
+      loadStripeSession();
+    }
+  }, [token, sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadInvitation = async () => {
     if (!token) return;
@@ -87,11 +94,41 @@ function ProfileSetupContent() {
     }
   };
 
+  const loadStripeSession = async () => {
+    if (!sessionId) return;
+    
+    try {
+      // Fetch session details from our API
+      const response = await fetch(`/api/stripe/session/${sessionId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to load payment session');
+      }
+      
+      const data = await response.json();
+      
+      if (data.email) {
+        setStripeEmail(data.email);
+        setEmail(data.email);
+      }
+      
+      setLoading(false);
+    } catch {
+      setError('Failed to load payment session');
+      setLoading(false);
+    }
+  };
+
   const validateForm = () => {
     const errors: Record<string, string> = {};
     
     if (!fullName.trim()) {
       errors.fullName = 'Full name is required';
+    }
+    
+    // Account name is required for cold signups (not invitations)
+    if (!invitation && stripeEmail && !accountName.trim()) {
+      errors.accountName = 'Company/Account name is required';
     }
     
     if (password.length < 8) {
@@ -109,7 +146,10 @@ function ProfileSetupContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm() || !invitation || !token) return;
+    if (!validateForm()) return;
+    
+    // Either invitation flow or cold signup flow must be present
+    if (!invitation && !stripeEmail) return;
     
     setSubmitting(true);
     setFormErrors({});
@@ -122,6 +162,10 @@ function ProfileSetupContent() {
         options: {
           data: {
             full_name: fullName,
+            // Include account name for cold signups to create account after email verification
+            ...(stripeEmail && !invitation && { account_name: accountName }),
+            // Include session ID for linking payment to account
+            ...(sessionId && { stripe_session_id: sessionId }),
           },
           emailRedirectTo: window.location.origin, // Redirect to current domain after email confirmation
         },
@@ -139,36 +183,50 @@ function ProfileSetupContent() {
       const needsEmailConfirmation = signUpData.user && !signUpData.user.confirmed_at;
 
       if (needsEmailConfirmation) {
-        // Redirect to email verification page
+        // Supabase will automatically send verification email via Resend SMTP
         toast.success('Account created! Please check your email to verify your account.');
         
         const verifyUrl = new URL('/auth/verify-email-pending', window.location.origin);
         verifyUrl.searchParams.set('email', email);
-        verifyUrl.searchParams.set('account', invitation.accounts.name);
-        verifyUrl.searchParams.set('token', token);
+        if (invitation && token) {
+          verifyUrl.searchParams.set('account', invitation.accounts.name);
+          verifyUrl.searchParams.set('token', token);
+        } else {
+          verifyUrl.searchParams.set('account', 'Wondrous Digital');
+          if (sessionId) {
+            verifyUrl.searchParams.set('session_id', sessionId);
+          }
+        }
         
         router.push(verifyUrl.toString());
       } else {
-        // Email already confirmed (rare case), accept invitation immediately
-        const response = await fetch('/api/invitations/accept-after-signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            token,
-            email: email 
-          }),
-        });
+        // Email already confirmed (rare case)
+        if (invitation && token) {
+          // Accept invitation if this is an invitation flow
+          const response = await fetch('/api/invitations/accept-after-signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              token,
+              email: email 
+            }),
+          });
 
-        const result = await response.json();
+          const result = await response.json();
 
-        if (!response.ok) {
-          throw new Error(result.error || 'Failed to accept invitation');
+          if (!response.ok) {
+            throw new Error(result.error || 'Failed to accept invitation');
+          }
+
+          toast.success('Account created and invitation accepted!');
+          
+          // Redirect to the account page
+          router.push(`/tools/accounts/${invitation.accounts.slug}`);
+        } else {
+          // Cold signup - account already created via webhook
+          toast.success('Account created successfully!');
+          router.push('/dashboard');
         }
-
-        toast.success('Account created and invitation accepted!');
-        
-        // Redirect to the account page
-        router.push(`/tools/accounts/${invitation.accounts.slug}`);
       }
     } catch (error) {
       console.error('Setup error:', error);
@@ -228,7 +286,7 @@ function ProfileSetupContent() {
     );
   }
 
-  if (!invitation) {
+  if (!invitation && !stripeEmail) {
     return null;
   }
 
@@ -241,19 +299,34 @@ function ProfileSetupContent() {
           </div>
           <CardTitle>Complete Your Profile</CardTitle>
           <CardDescription>
-            Set up your account to join {invitation.accounts.name}
+            {invitation 
+              ? `Set up your account to join ${invitation.accounts.name}`
+              : 'Set up your account to get started'
+            }
           </CardDescription>
         </CardHeader>
         
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {/* Invitation Info */}
-            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center gap-2 text-sm text-blue-700">
-                <Users className="h-4 w-4" />
-                <span>You're joining <strong>{invitation.accounts.name}</strong> as {invitation.role === 'account_owner' ? 'an Account Owner' : 'a User'}</span>
+            {invitation && (
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2 text-sm text-blue-700">
+                  <Users className="h-4 w-4" />
+                  <span>You're joining <strong>{invitation.accounts.name}</strong> as {invitation.role === 'account_owner' ? 'an Account Owner' : 'a User'}</span>
+                </div>
               </div>
-            </div>
+            )}
+            
+            {/* Payment Success Info for cold signups */}
+            {stripeEmail && (
+              <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                <div className="flex items-center gap-2 text-sm text-green-700">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>Payment successful! Complete your account setup below.</span>
+                </div>
+              </div>
+            )}
 
             {/* Email (read-only) */}
             <div className="space-y-2">
@@ -269,6 +342,31 @@ function ProfileSetupContent() {
                 className="bg-muted"
               />
             </div>
+
+            {/* Account/Company Name - Only for cold signups */}
+            {stripeEmail && !invitation && (
+              <div className="space-y-2">
+                <Label htmlFor="accountName">
+                  <Users className="inline h-4 w-4 mr-1" />
+                  Company/Account Name
+                </Label>
+                <Input
+                  id="accountName"
+                  type="text"
+                  placeholder="My Company"
+                  value={accountName}
+                  onChange={(e) => setAccountName(e.target.value)}
+                  disabled={submitting}
+                  className={formErrors.accountName ? 'border-red-500' : ''}
+                />
+                {formErrors.accountName && (
+                  <p className="text-sm text-red-500">{formErrors.accountName}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  This will be the name of your account in the platform
+                </p>
+              </div>
+            )}
 
             {/* Full Name */}
             <div className="space-y-2">

@@ -2,22 +2,56 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+
 ## 🚀 Project Overview
 
 This is a **Next.js 15 multi-tenant website builder platform**. All active development is in the `/nextjs-app/` directory. The legacy React/Vite app exists but is not in use.
 
-**Production Version:** v0.1.3 
-**Development Version:** v0.1.4 
+**Production Version:** v0.1.4 
+**Development Version:** v0.1.5 
 **Deployment Branch:** `nextjs-pagebuilder-core` (NOT master/main!)
+
 
 ## 📋 Essential Reading
 
 **IMPORTANT**: Before making any code changes, read these documents in `/nextjs-app/docs/`:
 
+### CORE PRINCIPLES
+
+#### YAGNI (You Aren't Gonna Need It)
+Avoid building functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
+
+#### KISS (Keep It Simple, Stupid)
+Simplicity should be a key goal in design. Choose straightforward solutions over complex ones whenever possible. Simple solutions are easier to understand, maintain, and debug.
+
+#### Design Principles
+- Dependency Inversion: High-level modules should not depend on low-level modules. Both should depend on abstractions.
+- Open/Closed Principle: Software entities should be open for extension but closed for modification.
+- Single Responsibility: Each function, class, and module should have one clear purpose.
+- Fail Fast: Check for potential errors early and raise exceptions immediately when issues occur.
+
+#### Updating Documents
+- ONLY update the ACTIVE-SPRINT.md file during development. The user will maintain BACKLOG and STATUS-LOG.
+
+#### File and Function Limits
+- Never create a file longer than 500 lines of code. If approaching this limit, refactor by splitting into modules.
+- Functions should be under 50 lines with a single, clear responsibility.
+- Classes should be under 100 lines and represent a single concept or entity.
+- Organize code into clearly separated modules, grouped by feature or responsibility.
+- Line length should be max 100 characters
+
+
+## DOCUMENTATION
+
+### Code Documentation
+- Every module should have a docstring explaining its purpose
+- Complex logic should have inline comments with # Reason: prefix
+- Keep README.md updated with setup instructions and examples
+- Maintain CHANGELOG.md for version history
+
 ### CONTEXT DOCS
 **[PRD Design & Build System](./nextjs-app/docs/PRD%20Design%20%26%20Build%20System.md)** - Product vision, architecture, and implementation phases
 **[STARTUP-PROMPT.md](./nextjs-app/docs/prompts/STARTUP-PROMPT.md)** - Quick context for new development sessions
-
 
 ### DEVELOPMENT DOCS
 1. **[CODE-CHECKLIST.md](./nextjs-app/docs/OPERATIONS/CODE-CHECKLIST.md)** - This document serves as a **MANDATORY** checklist that must be followed for every feature, fix, or code change. It was created after spending multiple days fixing 452 TypeScript errors, 304+ ESLint errors, and numerous build/deployment issues.
@@ -55,13 +89,11 @@ This is a **Next.js 15 multi-tenant website builder platform**. All active devel
 ### Per Packet Workflow:
 
   1. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
-  2. As you discover issues → Add to "Found Work" section:
-    - Critical → Must fix in current version
-    - Non-Critical → Defer to next version
-    - Tech Debt → Document for future
-  3. Update ACTIVE-STATUS.md → Log progress after each packet
-  4. Check off tasks → Mark complete in ACTIVE-SPRINT.md
-  5. [User will] Move to Sprint Backlog → When packet done, grab next
+    - First verify with user what dev mode each packet should use.
+    - ACTIVE SPRINT → Write in tasks from our LIFECYCLE process as part of the packet tasks.
+  2. Update ACTIVE-STATUS.md → Log progress after each packet
+  3. Check off tasks → Mark complete in ACTIVE-SPRINT.md
+  4. [User will] Move to Sprint Backlog → When packet done, grab next
 
 ### Daily Flow:
 
@@ -175,16 +207,21 @@ npx supabase db push --password 'MsDH6QjUsf6vXD3nCeYkBNiF'
 # Check migration status in DEV
 npx supabase migration list --password 'MsDH6QjUsf6vXD3nCeYkBNiF'
 
-# Create a new migration file
-echo "-- Your SQL here" > supabase/migrations/$(date +%Y%m%d_%H%M%S)_description.sql
+# Create a new migration file (replace 'description' with your feature name)
+echo "-- Your SQL here" > supabase/migrations/$(date +%Y%m%d%H%M%S)_description.sql
 ```
 
 ### Migration Naming Convention
 ```
-YYYYMMDD_HHMMSS_descriptive_name.sql
-# Or for related changes:
-YYYYMMDD_000001_feature_part1.sql
-YYYYMMDD_000002_feature_part2.sql
+# ALWAYS use full timestamp format to avoid conflicts:
+YYYYMMDDHHMMSS_descriptive_name.sql
+
+# Examples:
+20250820140000_pending_stripe_payments.sql  # Aug 20, 2025 at 2:00 PM
+20250820143000_fix_user_permissions.sql     # Aug 20, 2025 at 2:30 PM
+
+# IMPORTANT: Use 14 digits (no underscores in timestamp)
+# This allows multiple migrations per day without conflicts
 ```
 
 ### Environment Variables

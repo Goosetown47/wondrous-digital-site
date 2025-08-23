@@ -200,7 +200,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
               <div className="rounded-lg border p-4">
                 <div className="text-sm text-muted-foreground">Plan</div>
                 <p className="text-lg font-medium mt-1 capitalize">
-                  {project.accounts?.plan || 'Free'}
+                  {project.accounts?.tier || 'FREE'}
                 </p>
               </div>
               <div className="rounded-lg border p-4">

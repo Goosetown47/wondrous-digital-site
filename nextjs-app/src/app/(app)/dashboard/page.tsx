@@ -7,7 +7,7 @@ import { useAccountRole } from '@/hooks/useRole';
 import { supabase } from '@/lib/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building2, FolderOpen, Sparkles, Plus } from 'lucide-react';
+import { Building2, FolderOpen, Sparkles, Plus, CreditCard } from 'lucide-react';
 import { CreateProjectDialog } from '@/components/projects/CreateProjectDialog';
 
 export default function DashboardPage() {
@@ -78,7 +78,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Current Status */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Current Account</CardTitle>
@@ -89,9 +89,27 @@ export default function DashboardPage() {
               {currentAccount?.name || 'No account selected'}
             </div>
             {currentAccount && (
-              <p className="text-xs text-muted-foreground">
-                {currentAccount.plan} plan
-              </p>
+              <div className="flex items-center gap-2 mt-1">
+                {currentAccount.tier && (
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                    ${currentAccount.tier === 'FREE' ? 'bg-gray-100 text-gray-800' :
+                      currentAccount.tier === 'PRO' ? 'bg-blue-100 text-blue-800' :
+                      currentAccount.tier === 'SCALE' ? 'bg-purple-100 text-purple-800' :
+                      currentAccount.tier === 'MAX' ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-900' :
+                      'bg-green-100 text-green-800'}`}>
+                    {currentAccount.tier} {currentAccount.tier !== 'FREE' ? 'TIER' : 'PLAN'}
+                  </span>
+                )}
+                {currentAccount.subscription_status && currentAccount.tier !== 'FREE' && (
+                  <span className={`text-xs ${
+                    currentAccount.subscription_status === 'active' ? 'text-green-600' :
+                    currentAccount.subscription_status === 'trialing' ? 'text-blue-600' :
+                    'text-amber-600'
+                  }`}>
+                    • {currentAccount.subscription_status}
+                  </span>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -125,6 +143,34 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">
               {currentProject ? 'Click Builder in the menu' : 'Use the dropdown above'}
             </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Billing Status</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {currentAccount?.tier || 'FREE'}
+            </div>
+            <div className="space-y-1 mt-1">
+              {currentAccount?.subscription_status && (
+                <p className="text-xs text-muted-foreground">
+                  Status: <span className={`font-medium ${
+                    currentAccount.subscription_status === 'active' ? 'text-green-600' :
+                    currentAccount.subscription_status === 'trialing' ? 'text-blue-600' :
+                    'text-amber-600'
+                  }`}>{currentAccount.subscription_status}</span>
+                </p>
+              )}
+              {currentAccount?.setup_fee_paid && (
+                <p className="text-xs text-green-600">
+                  ✓ Setup fee paid
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

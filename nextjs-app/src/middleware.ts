@@ -3,6 +3,8 @@ import { createSupabaseClient } from '@/lib/supabase/middleware';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { env } from '@/env.mjs';
 import { applySecurityHeaders } from '@/lib/security-headers';
+import { validateCSRFRequest } from '@/lib/security/csrf';
+import { checkRateLimit, rateLimiters, createRateLimitResponse } from '@/lib/security/rate-limit';
 
 // Domains that should NOT be treated as customer domains
 const RESERVED_DOMAINS = [
@@ -15,6 +17,7 @@ const RESERVED_DOMAINS = [
 const RESERVED_SUBDOMAINS = [
   'app',      // Main application
   'www',      // Marketing site
+  'staging',  // Staging environment
   'sites',    // CNAME target for custom domains
   'api',      // API endpoints
   'admin',    // Admin panel
@@ -34,7 +37,10 @@ const PUBLIC_ROUTES = [
   '/auth/update-password',
   '/auth/verify-email-pending',
   '/invitation',
-  '/profile/setup'
+  '/profile/setup',
+  '/pricing',  // Allow cold visitors to see pricing
+  '/payment/success',  // Allow redirect after successful payment
+  '/payment/cancel'   // Allow redirect after cancelled payment
 ];
 
 export async function middleware(request: NextRequest) {
@@ -44,9 +50,47 @@ export async function middleware(request: NextRequest) {
   // Extract domain without port
   const domain = hostname.split(':')[0];
   
-  // Skip middleware for API routes and static files
+  // Handle API routes with CSRF protection and rate limiting
+  if (url.pathname.startsWith('/api/')) {
+    // Apply rate limiting based on endpoint
+    let rateLimitConfig = rateLimiters.api;
+    
+    if (url.pathname.startsWith('/api/signup')) {
+      rateLimitConfig = rateLimiters.signup;
+    } else if (url.pathname.startsWith('/api/auth/login')) {
+      rateLimitConfig = rateLimiters.login;
+    } else if (url.pathname.startsWith('/api/auth/reset-password')) {
+      rateLimitConfig = rateLimiters.passwordReset;
+    }
+    
+    const { allowed, resetAt } = await checkRateLimit(request, rateLimitConfig);
+    if (!allowed) {
+      return createRateLimitResponse(resetAt);
+    }
+    
+    // Skip CSRF for specific endpoints
+    const csrfExemptPaths = ['/api/csrf', '/api/auth/callback', '/api/stripe/webhook'];
+    const isExempt = csrfExemptPaths.some(path => url.pathname.startsWith(path));
+    
+    if (!isExempt && request.method !== 'GET') {
+      const isValid = await validateCSRFRequest(request);
+      if (!isValid) {
+        return new NextResponse(
+          JSON.stringify({ error: 'Invalid CSRF token' }),
+          { 
+            status: 403,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    }
+    
+    const response = NextResponse.next();
+    return applySecurityHeaders(response);
+  }
+  
+  // Skip middleware for static files
   if (
-    url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/_next/') ||
     url.pathname.startsWith('/static/') ||
     url.pathname.startsWith('/favicon.ico') ||
@@ -126,7 +170,26 @@ export async function middleware(request: NextRequest) {
       // Check if it's a reserved subdomain
       if (RESERVED_SUBDOMAINS.includes(subdomain)) {
         console.log(`[DOMAIN-ROUTING] Reserved subdomain detected: ${subdomain}`);
-        // Continue with normal routing for reserved subdomains
+        // Reserved subdomains should route to the main app, not look for projects
+        // Handle authentication for reserved subdomains
+        const isPublicRoute = PUBLIC_ROUTES.some(route => url.pathname.startsWith(route));
+        
+        if (!isPublicRoute) {
+          const { supabase, response } = createSupabaseClient(request);
+          const { data: { user }, error } = await supabase.auth.getUser();
+          
+          if (error || !user) {
+            const redirectUrl = new URL('/login', request.url);
+            redirectUrl.searchParams.set('redirectTo', url.pathname);
+            const redirectResponse = NextResponse.redirect(redirectUrl);
+            return applySecurityHeaders(redirectResponse);
+          }
+          
+          return applySecurityHeaders(response);
+        }
+        
+        const response = NextResponse.next();
+        return applySecurityHeaders(response);
       } else {
         // It's a project preview domain
         console.log(`[DOMAIN-ROUTING] Preview domain detected, slug: ${subdomain}`);

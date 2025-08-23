@@ -220,7 +220,7 @@ function NewProjectPageContent() {
                 ) : (
                   accounts?.map((account) => (
                     <SelectItem key={account.id} value={account.id}>
-                      {account.name} ({account.plan})
+                      {account.name} ({account.tier})
                     </SelectItem>
                   ))
                 )}

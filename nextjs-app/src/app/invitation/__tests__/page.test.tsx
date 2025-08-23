@@ -14,15 +14,25 @@ vi.mock('next/navigation', () => ({
   useRouter: () => mockUseRouter(),
 }));
 
-// Mock the InvitationCard component
-vi.mock('@/components/invitation/invitation-card', () => ({
-  InvitationCard: vi.fn(({ invitation, token }) => (
-    <div data-testid="invitation-card">
-      <p>Account: {invitation.accounts?.name}</p>
-      <p>Token: {token}</p>
-    </div>
-  )),
+// Mock Supabase client
+vi.mock('@/lib/supabase/client', () => ({
+  supabase: {
+    auth: {
+      getUser: vi.fn(),
+    },
+    from: vi.fn(),
+  },
 }));
+
+// Mock sonner toast
+vi.mock('sonner', () => ({
+  toast: {
+    error: vi.fn(),
+    success: vi.fn(),
+  },
+}));
+
+import { supabase } from '@/lib/supabase/client';
 
 // Mock fetch
 global.fetch = vi.fn();
@@ -37,10 +47,17 @@ describe('InvitationPage', () => {
       get: vi.fn(() => null),
     });
 
+    // Mock supabase auth check
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { user: null } as any,
+      error: null,
+    });
+
     render(<InvitationPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Unable to process invitation')).toBeInTheDocument();
+      expect(screen.getByText('Invalid Invitation')).toBeInTheDocument();
       expect(screen.getByText('No invitation token provided')).toBeInTheDocument();
     });
   });
@@ -50,7 +67,7 @@ describe('InvitationPage', () => {
       get: vi.fn(() => 'test-token'),
     });
 
-    (global.fetch as jest.Mock).mockImplementationOnce(
+    vi.mocked(global.fetch).mockImplementationOnce(
       () => new Promise(() => {}) // Never resolves to keep loading
     );
 
@@ -70,32 +87,46 @@ describe('InvitationPage', () => {
       get: vi.fn(() => 'valid-token'),
     });
 
+    // Mock supabase auth check
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { user: null } as any,
+      error: null,
+    });
+
     const mockInvitation = {
       id: '123',
       token: 'valid-token',
       email: 'test@example.com',
       role: 'user',
+      accepted_at: null,
+      declined_at: null,
+      cancelled_at: null,
       accounts: {
         name: 'Test Account',
         slug: 'test-account',
       },
-      inviter: {
-        email: 'inviter@example.com',
-      },
       expires_at: new Date(Date.now() + 86400000).toISOString(),
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockInvitation,
-    });
+    // Mock supabase invitation lookup
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: mockInvitation,
+            error: null,
+          }),
+        }),
+      }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     render(<InvitationPage />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('invitation-card')).toBeInTheDocument();
-      expect(screen.getByText('Account: Test Account')).toBeInTheDocument();
-      expect(screen.getByText('Token: valid-token')).toBeInTheDocument();
+      expect(screen.getByText('Team Invitation')).toBeInTheDocument();
+      expect(screen.getByText(/You've been invited to join Test Account/i)).toBeInTheDocument();
     });
   });
 
@@ -104,21 +135,46 @@ describe('InvitationPage', () => {
       get: vi.fn(() => 'expired-token'),
     });
 
+    // Mock supabase auth check
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { user: null } as any,
+      error: null,
+    });
+
     const mockInvitation = {
-      expired: true,
-      expires_at: new Date(Date.now() - 86400000).toISOString(),
+      id: '456',
+      token: 'expired-token',
+      email: 'expired@example.com',
+      role: 'user',
+      accepted_at: null,
+      declined_at: null,
+      cancelled_at: null,
+      accounts: {
+        name: 'Test Account',
+        slug: 'test-account',
+      },
+      expires_at: new Date(Date.now() - 86400000).toISOString(), // Yesterday
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockInvitation,
-    });
+    // Mock supabase invitation lookup
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: mockInvitation,
+            error: null,
+          }),
+        }),
+      }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     render(<InvitationPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Unable to process invitation')).toBeInTheDocument();
-      expect(screen.getByText('This invitation has expired')).toBeInTheDocument();
+      expect(screen.getByText('Invitation Expired')).toBeInTheDocument();
+      expect(screen.getByText(/invitation has expired/i)).toBeInTheDocument();
     });
   });
 
@@ -127,20 +183,46 @@ describe('InvitationPage', () => {
       get: vi.fn(() => 'accepted-token'),
     });
 
+    // Mock supabase auth check
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { user: null } as any,
+      error: null,
+    });
+
     const mockInvitation = {
+      id: '789',
+      token: 'accepted-token',
+      email: 'accepted@example.com',
+      role: 'user',
       accepted_at: new Date().toISOString(),
+      declined_at: null,
+      cancelled_at: null,
+      accounts: {
+        name: 'Test Account',
+        slug: 'test-account',
+      },
+      expires_at: new Date(Date.now() + 86400000).toISOString(),
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockInvitation,
-    });
+    // Mock supabase invitation lookup
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: mockInvitation,
+            error: null,
+          }),
+        }),
+      }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     render(<InvitationPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Unable to process invitation')).toBeInTheDocument();
-      expect(screen.getByText('This invitation has already been accepted')).toBeInTheDocument();
+      expect(screen.getByText('Invitation Already Accepted')).toBeInTheDocument();
+      expect(screen.getByText(/already been accepted/i)).toBeInTheDocument();
     });
   });
 
@@ -149,16 +231,31 @@ describe('InvitationPage', () => {
       get: vi.fn(() => 'invalid-token'),
     });
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({ error: 'Invitation not found' }),
+    // Mock supabase auth check
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { user: null } as any,
+      error: null,
     });
+
+    // Mock supabase invitation lookup with error
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: null,
+            error: { message: 'Invitation not found' },
+          }),
+        }),
+      }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
 
     render(<InvitationPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Unable to process invitation')).toBeInTheDocument();
-      expect(screen.getByText('Invitation not found')).toBeInTheDocument();
+      expect(screen.getByText('Invalid Invitation')).toBeInTheDocument();
+      expect(screen.getByText('Invalid invitation token')).toBeInTheDocument();
     });
   });
 
@@ -167,13 +264,19 @@ describe('InvitationPage', () => {
       get: vi.fn(() => null),
     });
 
+    // Mock supabase auth check
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { user: null } as any,
+      error: null,
+    });
+
     render(<InvitationPage />);
 
     await waitFor(() => {
-      const loginLink = screen.getByText('Go to login page');
-      expect(loginLink).toBeInTheDocument();
-      loginLink.click();
-      expect(mockPush).toHaveBeenCalledWith('/login');
+      const emailLink = screen.getByText('hello@wondrousdigital.com');
+      expect(emailLink).toBeInTheDocument();
+      expect(emailLink).toHaveAttribute('href', 'mailto:hello@wondrousdigital.com');
     });
   });
 });

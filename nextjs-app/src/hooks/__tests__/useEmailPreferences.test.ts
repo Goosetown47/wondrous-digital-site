@@ -1,15 +1,24 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useEmailPreferences, useUpdateEmailPreferences } from '../useEmailPreferences';
-import { createMockSupabaseClient } from '@/test/utils/supabase-mocks';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
 import React from 'react';
 
-// Mock dependencies
+// Mock dependencies first
 vi.mock('@/lib/supabase/client', () => ({
-  supabase: createMockSupabaseClient(),
+  supabase: {
+    from: vi.fn(),
+    auth: {
+      getUser: vi.fn(),
+      getSession: vi.fn(),
+    },
+  },
+  createClient: vi.fn(() => ({
+    from: vi.fn(),
+    auth: {
+      getUser: vi.fn(),
+      getSession: vi.fn(),
+    },
+  })),
 }));
 
 vi.mock('@/providers/auth-provider', () => ({
@@ -20,15 +29,14 @@ vi.mock('@/components/ui/use-toast', () => ({
   toast: vi.fn(),
 }));
 
-// Import mocked modules
-import { supabase } from '@/lib/supabase/client';
+// Import after mocks are set up
+import { useEmailPreferences, useUpdateEmailPreferences } from '../useEmailPreferences';
 import { useAuth } from '@/providers/auth-provider';
-// import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabase/client';
 
-// Type helper for mocked Supabase client
-type MockSupabaseClient = SupabaseClient<Database> & {
-  from: ReturnType<typeof vi.fn>;
-};
+// Get reference to mocked supabase
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockSupabaseClient = supabase as any;
 
 describe('Email Preferences Hooks', () => {
   let queryClient: QueryClient;
@@ -62,7 +70,7 @@ describe('Email Preferences Hooks', () => {
         updated_at: '2024-01-15T10:00:00Z',
       };
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
@@ -78,7 +86,7 @@ describe('Email Preferences Hooks', () => {
       });
 
       expect(result.current.data).toEqual(mockPreferences);
-      expect(supabase.from).toHaveBeenCalledWith('email_preferences');
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith('email_preferences');
     });
 
     it('should create default preferences if none exist', async () => {
@@ -93,8 +101,11 @@ describe('Email Preferences Hooks', () => {
         updated_at: '2024-01-01T00:00:00Z',
       };
 
+      // Track the insert mock
+      const insertMock = vi.fn().mockReturnThis();
+      
       // First query returns not found
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      mockSupabaseClient.from.mockReturnValueOnce({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
@@ -104,8 +115,8 @@ describe('Email Preferences Hooks', () => {
       });
 
       // Insert query returns new preferences
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValueOnce({
-        insert: vi.fn().mockReturnThis(),
+      mockSupabaseClient.from.mockReturnValueOnce({
+        insert: insertMock,
         select: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
           data: defaultPreferences,
@@ -120,7 +131,7 @@ describe('Email Preferences Hooks', () => {
       });
 
       expect(result.current.data).toEqual(defaultPreferences);
-      expect(((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>)().insert).toHaveBeenCalledWith({
+      expect(insertMock).toHaveBeenCalledWith({
         user_id: mockUser.id,
         marketing_emails: true,
         product_updates: true,
@@ -131,7 +142,7 @@ describe('Email Preferences Hooks', () => {
     });
 
     it('should handle database errors', async () => {
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
@@ -178,7 +189,7 @@ describe('Email Preferences Hooks', () => {
         updated_at: new Date().toISOString(),
       };
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         update: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         select: vi.fn().mockReturnThis(),
@@ -194,11 +205,13 @@ describe('Email Preferences Hooks', () => {
         await result.current.mutateAsync(updates);
       });
 
-      expect(((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>)().update).toHaveBeenCalledWith({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect(((supabase as any).from as ReturnType<typeof vi.fn>)().update).toHaveBeenCalledWith({
         ...updates,
         updated_at: expect.any(String),
       });
-      expect(((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>)().eq).toHaveBeenCalledWith('user_id', mockUser.id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect(((supabase as any).from as ReturnType<typeof vi.fn>)().eq).toHaveBeenCalledWith('user_id', mockUser.id);
     });
 
     it('should update query cache on success', async () => {
@@ -214,7 +227,7 @@ describe('Email Preferences Hooks', () => {
         updated_at: new Date().toISOString(),
       };
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         update: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         select: vi.fn().mockReturnThis(),
@@ -238,7 +251,7 @@ describe('Email Preferences Hooks', () => {
     it('should handle update errors', async () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         update: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         select: vi.fn().mockReturnThis(),
@@ -282,7 +295,7 @@ describe('Email Preferences Hooks', () => {
         billing_notifications: false, // Should be protected
       };
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         update: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         select: vi.fn().mockReturnThis(),
@@ -304,7 +317,7 @@ describe('Email Preferences Hooks', () => {
 
     it('should ensure preferences are user-specific', async () => {
       // RLS ensures only current user's preferences are accessible
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockImplementation((field, value) => {
           // RLS would ensure only current user's preferences are accessible
@@ -334,7 +347,7 @@ describe('Email Preferences Hooks', () => {
       const updates2 = { weekly_digest: true };
 
       let updateCount = 0;
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         update: vi.fn().mockImplementation((data) => {
           updateCount++;
           return {
@@ -380,7 +393,7 @@ describe('Email Preferences Hooks', () => {
         updated_at: new Date().toISOString(),
       };
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         update: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         select: vi.fn().mockReturnThis(),
@@ -397,7 +410,8 @@ describe('Email Preferences Hooks', () => {
       });
 
       // Verify only optional preferences were updated
-      expect(((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>)().update).toHaveBeenCalledWith({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect(((supabase as any).from as ReturnType<typeof vi.fn>)().update).toHaveBeenCalledWith({
         ...unsubscribeUpdates,
         updated_at: expect.any(String),
       });
@@ -421,7 +435,7 @@ describe('Email Preferences Hooks', () => {
         // Missing created_at and updated_at
       };
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({
@@ -442,7 +456,7 @@ describe('Email Preferences Hooks', () => {
     it('should handle partial updates correctly', async () => {
       const partialUpdate = { weekly_digest: false };
 
-      ((supabase as MockSupabaseClient).from as ReturnType<typeof vi.fn>).mockReturnValue({
+      mockSupabaseClient.from.mockReturnValue({
         update: vi.fn().mockImplementation((data) => {
           // Ensure only specified fields are updated
           expect(data).toHaveProperty('weekly_digest', false);

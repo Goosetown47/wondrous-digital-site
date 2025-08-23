@@ -103,15 +103,29 @@ export function AccountOverview({ account }: AccountOverviewProps) {
               <code className="text-sm bg-muted px-2 py-1 rounded">{account.slug}</code>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Plan</span>
+              <span className="text-sm font-medium">Tier</span>
               <Badge className={
-                account.plan === 'free' ? 'bg-gray-100 text-gray-700' :
-                account.plan === 'pro' ? 'bg-blue-100 text-blue-700' :
-                'bg-purple-100 text-purple-700'
+                account.tier === 'FREE' ? 'bg-gray-100 text-gray-700' :
+                account.tier === 'PRO' ? 'bg-blue-100 text-blue-700' :
+                account.tier === 'SCALE' ? 'bg-purple-100 text-purple-700' :
+                account.tier === 'MAX' ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-900' :
+                'bg-green-100 text-green-700'
               }>
-                {account.plan.charAt(0).toUpperCase() + account.plan.slice(1)}
+                {account.tier || 'FREE'}
               </Badge>
             </div>
+            {account.subscription_status && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Subscription</span>
+                <span className={`text-sm font-medium ${
+                  account.subscription_status === 'active' ? 'text-green-600' :
+                  account.subscription_status === 'trialing' ? 'text-blue-600' :
+                  'text-amber-600'
+                }`}>
+                  {account.subscription_status}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Created</span>
               <span className="text-sm">{format(new Date(account.created_at), 'MMM d, yyyy')}</span>

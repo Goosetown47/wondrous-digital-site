@@ -73,7 +73,7 @@ export function AccountAssignmentDropdown({ user }: AccountAssignmentDropdownPro
     
     // Apply plan filter
     if (planFilter !== 'all') {
-      filtered = filtered.filter(a => a.plan === planFilter);
+      filtered = filtered.filter(a => a.tier?.toLowerCase() === planFilter);
     }
     
     // Apply search filter
@@ -103,7 +103,7 @@ export function AccountAssignmentDropdown({ user }: AccountAssignmentDropdownPro
   // Get unique plans from all accounts for filter
   const availablePlans = useMemo(() => {
     if (!allAccounts) return [];
-    const plans = new Set(allAccounts.map(a => a.plan));
+    const plans = new Set(allAccounts.map(a => a.tier?.toLowerCase()));
     return Array.from(plans).filter(Boolean);
   }, [allAccounts]);
   
@@ -343,9 +343,9 @@ export function AccountAssignmentDropdown({ user }: AccountAssignmentDropdownPro
                             className="text-sm cursor-pointer flex-1 flex items-center"
                           >
                             {account.name}
-                            {account.plan && account.plan !== 'free' && (
+                            {account.tier && account.tier !== 'FREE' && (
                               <Badge variant="outline" className="ml-2 text-[10px] px-1 py-0">
-                                {account.plan}
+                                {account.tier}
                               </Badge>
                             )}
                           </Label>

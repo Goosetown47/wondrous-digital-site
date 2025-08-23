@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
           id,
           name,
           slug,
-          plan
+          tier
         )
       `)
       .order('created_at', { ascending: false });

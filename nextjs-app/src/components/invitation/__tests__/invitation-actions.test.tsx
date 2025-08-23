@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import type { InvitationWithAccount } from '@/lib/services/invitations';
 
 // Mock next/navigation
 const mockPush = vi.fn();

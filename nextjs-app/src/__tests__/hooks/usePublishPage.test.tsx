@@ -127,12 +127,13 @@ describe('useUnpublishedChanges', () => {
     expect(mockedPageHasUnpublishedChanges).toHaveBeenCalledWith('test-page-id');
   });
 
-  it('should return false when pageId is undefined', async () => {
+  it('should return undefined when pageId is undefined', async () => {
     const { result } = renderHook(() => useUnpublishedChanges(undefined), { wrapper });
 
-    await waitFor(() => {
-      expect(result.current.data).toBe(false);
-    });
+    // Query should be disabled when pageId is undefined
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.isSuccess).toBe(false);
 
     expect(mockedPageHasUnpublishedChanges).not.toHaveBeenCalled();
   });

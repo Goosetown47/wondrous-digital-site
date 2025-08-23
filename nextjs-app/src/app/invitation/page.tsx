@@ -88,12 +88,18 @@ function InvitationContent() {
 
   const handleAcceptNewUser = () => {
     if (!token || !invitation) return;
-    // Redirect to profile setup with the token
-    router.push(`/profile/setup?token=${token}`);
+    // All invited users go through unified signup with pre-filled email
+    router.push(`/signup?token=${token}&email=${invitation.email}&flow=invitation`);
   };
 
   const handleAcceptExistingUser = async () => {
     if (!invitation || !token) return;
+    
+    // For account_owner invitations, redirect to signup flow
+    if (invitation.role === 'account_owner') {
+      router.push(`/signup?token=${token}&email=${invitation.email}&flow=invitation`);
+      return;
+    }
     
     setProcessing(true);
     

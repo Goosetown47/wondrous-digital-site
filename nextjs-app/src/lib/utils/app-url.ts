@@ -3,8 +3,9 @@
  * 
  * Priority order:
  * 1. NEXT_PUBLIC_APP_URL - Explicitly set (useful for local dev)
- * 2. VERCEL_URL - Automatically set by Vercel for deployments
- * 3. Fallback to production URL
+ * 2. NEXT_PUBLIC_ENV=staging - Returns staging.wondrousdigital.com
+ * 3. VERCEL_URL - Automatically set by Vercel for deployments
+ * 4. Fallback to production URL
  */
 
 /**
@@ -16,6 +17,11 @@ export function getAppUrl(includeProtocol = true): string {
   // Check for explicitly set URL (local development)
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL;
+  }
+
+  // Check for staging environment
+  if (process.env.NEXT_PUBLIC_ENV === 'staging') {
+    return 'https://staging.wondrousdigital.com';
   }
 
   // Check for Vercel automatic URL (preview and production deployments)

@@ -120,10 +120,12 @@ function AccountDetailPageContent() {
     setDeleteDialog({ open: false });
   };
 
-  const planColors = {
+  const planColors: Record<string, string> = {
     free: 'bg-gray-100 text-gray-700',
+    basic: 'bg-green-100 text-green-700',
     pro: 'bg-blue-100 text-blue-700',
-    enterprise: 'bg-purple-100 text-purple-700',
+    scale: 'bg-purple-100 text-purple-700',
+    max: 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-900',
   };
 
   return (
@@ -141,8 +143,8 @@ function AccountDetailPageContent() {
             <div>
               <div className="flex items-center space-x-3">
                 <h2 className="text-3xl font-bold tracking-tight">{account.name}</h2>
-                <Badge className={planColors[account.plan] || planColors.free}>
-                  {account.plan.charAt(0).toUpperCase() + account.plan.slice(1)}
+                <Badge className={planColors[account.tier?.toLowerCase()] || planColors.free}>
+                  {account.tier}
                 </Badge>
                 {accountStatus?.isSuspended ? (
                   <Badge variant="destructive">Suspended</Badge>

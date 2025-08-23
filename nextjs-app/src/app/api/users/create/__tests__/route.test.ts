@@ -211,7 +211,7 @@ describe('POST /api/users/create', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe('Validation failed');
+    expect(data.error).toBe('Invalid email address');
     expect(data.details).toBeDefined();
   });
 

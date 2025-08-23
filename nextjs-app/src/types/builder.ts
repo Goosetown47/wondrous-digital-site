@@ -7,6 +7,7 @@ export interface Type {
   description: string | null;
   icon: string | null; // optional icon identifier
   schema: Record<string, unknown> | null; // optional JSON schema
+  tier_restrictions?: string[] | null; // Array of tier names that can access this type
   metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
@@ -37,6 +38,7 @@ export interface LabDraft {
   status: 'draft' | 'testing' | 'ready' | 'promoted';
   content_hash: string | null; // SHA-256 hash of content for change detection
   library_version: number | null; // Version of linked library item
+  tier_restrictions?: string[] | null; // Array of tier names that can access this draft
   metadata: Record<string, unknown>;
   created_by: string | null;
   created_at: string;
@@ -49,6 +51,7 @@ export interface Theme {
   name: string;
   description: string | null;
   variables: ThemeVariables;
+  tier_restrictions?: string[] | null; // Array of tier names that can access this theme
   metadata: Record<string, unknown>;
   created_by: string | null;
   created_at: string;
@@ -118,6 +121,7 @@ export interface LibraryItem {
   version: number;
   source_draft_id: string | null;
   theme_id: string | null;
+  tier_restrictions?: string[] | null; // Array of tier names that can access this item
   usage_count: number;
   metadata: Record<string, unknown>;
   created_by: string | null;

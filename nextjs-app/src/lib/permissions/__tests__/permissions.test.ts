@@ -154,34 +154,52 @@ describe('Permission System', () => {
     it('should check role permissions for non-admin users', async () => {
       const userScenario = createTestScenario('regularUser');
       
-      // First check isAdmin - returns false
-      const mockQuery1 = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue({
-          data: [],
-          error: null
-        })
-      };
+      let callCount = 0;
       
-      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery1 as any);
-
-      // Then check user permissions
-      const mockQuery2 = {
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: {
-            role: 'user',
-            roles: {
-              permissions: ['projects.read', 'projects.use']
-            }
-          },
-          error: null
-        })
-      };
-      
-      vi.mocked(mockSupabase.from).mockReturnValueOnce(mockQuery2 as any);
+      // Mock all three queries that hasPermission makes
+      vi.mocked(mockSupabase.from).mockImplementation(() => {
+        callCount++;
+        
+        // First call: check for admin in account_users
+        if (callCount === 1) {
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            limit: vi.fn().mockResolvedValue({
+              data: [],
+              error: null
+            })
+          } as any;
+        }
+        
+        // Second call: get user role in account_users
+        if (callCount === 2) {
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({
+              data: { role: 'user' },
+              error: null
+            })
+          } as any;
+        }
+        
+        // Third call: get permissions from roles table
+        if (callCount === 3) {
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({
+              data: {
+                permissions: ['projects.read', 'projects.use']
+              },
+              error: null
+            })
+          } as any;
+        }
+        
+        return {} as any;
+      });
 
       const result = await hasPermission(
         userScenario.user.id,

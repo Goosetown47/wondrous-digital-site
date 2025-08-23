@@ -49,13 +49,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Could not generate unique account slug' }, { status: 500 });
     }
 
-    // Create the account
+    // Check for pending payment before creating account
+    const { data: pendingPayment } = await serviceClient
+      .from('pending_stripe_payments')
+      .select('*')
+      .eq('email', user.email?.toLowerCase())
+      .is('processed_at', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    // Create the account with appropriate tier
     const { data: account, error: accountError } = await serviceClient
       .from('accounts')
       .insert({
         name: name.trim(),
         slug: uniqueSlug,
-        plan: 'free',
+        tier: pendingPayment?.tier || 'FREE',
+        stripe_customer_id: pendingPayment?.stripe_customer_id || null,
+        stripe_subscription_id: pendingPayment?.stripe_subscription_id || null,
+        subscription_status: pendingPayment ? 'active' : null,
+        setup_fee_paid: pendingPayment ? true : false,
+        setup_fee_paid_at: pendingPayment ? new Date().toISOString() : null,
         settings: {
           ...settings,
           created_via: 'onboarding',
@@ -88,6 +103,34 @@ export async function POST(request: NextRequest) {
         .eq('id', account.id);
       
       return NextResponse.json({ error: 'Failed to assign account ownership' }, { status: 500 });
+    }
+
+    // If we applied a pending payment, mark it as processed
+    if (pendingPayment) {
+      await serviceClient
+        .from('pending_stripe_payments')
+        .update({ processed_at: new Date().toISOString() })
+        .eq('id', pendingPayment.id);
+      
+      // Log to billing history
+      await serviceClient
+        .from('account_billing_history')
+        .insert({
+          account_id: account.id,
+          event_type: 'payment_processed_from_pending',
+          new_tier: pendingPayment.tier,
+          amount_cents: pendingPayment.amount_paid,
+          currency: pendingPayment.currency,
+          stripe_event_id: pendingPayment.stripe_session_id,
+          metadata: {
+            pending_payment_id: pendingPayment.id,
+            stripe_customer_id: pendingPayment.stripe_customer_id,
+            stripe_subscription_id: pendingPayment.stripe_subscription_id,
+            original_created_at: pendingPayment.created_at,
+          },
+        });
+      
+      console.log(`[Account Creation] Applied pending ${pendingPayment.tier} payment for ${user.email}`);
     }
 
     // Create audit log entry
