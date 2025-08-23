@@ -1,6 +1,7 @@
 /**
  * Environment detection utilities
  * Helps determine which environment the app is running in
+ * Configured for staging deployment: Jan 23, 2025
  */
 
 export type Environment = 'development' | 'staging' | 'production' | 'preview';
