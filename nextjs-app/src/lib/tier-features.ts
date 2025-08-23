@@ -27,47 +27,47 @@ export const TIER_LIMITS: Record<TierName, TierLimits> = {
   },
   BASIC: {
     projects: 3,
-    users: 3,
+    users: 1,  // Updated from 3 to 1
     customDomains: true,
     advancedAnalytics: false,
-    prioritySupport: false,
+    prioritySupport: false,  // Regular support
     whiteLabel: false,
     apiAccess: false,
     seoTools: false,
-    marketingPlatform: false,
+    marketingPlatform: false,  // No Smart Marketing Platform
   },
   PRO: {
-    projects: 10,
-    users: 10,
+    projects: 5,  // Updated from 10 to 5
+    users: 3,  // Updated from 10 to 3
     customDomains: true,
     advancedAnalytics: true,
-    prioritySupport: true,
+    prioritySupport: true,  // Premium support
     whiteLabel: false,
     apiAccess: true,
     seoTools: false,
-    marketingPlatform: true,
+    marketingPlatform: true,  // Smart Marketing Platform included
   },
   SCALE: {
-    projects: 50,
-    users: 50,
+    projects: 10,  // Updated from 50 to 10
+    users: 5,  // Updated from 50 to 5
     customDomains: true,
     advancedAnalytics: true,
-    prioritySupport: true,
+    prioritySupport: true,  // Premium support
     whiteLabel: true,
     apiAccess: true,
     seoTools: false,
-    marketingPlatform: true,
+    marketingPlatform: true,  // Smart Marketing Platform included
   },
   MAX: {
-    projects: -1, // Unlimited
-    users: -1, // Unlimited
+    projects: 25,  // Updated from unlimited to 25
+    users: 10,  // Updated from unlimited to 10
     customDomains: true,
     advancedAnalytics: true,
-    prioritySupport: true,
+    prioritySupport: true,  // Premium support
     whiteLabel: true,
     apiAccess: true,
     seoTools: false,
-    marketingPlatform: true,
+    marketingPlatform: true,  // Smart Marketing Platform included
   },
 };
 
@@ -129,8 +129,8 @@ export function canCreateMore(
   const tier = account.tier || 'FREE';
   const limit = TIER_LIMITS[tier][resource];
   
-  // -1 means unlimited
-  return limit === -1 || currentCount < limit;
+  // Check if current count is below the limit
+  return currentCount < limit;
 }
 
 /**
@@ -140,13 +140,12 @@ export function getRemainingCount(
   account: Pick<Account, 'tier'> | null,
   resource: 'projects' | 'users',
   currentCount: number
-): number | 'unlimited' {
+): number {
   if (!account) return 0;
   
   const tier = account.tier || 'FREE';
   const limit = TIER_LIMITS[tier][resource];
   
-  if (limit === -1) return 'unlimited';
   return Math.max(0, limit - currentCount);
 }
 
@@ -215,16 +214,12 @@ export function getTierFeatures(tier: TierName, hasPerformAddon = false): string
   const limits = TIER_LIMITS[tier];
   const features: string[] = [];
   
-  if (limits.projects === -1) {
-    features.push('Unlimited projects');
-  } else if (limits.projects > 0) {
+  if (limits.projects > 0) {
     features.push(`Up to ${limits.projects} project${limits.projects > 1 ? 's' : ''}`);
   }
   
-  if (limits.users === -1) {
-    features.push('Unlimited team members');
-  } else if (limits.users > 0) {
-    features.push(`Up to ${limits.users} team member${limits.users > 1 ? 's' : ''}`);
+  if (limits.users > 0) {
+    features.push(`Up to ${limits.users} user account${limits.users > 1 ? 's' : ''}`);
   }
   
   if (limits.customDomains) features.push('Custom domains');

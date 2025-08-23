@@ -28,47 +28,47 @@ const TIER_LIMITS: Record<TierName, TierLimits> = {
   },
   BASIC: {
     projects: 3,
-    users: 3,
+    users: 1,  // Updated from 3 to 1
     customDomains: true,
     advancedAnalytics: false,
-    prioritySupport: false,
+    prioritySupport: false,  // Regular support
     whiteLabel: false,
     apiAccess: false,
     seoTools: false,
-    marketingPlatform: false,
+    marketingPlatform: false,  // No Smart Marketing Platform
   },
   PRO: {
-    projects: 10,
-    users: 10,
+    projects: 5,  // Updated from 10 to 5
+    users: 3,  // Updated from 10 to 3
     customDomains: true,
     advancedAnalytics: true,
-    prioritySupport: true,
+    prioritySupport: true,  // Premium support
     whiteLabel: false,
     apiAccess: true,
     seoTools: false,
-    marketingPlatform: true,
+    marketingPlatform: true,  // Smart Marketing Platform included
   },
   SCALE: {
-    projects: 50,
-    users: 50,
+    projects: 10,  // Updated from 50 to 10
+    users: 5,  // Updated from 50 to 5
     customDomains: true,
     advancedAnalytics: true,
-    prioritySupport: true,
+    prioritySupport: true,  // Premium support
     whiteLabel: true,
     apiAccess: true,
     seoTools: false,
-    marketingPlatform: true,
+    marketingPlatform: true,  // Smart Marketing Platform included
   },
   MAX: {
-    projects: -1, // Unlimited
-    users: -1, // Unlimited
+    projects: 25,  // Updated from unlimited to 25
+    users: 10,  // Updated from unlimited to 10
     customDomains: true,
     advancedAnalytics: true,
-    prioritySupport: true,
+    prioritySupport: true,  // Premium support
     whiteLabel: true,
     apiAccess: true,
     seoTools: false,
-    marketingPlatform: true,
+    marketingPlatform: true,  // Smart Marketing Platform included
   },
 };
 
@@ -119,8 +119,8 @@ export function useAccountTier() {
     currentCount: number
   ): boolean => {
     const limit = effectiveLimits[resource];
-    // -1 means unlimited
-    return limit === -1 || currentCount < limit;
+    // Check if current count is below the limit
+    return currentCount < limit;
   };
   
   /**
@@ -129,9 +129,8 @@ export function useAccountTier() {
   const getRemainingCount = (
     resource: 'projects' | 'users',
     currentCount: number
-  ): number | 'unlimited' => {
+  ): number => {
     const limit = effectiveLimits[resource];
-    if (limit === -1) return 'unlimited';
     return Math.max(0, limit - currentCount);
   };
   
