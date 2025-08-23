@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { WEBHOOK_EVENTS } from '@/lib/stripe/config';
 import { verifyWebhookSignature, updateAccountTier, startGracePeriod } from '@/lib/stripe/utils';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
+import { getEnvironmentName, getStripeMode } from '@/lib/utils/environment';
 import type { TierName } from '@/types/database';
 import type Stripe from 'stripe';
 
@@ -10,6 +11,8 @@ import type Stripe from 'stripe';
 export async function POST(request: NextRequest) {
   console.log('🔔 WEBHOOK ENDPOINT HIT');
   console.log('Timestamp:', new Date().toISOString());
+  console.log('Environment:', getEnvironmentName());
+  console.log('Stripe Mode:', getStripeMode());
   
   try {
     const body = await request.text();

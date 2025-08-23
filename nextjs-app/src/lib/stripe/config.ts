@@ -1,9 +1,11 @@
 import Stripe from 'stripe';
 import { getAppUrl } from '@/lib/utils/app-url';
+import { getStripeMode, getEnvironmentName } from '@/lib/utils/environment';
 
 /**
  * Stripe configuration
  * Lazy loads the Stripe SDK to avoid initialization at module load time
+ * Supports both test and live modes based on environment
  */
 
 let stripeInstance: Stripe | null = null;
@@ -18,6 +20,12 @@ export function getStripe(): Stripe {
     
     if (!secretKey) {
       throw new Error('STRIPE_SECRET_KEY is not configured');
+    }
+
+    // Log Stripe mode for debugging (only in development)
+    if (process.env.NODE_ENV === 'development') {
+      const mode = getStripeMode();
+      console.log(`🔑 Initializing Stripe in ${mode} mode for ${getEnvironmentName()}`);
     }
 
     stripeInstance = new Stripe(secretKey, {

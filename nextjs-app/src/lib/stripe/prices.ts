@@ -1,22 +1,21 @@
 import type { TierName } from '@/types/database';
+import { getStripeMode } from '@/lib/utils/environment';
 
 /**
  * Stripe price IDs for each tier
- * These need to be created in the Stripe Dashboard and added here
- * 
- * TODO: Replace these with actual price IDs from Stripe Dashboard
+ * Supports both test and production modes
  */
 
 interface TierPricing {
   monthlyPriceId: string;
-  yearlyPriceId?: string; // For future use in PACKET 3
+  yearlyPriceId?: string;
   setupFeeId: string;
   displayPrice: number; // In cents
   setupFeeAmount: number; // In cents
 }
 
-// PRODUCTION Stripe Price IDs from the dashboard
-const PRICE_IDS: Record<Exclude<TierName, 'FREE' | 'BASIC'>, TierPricing> = {
+// PRODUCTION Stripe Price IDs
+const PRODUCTION_PRICE_IDS: Record<Exclude<TierName, 'FREE' | 'BASIC'>, TierPricing> = {
   PRO: {
     monthlyPriceId: 'price_1RgXbeAyYiuNghuYZ17FC9MK', // PRO Monthly $397 PROD
     yearlyPriceId: 'price_1RwqKuAyYiuNghuY3zj9y8Ho', // PRO Yearly $4,287 PROD
@@ -40,6 +39,32 @@ const PRICE_IDS: Record<Exclude<TierName, 'FREE' | 'BASIC'>, TierPricing> = {
   },
 };
 
+// TEST MODE Stripe Price IDs
+// TODO: Replace these with your actual test price IDs from Stripe Dashboard
+const TEST_PRICE_IDS: Record<Exclude<TierName, 'FREE' | 'BASIC'>, TierPricing> = {
+  PRO: {
+    monthlyPriceId: 'price_TEST_PRO_MONTHLY', // TODO: Replace with actual test price ID
+    yearlyPriceId: 'price_TEST_PRO_YEARLY', // TODO: Replace with actual test price ID
+    setupFeeId: 'price_TEST_SETUP_FEE', // TODO: Replace with actual test price ID
+    displayPrice: 39700, // $397 - same as production
+    setupFeeAmount: 150000, // $1500 - same as production
+  },
+  SCALE: {
+    monthlyPriceId: 'price_TEST_SCALE_MONTHLY', // TODO: Replace with actual test price ID
+    yearlyPriceId: 'price_TEST_SCALE_YEARLY', // TODO: Replace with actual test price ID
+    setupFeeId: 'price_TEST_SETUP_FEE', // TODO: Replace with actual test price ID
+    displayPrice: 69700, // $697 - same as production
+    setupFeeAmount: 150000, // $1500 - same as production
+  },
+  MAX: {
+    monthlyPriceId: 'price_TEST_MAX_MONTHLY', // TODO: Replace with actual test price ID
+    yearlyPriceId: 'price_TEST_MAX_YEARLY', // TODO: Replace with actual test price ID
+    setupFeeId: 'price_TEST_SETUP_FEE', // TODO: Replace with actual test price ID
+    displayPrice: 99700, // $997 - same as production
+    setupFeeAmount: 150000, // $1500 - same as production
+  },
+};
+
 // PERFORM addon pricing (for future use in PACKET 3)
 export const PERFORM_ADDON_PRICING = {
   monthlyPriceId: 'price_1RgXdcAyYiuNghuYDXhEEKyM', // PERFORM Monthly $459 PROD
@@ -56,6 +81,14 @@ export const BASIC_PRICING = {
 };
 
 /**
+ * Get the appropriate price IDs based on current environment
+ */
+function getPriceIds(): Record<Exclude<TierName, 'FREE' | 'BASIC'>, TierPricing> {
+  const stripeMode = getStripeMode();
+  return stripeMode === 'live' ? PRODUCTION_PRICE_IDS : TEST_PRICE_IDS;
+}
+
+/**
  * Get pricing information for a tier
  */
 export function getPricesByTier(tier: TierName): TierPricing | null {
@@ -64,7 +97,8 @@ export function getPricesByTier(tier: TierName): TierPricing | null {
     return null;
   }
   
-  return PRICE_IDS[tier];
+  const priceIds = getPriceIds();
+  return priceIds[tier];
 }
 
 /**
@@ -74,10 +108,11 @@ export function getPurchasableTiers(): Array<{
   tier: TierName;
   pricing: TierPricing;
 }> {
+  const priceIds = getPriceIds();
   return [
-    { tier: 'PRO', pricing: PRICE_IDS.PRO },
-    { tier: 'SCALE', pricing: PRICE_IDS.SCALE },
-    { tier: 'MAX', pricing: PRICE_IDS.MAX },
+    { tier: 'PRO', pricing: priceIds.PRO },
+    { tier: 'SCALE', pricing: priceIds.SCALE },
+    { tier: 'MAX', pricing: priceIds.MAX },
   ];
 }
 
