@@ -170,7 +170,26 @@ export async function middleware(request: NextRequest) {
       // Check if it's a reserved subdomain
       if (RESERVED_SUBDOMAINS.includes(subdomain)) {
         console.log(`[DOMAIN-ROUTING] Reserved subdomain detected: ${subdomain}`);
-        // Continue with normal routing for reserved subdomains
+        // Reserved subdomains should route to the main app, not look for projects
+        // Handle authentication for reserved subdomains
+        const isPublicRoute = PUBLIC_ROUTES.some(route => url.pathname.startsWith(route));
+        
+        if (!isPublicRoute) {
+          const { supabase, response } = createSupabaseClient(request);
+          const { data: { user }, error } = await supabase.auth.getUser();
+          
+          if (error || !user) {
+            const redirectUrl = new URL('/login', request.url);
+            redirectUrl.searchParams.set('redirectTo', url.pathname);
+            const redirectResponse = NextResponse.redirect(redirectUrl);
+            return applySecurityHeaders(redirectResponse);
+          }
+          
+          return applySecurityHeaders(response);
+        }
+        
+        const response = NextResponse.next();
+        return applySecurityHeaders(response);
       } else {
         // It's a project preview domain
         console.log(`[DOMAIN-ROUTING] Preview domain detected, slug: ${subdomain}`);
