@@ -27,21 +27,13 @@ Add a custom domain like `staging.wondrousdigital.com`:
 2. Add `staging.wondrousdigital.com`
 3. Configure DNS with your provider
 
-## Step 3: Update Stripe Test Price IDs
+## Step 3: ✅ Stripe Test Price IDs (Already Configured)
 
-Edit `/lib/stripe/prices.ts` and replace the TODO placeholders with your actual test price IDs:
-
-```typescript
-const TEST_PRICE_IDS = {
-  PRO: {
-    monthlyPriceId: 'price_[YOUR_TEST_PRO_MONTHLY_ID]',
-    yearlyPriceId: 'price_[YOUR_TEST_PRO_YEARLY_ID]',
-    setupFeeId: 'price_[YOUR_TEST_SETUP_FEE_ID]',
-    // ...
-  },
-  // ... etc for SCALE and MAX
-}
-```
+The test price IDs have been configured in `/lib/stripe/prices.ts`:
+- PRO, SCALE, MAX tiers with monthly/yearly pricing
+- Marketing Platform setup fee ($1,500)
+- SEO Platform setup fee ($750)
+- PERFORM addon (for future use)
 
 ## Step 4: Configure Environment Variables in Vercel
 
