@@ -17,6 +17,7 @@ const RESERVED_DOMAINS = [
 const RESERVED_SUBDOMAINS = [
   'app',      // Main application
   'www',      // Marketing site
+  'staging',  // Staging environment
   'sites',    // CNAME target for custom domains
   'api',      // API endpoints
   'admin',    // Admin panel
