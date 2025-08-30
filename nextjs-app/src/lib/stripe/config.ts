@@ -71,6 +71,7 @@ export const WEBHOOK_EVENTS = {
   SUBSCRIPTION_UPDATED: 'customer.subscription.updated',
   SUBSCRIPTION_DELETED: 'customer.subscription.deleted',
   INVOICE_PAID: 'invoice.paid',
+  INVOICE_PAYMENT_SUCCEEDED: 'invoice.payment_succeeded',
   CUSTOMER_UPDATED: 'customer.updated',
 } as const;
 

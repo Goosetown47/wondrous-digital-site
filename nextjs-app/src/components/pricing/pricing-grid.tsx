@@ -30,10 +30,10 @@ export function PricingGrid({
             key={tier}
             tier={tier}
             name={features.name}
-            description={features.description}
+            description=""
             monthlyPrice={pricing.displayPrice}
             setupFee={pricing.setupFeeAmount}
-            features={features.features}
+            features={[...features.marketingFeatures, ...features.platformFeatures]}
             isPopular={features.highlighted}
             currentPlan={currentPlan}
             isAuthenticated={isAuthenticated}

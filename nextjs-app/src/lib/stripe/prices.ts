@@ -122,6 +122,11 @@ export function getPricesByTier(tier: TierName): TierPricing | null {
 }
 
 /**
+ * Export TIER_PRICING for direct access
+ */
+export const TIER_PRICING = getPriceIds();
+
+/**
  * Get all purchasable tiers with their pricing
  */
 export function getPurchasableTiers(): Array<{
@@ -142,51 +147,60 @@ export function getPurchasableTiers(): Array<{
  */
 export const TIER_FEATURES: Record<Exclude<TierName, 'FREE' | 'BASIC'>, {
   name: string;
-  description: string;
-  features: string[];
+  marketingFeatures: string[];
+  platformFeatures: string[];
   highlighted?: boolean;
 }> = {
   PRO: {
-    name: 'Professional',
-    description: 'Perfect for growing businesses',
-    features: [
-      '5 Projects',
-      '3 Team Members',
-      'Custom Domains',
-      'Marketing Platform Access',
-      'Priority Support',
-      'Remove Watermark',
-      'Smart Sections',
+    name: 'PRO',
+    marketingFeatures: [
+      '10,000 emails',
+      '250 SMS/calls',
+      '1,000 AI words',
+      '100 premium automation executions',
+      '25 workflow AI executions',
+      'Unlimited forms/calendar bookings',
+    ],
+    platformFeatures: [
+      '3 user accounts',
+      '5 projects',
+      'Custom domains',
+      'Premium support',
     ],
   },
   SCALE: {
-    name: 'Scale',
-    description: 'Built for expanding teams',
+    name: 'SCALE',
     highlighted: true, // Popular badge
-    features: [
-      '10 Projects',
-      '5 Team Members',
-      'Custom Domains',
-      'Marketing Platform Access',
-      'Priority Support',
-      'Remove Watermark',
-      'Smart Sections',
-      'Advanced Analytics',
+    marketingFeatures: [
+      '20,000 emails',
+      '750 SMS/calls',
+      '5,000 AI words',
+      '500 premium automation executions',
+      '150 workflow AI executions',
+      'Unlimited forms/calendar bookings',
+    ],
+    platformFeatures: [
+      '5 user accounts',
+      '10 projects',
+      'Custom domains',
+      'Premium support',
     ],
   },
   MAX: {
-    name: 'Maximum',
-    description: 'Enterprise-ready solution',
-    features: [
-      '25 Projects',
-      '10 Team Members',
-      'Custom Domains',
-      'Marketing Platform Access',
-      'Dedicated Support',
-      'Remove Watermark',
-      'Smart Sections',
-      'Advanced Analytics',
-      'White Label Options',
+    name: 'MAX',
+    marketingFeatures: [
+      '45,000 emails',
+      '1,500 SMS/calls',
+      '10,000 AI words',
+      '1,000 premium automation executions',
+      '300 workflow AI executions',
+      'Unlimited forms/calendar bookings',
+    ],
+    platformFeatures: [
+      '10 user accounts',
+      '25 projects',
+      'Custom domains',
+      'Premium support',
     ],
   },
 };

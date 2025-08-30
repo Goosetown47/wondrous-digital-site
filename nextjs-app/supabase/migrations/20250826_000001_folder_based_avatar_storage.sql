@@ -9,6 +9,11 @@ DROP POLICY IF EXISTS "Users can delete their own avatar" ON storage.objects;
 -- Create new folder-based policies
 -- Each user can only manage files in their own folder (user_id/*)
 
+-- Drop new policies if they exist (in case of re-run)
+DROP POLICY IF EXISTS "Users can upload to their own folder" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update files in their own folder" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete files in their own folder" ON storage.objects;
+
 CREATE POLICY "Users can upload to their own folder"
 ON storage.objects
 FOR INSERT
@@ -31,6 +36,7 @@ WITH CHECK (
   AND (storage.foldername(name))[1] = auth.uid()::text
 );
 
+DROP POLICY IF EXISTS "Anyone can view avatars" ON storage.objects;
 CREATE POLICY "Anyone can view avatars"
 ON storage.objects
 FOR SELECT

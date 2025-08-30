@@ -18,6 +18,9 @@ CREATE INDEX IF NOT EXISTS idx_stripe_webhook_logs_created_at ON public.stripe_w
 -- Add RLS policies
 ALTER TABLE public.stripe_webhook_logs ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policy if it exists
+DROP POLICY IF EXISTS "Webhook logs are admin only" ON public.stripe_webhook_logs;
+
 -- Only system/admin can view webhook logs (no user access)
 CREATE POLICY "Webhook logs are admin only" ON public.stripe_webhook_logs
   FOR ALL

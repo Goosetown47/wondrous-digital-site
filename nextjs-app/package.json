@@ -30,7 +30,8 @@
     "import:component": "tsx scripts/import-components.ts import",
     "reconcile-payments": "tsx src/scripts/reconcile-pending-payments.ts",
     "import:list": "tsx scripts/import-components.ts list",
-    "import:all-shadcn": "tsx scripts/import-components.ts import --source shadcn --all"
+    "import:all-shadcn": "tsx scripts/import-components.ts import --source shadcn --all",
+    "test:emails": "tsx src/scripts/send-test-emails.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -55,6 +56,7 @@
     "@radix-ui/react-toggle": "^1.1.9",
     "@radix-ui/react-tooltip": "^1.2.7",
     "@react-email/components": "^0.3.2",
+    "@react-email/render": "^1.2.1",
     "@sentry/nextjs": "^9.42.1",
     "@stripe/react-stripe-js": "^3.9.0",
     "@stripe/stripe-js": "^7.8.0",
@@ -110,7 +112,7 @@
     "jsdom": "^26.1.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
-    "tsx": "^4.20.3",
+    "tsx": "^4.20.5",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   }

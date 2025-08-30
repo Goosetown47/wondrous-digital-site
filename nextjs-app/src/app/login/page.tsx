@@ -74,6 +74,31 @@ function LoginPageContent() {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
+        // Check if user is in unified signup flow
+        if (user.user_metadata?.signup_flow === 'unified') {
+          // Check if they have completed signup (have an account)
+          const { data: accountUser } = await supabase
+            .from('account_users')
+            .select('account_id')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (!accountUser) {
+            // User hasn't completed signup - resume where they left off
+            const invitationToken = user.user_metadata?.invitation_token;
+            
+            if (invitationToken) {
+              // Warm prospect - go to profile step
+              window.location.href = '/signup/profile?flow=invitation';
+            } else {
+              // Cold prospect - go to account setup
+              window.location.href = '/signup/account';
+            }
+            return;
+          }
+          // If they have an account, continue with normal flow to dashboard
+        }
+        
         // Check for any pending invitations for this user
         const { data: pendingInvitation } = await supabase
           .from('account_invitations')

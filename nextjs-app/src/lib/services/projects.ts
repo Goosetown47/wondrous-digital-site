@@ -66,7 +66,7 @@ export async function getProjectById(projectId: string) {
         id,
         name,
         slug,
-        plan
+        tier
       )
     `)
     .eq('id', projectId)

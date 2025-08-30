@@ -42,6 +42,8 @@ export async function POST() {
     const returnUrl = `${getAppUrl()}/billing`;
 
     // Create billing portal session
+    // Note: Customer portal must be configured in Stripe Dashboard (test mode)
+    // Go to: https://dashboard.stripe.com/test/settings/billing/portal
     const session = await stripe.billingPortal.sessions.create({
       customer: accountUser.accounts.stripe_customer_id,
       return_url: returnUrl,

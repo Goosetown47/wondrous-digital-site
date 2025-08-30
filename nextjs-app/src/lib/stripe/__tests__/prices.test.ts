@@ -58,26 +58,29 @@ describe('Stripe Prices', () => {
   describe('TIER_FEATURES', () => {
     it('should have features defined for PRO tier', () => {
       expect(TIER_FEATURES.PRO).toBeDefined();
-      expect(TIER_FEATURES.PRO.name).toBe('Professional');
-      expect(TIER_FEATURES.PRO.description).toBeDefined();
-      expect(TIER_FEATURES.PRO.features).toBeInstanceOf(Array);
-      expect(TIER_FEATURES.PRO.features.length).toBeGreaterThan(0);
+      expect(TIER_FEATURES.PRO.name).toBe('PRO');
+      expect(TIER_FEATURES.PRO.marketingFeatures).toBeInstanceOf(Array);
+      expect(TIER_FEATURES.PRO.platformFeatures).toBeInstanceOf(Array);
+      expect(TIER_FEATURES.PRO.marketingFeatures.length).toBeGreaterThan(0);
+      expect(TIER_FEATURES.PRO.platformFeatures.length).toBeGreaterThan(0);
     });
 
     it('should have features defined for SCALE tier', () => {
       expect(TIER_FEATURES.SCALE).toBeDefined();
-      expect(TIER_FEATURES.SCALE.name).toBe('Scale');
-      expect(TIER_FEATURES.SCALE.description).toBeDefined();
-      expect(TIER_FEATURES.SCALE.features).toBeInstanceOf(Array);
-      expect(TIER_FEATURES.SCALE.features.length).toBeGreaterThan(0);
+      expect(TIER_FEATURES.SCALE.name).toBe('SCALE');
+      expect(TIER_FEATURES.SCALE.marketingFeatures).toBeInstanceOf(Array);
+      expect(TIER_FEATURES.SCALE.platformFeatures).toBeInstanceOf(Array);
+      expect(TIER_FEATURES.SCALE.marketingFeatures.length).toBeGreaterThan(0);
+      expect(TIER_FEATURES.SCALE.platformFeatures.length).toBeGreaterThan(0);
     });
 
     it('should have features defined for MAX tier', () => {
       expect(TIER_FEATURES.MAX).toBeDefined();
-      expect(TIER_FEATURES.MAX.name).toBe('Maximum');
-      expect(TIER_FEATURES.MAX.description).toBeDefined();
-      expect(TIER_FEATURES.MAX.features).toBeInstanceOf(Array);
-      expect(TIER_FEATURES.MAX.features.length).toBeGreaterThan(0);
+      expect(TIER_FEATURES.MAX.name).toBe('MAX');
+      expect(TIER_FEATURES.MAX.marketingFeatures).toBeInstanceOf(Array);
+      expect(TIER_FEATURES.MAX.platformFeatures).toBeInstanceOf(Array);
+      expect(TIER_FEATURES.MAX.marketingFeatures.length).toBeGreaterThan(0);
+      expect(TIER_FEATURES.MAX.platformFeatures.length).toBeGreaterThan(0);
     });
   });
 

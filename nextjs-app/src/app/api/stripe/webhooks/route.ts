@@ -72,6 +72,152 @@ export async function POST(request: NextRequest) {
         let accountId = session.metadata?.account_id;
         const tier = session.metadata?.tier as TierName;
         const flow = session.metadata?.flow;
+        const addon = session.metadata?.addon;
+        
+        // Handle PERFORM addon purchase
+        if (flow === 'addon' && addon === 'PERFORM' && accountId) {
+          console.log(`Processing PERFORM addon for account ${accountId}`);
+          
+          const { error: updateError } = await supabase
+            .from('accounts')
+            .update({
+              has_perform_addon: true,
+              perform_setup_fee_paid: true,
+              perform_setup_fee_paid_at: new Date().toISOString(),
+            })
+            .eq('id', accountId);
+          
+          if (updateError) {
+            console.error('Failed to update PERFORM addon status:', updateError);
+          } else {
+            console.log('✅ PERFORM addon activated for account');
+            
+            // Log to billing history
+            await supabase
+              .from('account_billing_history')
+              .insert({
+                account_id: accountId,
+                event_type: 'addon_purchased',
+                metadata: {
+                  addon: 'PERFORM',
+                  amount: session.amount_total,
+                  currency: session.currency,
+                  subscription_id: session.subscription,
+                },
+                stripe_event_id: event.id,
+              });
+          }
+          break;
+        }
+        
+        // Handle subscription upgrade payment
+        if (session.metadata?.type === 'subscription_upgrade' && accountId) {
+          console.log(`Processing subscription upgrade payment for account ${accountId}`);
+          
+          const targetTier = session.metadata.target_tier as TierName;
+          const billingPeriod = session.metadata.billing_period as 'monthly' | 'yearly';
+          const subscriptionId = session.metadata.subscription_id;
+          const currentTier = session.metadata.current_tier as TierName;
+          const prorationAmount = parseFloat(session.metadata.proration_amount || '0');
+          
+          if (!targetTier || !subscriptionId) {
+            console.error('Missing upgrade metadata:', session.metadata);
+            break;
+          }
+          
+          try {
+            // Now that payment is successful, actually update the subscription
+            const { updateAccountTier } = await import('@/lib/stripe/utils');
+            const stripe = (await import('@/lib/stripe/config')).getStripe();
+            const { TIER_PRICING } = await import('@/lib/stripe/prices');
+            
+            // Get the subscription
+            const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+              expand: ['items.data.price']
+            });
+            
+            // Find the main plan item
+            const allTierPriceIds = [
+              TIER_PRICING.PRO.monthlyPriceId,
+              TIER_PRICING.PRO.yearlyPriceId,
+              TIER_PRICING.SCALE.monthlyPriceId,
+              TIER_PRICING.SCALE.yearlyPriceId,
+              TIER_PRICING.MAX.monthlyPriceId,
+              TIER_PRICING.MAX.yearlyPriceId,
+            ];
+            
+            const mainPlanItem = subscription.items.data.find(item => 
+              allTierPriceIds.includes(item.price.id)
+            );
+            
+            if (!mainPlanItem) {
+              console.error('Could not find main plan item in subscription');
+              break;
+            }
+            
+            // Update the subscription to the new tier
+            const tierPricing = TIER_PRICING[targetTier as 'PRO' | 'SCALE' | 'MAX'];
+            const newPriceId = billingPeriod === 'yearly' 
+              ? tierPricing.yearlyPriceId 
+              : tierPricing.monthlyPriceId;
+            
+            await stripe.subscriptions.update(subscriptionId, {
+              items: [{
+                id: mainPlanItem.id,
+                price: newPriceId,
+              }],
+              proration_behavior: 'none', // We already charged for proration
+              metadata: {
+                ...subscription.metadata,
+                tier: targetTier,
+                previous_tier: currentTier,
+              }
+            });
+            
+            console.log('✅ Subscription updated successfully');
+            
+            // Update account tier in database
+            const { error: updateError } = await supabase
+              .from('accounts')
+              .update({
+                tier: targetTier,
+                pending_tier_change: null,
+                pending_tier_change_date: null,
+              })
+              .eq('id', accountId);
+            
+            if (updateError) {
+              console.error('Failed to update account tier:', updateError);
+            } else {
+              console.log(`✅ Account tier updated to ${targetTier}`);
+            }
+            
+            // Log to billing history
+            await supabase
+              .from('account_billing_history')
+              .insert({
+                account_id: accountId,
+                event_type: 'plan_upgraded',
+                old_tier: currentTier,
+                new_tier: targetTier,
+                metadata: {
+                  proration_amount: prorationAmount,
+                  billing_period: billingPeriod,
+                  subscription_id: subscriptionId,
+                  checkout_session_id: session.id,
+                },
+                stripe_event_id: event.id,
+              });
+              
+            console.log('✅ Billing history logged');
+            
+          } catch (error) {
+            console.error('Failed to process upgrade after payment:', error);
+            // Payment succeeded but upgrade failed - this needs manual review
+          }
+          
+          break;
+        }
         
         if (!accountId || !tier) {
           console.error('Missing metadata in checkout session:', session.id);
@@ -388,20 +534,58 @@ export async function POST(request: NextRequest) {
       case WEBHOOK_EVENTS.SUBSCRIPTION_UPDATED: {
         const subscription = event.data.object as Stripe.Subscription;
         
+        console.log('=== SUBSCRIPTION UPDATED EVENT ===');
+        console.log('Subscription ID:', subscription.id);
+        console.log('Status:', subscription.status);
+        console.log('Metadata:', subscription.metadata);
+        
         // Find account by subscription ID
         const { data: account } = await supabase
           .from('accounts')
-          .select('id')
+          .select('id, tier, pending_tier_change')
           .eq('stripe_subscription_id', subscription.id)
           .single();
 
         if (account) {
-          // Update subscription status
+          // Check if this is a tier change
+          const newTier = subscription.metadata?.tier as TierName | undefined;
+          const previousTier = subscription.metadata?.previous_tier as TierName | undefined;
+          
+          const updateData: any = {
+            subscription_status: subscription.status,
+          };
+          
+          // If tier changed, update it
+          if (newTier && newTier !== account.tier) {
+            console.log(`Updating account tier from ${account.tier} to ${newTier}`);
+            updateData.tier = newTier;
+            
+            // Clear pending change if this was a scheduled downgrade
+            if (account.pending_tier_change === newTier) {
+              updateData.pending_tier_change = null;
+              updateData.pending_tier_change_date = null;
+            }
+            
+            // Log the tier change
+            await supabase
+              .from('account_billing_history')
+              .insert({
+                account_id: account.id,
+                event_type: 'tier_changed',
+                old_tier: previousTier || account.tier,
+                new_tier: newTier,
+                stripe_event_id: event.id,
+                metadata: {
+                  subscription_id: subscription.id,
+                  status: subscription.status,
+                },
+              });
+          }
+          
+          // Update account
           await supabase
             .from('accounts')
-            .update({
-              subscription_status: subscription.status,
-            })
+            .update(updateData)
             .eq('id', account.id);
         }
         
@@ -442,6 +626,126 @@ export async function POST(request: NextRequest) {
                 canceled_at: subscription.canceled_at,
               },
             });
+        }
+        
+        break;
+      }
+
+      case WEBHOOK_EVENTS.INVOICE_PAYMENT_SUCCEEDED: {
+        const invoice = event.data.object as Stripe.Invoice;
+        
+        console.log('=== INVOICE PAYMENT SUCCEEDED EVENT ===');
+        console.log('Invoice ID:', invoice.id);
+        console.log('Customer:', invoice.customer);
+        console.log('Metadata:', invoice.metadata);
+        console.log('Amount Paid:', invoice.amount_paid);
+        
+        // Check if this is an upgrade payment by metadata
+        if (invoice.metadata?.type === 'subscription_upgrade') {
+          const accountId = invoice.metadata.account_id;
+          const targetTier = invoice.metadata.target_tier as TierName;
+          const currentTier = invoice.metadata.current_tier as TierName;
+          const billingPeriod = invoice.metadata.billing_period;
+          const subscriptionId = invoice.metadata.subscription_id;
+          const prorationAmount = parseFloat(invoice.metadata.proration_amount || '0');
+          
+          if (!accountId || !targetTier || !subscriptionId) {
+            console.error('Missing required metadata for upgrade processing:', invoice.metadata);
+            break;
+          }
+          
+          console.log(`Processing upgrade payment for account ${accountId}: ${currentTier} -> ${targetTier}`);
+          
+          try {
+            // Update the subscription to the new tier
+            const { getStripe } = await import('@/lib/stripe/config');
+            const stripe = getStripe();
+            
+            // Get the right price ID for the target tier
+            const { TIER_PRICING } = await import('@/lib/stripe/prices');
+            const targetPricing = TIER_PRICING[targetTier as 'PRO' | 'SCALE' | 'MAX'];
+            const priceId = billingPeriod === 'yearly' 
+              ? targetPricing.yearlyPriceId 
+              : targetPricing.monthlyPriceId;
+            
+            if (!priceId) {
+              throw new Error(`No price ID found for ${targetTier} ${billingPeriod}`);
+            }
+            
+            // Get the current subscription
+            const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+            
+            // Update subscription items to new tier
+            // Assume there's only one item (the main subscription)
+            const currentItem = subscription.items.data[0];
+            
+            if (!currentItem) {
+              throw new Error('No subscription items found');
+            }
+            
+            // Update the subscription item to the new price
+            await stripe.subscriptions.update(subscriptionId, {
+              items: [{
+                id: currentItem.id,
+                price: priceId,
+              }],
+              proration_behavior: 'none', // Don't create another proration since we just paid for it
+            });
+            
+            console.log(`✅ Subscription ${subscriptionId} updated to ${targetTier} tier`);
+            
+            // Update account in database
+            const { error: updateError } = await supabase
+              .from('accounts')
+              .update({
+                tier: targetTier,
+                pending_tier_change: null,
+                pending_tier_change_date: null,
+              })
+              .eq('id', accountId);
+            
+            if (updateError) {
+              console.error('Failed to update account tier:', updateError);
+            } else {
+              console.log(`✅ Account tier updated to ${targetTier}`);
+            }
+            
+            // Log to billing history
+            await supabase
+              .from('account_billing_history')
+              .insert({
+                account_id: accountId,
+                event_type: 'plan_upgraded',
+                old_tier: currentTier,
+                new_tier: targetTier,
+                metadata: {
+                  proration_amount: prorationAmount,
+                  billing_period: billingPeriod,
+                  subscription_id: subscriptionId,
+                  invoice_id: invoice.id,
+                },
+                stripe_event_id: event.id,
+              });
+              
+            console.log('✅ Billing history logged for upgrade');
+            
+          } catch (error) {
+            console.error('Failed to process upgrade after invoice payment:', error);
+            // Payment succeeded but upgrade failed - this needs manual review
+            // Log error to billing history
+            await supabase
+              .from('account_billing_history')
+              .insert({
+                account_id: accountId,
+                event_type: 'upgrade_processing_error',
+                metadata: {
+                  error: error instanceof Error ? error.message : 'Unknown error',
+                  invoice_id: invoice.id,
+                  target_tier: targetTier,
+                },
+                stripe_event_id: event.id,
+              });
+          }
         }
         
         break;

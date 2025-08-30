@@ -127,30 +127,26 @@ export default function SignupPricingPage() {
       monthlyPrice: 39700, // $397
       annualPrice: 428700, // $4,287 (10% discount)
       setupFee: 150000, // $1,500
-      description: 'Perfect for growing businesses',
+      description: '',
       features: [
         {
-          title: 'Projects & Team',
+          title: 'Smart Marketing Platform',
           items: [
-            { icon: Layers, text: '5 Projects' },
-            { icon: Users, text: '3 Team Members' },
-            { icon: UserPlus, text: 'Basic team collaboration' },
+            { icon: Mail, text: '10,000 emails' },
+            { icon: Bell, text: '250 SMS/calls' },
+            { icon: Zap, text: '1,000 AI words' },
+            { icon: Star, text: '100 premium automation executions' },
+            { icon: Layers, text: '25 workflow AI executions' },
+            { icon: Check, text: 'Unlimited forms/calendar bookings' },
           ],
         },
         {
           title: 'Platform Features',
           items: [
-            { icon: Globe, text: 'Custom Domains' },
-            { icon: Zap, text: 'Marketing Platform Access' },
-            { icon: Palette, text: 'Smart Sections' },
-            { icon: Check, text: 'Remove Watermark' },
-          ],
-        },
-        {
-          title: 'Support',
-          items: [
-            { icon: Mail, text: 'Priority Support' },
-            { icon: Clock, text: 'Business hours support' },
+            { icon: Users, text: '3 user accounts' },
+            { icon: Layers, text: '5 projects' },
+            { icon: Globe, text: 'Custom domains' },
+            { icon: ShieldCheck, text: 'Premium support' },
           ],
         },
       ],
@@ -161,36 +157,29 @@ export default function SignupPricingPage() {
       monthlyPrice: 69700, // $697
       annualPrice: 752700, // $7,527 (10% discount)
       setupFee: 150000, // $1,500
-      description: 'Built for expanding teams',
+      description: '',
       features: [
         {
-          title: 'Projects & Team',
+          title: 'Smart Marketing Platform',
           items: [
-            { icon: Layers, text: '10 Projects' },
-            { icon: Users, text: '5 Team Members' },
-            { icon: UserCheck, text: 'Advanced team collaboration' },
+            { icon: Mail, text: '20,000 emails' },
+            { icon: Bell, text: '750 SMS/calls' },
+            { icon: Zap, text: '5,000 AI words' },
+            { icon: Star, text: '500 premium automation executions' },
+            { icon: Layers, text: '150 workflow AI executions' },
+            { icon: Check, text: 'Unlimited forms/calendar bookings' },
           ],
         },
         {
           title: 'Platform Features',
           items: [
-            { icon: Globe, text: 'Custom Domains' },
-            { icon: Zap, text: 'Marketing Platform Access' },
-            { icon: Palette, text: 'Smart Sections' },
-            { icon: BarChart, text: 'Advanced Analytics' },
-            { icon: Check, text: 'Remove Watermark' },
-          ],
-        },
-        {
-          title: 'Support',
-          items: [
-            { icon: Mail, text: 'Priority Support' },
-            { icon: Clock, text: '24/7 support' },
-            { icon: Bell, text: 'Dedicated success manager' },
+            { icon: Users, text: '5 user accounts' },
+            { icon: Layers, text: '10 projects' },
+            { icon: Globe, text: 'Custom domains' },
+            { icon: ShieldCheck, text: 'Premium support' },
           ],
         },
       ],
-      isPopular: true,
     },
     {
       tier: 'MAX',
@@ -198,35 +187,26 @@ export default function SignupPricingPage() {
       monthlyPrice: 99700, // $997
       annualPrice: 1076700, // $10,767 (10% discount)
       setupFee: 150000, // $1,500
-      description: 'Enterprise-ready solution',
+      description: '',
       features: [
         {
-          title: 'Projects & Team',
+          title: 'Smart Marketing Platform',
           items: [
-            { icon: Layers, text: '25 Projects' },
-            { icon: Users, text: '10 Team Members' },
-            { icon: UserCog, text: 'Role-based access control' },
-            { icon: UserCheck, text: 'Advanced team collaboration' },
+            { icon: Mail, text: '45,000 emails' },
+            { icon: Bell, text: '1,500 SMS/calls' },
+            { icon: Zap, text: '10,000 AI words' },
+            { icon: Star, text: '1,000 premium automation executions' },
+            { icon: Layers, text: '300 workflow AI executions' },
+            { icon: Check, text: 'Unlimited forms/calendar bookings' },
           ],
         },
         {
           title: 'Platform Features',
           items: [
-            { icon: Globe, text: 'Custom Domains' },
-            { icon: Zap, text: 'Marketing Platform Access' },
-            { icon: Palette, text: 'Smart Sections' },
-            { icon: BarChart, text: 'Advanced Analytics' },
-            { icon: Star, text: 'White Label Options' },
-            { icon: Check, text: 'Remove Watermark' },
-          ],
-        },
-        {
-          title: 'Security & Support',
-          items: [
-            { icon: ShieldCheck, text: 'Enterprise security' },
-            { icon: Mail, text: 'Dedicated Support' },
-            { icon: Clock, text: '24/7 premium support' },
-            { icon: Star, text: 'Custom SLA agreements' },
+            { icon: Users, text: '10 user accounts' },
+            { icon: Layers, text: '25 projects' },
+            { icon: Globe, text: 'Custom domains' },
+            { icon: ShieldCheck, text: 'Premium support' },
           ],
         },
       ],
@@ -291,18 +271,8 @@ export default function SignupPricingPage() {
             Pick a plan that works for you.
           </h1>
           <p className="text-lg text-muted-foreground">
-            Every plan gets all the smart marketing features.
+            Every plan gets all the smart marketing features. Our plans are usage based. You pay for what you use. Cancel any time, without any hassle.
           </p>
-          <p className="text-lg text-muted-foreground">
-            Our plans are usage based. You pay for what you use.
-          </p>
-        </div>
-
-        {/* Cancel anytime info */}
-        <div className="mx-auto mb-8 flex max-w-3xl items-center justify-center">
-          <span className="text-center text-sm font-medium">
-            Cancel any time, without any hassle
-          </span>
         </div>
 
         {/* Billing Cycle Toggle */}
@@ -357,9 +327,8 @@ export default function SignupPricingPage() {
             <div key={pkg.tier} className="rounded-2xl border p-6">
               <div className="flex h-full flex-col justify-between gap-5">
                 <div>
-                  <div className="mb-4 flex items-center justify-between">
+                  <div className="mb-4">
                     <h3 className="text-xl">{pkg.title}</h3>
-                    {pkg.isPopular && <Badge>Most Popular</Badge>}
                   </div>
                   <div className="mb-2 flex items-baseline gap-2">
                     <span className="text-5xl font-semibold">
@@ -376,7 +345,7 @@ export default function SignupPricingPage() {
                       <TooltipTrigger asChild>
                         <div className="mb-2">
                           <span className="text-sm text-muted-foreground">
-                            + {formatCurrency(pkg.setupFee)} one-time setup fee
+                            + {formatCurrency(pkg.setupFee)} one-time Marketing Platform setup fee
                           </span>
                         </div>
                       </TooltipTrigger>
@@ -385,9 +354,11 @@ export default function SignupPricingPage() {
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {pkg.description}
-                  </p>
+                  {pkg.description && (
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {pkg.description}
+                    </p>
+                  )}
                   <Button 
                     className="mt-6 w-full rounded-full" 
                     onClick={() => handleSelectTier(pkg.tier)}

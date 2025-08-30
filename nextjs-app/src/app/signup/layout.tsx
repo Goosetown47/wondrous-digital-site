@@ -45,13 +45,13 @@ function SignupLayoutContent({
       if (pathname === '/signup/account') return 2 // Should not happen, but handle gracefully
       if (pathname === '/signup/profile') return 2 // Step 3 for warm prospects
       if (pathname === '/signup/pricing') return 3 // Step 4 for warm prospects
-      if (pathname === '/signup/success') return 3 // Success shows all 4 steps complete (0-indexed)
+      if (pathname === '/signup/success') return 4 // All 4 steps complete
     } else {
       // For cold prospects, all steps
       if (pathname === '/signup/account') return 2
       if (pathname === '/signup/profile') return 3
       if (pathname === '/signup/pricing') return 4
-      if (pathname === '/signup/success') return 4 // Success shows all 5 steps complete (0-indexed)
+      if (pathname === '/signup/success') return 5 // All 5 steps complete
     }
     return 0
   }

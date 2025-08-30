@@ -94,14 +94,49 @@ export async function POST() {
       }
     }
     
-    const redirect = hasAccounts ? '/dashboard' : '/setup';
+    // Check if user is in unified signup flow without an account
+    if (!hasAccounts) {
+      // Check if this is a unified signup user
+      const isUnifiedSignup = user.user_metadata?.signup_flow === 'unified';
+      
+      if (isUnifiedSignup) {
+        // User is mid-signup, determine appropriate step
+        const invitationToken = user.user_metadata?.invitation_token;
+        
+        const redirect = invitationToken 
+          ? '/signup/profile?flow=invitation'  // Warm prospect
+          : '/signup/account';                  // Cold prospect
+        
+        console.log(`[Post-Login] Unified signup user ${user.email} - Redirecting to: ${redirect}`);
+        
+        return NextResponse.json({ 
+          redirect,
+          hasAccounts: false,
+          userId: user.id,
+          email: user.email,
+          signupFlow: 'unified'
+        });
+      }
+      
+      // For legacy users without accounts (shouldn't happen for new users)
+      console.error(`[Post-Login] Legacy user ${user.email} has no account - redirecting to signup`);
+      // Force them through unified signup
+      return NextResponse.json({ 
+        redirect: '/signup',
+        hasAccounts: false,
+        userId: user.id,
+        email: user.email,
+        needsSignup: true
+      });
+    }
 
-    // Log the decision for debugging
+    // User has accounts - go to dashboard
+    const redirect = '/dashboard';
     console.log(`[Post-Login] User ${user.email} - Has accounts: ${hasAccounts} - Redirecting to: ${redirect}`);
 
     return NextResponse.json({ 
       redirect,
-      hasAccounts,
+      hasAccounts: true,
       userId: user.id,
       email: user.email
     });

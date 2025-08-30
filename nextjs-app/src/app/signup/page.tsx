@@ -85,6 +85,7 @@ function SignupPageContent() {
           emailRedirectTo: `${window.location.origin}/auth/confirm?flow=unified`,
           data: {
             signup_flow: 'unified',
+            signup_step: 'email_confirmation', // Track current step
             // Only include invitation token if this is actually an invitation flow
             invitation_token: searchParams.get('token') || null,
           }
