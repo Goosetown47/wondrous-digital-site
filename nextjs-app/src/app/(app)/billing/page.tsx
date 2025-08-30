@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { 
@@ -116,7 +116,17 @@ interface BillingDetails {
   } | null;
 }
 
-export default function BillingPage() {
+// Loading component for Suspense
+function BillingLoading() {
+  return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+// Main billing content component that uses useSearchParams
+function BillingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, currentAccount: selectedAccount } = useAuth();
@@ -874,5 +884,14 @@ export default function BillingPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+// Default export with Suspense boundary
+export default function BillingPage() {
+  return (
+    <Suspense fallback={<BillingLoading />}>
+      <BillingContent />
+    </Suspense>
   );
 }
