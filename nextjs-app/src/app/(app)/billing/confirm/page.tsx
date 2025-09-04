@@ -171,15 +171,7 @@ function BillingConfirmContent() {
         stripeLineItems: previewData.stripeLineItems, // Keep for debugging
       };
       
-      console.log('Calculations debugging:', {
-        amountOwedNow: calcs.amountOwedNow,
-        credit: calcs.credit,
-        monthsRemaining: calcs.monthsRemaining,
-        daysRemaining: calcs.daysRemaining,
-        nextBillingDate: calcs.nextBillingDate,
-        currentPeriod: previewData.currentPeriod,
-        rawPreviewData: previewData,
-      });
+      // Debug logging removed for production
       
       setCalculations(calcs);
       setSubscriptionData(account);

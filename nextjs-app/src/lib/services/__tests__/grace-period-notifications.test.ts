@@ -92,7 +92,10 @@ describe('Grace Period Notifications', () => {
     
     // Reset resend mock to default resolved value
     const { resend } = await import('@/lib/resend');
-    vi.mocked(resend!.emails.send).mockResolvedValue({ id: 'email-id' });
+    vi.mocked(resend!.emails.send).mockResolvedValue({ 
+      data: { id: 'email-id' },
+      error: null 
+    });
   });
 
   describe('checkAndSendGracePeriodNotifications', () => {
@@ -162,7 +165,10 @@ describe('Grace Period Notifications', () => {
             }
           },
           error: null
-        })
+        }),
+        updateUserById: vi.fn(),
+        deleteUser: vi.fn(),
+        listUsers: vi.fn()
       };
 
       const result = await checkAndSendGracePeriodNotifications();
@@ -233,7 +239,10 @@ describe('Grace Period Notifications', () => {
             }
           },
           error: null
-        })
+        }),
+        updateUserById: vi.fn(),
+        deleteUser: vi.fn(),
+        listUsers: vi.fn()
       };
 
       const result = await checkAndSendGracePeriodNotifications();
