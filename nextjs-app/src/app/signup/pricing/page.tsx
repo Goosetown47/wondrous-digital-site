@@ -4,20 +4,14 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Bell,
   Check,
-  Clock,
   Lock,
   Mail,
-  Palette,
   ShieldCheck,
   Star,
-  UserCheck,
-  UserCog,
-  UserPlus,
   Users,
   Loader2,
   Zap,
   Globe,
-  BarChart,
   Layers,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';

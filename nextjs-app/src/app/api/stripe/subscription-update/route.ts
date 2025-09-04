@@ -2,8 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
 import { getStripe } from '@/lib/stripe/config';
-import { TIER_PRICING, PERFORM_ADDON_PRICING } from '@/lib/stripe/prices';
+import { TIER_PRICING } from '@/lib/stripe/prices';
 import { format } from 'date-fns';
+import { 
+  SubscriptionState, 
+  SubscriptionAction, 
+  isActionAllowed, 
+  getPendingChangeDetails,
+  getEnhancedErrorMessage 
+} from '@/lib/services/subscription-state';
+import { 
+  checkCooldownStatus, 
+  updateLastChangeTime, 
+  getCooldownErrorMessage 
+} from '@/lib/services/billing-cooldown';
 import type { TierName } from '@/types/database';
 import type Stripe from 'stripe';
 
@@ -90,6 +102,80 @@ export async function POST(request: NextRequest) {
         { error: 'No active subscription found. Please subscribe first.' },
         { status: 400 }
       );
+    }
+
+    // Check subscription state to see if changes are allowed
+    const subscriptionState = account.subscription_state as SubscriptionState | null;
+    if (subscriptionState) {
+      // Map the action to our SubscriptionAction enum
+      let requiredAction: SubscriptionAction;
+      if (action === 'upgrade') {
+        requiredAction = SubscriptionAction.UPGRADE;
+      } else if (action === 'downgrade') {
+        requiredAction = SubscriptionAction.DOWNGRADE;
+      } else if (action === 'switch-billing') {
+        requiredAction = SubscriptionAction.CHANGE_BILLING_PERIOD;
+      } else {
+        return NextResponse.json(
+          { error: 'Invalid action specified' },
+          { status: 400 }
+        );
+      }
+
+      // Check cooldown period (24 hours between changes)
+      const cooldownStatus = await checkCooldownStatus(accountId);
+      if (cooldownStatus.isActive) {
+        return NextResponse.json(
+          { 
+            error: getCooldownErrorMessage(cooldownStatus.timeRemaining || '24 hours'),
+            cooldownInfo: {
+              isActive: true,
+              endsAt: cooldownStatus.endsAt,
+              timeRemaining: cooldownStatus.timeRemaining
+            }
+          },
+          { status: 429 } // Too Many Requests
+        );
+      }
+
+      // Block all changes when in PENDING_CHANGE state
+      if (subscriptionState === SubscriptionState.PENDING_CHANGE) {
+        // Get detailed information about the pending change for enhanced error message
+        const pendingDetails = getPendingChangeDetails(account);
+        const errorMessage = getEnhancedErrorMessage(action, pendingDetails);
+        
+        return NextResponse.json(
+          { 
+            error: errorMessage,
+            currentState: subscriptionState,
+            pendingChange: pendingDetails,
+            allowedActions: isActionAllowed(subscriptionState, SubscriptionAction.CANCEL_PENDING_CHANGE) 
+              ? ['cancel_pending_change'] 
+              : []
+          },
+          { status: 400 }
+        );
+      } else if (!isActionAllowed(subscriptionState, requiredAction)) {
+        // Handle other states that don't allow the action
+        let errorMessage = 'This action is not allowed in the current subscription state.';
+        
+        if (subscriptionState === SubscriptionState.CANCELING) {
+          errorMessage = 'Your subscription is scheduled for cancellation. Please reactivate it before making changes.';
+        } else if (subscriptionState === SubscriptionState.PAST_DUE) {
+          errorMessage = 'Your subscription is past due. Please update your payment method before making changes.';
+        } else if (subscriptionState === SubscriptionState.INCOMPLETE) {
+          errorMessage = 'Your subscription setup is incomplete. Please complete the payment first.';
+        }
+        
+        return NextResponse.json(
+          { 
+            error: errorMessage,
+            currentState: subscriptionState,
+            allowedActions: []
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Get the current subscription from Stripe
@@ -269,6 +355,7 @@ export async function POST(request: NextRequest) {
         .update({
           pending_tier_change: targetTier,
           pending_tier_change_date: new Date(currentPeriodEnd * 1000).toISOString(),
+          subscription_state: SubscriptionState.PENDING_CHANGE, // Set state to pending_change
         })
         .eq('id', accountId);
 
@@ -305,6 +392,9 @@ export async function POST(request: NextRequest) {
       }
 
       const message = `Your downgrade to ${targetTier} has been scheduled. You'll continue to have access to ${account.tier} features until ${format(new Date(currentPeriodEnd * 1000), 'MMMM d, yyyy')}. The change will take effect automatically at that time.`;
+
+      // Update cooldown timestamp
+      await updateLastChangeTime(accountId);
 
       return NextResponse.json({
         success: true,
@@ -364,6 +454,9 @@ export async function POST(request: NextRequest) {
       const message = action === 'upgrade' 
         ? `Successfully upgraded to ${targetTier}. You've been charged the prorated difference.`
         : `Successfully switched to ${billingPeriod} billing. Your new billing schedule has been applied.`;
+
+      // Update cooldown timestamp
+      await updateLastChangeTime(accountId);
 
       return NextResponse.json({
         success: true,

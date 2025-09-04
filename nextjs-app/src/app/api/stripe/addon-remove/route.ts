@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe/config';
 import { PERFORM_ADDON_PRICING } from '@/lib/stripe/prices';
-import type Stripe from 'stripe';
+import { SubscriptionState, SubscriptionAction, isActionAllowed } from '@/lib/services/subscription-state';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
     
     const { 
       accountId,
-      addon = 'PERFORM',
     } = body as {
       accountId: string;
       addon?: 'PERFORM';
@@ -67,6 +66,36 @@ export async function POST(request: NextRequest) {
         { error: 'No active subscription found' },
         { status: 400 }
       );
+    }
+
+    // Check subscription state to see if addon removal is allowed
+    const subscriptionState = account.subscription_state as SubscriptionState | null;
+    if (subscriptionState) {
+      // Check if removing addons is allowed in current state
+      if (!isActionAllowed(subscriptionState, SubscriptionAction.REMOVE_ADDON)) {
+        let errorMessage = 'Cannot remove addons in the current subscription state.';
+        
+        // Provide specific error messages based on state
+        if (subscriptionState === SubscriptionState.PENDING_CHANGE) {
+          errorMessage = 'You have a pending plan change. Please wait for it to complete before removing addons.';
+        } else if (subscriptionState === SubscriptionState.CANCELING) {
+          errorMessage = 'Your subscription is scheduled for cancellation. Addons will be removed automatically.';
+        } else if (subscriptionState === SubscriptionState.PAST_DUE) {
+          errorMessage = 'Your subscription is past due. Please update your payment method first.';
+        } else if (subscriptionState === SubscriptionState.INCOMPLETE) {
+          errorMessage = 'Your subscription setup is incomplete. Please complete the payment first.';
+        } else if (subscriptionState === SubscriptionState.INCOMPLETE_EXPIRED) {
+          errorMessage = 'Your subscription has expired. Please start a new subscription.';
+        }
+        
+        return NextResponse.json(
+          { 
+            error: errorMessage,
+            currentState: subscriptionState
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Get the current subscription from Stripe

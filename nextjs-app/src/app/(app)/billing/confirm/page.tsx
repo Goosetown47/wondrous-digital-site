@@ -13,18 +13,46 @@ import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import type { TierName } from '@/types/database';
 
+interface SubscriptionCalculations {
+  amountOwedNow: number;
+  credit: number;
+  futureAmount: number;
+  setupFees: number;
+  nextBillingDate: Date;
+  totalDueToday: number;
+  daysRemaining: number;
+  monthsRemaining: number;
+  hasSubscription: boolean;
+  currentPeriod?: string;
+  currentPlan?: {
+    tier: string;
+    amount: number;
+    interval: 'monthly' | 'yearly';
+    isYearly: boolean;
+    priceId: string;
+  };
+  changes?: {
+    isScheduledChange?: boolean;
+    scheduledDate?: string;
+  };
+  stripeLineItems?: unknown[];
+}
+
+interface AccountData {
+  id: string;
+  name: string;
+  tier: TierName;
+  billingPeriod?: 'monthly' | 'yearly';
+  stripeCustomerId?: string;
+  [key: string]: unknown;
+}
+
 // Pricing data (matches your document)
 const TIER_PRICING = {
   PRO: { monthly: 397, yearly: 4287, monthlyPrice: 397, yearlyPrice: 428700 },
   SCALE: { monthly: 697, yearly: 7527, monthlyPrice: 697, yearlyPrice: 752700 },
   MAX: { monthly: 997, yearly: 10767, monthlyPrice: 997, yearlyPrice: 1076700 },
 } as const;
-
-const PERFORM_PRICING = {
-  monthly: 459,
-  yearly: 4957,
-  setupFee: 750,
-};
 
 // Feature differences between tiers
 const TIER_FEATURES = {
@@ -60,11 +88,11 @@ const TIER_FEATURES = {
 function BillingConfirmContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, currentAccount } = useAuth();
+  const { currentAccount } = useAuth();
   const [loading, setLoading] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [subscriptionData, setSubscriptionData] = useState<any>(null);
-  const [calculations, setCalculations] = useState<any>(null);
+  const [subscriptionData, setSubscriptionData] = useState<AccountData | null>(null);
+  const [calculations, setCalculations] = useState<SubscriptionCalculations | null>(null);
 
   // Get params from URL
   const currentTier = searchParams.get('from') as TierName;
@@ -183,6 +211,13 @@ function BillingConfirmContent() {
       setCalculations({ 
         nextBillingDate: new Date(),
         hasSubscription: true,
+        amountOwedNow: 0,
+        credit: 0,
+        futureAmount: 0,
+        setupFees: 0,
+        totalDueToday: 0,
+        daysRemaining: 0,
+        monthsRemaining: 0
       });
     } catch (error) {
       console.error('Error fetching account data:', error);
@@ -237,7 +272,7 @@ function BillingConfirmContent() {
         window.location.href = url;
       } else if (action === 'upgrade') {
         // For upgrades, check if payment is required
-        if (calculations.amountOwedNow > 0) {
+        if (calculations && calculations.amountOwedNow > 0) {
           // Paid upgrade - use checkout flow
           const response = await fetch('/api/stripe/upgrade-checkout', {
             method: 'POST',
@@ -355,9 +390,9 @@ function BillingConfirmContent() {
   };
 
   // Get current and new prices - use ACTUAL current billing period from Stripe
-  const actualCurrentBillingPeriod = calculations.currentPlan?.interval || billingPeriod;
+  const actualCurrentBillingPeriod = calculations?.currentPlan?.interval || billingPeriod;
   const currentTierPricing = TIER_PRICING[currentTier as keyof typeof TIER_PRICING];
-  const currentPrice = calculations.currentPlan?.amount || 
+  const currentPrice = calculations?.currentPlan?.amount || 
     (currentTierPricing ? currentTierPricing[actualCurrentBillingPeriod as 'monthly' | 'yearly'] : 0);
   
   const targetTierPricing = TIER_PRICING[targetTier as keyof typeof TIER_PRICING];
@@ -453,7 +488,7 @@ function BillingConfirmContent() {
                       </>
                     ) : action === 'downgrade' ? (
                       <>
-                        On <strong>{formatDate(calculations.nextBillingDate)}</strong> your account will change to{' '}
+                        On <strong>{formatDate(calculations?.nextBillingDate || new Date())}</strong> your account will change to{' '}
                         <strong>{targetTier} {billingPeriod}</strong>
                       </>
                     ) : action === 'switch-billing' ? (
@@ -461,7 +496,7 @@ function BillingConfirmContent() {
                         {/* Check if this is a deferred billing switch (yearly to monthly) */}
                         {calculations.changes?.isScheduledChange ? (
                           <>
-                            On <strong>{formatDate(new Date(calculations.changes.scheduledDate))}</strong> your billing will switch to{' '}
+                            On <strong>{formatDate(new Date(calculations.changes.scheduledDate as string))}</strong> your billing will switch to{' '}
                             <strong>{billingPeriod}</strong>
                           </>
                         ) : (
@@ -633,7 +668,7 @@ function BillingConfirmContent() {
                         <Check className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                         <span>
                           You have paid for <strong>{targetTier} {actualCurrentBillingPeriod}</strong> until{' '}
-                          <strong>{formatDate(new Date(calculations.changes.scheduledDate))}</strong>
+                          <strong>{formatDate(new Date(calculations?.changes?.scheduledDate || ''))}</strong>
                         </span>
                       </div>
                       <div className="flex items-start gap-3">
@@ -646,7 +681,7 @@ function BillingConfirmContent() {
                         <Check className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                         <span>
                           Your first monthly payment of <strong>${newPrice.toLocaleString()}</strong> will be on{' '}
-                          <strong>{formatDate(new Date(calculations.changes.scheduledDate))}</strong>
+                          <strong>{formatDate(new Date(calculations?.changes?.scheduledDate || ''))}</strong>
                         </span>
                       </div>
                     </>

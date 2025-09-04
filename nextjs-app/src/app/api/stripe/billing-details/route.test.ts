@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { GET } from './route';
+import type { MockSupabaseClient, MockStripeClient } from '@/test/mocks/types';
+import { createMockSupabaseClient, createMockStripeClient } from '@/test/mocks/types';
 
 // Import actual modules to mock
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -16,34 +18,21 @@ vi.mock('@/lib/stripe/config', () => ({
 }));
 
 describe('GET /api/stripe/billing-details', () => {
-  let mockSupabase: any;
-  let mockStripe: any;
+  let mockSupabase: MockSupabaseClient;
+  let mockStripe: MockStripeClient;
   let mockRequest: NextRequest;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
     // Setup mock Supabase client
-    mockSupabase = {
-      auth: {
-        getUser: vi.fn(),
-      },
-      from: vi.fn(),
-    };
+    mockSupabase = createMockSupabaseClient();
 
     // Setup mock Stripe client
-    mockStripe = {
-      subscriptions: {
-        retrieve: vi.fn(),
-      },
-      invoices: {
-        list: vi.fn(),
-        createPreview: vi.fn(),
-      },
-    };
+    mockStripe = createMockStripeClient();
 
-    vi.mocked(createSupabaseServerClient).mockResolvedValue(mockSupabase);
-    vi.mocked(getStripe).mockReturnValue(mockStripe);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(mockSupabase as unknown as Awaited<ReturnType<typeof createSupabaseServerClient>>);
+    vi.mocked(getStripe).mockReturnValue(mockStripe as unknown as ReturnType<typeof getStripe>);
   });
 
   describe('Pending Change Information', () => {

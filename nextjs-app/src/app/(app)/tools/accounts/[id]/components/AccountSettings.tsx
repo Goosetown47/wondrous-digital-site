@@ -11,13 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   Card,
   CardContent,
   CardDescription,
@@ -38,7 +31,6 @@ const updateAccountSchema = z.object({
     .refine(slug => slug.length > 0, 'Slug is required')
     .refine(slug => /^[a-z0-9-]+$/.test(slug), 'Slug can only contain lowercase letters, numbers, and hyphens')
     .refine(slug => !slug.startsWith('-') && !slug.endsWith('-'), 'Slug cannot start or end with hyphen'),
-  tier: z.enum(['FREE', 'BASIC', 'PRO', 'SCALE', 'MAX']),
   description: z.string()
     .max(INPUT_LIMITS.projectDescription, `Description must be less than ${INPUT_LIMITS.projectDescription} characters`)
     .optional(),
@@ -66,19 +58,16 @@ export function AccountSettings({ account }: AccountSettingsProps) {
     defaultValues: {
       name: account.name,
       slug: account.slug,
-      tier: account.tier,
       description: (account.settings as Record<string, unknown>)?.description as string || '',
     },
   });
 
-  const watchTier = watch('tier');
 
   // Reset form when account data changes (e.g., after refetch)
   useEffect(() => {
     reset({
       name: account.name,
       slug: account.slug,
-      tier: account.tier,
       description: (account.settings as Record<string, unknown>)?.description as string || '',
     });
   }, [account, reset]);
@@ -90,7 +79,6 @@ export function AccountSettings({ account }: AccountSettingsProps) {
         updates: {
           name: data.name,
           slug: data.slug,
-          tier: data.tier,
           settings: {
             ...account.settings,
             description: data.description,
@@ -243,16 +231,16 @@ export function AccountSettings({ account }: AccountSettingsProps) {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Subscription Plan</CardTitle>
-            <CardDescription>
-              Current plan and billing information
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {!isEditing ? (
-              // Read-only plan view
+        {/* Only show subscription plan card in read-only mode */}
+        {!isEditing && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Subscription Plan</CardTitle>
+              <CardDescription>
+                Current plan and billing information
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -287,114 +275,18 @@ export function AccountSettings({ account }: AccountSettingsProps) {
                     </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              // Edit plan mode
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="tier">Tier *</Label>
-                  <Select
-                    value={watchTier}
-                    onValueChange={(value: 'FREE' | 'BASIC' | 'PRO' | 'SCALE' | 'MAX') => setValue('tier', value, { shouldDirty: true })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="FREE">
-                        <div className="flex items-center justify-between w-full">
-                          <div>
-                            <div className="font-medium">Free Plan</div>
-                            <div className="text-sm text-muted-foreground">
-                              {tierDescriptions.FREE}
-                            </div>
-                          </div>
-                          <div className="font-medium text-green-600 ml-4">
-                            {tierPricing.FREE}
-                          </div>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="BASIC">
-                        <div className="flex items-center justify-between w-full">
-                          <div>
-                            <div className="font-medium">Basic Plan</div>
-                            <div className="text-sm text-muted-foreground">
-                              {tierDescriptions.BASIC}
-                            </div>
-                          </div>
-                          <div className="font-medium text-blue-600 ml-4">
-                            {tierPricing.BASIC}
-                          </div>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="PRO">
-                        <div className="flex items-center justify-between w-full">
-                          <div>
-                            <div className="font-medium">Pro Plan</div>
-                            <div className="text-sm text-muted-foreground">
-                              {tierDescriptions.PRO}
-                            </div>
-                          </div>
-                          <div className="font-medium text-blue-600 ml-4">
-                            {tierPricing.PRO}
-                          </div>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="SCALE">
-                        <div className="flex items-center justify-between w-full">
-                          <div>
-                            <div className="font-medium">Scale Plan</div>
-                            <div className="text-sm text-muted-foreground">
-                              {tierDescriptions.SCALE}
-                            </div>
-                          </div>
-                          <div className="font-medium text-purple-600 ml-4">
-                            {tierPricing.SCALE}
-                          </div>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="MAX">
-                        <div className="flex items-center justify-between w-full">
-                          <div>
-                            <div className="font-medium">Max Plan</div>
-                            <div className="text-sm text-muted-foreground">
-                              {tierDescriptions.MAX}
-                            </div>
-                          </div>
-                          <div className="font-medium text-purple-600 ml-4">
-                            {tierPricing.MAX}
-                          </div>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {watchTier && (
-                  <div className="p-3 bg-muted rounded-lg">
-                    <h5 className="font-medium mb-2">
-                      {watchTier} Tier Limits
-                    </h5>
-                    <div className="grid grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Projects</p>
-                        <p className="font-medium">{tierLimits[watchTier].projects}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Users</p>
-                        <p className="font-medium">{tierLimits[watchTier].users}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Storage</p>
-                        <p className="font-medium">{tierLimits[watchTier].storage}</p>
-                      </div>
-                    </div>
+                
+                {account.is_unlocked && (
+                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                      🔓 This account has all features unlocked
+                    </p>
                   </div>
                 )}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </form>
     </div>
   );

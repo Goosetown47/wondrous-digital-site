@@ -189,9 +189,10 @@ async function sendTestEmails() {
         console.log(`❌ Failed to send: ${response.error.message}\n`);
         results.push({ template: template.name, status: 'failed', error: response.error.message });
       }
-    } catch (error: any) {
-      console.log(`❌ Error: ${error.message}\n`);
-      results.push({ template: template.name, status: 'error', error: error.message });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`❌ Error: ${errorMessage}\n`);
+      results.push({ template: template.name, status: 'error', error: errorMessage });
     }
   }
 

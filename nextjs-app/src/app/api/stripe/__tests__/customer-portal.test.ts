@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { NextRequest } from 'next/server';
 import { POST } from '../customer-portal/route';
 
 // Mock dependencies
@@ -79,7 +80,8 @@ describe('POST /api/stripe/customer-portal', () => {
       url: 'https://billing.stripe.com/session/xxx',
     });
 
-    const response = await POST();
+    const request = new NextRequest('http://localhost:3000/api/stripe/customer-portal');
+    const response = await POST(request);
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -99,7 +101,8 @@ describe('POST /api/stripe/customer-portal', () => {
       error: { message: 'Not authenticated' },
     });
 
-    const response = await POST();
+    const request = new NextRequest('http://localhost:3000/api/stripe/customer-portal');
+    const response = await POST(request);
     const data = await response.json();
 
     expect(response.status).toBe(401);
@@ -138,7 +141,8 @@ describe('POST /api/stripe/customer-portal', () => {
       })),
     });
 
-    const response = await POST();
+    const request = new NextRequest('http://localhost:3000/api/stripe/customer-portal');
+    const response = await POST(request);
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -172,7 +176,8 @@ describe('POST /api/stripe/customer-portal', () => {
       })),
     });
 
-    const response = await POST();
+    const request = new NextRequest('http://localhost:3000/api/stripe/customer-portal');
+    const response = await POST(request);
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -217,7 +222,8 @@ describe('POST /api/stripe/customer-portal', () => {
       url: 'https://billing.stripe.com/session/xxx',
     });
 
-    await POST();
+    const request = new NextRequest('http://localhost:3000/api/stripe/customer-portal');
+    await POST(request);
 
     expect(mockStripe.billingPortal.sessions.create).toHaveBeenCalledWith({
       customer: 'cus_stripe_123',
@@ -259,7 +265,8 @@ describe('POST /api/stripe/customer-portal', () => {
       new Error('Stripe API error')
     );
 
-    const response = await POST();
+    const request = new NextRequest('http://localhost:3000/api/stripe/customer-portal');
+    const response = await POST(request);
     const data = await response.json();
 
     expect(response.status).toBe(500);

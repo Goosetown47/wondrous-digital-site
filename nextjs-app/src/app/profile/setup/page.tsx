@@ -45,18 +45,38 @@ function ProfileSetupContent() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!token && !sessionId) {
-      setError('No invitation token or payment session provided');
-      setLoading(false);
-      return;
-    }
+    // Check if user is already logged in
+    const checkExistingUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // If user is logged in and doesn't have an invitation token
+      // they shouldn't be on this page
+      if (user && !token) {
+        // Redirect to billing if they came from a payment session
+        if (sessionId) {
+          router.push('/billing?upgrade=success');
+        } else {
+          router.push('/dashboard');
+        }
+        return;
+      }
+      
+      // Continue with normal flow
+      if (!token && !sessionId) {
+        setError('No invitation token or payment session provided');
+        setLoading(false);
+        return;
+      }
+      
+      if (token) {
+        loadInvitation();
+      } else if (sessionId) {
+        loadStripeSession();
+      }
+    };
     
-    if (token) {
-      loadInvitation();
-    } else if (sessionId) {
-      loadStripeSession();
-    }
-  }, [token, sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
+    checkExistingUser();
+  }, [token, sessionId, router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadInvitation = async () => {
     if (!token) return;
