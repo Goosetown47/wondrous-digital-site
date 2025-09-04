@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe/config';
 import { getAppUrl } from '@/lib/utils/app-url';
+import { rateLimitWithUser, RATE_LIMITS } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,6 +22,17 @@ export async function POST(request: NextRequest) {
         { error: 'You must be logged in to manage billing' },
         { status: 401 }
       );
+    }
+
+    // Apply rate limiting
+    const rateLimitResponse = await rateLimitWithUser(
+      request,
+      RATE_LIMITS.customerPortal,
+      user.id,
+      accountId
+    );
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     // Get user's account with Stripe customer ID

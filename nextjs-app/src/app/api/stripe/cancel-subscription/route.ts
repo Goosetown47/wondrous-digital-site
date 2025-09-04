@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { sendEmail } from '@/lib/services/email';
 import CancellationNotificationEmail from '@/emails/cancellation-notification';
 import * as React from 'react';
+import { rateLimitWithUser, RATE_LIMITS } from '@/lib/rate-limiter';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +35,17 @@ export async function POST(request: NextRequest) {
         { error: 'You must be logged in to cancel subscription' },
         { status: 401 }
       );
+    }
+
+    // Apply rate limiting
+    const rateLimitResponse = await rateLimitWithUser(
+      request,
+      RATE_LIMITS.cancelSubscription,
+      user.id,
+      accountId
+    );
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     // Get account details
