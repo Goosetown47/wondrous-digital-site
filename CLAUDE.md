@@ -55,7 +55,7 @@ Simplicity should be a key goal in design. Choose straightforward solutions over
 
 ### DEVELOPMENT DOCS
 1. **[CODE-CHECKLIST.md](./nextjs-app/docs/OPERATIONS/CODE-CHECKLIST.md)** - This document serves as a **MANDATORY** checklist that must be followed for every feature, fix, or code change. It was created after spending multiple days fixing 452 TypeScript errors, 304+ ESLint errors, and numerous build/deployment issues.
-2. **[DEV-LIFECYCLE.md](./nextjs-app/docs/OPERATIONS/DEV-LIFECYCLE.md)** - This is our development lifecycle. This is how we process the items in our active sprint. These steps are **MANDATORY** to complete before a sprint can be finished.
+2. **[DEV-LIFECYCLE.md](./nextjs-app/docs/DEV-LIFECYCLE.md)** - This is our development lifecycle. This is how we process the items in our active sprint. These steps are **MANDATORY** to complete before a sprint can be finished. Includes three process modes: Full Feature Mode (with TDD), Fast Track Mode (bug fixes), and Emergency Mode.
 3. **[DEV-TOOLS.md](./nextjs-app/docs/OPERATIONS/DEV-TOOLS.md)** - This document outlines what our platform is, what tools are available, and a guide for what to use, when, and how. It should contain every single command, and Claude user stories on when to use what, mapped to each part of our DEV-LIFECYCLE.
 
 
@@ -90,10 +90,14 @@ Simplicity should be a key goal in design. Choose straightforward solutions over
 
   1. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
     - First verify with user what dev mode each packet should use.
+    - Full Feature Mode: TDD approach with RED-GREEN-REFACTOR cycle
+    - Fast Track Mode: For bug fixes and small improvements
+    - Emergency Mode: For critical production issues
     - ACTIVE SPRINT → Write in tasks from our LIFECYCLE process as part of the packet tasks.
-  2. Update ACTIVE-STATUS.md → Log progress after each packet
+  2. Update ACTIVE-SPRINT.md → Log progress after each packet
   3. Check off tasks → Mark complete in ACTIVE-SPRINT.md
-  4. [User will] Move to Sprint Backlog → When packet done, grab next
+  4. Complete PACKET requires all features tested on DEV, deploy to PROD before next packet
+  5. [User will] Move to Sprint Backlog → When packet done, grab next
 
 ### Daily Flow:
 
@@ -139,10 +143,18 @@ Simplicity should be a key goal in design. Choose straightforward solutions over
 
 ## 🚀 Deployment Process
 
-**CRITICAL**: Our deployment branch is `nextjs-pagebuilder-core` (NOT master/main!)
-- All PRs must target `nextjs-pagebuilder-core`
-- Vercel automatically deploys from `nextjs-pagebuilder-core`
-- Never create PRs against `master` branch
+**CRITICAL**: Our deployment flow is:
+```
+Feature Branch → staging branch → nextjs-pagebuilder-core
+      ↓              ↓                    ↓
+   DEV Local    STAGING Site         PROD Site
+```
+
+- Feature branches merge to `staging` for testing
+- `staging` branch deploys to https://staging.wondrousdigital.com
+- After staging verification, merge `staging` → `nextjs-pagebuilder-core`
+- `nextjs-pagebuilder-core` deploys to https://wondrousdigital.com (PRODUCTION)
+- Never create PRs directly against `master` branch
 
 ## 💻 Development Commands
 
@@ -185,31 +197,67 @@ npm run dev:logs
 npm run dev:status
 ```
 
+## ⚠️ Development Server Management
+
+### CRITICAL: Preventing Port Conflicts
+- **ALWAYS** check server status first: `npm run dev:status`
+- **NEVER** start servers on ports 3001, 3002 (corrupts `.next/routes-manifest`)
+- **ONLY** use PM2 commands for server management
+- Server runs on port 3000 ONLY
+
+### When Server Needs Restart:
+1. Claude asks: "Please restart the server by running: `npm run dev:restart`"
+2. User runs command in their terminal
+3. Claude verifies restart succeeded
+
+### If Routes Manifest Corrupted:
+```bash
+npm run dev:stop
+rm -rf .next
+npm run dev:start
+```
+
 # 🗄️ Database Management
 
-### Database Environments
-- **DEV Database**: hlpvvwlxjzexpgitsjlw (linked to CLI)
-- **PROD Database**: bpdhbxvsguklkbusqtke (manual migrations only)
+## Three-Tier Environment Architecture
+
+### 🖥️ DEV (Local Development)
+- **URL**: http://localhost:3000
+- **Database**: DEV Supabase (`hlpvvwlxjzexpgitsjlw`)
+- **Migrations**: USER applies manually via Supabase Dashboard
+
+### 🔍 STAGING (Preview Environment)  
+- **URL**: https://staging.wondrousdigital.com
+- **Database**: DEV Supabase (`hlpvvwlxjzexpgitsjlw`) - Shared with DEV
+- **Purpose**: Preview testing before production
+
+### 🚀 PROD (Production)
+- **URL**: https://wondrousdigital.com
+- **Database**: PROD Supabase (`bpdhbxvsguklkbusqtke`)
+- **Migrations**: USER applies manually via Supabase Dashboard
+
+## ⚠️ CRITICAL: Migration Process
+
+**USER APPLIES ALL MIGRATIONS MANUALLY - NO CLI USAGE**
 
 ### Migration Workflow
 1. **Create Migration**: Write SQL file in `/nextjs-app/supabase/migrations/`
-2. **Test in DEV**: Apply using CLI (see commands below)
-3. **Deploy to PROD**: User manually applies via Supabase Dashboard
+2. **Provide to USER**: Claude provides migration SQL for manual application
+3. **USER applies to DEV**: Via Supabase Dashboard (NOT CLI)
+4. **Test in DEV/STAGING**: Verify migration works correctly
+5. **USER applies to PROD**: Via Supabase Dashboard after staging verification
 
-### Migration Commands (DEV Only)
+### Creating Migration Files
 ```bash
-# From nextjs-app directory
-cd nextjs-app
-
-# Apply migrations to DEV
-npx supabase db push --password 'MsDH6QjUsf6vXD3nCeYkBNiF'
-
-# Check migration status in DEV
-npx supabase migration list --password 'MsDH6QjUsf6vXD3nCeYkBNiF'
-
-# Create a new migration file (replace 'description' with your feature name)
+# Create new migration file (MUST use 14-digit timestamp)
 echo "-- Your SQL here" > supabase/migrations/$(date +%Y%m%d%H%M%S)_description.sql
 ```
+
+**Important Rules:**
+- ✅ USER manually applies ALL migrations
+- ❌ NEVER use `npx supabase db push` or CLI commands
+- ❌ NEVER sync databases between environments
+- ✅ Test in DEV/STAGING before PROD
 
 ### Migration Naming Convention
 ```
@@ -235,6 +283,36 @@ YYYYMMDDHHMMSS_descriptive_name.sql
 ## 🎨 Current Implementation
 
 See /nextjs-app/docs/MASTER-TASK-LIST.MD 
+
+## 🧪 Test-Driven Development (TDD)
+
+### RED-GREEN-REFACTOR Cycle
+1. **RED**: Write failing tests first
+2. **GREEN**: Write minimal code to pass tests
+3. **REFACTOR**: Improve code while keeping tests green
+
+### Coverage Requirements
+- **Critical Paths (100% Required)**:
+  - `/api/stripe/*` - All payment routes
+  - `/lib/services/billing-*` - Billing services  
+  - `/lib/permissions/*` - Permission checks
+  - `/lib/supabase/auth/*` - Authentication
+- **Overall Target**: 85% minimum, 90% goal
+- **New Code**: Must not decrease coverage
+
+### Test Commands
+```bash
+npm test                    # Run all tests
+npm test -- --watch         # Watch mode during development
+npm test -- --coverage      # Check coverage
+npm test -- --run           # Run once (CI mode)
+```
+
+### Manual E2E Testing
+- Claude creates TodoWrite checklist from user stories
+- User and Claude test together on DEV, then STAGING
+- Real-time issue discovery and fixing
+- Update automated tests based on findings
 
 ## 🛠️ Technology Stack
 
@@ -282,8 +360,31 @@ See /nextjs-app/docs/MASTER-TASK-LIST.MD
 1. **Follow KISS, DRY, and SOLID principles**
 2. **No throwaway work** - Everything must be production-ready
 3. **Maintain clear separation** between app code and project code
-4. **Test thoroughly** before marking tasks complete
+4. **Test thoroughly** before marking tasks complete (follow TDD approach)
 5. **Update documentation** as you make changes
+6. **Use appropriate DEV-LIFECYCLE mode**: Full Feature (TDD), Fast Track (bugs), or Emergency
+7. **Complete each packet fully** before moving to next (including PROD deployment)
+
+## 🚨 CRITICAL: TypeScript Checking Process
+
+**LESSON LEARNED (2025-09-03)**: We accumulated 192 TypeScript errors because we were using the WRONG verification method.
+
+### ❌ INVALID TypeScript Checks:
+- `npm run build` - Only checks app code, IGNORES test files
+- "App runs fine" - Runtime != compile-time type safety
+- Build success - Does NOT mean zero TypeScript errors
+
+### ✅ ONLY VALID TypeScript Check:
+```bash
+npm run type-check  # or: npx tsc --noEmit
+```
+**This command checks ALL TypeScript files including tests. ZERO errors is the only acceptable result.**
+
+### Why This Matters:
+- Test files can have 100+ type errors while build passes
+- Type errors accumulate silently in test files
+- Each feature adds more unchecked test errors
+- Eventually you have 192 errors to fix (like we did)
 - ✅ DO tell me if we're doing something that rubs against the grain for the tech stack we are using. If we're doing something VERY atypical that could cause us headaches down the road, SOUND THE ALARM!
 - ✅ Everything we do must be work that is saved and critical to our production environment.
 - ✅ DO tell me what you really think. Don't agree with me just to agree. Disagree with me if you disagree.

@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
     // Get upcoming invoice preview from Stripe
     try {
       // Build subscription items for the preview
-      let subscriptionItems: any[] = [];
+      let subscriptionItems: Array<{ id?: string; price?: string; quantity?: number }> = [];
       
       if (action === 'upgrade' || action === 'downgrade' || action === 'switch-billing') {
         subscriptionItems = [{

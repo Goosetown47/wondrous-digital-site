@@ -10,12 +10,15 @@ import {
   useSuspendAccount,
   useActivateAccount,
   useDeleteAccount,
+  useUpdateAccount,
   getAccountStatus,
 } from '@/hooks/useAccounts';
+import { useIsAdmin } from '@/hooks/useRole';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 import { EnhancedTable } from '@/components/ui/enhanced-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,6 +53,8 @@ export default function AccountsPage() {
   const suspendAccount = useSuspendAccount();
   const activateAccount = useActivateAccount();
   const deleteAccount = useDeleteAccount();
+  const updateAccount = useUpdateAccount();
+  const { data: isAdmin } = useIsAdmin();
 
   const [deleteDialog, setDeleteDialog] = useState<{ 
     open: boolean; 
@@ -66,12 +71,19 @@ export default function AccountsPage() {
       render: (account: AccountWithStats) => (
         <div className="flex items-center space-x-3">
           <div>
-            <Link 
-              href={`/tools/accounts/${account.id}`}
-              className="font-medium hover:underline"
-            >
-              {account.name}
-            </Link>
+            <div className="flex items-center space-x-1">
+              <Link 
+                href={`/tools/accounts/${account.id}`}
+                className="font-medium hover:underline"
+              >
+                {account.name}
+              </Link>
+              {account.is_unlocked && (
+                <span className="text-green-600" title="All features unlocked">
+                  🔓
+                </span>
+              )}
+            </div>
             <div className="text-sm text-muted-foreground">
               {account.slug}
             </div>
@@ -96,6 +108,41 @@ export default function AccountsPage() {
           <Badge className={planColors[tierKey] || planColors.free}>
             {account.tier || 'FREE'}
           </Badge>
+        );
+      },
+    },
+    {
+      key: 'is_unlocked',
+      title: 'Unlocked',
+      render: (account: AccountWithStats) => {
+        if (!isAdmin) {
+          // Non-admins just see the status
+          return account.is_unlocked ? (
+            <Badge className="bg-green-100 text-green-700">
+              🔓 Unlocked
+            </Badge>
+          ) : null;
+        }
+        
+        // Admins see a toggle switch
+        return (
+          <div className="flex items-center space-x-2">
+            <Switch
+              checked={account.is_unlocked || false}
+              onCheckedChange={(checked) => {
+                updateAccount.mutate({
+                  id: account.id,
+                  updates: { is_unlocked: checked }
+                });
+              }}
+              aria-label={`Toggle unlock for ${account.name}`}
+            />
+            {account.is_unlocked && (
+              <span className="text-green-600" title="All features unlocked">
+                🔓
+              </span>
+            )}
+          </div>
         );
       },
     },

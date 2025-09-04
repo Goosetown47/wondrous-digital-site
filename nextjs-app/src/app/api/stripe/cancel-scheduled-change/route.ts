@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe/config';
+import { updateLastChangeTime } from '@/lib/services/billing-cooldown';
 
 export async function POST(request: NextRequest) {
   try {
@@ -113,12 +114,13 @@ export async function POST(request: NextRequest) {
       console.log('No schedule found on subscription');
     }
 
-    // Clear pending change fields in database
+    // Clear pending change fields in database and reset state to ACTIVE
     const { error: updateError } = await supabase
       .from('accounts')
       .update({
         pending_tier_change: null,
         pending_tier_change_date: null,
+        subscription_state: 'active', // Reset state back to active
       })
       .eq('id', accountId);
     
@@ -148,6 +150,9 @@ export async function POST(request: NextRequest) {
           cancelled_at: new Date().toISOString(),
         },
       });
+
+    // Update cooldown timestamp (cancellations also trigger cooldown)
+    await updateLastChangeTime(accountId);
 
     return NextResponse.json({
       success: true,

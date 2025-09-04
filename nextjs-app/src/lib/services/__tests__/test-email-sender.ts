@@ -3,7 +3,7 @@ import { Resend } from 'resend';
 interface TestEmailOptions {
   to: string;
   template: string;
-  data: any;
+  data: Record<string, unknown>;
 }
 
 interface TestEmailResult {
@@ -47,10 +47,10 @@ export async function sendTestEmail(options: TestEmailOptions): Promise<TestEmai
       emailId: response.data?.id,
       testEmailSent: to === 'doyixo9427@besaies.com'
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 }
@@ -71,28 +71,38 @@ export async function sendTestEmailForScenario(
   });
 }
 
-function getEmailSubject(template: string, data: any): string {
+function getEmailSubject(template: string, data: Record<string, unknown>): string {
   const subjects: Record<string, string> = {
-    'billing-change-reminder': `Billing Change Reminder: ${data.reminderType?.replace('_', ' ')} notice`,
+    'billing-change-reminder': `Billing Change Reminder: ${typeof data.reminderType === 'string' ? data.reminderType.replace('_', ' ') : ''} notice`,
     'billing-notifications-summary': 'Billing Notifications Summary Report'
   };
 
   return subjects[template] || 'Wondrous Digital Notification';
 }
 
-async function renderEmailTemplate(template: string, data: any): Promise<string> {
+interface AccountData {
+  name?: string;
+  tier?: string;
+  pending_tier_change?: string;
+  pending_tier_change_date?: string;
+}
+
+async function renderEmailTemplate(template: string, data: Record<string, unknown>): Promise<string> {
   // This would normally import and render the actual React email component
   // For testing, we'll return a simple HTML template
   
   if (template === 'billing-change-reminder') {
+    const account = data.account as AccountData | undefined;
+    const reminderType = typeof data.reminderType === 'string' ? data.reminderType : '';
+    
     return `
       <div>
         <h1>Billing Change Reminder</h1>
-        <p>Dear ${data.account?.name || 'Customer'},</p>
-        <p>This is a reminder that your billing will change in ${data.reminderType?.replace('_', ' ')}.</p>
-        <p>Current Plan: ${data.account?.tier}</p>
-        <p>New Plan: ${data.account?.pending_tier_change}</p>
-        <p>Change Date: ${data.account?.pending_tier_change_date}</p>
+        <p>Dear ${account?.name || 'Customer'},</p>
+        <p>This is a reminder that your billing will change in ${reminderType.replace('_', ' ')}.</p>
+        <p>Current Plan: ${account?.tier || 'N/A'}</p>
+        <p>New Plan: ${account?.pending_tier_change || 'N/A'}</p>
+        <p>Change Date: ${account?.pending_tier_change_date || 'N/A'}</p>
         <a href="https://app.wondrousdigital.com/billing">Review Changes</a>
       </div>
     `;

@@ -65,7 +65,7 @@ export const spacing = {
   logoPadding: '32px 0',
   
   // Content
-  contentPadding: '0 48px 32px', // Reduced bottom padding
+  contentPadding: '32px 48px', // Consistent padding on all sides
   
   // Sections
   sectionMargin: '32px 0 16px 0',
@@ -82,6 +82,14 @@ export const spacing = {
 
 // Component Styles
 export const styles = {
+  // Body style for email body element
+  body: {
+    backgroundColor: colors.background,
+    margin: 0,
+    padding: 0,
+    fontFamily: typography.fontFamily,
+  },
+  
   // Main container
   container: {
     backgroundColor: colors.background,
@@ -107,6 +115,11 @@ export const styles = {
   // Content wrapper
   content: {
     padding: spacing.contentPadding,
+  },
+  
+  // Content section (used by grace period emails)
+  contentSection: {
+    padding: '0 48px 48px', // No top padding (logo handles that), 48px left/right and bottom
   },
   
   // Typography styles
@@ -256,6 +269,14 @@ export const styles = {
     marginBottom: '8px',
   },
   
+  // Highlight section for important notices
+  highlightSection: {
+    padding: '16px',
+    borderRadius: '8px',
+    border: '1px solid',
+    margin: '24px 0',
+  },
+  
   // Warning box styles (deprecated, but kept for reference)
   warningBox: {
     backgroundColor: '#fef2f2',
@@ -269,6 +290,14 @@ export const styles = {
     fontSize: '13px',
     lineHeight: '20px',
     margin: 0,
+  },
+  
+  // Info/data box for displaying structured information
+  box: {
+    backgroundColor: '#f9fafb',
+    borderRadius: '8px',
+    padding: '16px',
+    marginBottom: '16px',
   },
 } as const;
 

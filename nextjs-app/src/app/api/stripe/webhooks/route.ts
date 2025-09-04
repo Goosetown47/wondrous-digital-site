@@ -4,6 +4,7 @@ import { WEBHOOK_EVENTS } from '@/lib/stripe/config';
 import { verifyWebhookSignature, updateAccountTier, startGracePeriod } from '@/lib/stripe/utils';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
 import { getEnvironmentName, getStripeMode } from '@/lib/utils/environment';
+import { SubscriptionState, mapStripeStatusToState } from '@/lib/services/subscription-state';
 import type { TierName } from '@/types/database';
 import type Stripe from 'stripe';
 
@@ -127,7 +128,6 @@ export async function POST(request: NextRequest) {
           
           try {
             // Now that payment is successful, actually update the subscription
-            const { updateAccountTier } = await import('@/lib/stripe/utils');
             const stripe = (await import('@/lib/stripe/config')).getStripe();
             const { TIER_PRICING } = await import('@/lib/stripe/prices');
             
@@ -363,7 +363,7 @@ export async function POST(request: NextRequest) {
               const updateData = {
                 tier,
                 stripe_customer_id: session.customer as string,
-                subscription_status: 'pending' as const,
+                subscription_state: SubscriptionState.INCOMPLETE,
                 setup_fee_paid: true,
                 setup_fee_paid_at: new Date().toISOString(),
               };
@@ -408,7 +408,7 @@ export async function POST(request: NextRequest) {
                 // Double-check the update actually persisted
                 const { data: verifyUpdate } = await supabase
                   .from('accounts')
-                  .select('tier, stripe_customer_id, subscription_status')
+                  .select('tier, stripe_customer_id, subscription_state')
                   .eq('id', accountId)
                   .single();
                 console.log('Verification read after update:', JSON.stringify(verifyUpdate, null, 2));
@@ -474,8 +474,35 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (account) {
-          // Start grace period
-          await startGracePeriod(account.id, 10, supabase);
+          // Start 14-day grace period (changed from 10)
+          await startGracePeriod(account.id, 14, supabase);
+          
+          // Get tier for notifications
+          const { data: accountDetails } = await supabase
+            .from('accounts')
+            .select('tier')
+            .eq('id', account.id)
+            .single();
+          
+          // Schedule grace period notifications
+          const { calculateGracePeriodEnd, scheduleGracePeriodNotifications } = await import('@/lib/services/grace-period');
+          const gracePeriodEnd = calculateGracePeriodEnd(new Date());
+          
+          if (accountDetails?.tier) {
+            await scheduleGracePeriodNotifications(
+              account.id,
+              gracePeriodEnd.toISOString(),
+              accountDetails.tier
+            );
+          }
+          
+          // Update subscription state to past_due
+          await supabase
+            .from('accounts')
+            .update({
+              subscription_state: 'past_due'
+            })
+            .eq('id', account.id);
           
           // Log payment failure
           await supabase
@@ -488,8 +515,11 @@ export async function POST(request: NextRequest) {
               metadata: {
                 attempt_count: invoice.attempt_count,
                 next_payment_attempt: invoice.next_payment_attempt,
+                grace_period_ends_at: gracePeriodEnd.toISOString(),
               },
             });
+          
+          console.log(`Payment failed for account ${account.id}, 14-day grace period started`);
         }
         
         break;
@@ -517,7 +547,7 @@ export async function POST(request: NextRequest) {
             .from('accounts')
             .update({
               stripe_subscription_id: subscription.id,
-              subscription_status: subscription.status as string,
+              subscription_state: mapStripeStatusToState(subscription.status),
             })
             .eq('id', account.id);
           
@@ -551,8 +581,8 @@ export async function POST(request: NextRequest) {
           const newTier = subscription.metadata?.tier as TierName | undefined;
           const previousTier = subscription.metadata?.previous_tier as TierName | undefined;
           
-          const updateData: any = {
-            subscription_status: subscription.status,
+          const updateData: Record<string, unknown> = {
+            subscription_state: mapStripeStatusToState(subscription.status),
           };
           
           // If tier changed, update it
@@ -608,7 +638,7 @@ export async function POST(request: NextRequest) {
             .from('accounts')
             .update({
               tier: 'FREE' as TierName,
-              subscription_status: 'canceled',
+              subscription_state: null, // No subscription means no state
             })
             .eq('id', account.id);
           

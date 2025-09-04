@@ -3,6 +3,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe/config';
 import { PERFORM_ADDON_PRICING } from '@/lib/stripe/prices';
 import { createOrRetrieveCustomer } from '@/lib/stripe/utils';
+import { SubscriptionState, SubscriptionAction, isActionAllowed } from '@/lib/services/subscription-state';
+import type Stripe from 'stripe';
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,6 +53,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify user has permission (account owner only)
+    const { data: accountUser } = await supabase
+      .from('account_users')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('account_id', accountId)
+      .single();
+    
+    if (!accountUser || accountUser.role !== 'account_owner') {
+      return NextResponse.json(
+        { error: 'Only account owners can purchase addons' },
+        { status: 403 }
+      );
+    }
+
     // Check if account has a premium package
     if (account.tier === 'FREE' || account.tier === 'BASIC') {
       return NextResponse.json(
@@ -65,6 +82,36 @@ export async function POST(request: NextRequest) {
         { error: 'Account already has PERFORM addon' },
         { status: 400 }
       );
+    }
+
+    // Check subscription state to see if addon changes are allowed
+    const subscriptionState = account.subscription_state as SubscriptionState | null;
+    if (subscriptionState) {
+      // Check if adding addons is allowed in current state
+      if (!isActionAllowed(subscriptionState, SubscriptionAction.ADD_ADDON)) {
+        let errorMessage = 'Cannot add addons in the current subscription state.';
+        
+        // Provide specific error messages based on state
+        if (subscriptionState === SubscriptionState.PENDING_CHANGE) {
+          errorMessage = 'You have a pending plan change. Please wait for it to complete before adding addons.';
+        } else if (subscriptionState === SubscriptionState.CANCELING) {
+          errorMessage = 'Your subscription is scheduled for cancellation. Please reactivate it before adding addons.';
+        } else if (subscriptionState === SubscriptionState.PAST_DUE) {
+          errorMessage = 'Your subscription is past due. Please update your payment method before adding addons.';
+        } else if (subscriptionState === SubscriptionState.INCOMPLETE) {
+          errorMessage = 'Your subscription setup is incomplete. Please complete the payment first.';
+        } else if (subscriptionState === SubscriptionState.INCOMPLETE_EXPIRED) {
+          errorMessage = 'Your subscription has expired. Please start a new subscription.';
+        }
+        
+        return NextResponse.json(
+          { 
+            error: errorMessage,
+            currentState: subscriptionState
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Get stripe instance
@@ -83,7 +130,7 @@ export async function POST(request: NextRequest) {
       : PERFORM_ADDON_PRICING.monthlyPriceId;
 
     // Build line items
-    const lineItems: any[] = [
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
       {
         price: priceId,
         quantity: 1,

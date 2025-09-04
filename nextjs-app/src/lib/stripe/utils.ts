@@ -113,12 +113,18 @@ export async function createCheckoutSession(
       params += '&flow=invitation';
     }
     successUrl = `${baseUrl}/signup/success?${params}`;
+  } else if (flow === 'upgrade') {
+    // For upgrades, redirect back to billing page with success indicator
+    successUrl = `${baseUrl}/billing?upgrade=success`;
   } else {
+    // Default for other flows (cold, invitation)
     successUrl = STRIPE_CONFIG.getSuccessUrl('{CHECKOUT_SESSION_ID}');
   }
     
   const cancelUrl = flow === 'signup'
     ? `${baseUrl}/signup/pricing`
+    : flow === 'upgrade'
+    ? `${baseUrl}/billing/plans`
     : STRIPE_CONFIG.getCancelUrl();
 
   // Create checkout session

@@ -62,7 +62,7 @@ export async function GET() {
       console.log('🔍 [API/Accounts] Using service role for admin/staff user...');
       ({ data: accounts, error: accountsError } = await serviceClient
         .from('accounts')
-        .select('id, name, slug, tier, stripe_customer_id, stripe_subscription_id, subscription_status, created_at, updated_at, settings')
+        .select('id, name, slug, tier, is_unlocked, stripe_customer_id, stripe_subscription_id, subscription_status, created_at, updated_at, settings')
         .neq('id', '00000000-0000-0000-0000-000000000000') // Exclude platform account
         .order('name'));
     } else {
@@ -75,6 +75,7 @@ export async function GET() {
           name, 
           slug, 
           tier,
+          is_unlocked,
           stripe_customer_id,
           stripe_subscription_id,
           subscription_status, 

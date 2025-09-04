@@ -246,7 +246,7 @@ export function getTestAccount(scenario: keyof typeof TEST_SCENARIOS) {
 
 export function getFeatureComparison(scenario: keyof typeof TEST_SCENARIOS) {
   const { currentFeatures, targetFeatures } = TEST_SCENARIOS[scenario];
-  const changes: Record<string, { from: any; to: any }> = {};
+  const changes: Record<string, { from: string | number | boolean; to: string | number | boolean }> = {};
 
   for (const [key, value] of Object.entries(currentFeatures)) {
     if (value !== targetFeatures[key as keyof typeof targetFeatures]) {

@@ -1,7 +1,6 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,8 +9,6 @@ import Image from 'next/image';
 import confetti from 'canvas-confetti';
 
 function PaymentSuccessContent() {
-  const searchParams = useSearchParams();
-  const sessionId = searchParams.get('session_id');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -95,8 +92,8 @@ function PaymentSuccessContent() {
               </p>
               <div className="flex gap-3 justify-center mt-6">
                 <Button asChild size="lg">
-                  <Link href={sessionId ? `/profile/setup?session_id=${sessionId}` : '/dashboard'}>
-                    {sessionId ? 'Set Up Your Account' : 'Go to Dashboard'}
+                  <Link href="/billing">
+                    View Your Subscription
                   </Link>
                 </Button>
               </div>

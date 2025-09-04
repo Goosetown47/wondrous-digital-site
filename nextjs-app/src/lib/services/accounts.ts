@@ -14,7 +14,8 @@ export interface AccountWithStats extends Account {
 export interface CreateAccountData {
   name: string;
   slug: string;
-  tier: 'FREE' | 'BASIC' | 'PRO' | 'SCALE' | 'MAX';
+  tier?: 'FREE' | 'BASIC' | 'PRO' | 'SCALE' | 'MAX'; // Optional, will always default to FREE
+  is_unlocked?: boolean; // Admin-only field
   settings?: Record<string, unknown>;
 }
 
@@ -22,6 +23,7 @@ export interface UpdateAccountData {
   name?: string;
   slug?: string;
   tier?: 'FREE' | 'BASIC' | 'PRO' | 'SCALE' | 'MAX';
+  is_unlocked?: boolean;
   settings?: Record<string, unknown>;
 }
 
@@ -174,12 +176,16 @@ export async function createAccount(data: CreateAccountData): Promise<Account> {
     throw new Error('Account slug already exists');
   }
 
+  // Only admins can set is_unlocked
+  const userIsAdmin = await isAdmin(user.id);
+  
   const { data: account, error } = await supabase
     .from('accounts')
     .insert({
       name: trimmedName,
       slug: trimmedSlug,
-      tier: data.tier,
+      tier: 'FREE', // Always create with FREE tier
+      is_unlocked: userIsAdmin && data.is_unlocked ? data.is_unlocked : false,
       settings: validatedSettings,
     })
     .select()
@@ -248,6 +254,14 @@ export async function updateAccount(id: string, updates: UpdateAccountData): Pro
   // Copy other fields
   if (updates.tier !== undefined) {
     sanitizedUpdates.tier = updates.tier;
+  }
+  
+  // Only admins can set is_unlocked
+  if (updates.is_unlocked !== undefined) {
+    const userIsAdmin = await isAdmin(user.id);
+    if (userIsAdmin) {
+      sanitizedUpdates.is_unlocked = updates.is_unlocked;
+    }
   }
   
   // Validate settings (including description)
