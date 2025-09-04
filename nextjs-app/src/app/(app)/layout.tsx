@@ -1,7 +1,6 @@
 import { AppSidebar } from '@/components/navigation/app-sidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AuthProvider } from '@/providers/auth-provider';
-import { Toaster } from 'sonner';
 
 export default function AppLayout({
   children,
@@ -22,7 +21,6 @@ export default function AppLayout({
             </div>
           </main>
         </div>
-        <Toaster />
       </SidebarProvider>
     </AuthProvider>
   );

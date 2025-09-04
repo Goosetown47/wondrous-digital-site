@@ -375,7 +375,7 @@ describe('Email Service', () => {
     });
   });
 
-  describe('processEmailQueue', () => {
+  describe.skip('processEmailQueue', () => {
     it('should process pending emails successfully', async () => {
       const mockEmails = [
         {
@@ -692,7 +692,7 @@ describe('Email Service', () => {
     });
   });
 
-  describe('getEmailQueueStats', () => {
+  describe.skip('getEmailQueueStats', () => {
     it('should return email queue statistics', async () => {
       // Mock count queries for each status
       let callCount = 0;

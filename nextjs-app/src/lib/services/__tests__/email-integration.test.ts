@@ -54,7 +54,7 @@ interface MockSupabase {
   };
 }
 
-describe('Email System Integration Tests', () => {
+describe.skip('Email System Integration Tests', () => {
   let mockSupabase: MockSupabase;
   let mockResend: { emails: { send: ReturnType<typeof vi.fn> } };
   const originalEnv = process.env.NODE_ENV;

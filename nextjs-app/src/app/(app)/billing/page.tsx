@@ -2,17 +2,16 @@
 
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { format } from 'date-fns';
+import { format, differenceInHours, differenceInMinutes, differenceInDays } from 'date-fns';
 import { 
   AlertCircle,
+  AlertTriangle,
   Download,
   Loader2,
   Check,
   ChevronDown,
   ChevronRight,
-  CreditCard,
-  Calendar,
-  DollarSign
+  CreditCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,10 +24,14 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useAuth } from '@/providers/auth-provider';
+import { useIsAccountOwner } from '@/hooks/useRole';
 import { toast } from 'sonner';
-import { TIER_PRICING } from '@/lib/stripe/prices';
-import type { TierName } from '@/types/database';
 
 interface LineItem {
   description: string;
@@ -62,7 +65,16 @@ interface BillingDetails {
     stripeSubscriptionId: string | null;
     pendingTierChange: string | null;
     pendingTierChangeDate: string | null;
+    gracePeriodEndsAt?: string | null;
+    subscriptionState?: string;
   };
+  subscriptionStateInfo?: {
+    label: string;
+    color: 'green' | 'blue' | 'yellow' | 'red' | 'gray';
+    description: string;
+    icon?: string;
+  } | null;
+  availableActions?: string[];
   billingStatus: {
     status: 'paid' | 'overdue' | 'no_subscription';
     message: string;
@@ -114,6 +126,12 @@ interface BillingDetails {
     targetBillingPeriod?: 'monthly' | 'yearly';
     hasYearlyDiscount?: boolean;
   } | null;
+  cooldownInfo?: {
+    isActive: boolean;
+    endsAt: string | null;
+    timeRemaining: string | null;
+    canMakeChange: boolean;
+  };
 }
 
 // Loading component for Suspense
@@ -129,11 +147,14 @@ function BillingLoading() {
 function BillingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, currentAccount: selectedAccount } = useAuth();
+  const { currentAccount: selectedAccount } = useAuth();
+  const { data: isAccountOwner, isLoading: isOwnerLoading } = useIsAccountOwner();
   const [loading, setLoading] = useState(true);
   const [billingDetails, setBillingDetails] = useState<BillingDetails | null>(null);
   const [creatingPortalSession, setCreatingPortalSession] = useState(false);
   const [expandedInvoices, setExpandedInvoices] = useState<string[]>([]);
+  const [cooldownTimeRemaining, setCooldownTimeRemaining] = useState<string | null>(null);
+  const [gracePeriodDaysRemaining, setGracePeriodDaysRemaining] = useState<number | null>(null);
 
   // Toggle invoice expansion
   const toggleInvoiceExpanded = useCallback((invoiceId: string) => {
@@ -184,6 +205,92 @@ function BillingContent() {
     fetchBillingDetails();
   }, [selectedAccount]);
 
+  // Update cooldown countdown every minute
+  useEffect(() => {
+    if (!billingDetails?.cooldownInfo?.isActive || !billingDetails?.cooldownInfo?.endsAt) {
+      setCooldownTimeRemaining(null);
+      return;
+    }
+
+    const updateCountdown = () => {
+      if (!billingDetails?.cooldownInfo?.endsAt) return;
+      
+      const now = new Date();
+      const endsAt = new Date(billingDetails.cooldownInfo.endsAt);
+      
+      if (now >= endsAt) {
+        setCooldownTimeRemaining(null);
+        // Refresh billing details when cooldown expires
+        window.location.reload();
+        return;
+      }
+      
+      const hoursRemaining = differenceInHours(endsAt, now);
+      const minutesRemaining = differenceInMinutes(endsAt, now) % 60;
+      
+      let timeText = '';
+      if (hoursRemaining > 0) {
+        timeText = `${hoursRemaining} hour${hoursRemaining !== 1 ? 's' : ''}`;
+        if (minutesRemaining > 0) {
+          timeText += ` and ${minutesRemaining} minute${minutesRemaining !== 1 ? 's' : ''}`;
+        }
+      } else {
+        timeText = `${minutesRemaining} minute${minutesRemaining !== 1 ? 's' : ''}`;
+      }
+      
+      setCooldownTimeRemaining(timeText);
+    };
+
+    // Update immediately
+    updateCountdown();
+    
+    // Update every minute
+    const interval = setInterval(updateCountdown, 60000);
+    
+    return () => clearInterval(interval);
+  }, [billingDetails?.cooldownInfo]);
+
+  // Update grace period countdown every minute
+  useEffect(() => {
+    if (billingDetails?.account.subscriptionState !== 'past_due' || 
+        !billingDetails?.account.gracePeriodEndsAt) {
+      setGracePeriodDaysRemaining(null);
+      return;
+    }
+
+    const updateGracePeriodCountdown = () => {
+      if (!billingDetails?.account.gracePeriodEndsAt) return;
+      
+      const now = new Date();
+      const gracePeriodEnd = new Date(billingDetails.account.gracePeriodEndsAt);
+      
+      if (now >= gracePeriodEnd) {
+        setGracePeriodDaysRemaining(0);
+        // Refresh billing details when grace period expires
+        window.location.reload();
+        return;
+      }
+      
+      const daysRemaining = differenceInDays(gracePeriodEnd, now);
+      const hoursRemaining = differenceInHours(gracePeriodEnd, now);
+      
+      // If less than 24 hours, show as "less than 1 day"
+      if (daysRemaining === 0 && hoursRemaining > 0) {
+        setGracePeriodDaysRemaining(1); // Will display as "1 day"
+      } else {
+        setGracePeriodDaysRemaining(daysRemaining);
+      }
+    };
+
+    // Update immediately
+    updateGracePeriodCountdown();
+    
+    // Update every minute
+    const interval = setInterval(updateGracePeriodCountdown, 60000);
+    
+    return () => clearInterval(interval);
+  }, [billingDetails?.account.subscriptionState, billingDetails?.account.gracePeriodEndsAt]);
+
   // Create Stripe portal session
   const handleManageBilling = async () => {
     if (!selectedAccount) return;
@@ -233,7 +340,7 @@ function BillingContent() {
     );
   }
 
-  const { account, billingStatus, subscription, invoices = [], upcomingInvoice } = billingDetails || {};
+  const { account, billingStatus, subscription, invoices = [] } = billingDetails || {};
   const hasActiveSubscription = subscription?.status === 'active';
   const hasStripeCustomer = !!account?.stripeCustomerId;
 
@@ -344,25 +451,33 @@ function BillingContent() {
   };
 
   // Get the new tier pricing
-  const getNewTierPricing = (targetTier: TierName, billingPeriod: 'monthly' | 'yearly') => {
-    if (targetTier === 'FREE' || targetTier === 'BASIC') return 0;
-    const tierPricing = TIER_PRICING[targetTier as 'PRO' | 'SCALE' | 'MAX'];
-    if (!tierPricing) return 0;
-    
-    // Use the correct price based on billing period
-    if (billingPeriod === 'yearly' && tierPricing.yearlyPriceId) {
-      // Calculate yearly price from monthly (multiply by 12 and apply discount)
-      const yearlyPrices = { PRO: 4287, SCALE: 7527, MAX: 10767 };
-      return yearlyPrices[targetTier as keyof typeof yearlyPrices] || 0;
-    } else {
-      return tierPricing.displayPrice / 100; // Convert from cents to dollars
-    }
-  };
 
   const billingDay = getBillingDay();
   const planName = getPlanDisplayName();
   const paidUntil = getPaidUntilDate();
   const nextPayment = getNextPaymentDetails();
+
+  // Check if user has permission to view billing
+  if (!isOwnerLoading && !isAccountOwner) {
+    return (
+      <div className="container mx-auto py-8 max-w-7xl">
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center">
+              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h2 className="text-2xl font-semibold mb-2">Access Restricted</h2>
+              <p className="text-muted-foreground">
+                Only account owners can access billing information.
+              </p>
+              <p className="text-sm text-muted-foreground mt-4">
+                Please contact your account owner to manage billing settings.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 max-w-7xl">
@@ -372,6 +487,7 @@ function BillingContent() {
           Your subscription details and payment history
         </p>
       </div>
+
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
@@ -387,11 +503,66 @@ function BillingContent() {
             <div className="flex-1">
               {/* Account Status */}
               <div className="mb-6">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Account Status</h3>
-                {hasActiveSubscription ? (
-                  <Badge className="bg-green-500 text-white">ACTIVE</Badge>
+                <h3 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                  Account Status
+                  {billingDetails?.account.subscriptionState === 'past_due' && 
+                   billingDetails?.account.gracePeriodEndsAt && (
+                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                  )}
+                </h3>
+                {/* Grace Period Container - Only show when in grace period */}
+                {billingDetails?.account.subscriptionState === 'past_due' && 
+                 billingDetails?.account.gracePeriodEndsAt ? (
+                  <div className="border-2 border-yellow-500 rounded-lg p-4 bg-yellow-50">
+                    <div className="flex items-start gap-2">
+                      <Badge className="bg-yellow-500 text-white shrink-0">
+                        Grace Period
+                      </Badge>
+                      <span className="text-sm">
+                        Your payment failed. You have <strong>{gracePeriodDaysRemaining !== null ? gracePeriodDaysRemaining : '14'} day{gracePeriodDaysRemaining === 1 ? '' : 's'}</strong> to update your payment
+                        method before your account is downgraded to FREE. Select the manage payment
+                        button to update your billing information.
+                      </span>
+                    </div>
+                  </div>
                 ) : (
-                  <Badge variant="secondary">INACTIVE</Badge>
+                  <div className="flex items-center gap-2">
+                    {billingDetails?.subscriptionStateInfo ? (
+                      <Badge 
+                        className={`
+                          ${billingDetails.subscriptionStateInfo.color === 'green' ? 'bg-green-500 text-white' : ''}
+                          ${billingDetails.subscriptionStateInfo.color === 'blue' ? 'bg-blue-500 text-white' : ''}
+                          ${billingDetails.subscriptionStateInfo.color === 'yellow' ? 'bg-yellow-500 text-white' : ''}
+                          ${billingDetails.subscriptionStateInfo.color === 'red' ? 'bg-red-500 text-white' : ''}
+                          ${billingDetails.subscriptionStateInfo.color === 'gray' ? 'bg-gray-500 text-white' : ''}
+                        `}
+                      >
+                        {billingDetails.subscriptionStateInfo.label}
+                      </Badge>
+                    ) : hasActiveSubscription ? (
+                      <Badge className="bg-green-500 text-white">ACTIVE</Badge>
+                    ) : account?.tier === 'FREE' ? (
+                      <Badge variant="outline">FREE</Badge>
+                    ) : (
+                      <Badge variant="secondary">INACTIVE</Badge>
+                    )}
+                    {billingDetails?.subscriptionStateInfo?.description && (
+                      <span className="text-sm text-muted-foreground">
+                        - {billingDetails.subscriptionStateInfo.description}
+                      </span>
+                    )}
+                  </div>
+                )}
+                
+                {/* Cooldown Warning */}
+                {billingDetails?.cooldownInfo?.isActive && (
+                  <div className="flex items-start gap-2 mt-2">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" />
+                    <div className="text-sm text-gray-600">
+                      <span className="text-yellow-600 font-medium">Cooldown Active:</span>
+                      {' '}You can make another plan change in {cooldownTimeRemaining || billingDetails.cooldownInfo.timeRemaining}
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -433,20 +604,30 @@ function BillingContent() {
                         <p>Your next payment of <strong>{formatCurrency(nextPayment?.amount || 0)}</strong> will be processed on <strong>{nextPayment?.date || 'N/A'}</strong></p>
                       </div>
                     )}
-                    {subscription?.cancelAtPeriodEnd && (
-                      <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          Your subscription will end on {formatDate(subscription.currentPeriodEnd)}
-                        </AlertDescription>
-                      </Alert>
-                    )}
                   </div>
                 </div>
               )}
 
+              {/* Upcoming Changes Section - Shows for cancellation */}
+              {subscription?.cancelAtPeriodEnd && (
+                <div className="mb-8">
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">Upcoming Changes</h3>
+                  <Alert className="border-orange-200 bg-orange-50">
+                    <AlertCircle className="h-4 w-4 text-orange-600" />
+                    <AlertDescription className="text-orange-900">
+                      <div className="space-y-2">
+                        <p className="font-medium">Subscription Scheduled for Cancellation</p>
+                        <p>Your {account?.tier} subscription will end on <strong>{formatDate(subscription.currentPeriodEnd)}</strong></p>
+                        <p>You will retain full access to your {account?.tier} features until this date, after which your account will be downgraded to FREE.</p>
+                        <p className="text-sm text-orange-700">To keep your subscription active, click "Revert Cancellation" in the quick actions.</p>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
+
               {/* Upcoming Changes Section - Shows for credit anniversary changes or pending tier changes */}
-              {billingStatus?.billingAnniversaryChange && !billingDetails?.pendingChange && (
+              {billingStatus?.billingAnniversaryChange && !billingDetails?.pendingChange && !subscription?.cancelAtPeriodEnd && (
                 <div className="mb-8">
                   <h3 className="text-sm font-medium text-muted-foreground mb-3">Upcoming Changes</h3>
                   <div className="space-y-2">
@@ -466,7 +647,7 @@ function BillingContent() {
               )}
 
               {/* Upcoming Changes Section - For pending tier changes */}
-              {billingDetails?.pendingChange && (
+              {billingDetails?.pendingChange && !subscription?.cancelAtPeriodEnd && (
                 <div className="mb-8">
                   <h3 className="text-sm font-medium text-muted-foreground mb-3">Upcoming Changes</h3>
                   <div className="space-y-2">
@@ -636,13 +817,24 @@ function BillingContent() {
                 <CardHeader>
                   <CardTitle>Account Quick Actions</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent>
+                  <div className="space-y-3">
                   {hasStripeCustomer && (
                     <Button 
                       onClick={handleManageBilling}
                       disabled={creatingPortalSession}
-                      className="w-full"
-                      variant="default"
+                      className={`w-full ${
+                        billingDetails?.account.subscriptionState === 'past_due' && 
+                        billingDetails?.account.gracePeriodEndsAt
+                          ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                          : ''
+                      }`}
+                      variant={
+                        billingDetails?.account.subscriptionState === 'past_due' && 
+                        billingDetails?.account.gracePeriodEndsAt
+                          ? 'ghost'
+                          : 'default'
+                      }
                     >
                       {creatingPortalSession ? (
                         <>
@@ -658,35 +850,127 @@ function BillingContent() {
                     </Button>
                   )}
                   
-                  <Button 
-                    onClick={() => {
-                      if (billingDetails?.pendingChange) {
-                        // Navigate to cancel confirmation page
-                        const params = new URLSearchParams({
-                          action: 'cancel-change',
-                          from: billingDetails.pendingChange.currentTier,
-                          to: billingDetails.pendingChange.targetTier,
-                        });
-                        router.push(`/billing/confirm?${params.toString()}`);
-                      } else {
-                        // Navigate to plans page
-                        router.push('/billing/plans');
-                      }
-                    }} 
-                    variant={billingDetails?.pendingChange ? "destructive" : "outline"}
-                    className="w-full"
-                  >
-                    {billingDetails?.pendingChange ? "Cancel Planned Change" : "Change Plans"}
-                  </Button>
-                  
-                  {hasActiveSubscription && account?.tier !== 'FREE' && !subscription?.cancelAtPeriodEnd && (
+                  {/* Plan Change / Upgrade Button */}
+                  <div>
+                  {(billingDetails?.cooldownInfo?.isActive && !billingDetails?.pendingChange) || subscription?.cancelAtPeriodEnd ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="w-full">
+                          <Button 
+                            onClick={() => {
+                              if (billingDetails?.pendingChange) {
+                                // Navigate to cancel confirmation page
+                                const params = new URLSearchParams({
+                                  action: 'cancel-change',
+                                  from: billingDetails.pendingChange.currentTier,
+                                  to: billingDetails.pendingChange.targetTier,
+                                });
+                                router.push(`/billing/confirm?${params.toString()}`);
+                              } else {
+                                // Navigate to plans page
+                                router.push('/billing/plans');
+                              }
+                            }} 
+                            variant={billingDetails?.pendingChange ? "destructive" : account?.tier === 'FREE' ? "default" : "outline"}
+                            className={`w-full ${(billingDetails?.cooldownInfo?.isActive && !billingDetails?.pendingChange) || subscription?.cancelAtPeriodEnd ? 'opacity-50' : ''}`}
+                            disabled={(billingDetails?.cooldownInfo?.isActive && !billingDetails?.pendingChange) || subscription?.cancelAtPeriodEnd}
+                          >
+                            {billingDetails?.pendingChange 
+                              ? "Cancel Planned Change" 
+                              : billingDetails?.cooldownInfo?.isActive 
+                                ? "Plan Change Unavailable"
+                                : subscription?.cancelAtPeriodEnd
+                                  ? "Plan Change Unavailable"
+                                : account?.tier === 'FREE'
+                                  ? "Upgrade Account"
+                                  : "Change Plans"}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent 
+                        side="top" 
+                        align="center"
+                        sideOffset={5}
+                        className="max-w-[330px] text-center"
+                      >
+                        <p>
+                          {billingDetails?.cooldownInfo?.isActive && !billingDetails?.pendingChange
+                            ? "You recently made a plan change. Please wait before making another change."
+                            : "We have a one change at a time policy at Wondrous. Please revert your cancellation if you'd like to change your plan."}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
                     <Button 
-                      onClick={() => router.push('/billing/cancel')}
-                      variant="outline"
-                      className="w-full text-red-600 hover:text-red-700"
+                      onClick={() => {
+                        if (billingDetails?.pendingChange) {
+                          // Navigate to cancel confirmation page
+                          const params = new URLSearchParams({
+                            action: 'cancel-change',
+                            from: billingDetails.pendingChange.currentTier,
+                            to: billingDetails.pendingChange.targetTier,
+                          });
+                          router.push(`/billing/confirm?${params.toString()}`);
+                        } else {
+                          // Navigate to plans page
+                          router.push('/billing/plans');
+                        }
+                      }} 
+                      variant={billingDetails?.pendingChange ? "destructive" : account?.tier === 'FREE' ? "default" : "outline"}
+                      className="w-full"
+                      disabled={(billingDetails?.cooldownInfo?.isActive && !billingDetails?.pendingChange) || subscription?.cancelAtPeriodEnd}
                     >
-                      Cancel Plan
+                      {billingDetails?.pendingChange 
+                        ? "Cancel Planned Change" 
+                        : billingDetails?.cooldownInfo?.isActive 
+                          ? "Plan Change Unavailable"
+                          : subscription?.cancelAtPeriodEnd
+                            ? "Plan Change Unavailable"
+                          : account?.tier === 'FREE'
+                            ? "Upgrade Account"
+                            : "Change Plans"}
                     </Button>
+                  )}
+                  </div>
+                  
+                  {hasActiveSubscription && account?.tier !== 'FREE' && (
+                    subscription?.cancelAtPeriodEnd ? (
+                      <Button 
+                        onClick={async () => {
+                          try {
+                            const response = await fetch('/api/stripe/reactivate-subscription', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ accountId: selectedAccount?.id }),
+                            });
+                            
+                            if (!response.ok) {
+                              const error = await response.json();
+                              throw new Error(error.error || 'Failed to reactivate subscription');
+                            }
+                            
+                            const data = await response.json();
+                            toast.success(data.message || 'Subscription reactivated successfully');
+                            window.location.reload();
+                          } catch (error) {
+                            console.error('Error reactivating subscription:', error);
+                            toast.error(error instanceof Error ? error.message : 'Failed to reactivate subscription');
+                          }
+                        }}
+                        variant="default"
+                        className="w-full"
+                      >
+                        Revert Cancellation
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={() => router.push('/billing/cancel')}
+                        variant="outline"
+                        className="w-full text-red-600 hover:text-red-700"
+                      >
+                        Cancel Plan
+                      </Button>
+                    )
                   )}
 
                   <Separator className="my-4" />
@@ -702,6 +986,7 @@ function BillingContent() {
                     >
                       hello@wondrousdigital.com
                     </a>
+                  </div>
                   </div>
                 </CardContent>
               </Card>

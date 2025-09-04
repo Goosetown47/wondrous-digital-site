@@ -95,10 +95,7 @@ export default function CancelSubscriptionPage() {
 
   const handleReasonSelect = (reason: string) => {
     setSelectedReason(reason);
-    // Show retention offer immediately when reason is selected
-    if (reason && retentionOffers[reason as keyof typeof retentionOffers]) {
-      setShowRetentionOffer(true);
-    }
+    // Don't show retention offers automatically anymore
   };
 
   const handleAcceptOffer = async () => {
@@ -118,32 +115,34 @@ export default function CancelSubscriptionPage() {
   };
 
   const handleProceedToCancellation = () => {
-    setShowRetentionOffer(false);
+    // Skip retention offers for now and go straight to confirmation
     setShowConfirmDialog(true);
   };
 
   const handleConfirmCancellation = async () => {
     setProcessingCancellation(true);
     try {
-      // Create Stripe portal session for cancellation
-      const response = await fetch('/api/stripe/customer-portal', {
+      // Cancel subscription using our API
+      const response = await fetch('/api/stripe/cancel-subscription', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           accountId: selectedAccount?.id,
-          returnUrl: '/billing',
+          reason: selectedReason,
+          feedback: additionalFeedback,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create portal session');
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to cancel subscription');
       }
 
-      const { url } = await response.json();
+      const data = await response.json();
       
-      // Track cancellation reason
+      // Track cancellation reason (analytics - don't block on this)
       await fetch('/api/analytics/cancellation', {
         method: 'POST',
         headers: {
@@ -154,13 +153,14 @@ export default function CancelSubscriptionPage() {
           reason: selectedReason,
           feedback: additionalFeedback,
         }),
-      }).catch(console.error); // Don't block on analytics
+      }).catch(console.error);
       
-      // Redirect to Stripe portal
-      window.location.href = url;
+      // Show success message and redirect
+      toast.success(data.message || 'Your subscription has been scheduled for cancellation');
+      router.push('/billing');
     } catch (error) {
       console.error('Error cancelling subscription:', error);
-      toast.error('Failed to cancel subscription. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to cancel subscription. Please try again.');
       setProcessingCancellation(false);
     }
   };
@@ -182,7 +182,7 @@ export default function CancelSubscriptionPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Cancel Subscription</h1>
         <p className="text-muted-foreground mt-2">
-          We\'re sorry to see you go. Please help us improve by telling us why.
+          We're sorry to see you go. Please help us improve by telling us why.
         </p>
       </div>
 
@@ -198,21 +198,28 @@ export default function CancelSubscriptionPage() {
             <div className="flex items-start space-x-3">
               <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
               <div>
-                <p className="font-medium">Unlimited website updates</p>
-                <p className="text-sm text-muted-foreground">Keep your site fresh with no restrictions</p>
+                <p className="font-medium">Smart Marketing Features</p>
+                <p className="text-sm text-muted-foreground">Like your booking calendar and smart forms</p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
               <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
               <div>
-                <p className="font-medium">Premium templates & themes</p>
-                <p className="text-sm text-muted-foreground">Access to our entire library of designs</p>
+                <p className="font-medium">Multiple User Accounts</p>
+                <p className="text-sm text-muted-foreground">So your team can help you manage your site</p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
               <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
               <div>
-                <p className="font-medium">Priority support</p>
+                <p className="font-medium">Multiple Projects</p>
+                <p className="text-sm text-muted-foreground">So you can market to customers at different times of the year</p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+              <div>
+                <p className="font-medium">Premium Support</p>
                 <p className="text-sm text-muted-foreground">Get help when you need it most</p>
               </div>
             </div>
@@ -262,7 +269,7 @@ export default function CancelSubscriptionPage() {
             <AlertDescription>
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>Your subscription will remain active until the end of your billing period</li>
-                <li>You\'ll lose access to premium features after expiration</li>
+                <li>You'll lose access to premium features after expiration</li>
                 <li>Your data will be retained for 30 days</li>
                 <li>You can reactivate anytime to restore full access</li>
               </ul>
@@ -279,7 +286,6 @@ export default function CancelSubscriptionPage() {
             <Button
               variant="destructive"
               onClick={handleProceedToCancellation}
-              disabled={!selectedReason}
             >
               Continue with Cancellation
             </Button>

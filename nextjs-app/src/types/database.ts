@@ -16,6 +16,7 @@ export interface Account {
   setup_fee_paid_at?: string | null;
   grace_period_ends_at?: string | null;
   has_perform_addon?: boolean;
+  is_unlocked?: boolean; // When true, account has access to all features regardless of tier
   settings: Record<string, unknown>;
   created_at: string;
   updated_at: string;

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe/config';
+import { SubscriptionState, getStateDisplayInfo, getAvailableActions } from '@/lib/services/subscription-state';
+import { checkCooldownStatus } from '@/lib/services/billing-cooldown';
 import type Stripe from 'stripe';
 
 export async function GET(request: NextRequest) {
@@ -28,7 +30,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get account details including pending tier changes
+    // Get account details including pending tier changes and grace period
     const { data: account, error: accountError } = await supabase
       .from('accounts')
       .select('*')
@@ -57,6 +59,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Only account owners can view billing details
+    if (accountUser.role !== 'account_owner') {
+      return NextResponse.json(
+        { error: 'Only account owners can access billing information' },
+        { status: 403 }
+      );
+    }
+
     // Initialize Stripe AFTER authentication is verified
     const stripe = getStripe();
     if (!stripe) {
@@ -70,7 +80,11 @@ export async function GET(request: NextRequest) {
           tier: account.tier,
           stripeCustomerId: null,
           stripeSubscriptionId: null,
+          subscriptionState: null,
+          gracePeriodEndsAt: account.grace_period_ends_at,
         },
+        subscriptionStateInfo: null,
+        availableActions: [],
         billingStatus: {
           status: 'no_subscription',
           message: 'No active subscription',
@@ -378,7 +392,7 @@ export async function GET(request: NextRequest) {
       const currentBillingPeriod = interval === 'year' ? 'yearly' : 'monthly';
       
       // Get target billing period from metadata - cast metadata as any to access properties
-      const metadata = changeHistory?.metadata as any;
+      const metadata = changeHistory?.metadata as Record<string, string> | undefined;
       const targetBillingPeriod = metadata?.billing_period || currentBillingPeriod;
       
       if (changeHistory) {
@@ -425,6 +439,14 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    // Get subscription state information - pass grace period for custom display
+    const subscriptionState = account.subscription_state as SubscriptionState | null;
+    const stateInfo = subscriptionState ? getStateDisplayInfo(subscriptionState, account.grace_period_ends_at) : null;
+    const availableActions = subscriptionState ? getAvailableActions(subscriptionState) : [];
+
+    // Get cooldown status for the account
+    const cooldownInfo = await checkCooldownStatus(accountId);
+
     return NextResponse.json({
       account: {
         tier: account.tier,
@@ -432,7 +454,12 @@ export async function GET(request: NextRequest) {
         stripeSubscriptionId: account.stripe_subscription_id,
         pendingTierChange: account.pending_tier_change,
         pendingTierChangeDate: account.pending_tier_change_date,
+        subscriptionState: subscriptionState,
+        gracePeriodEndsAt: account.grace_period_ends_at,
       },
+      subscriptionStateInfo: stateInfo,
+      availableActions,
+      cooldownInfo,
       billingStatus,
       subscription: subscriptionData,
       invoices: allPayments, // Now includes both invoices and one-time charges

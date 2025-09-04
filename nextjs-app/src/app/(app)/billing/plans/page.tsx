@@ -20,16 +20,17 @@ import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { 
   getPurchasableTiers, 
-  TIER_FEATURES, 
-  PERFORM_ADDON_PRICING,
-  TIER_PRICING 
+  TIER_FEATURES
 } from '@/lib/stripe/prices';
 import { TIER_HIERARCHY } from '@/lib/tier-features';
+import { SubscriptionState } from '@/lib/services/subscription-state';
+import { shouldChargeSetupFee } from '@/lib/utils/setup-fee';
 import type { Account, TierName } from '@/types/database';
 
 interface AccountWithSetupFees extends Account {
   perform_setup_fee_paid?: boolean;
   perform_setup_fee_paid_at?: string;
+  subscription_state?: SubscriptionState | null;
 }
 
 export default function BillingPlansPage() {
@@ -103,6 +104,32 @@ export default function BillingPlansPage() {
   const handlePlanChange = async (targetTier: TierName, action: 'upgrade' | 'downgrade') => {
     if (!accountDetails) return;
     
+    // Check subscription state restrictions
+    const subscriptionState = accountDetails.subscription_state;
+    if (subscriptionState) {
+      // Block changes for certain states
+      if (subscriptionState === SubscriptionState.PENDING_CHANGE) {
+        toast.error('You already have a pending change. Please wait for it to complete or cancel it first.');
+        return;
+      }
+      if (subscriptionState === SubscriptionState.CANCELING) {
+        toast.error('Your subscription is scheduled for cancellation. Please reactivate it before making changes.');
+        return;
+      }
+      if (subscriptionState === SubscriptionState.PAST_DUE) {
+        toast.error('Your subscription is past due. Please update your payment method before making changes.');
+        return;
+      }
+      if (subscriptionState === SubscriptionState.INCOMPLETE) {
+        toast.error('Your subscription setup is incomplete. Please complete the payment first.');
+        return;
+      }
+      if (subscriptionState === SubscriptionState.INCOMPLETE_EXPIRED) {
+        toast.error('Your subscription has expired. Please start a new subscription.');
+        return;
+      }
+    }
+    
     // For users without active subscriptions (FREE tier), use checkout session
     if (!accountDetails.stripe_subscription_id) {
       setCheckoutLoading(targetTier);
@@ -116,7 +143,7 @@ export default function BillingPlansPage() {
             tier: targetTier,
             accountId: accountDetails.id,
             billingPeriod: yearlyBilling ? 'yearly' : 'monthly',
-            flow: 'billing',
+            flow: 'upgrade',
           }),
         });
 
@@ -268,9 +295,12 @@ export default function BillingPlansPage() {
           const displayPrice = yearlyBilling ? yearlyPrice : monthlyPrice;
           const billingPeriod = yearlyBilling ? '/year' : '/month';
 
-          // Show setup fee only for new customers or those upgrading from FREE/BASIC
-          const shouldShowSetupFee = !hasMarketingSetupFeePaid && 
-            (currentTier === 'FREE' || currentTier === 'BASIC');
+          // Show setup fee based on 60-day rule
+          // If they've paid before, only charge again if it's been > 60 days
+          const shouldShowSetupFee = shouldChargeSetupFee(
+            hasMarketingSetupFeePaid,
+            accountDetails.setup_fee_paid_at
+          );
 
           return (
             <Card 
@@ -444,7 +474,10 @@ export default function BillingPlansPage() {
           </div>
           
           <div className="mt-6 flex items-center justify-between">
-            {!hasPerformAddon && !hasPerformSetupFeePaid && (
+            {!hasPerformAddon && shouldChargeSetupFee(
+              hasPerformSetupFeePaid,
+              accountDetails.perform_setup_fee_paid_at
+            ) && (
               <p className="text-sm text-muted-foreground">
                 + $750 one-time SEO Platform setup fee
               </p>

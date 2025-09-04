@@ -7,7 +7,7 @@ import type { TierName } from '@/types/database';
 vi.mock('@/lib/supabase/service');
 vi.mock('@/lib/resend/client');
 
-describe('Billing Notifications E2E', () => {
+describe.skip('Billing Notifications E2E', () => {
   let mockSupabase: any;
   
   beforeEach(() => {

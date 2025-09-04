@@ -93,7 +93,8 @@ describe('POST /api/stripe/create-checkout-session', () => {
         'inviter_user_123', // userId will be the inviter's ID
         'cus_123',
         'invitation',
-        'monthly'
+        'monthly',
+        false
       );
     });
 
@@ -179,7 +180,8 @@ describe('POST /api/stripe/create-checkout-session', () => {
         'user_123',
         'cus_456',
         'upgrade',
-        'monthly'
+        'monthly',
+        false
       );
     });
 

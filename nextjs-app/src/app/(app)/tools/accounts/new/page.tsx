@@ -11,13 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   Card,
   CardContent,
   CardDescription,
@@ -35,7 +28,6 @@ const createAccountSchema = z.object({
     .max(50, 'Slug too long')
     .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens')
     .refine(slug => !slug.startsWith('-') && !slug.endsWith('-'), 'Slug cannot start or end with hyphen'),
-  tier: z.enum(['FREE', 'BASIC', 'PRO', 'SCALE', 'MAX']).describe('Please select a tier'),
   description: z.string().max(500, 'Description too long').optional(),
 });
 
@@ -57,7 +49,6 @@ export default function NewAccountPage() {
     defaultValues: {
       name: '',
       slug: '',
-      tier: 'FREE',
       description: '',
     },
   });
@@ -86,7 +77,7 @@ export default function NewAccountPage() {
       const newAccount = await createAccount.mutateAsync({
         name: data.name,
         slug: data.slug,
-        tier: data.tier,
+        tier: 'FREE', // Always create accounts with FREE tier
         settings: data.description ? { description: data.description } : {},
       });
       
@@ -98,53 +89,54 @@ export default function NewAccountPage() {
       
       // Map error messages to specific fields
       if (errorMessage.includes('Account name')) {
-        setError('name', { type: 'server', message: errorMessage });
-      } else if (errorMessage.includes('Slug')) {
-        setError('slug', { type: 'server', message: errorMessage });
-      } else if (errorMessage.includes('Description')) {
-        setError('description', { type: 'server', message: errorMessage });
+        setError('name', { message: errorMessage });
+      } else if (errorMessage.includes('slug')) {
+        setError('slug', { message: errorMessage });
+      } else {
+        // Show generic error as toast or alert
+        setError('root', { message: errorMessage });
       }
-      // Toast is already shown by the mutation's onError callback
     }
   };
 
-  const planDescriptions = {
-    free: 'Basic features for small projects',
-    pro: 'Advanced features for growing businesses',
-    enterprise: 'Full features with enterprise support',
-  };
-
-  const planPricing = {
-    free: 'Free',
-    pro: '$29/month',
-    enterprise: 'Contact Sales',
-  };
-
   return (
-    <PermissionGate permission="account:create">
-      <div className="flex-1 space-y-6 p-8 pt-6">
-        <div className="flex items-center space-x-4">
-          <Link href="/tools/accounts">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Accounts
-            </Button>
-          </Link>
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Create New Account</h2>
-            <p className="text-muted-foreground">
-              Set up a new customer account with their preferred plan
-            </p>
-          </div>
+    <PermissionGate
+      permission="accounts.create"
+      fallback={
+        <div className="container mx-auto py-8">
+          <p>You don't have permission to create accounts.</p>
         </div>
+      }
+    >
+      <div className="container mx-auto py-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Create New Account</h1>
+              <p className="text-muted-foreground mt-1">
+                Add a new customer account to the platform
+              </p>
+            </div>
+            <Link href="/tools/accounts">
+              <Button variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Accounts
+              </Button>
+            </Link>
+          </div>
 
-        <div className="max-w-2xl">
+          {errors.root && (
+            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
+              {errors.root.message}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Account Information</CardTitle>
+                <CardTitle>Account Details</CardTitle>
                 <CardDescription>
-                  Basic information about the customer account
+                  Basic information about the customer account. All new accounts start with the FREE tier.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -189,72 +181,6 @@ export default function NewAccountPage() {
                   />
                   {errors.description && (
                     <p className="text-sm text-red-600">{errors.description.message}</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Subscription Plan</CardTitle>
-                <CardDescription>
-                  Choose the subscription plan for this account
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="tier">Tier *</Label>
-                  <Select
-                    onValueChange={(value: 'FREE' | 'BASIC' | 'PRO' | 'SCALE' | 'MAX') => setValue('tier', value)}
-                    defaultValue="FREE"
-                  >
-                    <SelectTrigger className={errors.tier ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select a tier" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="FREE">
-                        <div className="flex items-center justify-between w-full">
-                          <div>
-                            <div className="font-medium">Free Plan</div>
-                            <div className="text-sm text-muted-foreground">
-                              {planDescriptions.free}
-                            </div>
-                          </div>
-                          <div className="font-medium text-green-600 ml-4">
-                            {planPricing.free}
-                          </div>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="PRO">
-                        <div className="flex items-center justify-between w-full">
-                          <div>
-                            <div className="font-medium">Pro Plan</div>
-                            <div className="text-sm text-muted-foreground">
-                              {planDescriptions.pro}
-                            </div>
-                          </div>
-                          <div className="font-medium text-blue-600 ml-4">
-                            {planPricing.pro}
-                          </div>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="MAX">
-                        <div className="flex items-center justify-between w-full">
-                          <div>
-                            <div className="font-medium">Enterprise Plan</div>
-                            <div className="text-sm text-muted-foreground">
-                              {planDescriptions.enterprise}
-                            </div>
-                          </div>
-                          <div className="font-medium text-purple-600 ml-4">
-                            {planPricing.enterprise}
-                          </div>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.tier && (
-                    <p className="text-sm text-red-600">{errors.tier.message}</p>
                   )}
                 </div>
               </CardContent>

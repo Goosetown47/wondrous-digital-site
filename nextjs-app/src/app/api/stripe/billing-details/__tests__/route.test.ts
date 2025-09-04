@@ -3,6 +3,8 @@ import { NextRequest } from 'next/server';
 import { GET } from '../route';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe/config';
+import type { MockSupabaseClient, MockStripeClient } from '@/test/mocks/types';
+import { createMockSupabaseClient, createMockStripeClient, createMockQueryBuilder } from '@/test/mocks/types';
 
 // Mock Supabase
 vi.mock('@/lib/supabase/server');
@@ -11,39 +13,20 @@ vi.mock('@/lib/supabase/server');
 vi.mock('@/lib/stripe/config');
 
 describe('/api/stripe/billing-details', () => {
-  let mockSupabase: any;
-  let mockStripe: any;
+  let mockSupabase: MockSupabaseClient;
+  let mockStripe: MockStripeClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
     
     // Setup Supabase mock
-    mockSupabase = {
-      auth: {
-        getUser: vi.fn(),
-      },
-      from: vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn(),
-          })),
-        })),
-      })),
-    };
+    mockSupabase = createMockSupabaseClient();
     
     // Setup Stripe mock
-    mockStripe = {
-      subscriptions: {
-        retrieve: vi.fn(),
-      },
-      invoices: {
-        list: vi.fn(),
-        createPreview: vi.fn(),
-      },
-    };
+    mockStripe = createMockStripeClient();
     
-    vi.mocked(createSupabaseServerClient).mockResolvedValue(mockSupabase as any);
-    vi.mocked(getStripe).mockReturnValue(mockStripe as any);
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(mockSupabase as unknown as Awaited<ReturnType<typeof createSupabaseServerClient>>);
+    vi.mocked(getStripe).mockReturnValue(mockStripe as unknown as ReturnType<typeof getStripe>);
   });
 
   describe('Authentication', () => {
@@ -90,45 +73,21 @@ describe('/api/stripe/billing-details', () => {
         stripe_subscription_id: null,
       };
 
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: mockAccount,
-              error: null,
-            }),
-          }),
-        }),
-      });
-
       // Mock account_users check
       mockSupabase.from.mockImplementation((table: string) => {
+        const queryBuilder = createMockQueryBuilder();
         if (table === 'accounts') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                single: vi.fn().mockResolvedValue({
-                  data: mockAccount,
-                  error: null,
-                }),
-              }),
-            }),
-          };
+          queryBuilder.single.mockResolvedValue({
+            data: mockAccount,
+            error: null,
+          });
+        } else if (table === 'account_users') {
+          queryBuilder.single.mockResolvedValue({
+            data: { role: 'account_owner' },
+            error: null,
+          });
         }
-        if (table === 'account_users') {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                eq: vi.fn().mockReturnValue({
-                  single: vi.fn().mockResolvedValue({
-                    data: { role: 'account_owner' },
-                    error: null,
-                  }),
-                }),
-              }),
-            }),
-          };
-        }
+        return queryBuilder;
       });
 
       const request = new NextRequest('http://localhost/api/stripe/billing-details?accountId=account-123');
