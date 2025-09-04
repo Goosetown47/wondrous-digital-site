@@ -133,12 +133,15 @@ describe('Stripe Utils', () => {
         expect.objectContaining({
           customer: customerId,
           mode: 'subscription',
+          allow_promotion_codes: true,
+          payment_method_types: ['card'],
           metadata: {
             account_id: accountId,
             user_id: userId,
             tier,
             flow,
             billing_period: 'monthly',
+            is_warm_prospect: 'false',
           },
           line_items: [
             {

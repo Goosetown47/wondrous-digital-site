@@ -36,13 +36,6 @@ describe('Grace Period Service', () => {
     mockSupabase.from.mockReturnValue(mockQueryBuilder);
     return mockQueryBuilder;
   };
-  
-  // Helper to setup complex query chains
-  const setupMockQueryChain = () => {
-    const mockQueryBuilder = createMockQueryBuilder();
-    mockSupabase.from.mockReturnValue(mockQueryBuilder);
-    return mockQueryBuilder;
-  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -145,8 +138,17 @@ describe('Grace Period Service', () => {
       vi.setSystemTime(now);
 
       // Mock successful inserts
-      const mockQueryBuilder = setupMockQueryChain();
-      mockQueryBuilder.insert.mockResolvedValue({ error: null });
+      const notificationsQueryBuilder = createMockQueryBuilder({ 
+        data: [{ id: 'notif-1' }], 
+        error: null 
+      });
+      
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'grace_period_notifications') {
+          return notificationsQueryBuilder;
+        }
+        return createMockQueryBuilder();
+      });
 
       await scheduleGracePeriodNotifications(
         'account-123',
@@ -155,8 +157,8 @@ describe('Grace Period Service', () => {
       );
 
       // Should insert 4 notification records
-      expect(mockQueryBuilder.insert).toHaveBeenCalledTimes(1);
-      expect(mockQueryBuilder.insert).toHaveBeenCalledWith(
+      expect(notificationsQueryBuilder.insert).toHaveBeenCalledTimes(1);
+      expect(notificationsQueryBuilder.insert).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             account_id: 'account-123',
@@ -187,18 +189,32 @@ describe('Grace Period Service', () => {
     });
 
     it('should not schedule duplicate notifications', async () => {
-      // Mock existing notifications
-      mockSupabase.select!.mockReturnThis();
-      mockSupabase.eq!.mockReturnThis();
-      setupMockResponse({
+      const now = new Date('2025-09-02T10:00:00Z');
+      vi.setSystemTime(now);
+
+      // Mock existing notifications check
+      const existingNotificationsBuilder = createMockQueryBuilder({
         data: [
           { notification_type: 'grace_period_day_0', sent: false }
         ],
         error: null
       });
 
-      const now = new Date('2025-09-02T10:00:00Z');
-      vi.setSystemTime(now);
+      // Mock insert for new notifications
+      const insertNotificationsBuilder = createMockQueryBuilder({
+        data: [{ id: 'notif-2' }],
+        error: null
+      });
+
+      let callCount = 0;
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'grace_period_notifications') {
+          callCount++;
+          // First call is to check existing, second is to insert
+          return callCount === 1 ? existingNotificationsBuilder : insertNotificationsBuilder;
+        }
+        return createMockQueryBuilder();
+      });
 
       await scheduleGracePeriodNotifications(
         'account-123',
@@ -207,7 +223,9 @@ describe('Grace Period Service', () => {
       );
 
       // Should check for existing notifications
-      expect(mockSupabase.select).toHaveBeenCalled();
+      expect(existingNotificationsBuilder.select).toHaveBeenCalled();
+      expect(existingNotificationsBuilder.eq).toHaveBeenCalledWith('account_id', 'account-123');
+      expect(existingNotificationsBuilder.eq).toHaveBeenCalledWith('sent', false);
     });
   });
 
@@ -216,11 +234,8 @@ describe('Grace Period Service', () => {
       const now = new Date('2025-09-17T10:00:00Z');
       vi.setSystemTime(now);
 
-      // Mock accounts with expired grace periods
-      mockSupabase.select!.mockReturnThis();
-      mockSupabase.lte!.mockReturnThis();
-      mockSupabase.eq!.mockReturnThis();
-      mockSupabase.select!.mockResolvedValue({
+      // Create mock query builder for accounts with expired grace periods
+      const accountsQueryBuilder = createMockQueryBuilder({
         data: [
           {
             id: 'account-1',
@@ -238,8 +253,23 @@ describe('Grace Period Service', () => {
         error: null
       });
 
-      // Mock successful updates
-      mockSupabase.update!.mockResolvedValue({ error: null });
+      // Create mock query builder for updates
+      const updateQueryBuilder = createMockQueryBuilder({
+        data: { id: 'account-1', tier: 'FREE' },
+        error: null
+      });
+
+      // Mock the from() calls
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'accounts') {
+          // First call is to fetch accounts, subsequent calls are updates
+          if (mockSupabase.from.mock.calls.filter(c => c[0] === 'accounts').length === 1) {
+            return accountsQueryBuilder;
+          }
+          return updateQueryBuilder;
+        }
+        return createMockQueryBuilder();
+      });
 
       const result = await processExpiredGracePeriods();
 
@@ -247,7 +277,7 @@ describe('Grace Period Service', () => {
       expect(result.errors).toHaveLength(0);
       
       // Should update each account to FREE tier
-      expect(mockSupabase.update).toHaveBeenCalledWith({
+      expect(updateQueryBuilder.update).toHaveBeenCalledWith({
         tier: 'FREE',
         grace_period_ends_at: null,
         subscription_state: 'active',
@@ -261,21 +291,47 @@ describe('Grace Period Service', () => {
       const now = new Date('2025-09-17T10:00:00Z');
       vi.setSystemTime(now);
 
-      mockSupabase.select!.mockResolvedValue({
+      // Create mock query builders for accounts fetch
+      const accountsQueryBuilder = createMockQueryBuilder({
         data: [{
           id: 'account-1',
           tier: 'PRO',
-          grace_period_ends_at: '2025-09-16T10:00:00Z'
+          grace_period_ends_at: '2025-09-16T10:00:00Z',
+          stripe_subscription_id: 'sub_123'
         }],
         error: null
       });
 
-      mockSupabase.update!.mockResolvedValue({ error: null });
+      // Create mock query builder for update
+      const updateQueryBuilder = createMockQueryBuilder({
+        data: { id: 'account-1', tier: 'FREE' },
+        error: null
+      });
+
+      // Create mock query builder for billing history insert
+      const billingHistoryBuilder = createMockQueryBuilder({
+        data: { id: 'history-1' },
+        error: null
+      });
+
+      // Mock the from() calls
+      let accountCallCount = 0;
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'accounts') {
+          accountCallCount++;
+          // First call is to fetch accounts, second is update
+          return accountCallCount === 1 ? accountsQueryBuilder : updateQueryBuilder;
+        }
+        if (table === 'account_billing_history') {
+          return billingHistoryBuilder;
+        }
+        return createMockQueryBuilder();
+      });
 
       await processExpiredGracePeriods();
 
       // Should log the downgrade event
-      expect(mockSupabase.insert).toHaveBeenCalledWith(
+      expect(billingHistoryBuilder.insert).toHaveBeenCalledWith(
         expect.objectContaining({
           account_id: 'account-1',
           event_type: 'account_downgraded_grace_period_expired',
@@ -286,18 +342,33 @@ describe('Grace Period Service', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      mockSupabase.select!.mockResolvedValue({
+      const now = new Date('2025-09-17T10:00:00Z');
+      vi.setSystemTime(now);
+
+      // Create mock query builders
+      const accountsQueryBuilder = createMockQueryBuilder({
         data: [{
           id: 'account-1',
           tier: 'PRO',
-          grace_period_ends_at: '2025-09-16T10:00:00Z'
+          grace_period_ends_at: '2025-09-16T10:00:00Z',
+          stripe_subscription_id: 'sub_123'
         }],
         error: null
       });
 
       // Mock update failure
-      mockSupabase.update!.mockResolvedValue({
-        error: new Error('Database error')
+      const updateQueryBuilder = createMockQueryBuilder({
+        data: null,
+        error: { message: 'Database error' }
+      });
+
+      let accountCallCount = 0;
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'accounts') {
+          accountCallCount++;
+          return accountCallCount === 1 ? accountsQueryBuilder : updateQueryBuilder;
+        }
+        return createMockQueryBuilder();
       });
 
       const result = await processExpiredGracePeriods();
@@ -310,37 +381,72 @@ describe('Grace Period Service', () => {
 
   describe('handlePaymentRetry', () => {
     it('should clear grace period on successful payment', async () => {
-      mockSupabase.update!.mockResolvedValue({
+      // Mock account update
+      const accountUpdateBuilder = createMockQueryBuilder({
         data: { id: 'account-123' },
         error: null
       });
 
+      // Mock notifications delete
+      const notificationsDeleteBuilder = createMockQueryBuilder({
+        data: null,
+        error: null
+      });
+
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'accounts') {
+          return accountUpdateBuilder;
+        }
+        if (table === 'grace_period_notifications') {
+          return notificationsDeleteBuilder;
+        }
+        return createMockQueryBuilder();
+      });
+
       await handlePaymentRetry('account-123', true);
 
-      expect(mockSupabase.update).toHaveBeenCalledWith({
+      expect(accountUpdateBuilder.update).toHaveBeenCalledWith({
         grace_period_ends_at: null,
         subscription_state: 'active'
       });
 
       // Should also delete pending notifications
-      expect(mockSupabase.delete).toHaveBeenCalled();
+      expect(notificationsDeleteBuilder.delete).toHaveBeenCalled();
     });
 
     it('should extend grace period on failed retry', async () => {
       const now = new Date('2025-09-10T10:00:00Z');
       vi.setSystemTime(now);
 
-      setupMockResponse({
+      // Mock account fetch with grace period
+      const accountQueryBuilder = createMockQueryBuilder({
         data: {
+          id: 'account-123',
           grace_period_ends_at: '2025-09-16T10:00:00Z' // 6 days left
         },
         error: null
       });
 
+      // Mock billing history insert
+      const billingHistoryBuilder = createMockQueryBuilder({
+        data: { id: 'history-1' },
+        error: null
+      });
+
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'accounts') {
+          return accountQueryBuilder;
+        }
+        if (table === 'account_billing_history') {
+          return billingHistoryBuilder;
+        }
+        return createMockQueryBuilder();
+      });
+
       await handlePaymentRetry('account-123', false);
 
       // Should log the retry attempt
-      expect(mockSupabase.insert).toHaveBeenCalledWith(
+      expect(billingHistoryBuilder.insert).toHaveBeenCalledWith(
         expect.objectContaining({
           account_id: 'account-123',
           event_type: 'payment_retry_failed',
@@ -387,21 +493,41 @@ describe('Grace Period Service', () => {
 
   describe('clearGracePeriod', () => {
     it('should remove grace period and notifications', async () => {
-      mockSupabase.update!.mockResolvedValue({ error: null });
-      mockSupabase.delete!.mockResolvedValue({ error: null });
+      // Mock account update
+      const accountUpdateBuilder = createMockQueryBuilder({
+        data: { id: 'account-123' },
+        error: null
+      });
+
+      // Mock notifications delete
+      const notificationsDeleteBuilder = createMockQueryBuilder({
+        data: null,
+        error: null
+      });
+
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'accounts') {
+          return accountUpdateBuilder;
+        }
+        if (table === 'grace_period_notifications') {
+          return notificationsDeleteBuilder;
+        }
+        return createMockQueryBuilder();
+      });
 
       await clearGracePeriod('account-123');
 
       // Should clear grace period fields
-      expect(mockSupabase.update).toHaveBeenCalledWith({
+      expect(accountUpdateBuilder.update).toHaveBeenCalledWith({
         grace_period_ends_at: null,
         subscription_state: 'active'
       });
+      expect(accountUpdateBuilder.eq).toHaveBeenCalledWith('id', 'account-123');
 
       // Should delete all pending notifications
-      expect(mockSupabase.delete).toHaveBeenCalled();
-      expect(mockSupabase.eq).toHaveBeenCalledWith('account_id', 'account-123');
-      expect(mockSupabase.eq).toHaveBeenCalledWith('sent', false);
+      expect(notificationsDeleteBuilder.delete).toHaveBeenCalled();
+      expect(notificationsDeleteBuilder.eq).toHaveBeenCalledWith('account_id', 'account-123');
+      expect(notificationsDeleteBuilder.eq).toHaveBeenCalledWith('sent', false);
     });
   });
 });

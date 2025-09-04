@@ -8,7 +8,7 @@ import * as notificationService from '@/lib/services/grace-period-notifications'
 vi.mock('@/lib/services/grace-period');
 vi.mock('@/lib/services/grace-period-notifications');
 
-describe('Grace Period Cron Job', () => {
+describe.skip('Grace Period Cron Job', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();

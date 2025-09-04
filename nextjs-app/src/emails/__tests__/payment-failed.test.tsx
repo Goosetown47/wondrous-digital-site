@@ -12,7 +12,7 @@ describe('Payment Failed Email Templates', () => {
         userName: 'John Doe',
         accountName: 'Test Company',
         currentTier: 'PRO',
-        gracePeriodEndsAt: '2025-09-16T10:00:00Z',
+        gracePeriodEndsAt: 'September 16, 2025', // Changed to formatted date
         daysRemaining: 14,
         updatePaymentUrl: 'https://app.wondrousdigital.com/billing'
       };
@@ -34,7 +34,7 @@ describe('Payment Failed Email Templates', () => {
         userName: 'Jane Smith',
         accountName: 'Big Corp',
         currentTier: 'MAX',
-        gracePeriodEndsAt: '2025-09-16T10:00:00Z',
+        gracePeriodEndsAt: 'September 16, 2025',
         daysRemaining: 14,
         updatePaymentUrl: 'https://app.wondrousdigital.com/billing'
       };
@@ -50,7 +50,7 @@ describe('Payment Failed Email Templates', () => {
         userName: 'User',
         accountName: 'Company',
         currentTier: 'SCALE',
-        gracePeriodEndsAt: '2025-09-16T10:00:00Z',
+        gracePeriodEndsAt: 'September 16, 2025',
         daysRemaining: 14,
         updatePaymentUrl: 'https://app.wondrousdigital.com/billing'
       };
@@ -67,7 +67,7 @@ describe('Payment Failed Email Templates', () => {
         userName: 'Admin',
         accountName: 'Startup Inc',
         currentTier: 'PRO',
-        gracePeriodEndsAt: '2025-09-16T10:00:00Z',
+        gracePeriodEndsAt: 'September 16, 2025',
         daysRemaining: 14,
         updatePaymentUrl: 'https://app.wondrousdigital.com/billing'
       };
@@ -86,7 +86,7 @@ describe('Payment Failed Email Templates', () => {
         userName: 'John Doe',
         accountName: 'Test Company',
         currentTier: 'PRO',
-        gracePeriodEndsAt: '2025-09-16T10:00:00Z',
+        gracePeriodEndsAt: 'September 16, 2025',
         daysRemaining: 7,
         updatePaymentUrl: 'https://app.wondrousdigital.com/billing'
       };
@@ -104,7 +104,7 @@ describe('Payment Failed Email Templates', () => {
         userName: 'User',
         accountName: 'Company',
         currentTier: 'MAX',
-        gracePeriodEndsAt: '2025-09-16T10:00:00Z',
+        gracePeriodEndsAt: 'September 16, 2025',
         daysRemaining: 7,
         updatePaymentUrl: 'https://app.wondrousdigital.com/billing'
       };
@@ -123,7 +123,7 @@ describe('Payment Failed Email Templates', () => {
         userName: 'John Doe',
         accountName: 'Test Company',
         currentTier: 'SCALE',
-        gracePeriodEndsAt: '2025-09-16T10:00:00Z',
+        gracePeriodEndsAt: 'September 16, 2025',
         daysRemaining: 1,
         updatePaymentUrl: 'https://app.wondrousdigital.com/billing'
       };
@@ -142,7 +142,7 @@ describe('Payment Failed Email Templates', () => {
         userName: 'Admin',
         accountName: 'Corp',
         currentTier: 'MAX',
-        gracePeriodEndsAt: '2025-09-16T10:00:00Z',
+        gracePeriodEndsAt: 'September 16, 2025',
         daysRemaining: 1,
         updatePaymentUrl: 'https://app.wondrousdigital.com/billing'
       };
@@ -159,7 +159,7 @@ describe('Payment Failed Email Templates', () => {
         userName: 'User',
         accountName: 'Business',
         currentTier: 'PRO',
-        gracePeriodEndsAt: '2025-09-16T10:00:00Z',
+        gracePeriodEndsAt: 'September 16, 2025',
         daysRemaining: 1,
         updatePaymentUrl: 'https://app.wondrousdigital.com/billing'
       };
@@ -250,7 +250,7 @@ describe('Payment Failed Email Templates', () => {
           userName="Test"
           accountName="Test Co"
           currentTier="PRO"
-          gracePeriodEndsAt="2025-09-16T10:00:00Z"
+          gracePeriodEndsAt="September 16, 2025"
           daysRemaining={14}
           updatePaymentUrl="https://test.com"
         />,
@@ -258,7 +258,7 @@ describe('Payment Failed Email Templates', () => {
           userName="Test"
           accountName="Test Co"
           currentTier="PRO"
-          gracePeriodEndsAt="2025-09-16T10:00:00Z"
+          gracePeriodEndsAt="September 16, 2025"
           daysRemaining={7}
           updatePaymentUrl="https://test.com"
         />,
@@ -266,7 +266,7 @@ describe('Payment Failed Email Templates', () => {
           userName="Test"
           accountName="Test Co"
           currentTier="PRO"
-          gracePeriodEndsAt="2025-09-16T10:00:00Z"
+          gracePeriodEndsAt="September 16, 2025"
           daysRemaining={1}
           updatePaymentUrl="https://test.com"
         />,
@@ -314,7 +314,7 @@ describe('Payment Failed Email Templates', () => {
         userName: 'User',
         accountName: 'Company',
         currentTier: 'PRO',
-        gracePeriodEndsAt: '2025-09-16T10:00:00Z',
+        gracePeriodEndsAt: 'September 16, 2025',
         daysRemaining: 14,
         updatePaymentUrl: 'https://app.wondrousdigital.com/billing'
       };

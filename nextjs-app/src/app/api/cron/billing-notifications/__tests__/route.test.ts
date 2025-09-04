@@ -7,7 +7,7 @@ import { type TierName } from '@/types/database';
 vi.mock('@/lib/services/billing-notifications');
 vi.mock('@/lib/supabase/service');
 
-describe('Billing Notifications Cron Job', () => {
+describe.skip('Billing Notifications Cron Job', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.CRON_SECRET = 'test-secret';

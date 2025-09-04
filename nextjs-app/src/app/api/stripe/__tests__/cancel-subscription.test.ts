@@ -29,6 +29,12 @@ describe('Cancel Subscription API', () => {
           cancel_at_period_end: true,
           current_period_end: 1735689600, // 2025-01-01
         }),
+        retrieve: vi.fn().mockResolvedValue({
+          id: 'sub_123',
+          cancel_at_period_end: true,
+          current_period_end: 1735689600, // 2025-01-01
+          cancel_at: 1735689600, // Same as current_period_end when canceling
+        }),
       },
     });
     vi.mocked(getStripe).mockReturnValue(mockStripe as unknown as ReturnType<typeof getStripe>);

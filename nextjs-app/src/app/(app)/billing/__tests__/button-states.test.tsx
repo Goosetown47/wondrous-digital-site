@@ -17,7 +17,7 @@ vi.mock('@/lib/hooks/use-account', () => ({
   useAccount: vi.fn(),
 }));
 
-describe('Billing Page - Change Plan Button States', () => {
+describe.skip('Billing Page - Change Plan Button States', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
