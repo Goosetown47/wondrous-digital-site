@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Html, Head, Body, Section, Text } from '@react-email/components';
+import { Section, Text } from '@react-email/components';
 import { EmailContainer } from './components/email-container';
 import { EmailHeader } from './components/email-header';
 import { EmailButton } from './components/email-button';
@@ -56,11 +56,8 @@ export const PaymentFailedDay13: React.FC<PaymentFailedDay13Props> = ({
   const tierFeatures = getTierFeatures(currentTier);
   
   return (
-    <Html>
-      <Head />
-      <Body style={styles.body}>
-        <EmailContainer preview="Urgent: 1 day left until your account is downgraded">
-          <EmailHeader />
+    <EmailContainer preview="Urgent: 1 day left until your account is downgraded">
+      <EmailHeader />
           
           <Section style={styles.contentSection}>
             <Text style={styles.title}>
@@ -124,8 +121,6 @@ export const PaymentFailedDay13: React.FC<PaymentFailedDay13Props> = ({
           
           <EmailFooter includeSupport={false} />
         </EmailContainer>
-      </Body>
-    </Html>
   );
 };
 

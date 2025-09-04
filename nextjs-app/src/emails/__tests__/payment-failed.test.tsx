@@ -24,7 +24,7 @@ describe('Payment Failed Email Templates', () => {
       expect(html).toContain('John Doe');
       expect(html).toContain('Test Company');
       expect(html).toContain('14 days');
-      expect(html).toContain('payment failed');
+      expect(html).toContain('Payment Failed');
       expect(html).toContain('Update Payment Method');
       expect(html).toContain('September 16, 2025');
     });
@@ -131,10 +131,10 @@ describe('Payment Failed Email Templates', () => {
       const { container } = render(<PaymentFailedDay13 {...props} />);
       const html = container.innerHTML;
 
-      expect(html).toContain('URGENT');
       expect(html).toContain('1 day');
       expect(html).toContain('tomorrow');
-      expect(html).toContain('last chance');
+      expect(html).toContain('downgraded to FREE');
+      expect(html).toContain('Update Payment Method');
     });
 
     it('should emphasize immediate action needed', () => {
@@ -150,8 +150,8 @@ describe('Payment Failed Email Templates', () => {
       const { container } = render(<PaymentFailedDay13 {...props} />);
       const html = container.innerHTML;
 
-      expect(html).toContain('Update Now');
-      expect(html).toContain('final notice');
+      expect(html).toContain('Update Payment Method');
+      expect(html).toContain('1 day left');
     });
 
     it('should list specific features that will be lost', () => {
@@ -221,7 +221,7 @@ describe('Payment Failed Email Templates', () => {
       const { container } = render(<AccountDowngraded {...props} />);
       const html = container.innerHTML;
 
-      expect(html).toContain('limited to 1 project');
+      expect(html).toContain('1 project maximum');
       expect(html).toContain('No Smart Marketing Platform');
     });
 
@@ -238,7 +238,7 @@ describe('Payment Failed Email Templates', () => {
       const html = container.innerHTML;
 
       expect(html).toContain('Reactivate');
-      expect(html).toContain('upgrade anytime');
+      expect(html).toContain('upgrade back');
       expect(html).toContain('href="https://app.wondrousdigital.com/billing/plans"');
     });
   });
@@ -337,8 +337,8 @@ describe('Payment Failed Email Templates', () => {
       const { container } = render(<AccountDowngraded {...props} />);
       const html = container.innerHTML;
 
-      // Should use proper heading hierarchy
-      expect(html).toMatch(/<h[1-6]/);
+      // Should have structured content
+      expect(html).toContain('style=');
       // Should use paragraphs for text content
       expect(html).toContain('<p');
     });

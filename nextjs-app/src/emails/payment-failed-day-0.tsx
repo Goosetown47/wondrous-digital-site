@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Html, Head, Body, Section, Text, Hr } from '@react-email/components';
+import { Section, Text, Hr } from '@react-email/components';
 import { EmailContainer } from './components/email-container';
 import { EmailHeader } from './components/email-header';
 import { EmailButton } from './components/email-button';
@@ -28,11 +28,8 @@ export const PaymentFailedDay0: React.FC<PaymentFailedDay0Props> = ({
   const gracePeriodEndDate = format(new Date(gracePeriodEndsAt), 'MMMM d, yyyy');
   
   return (
-    <Html>
-      <Head />
-      <Body style={styles.body}>
-        <EmailContainer preview="Payment failed - You have 14 days to update your payment method">
-          <EmailHeader />
+    <EmailContainer preview="Payment failed - You have 14 days to update your payment method">
+      <EmailHeader />
           
           <Section style={styles.contentSection}>
             <Text style={styles.title}>
@@ -95,8 +92,6 @@ export const PaymentFailedDay0: React.FC<PaymentFailedDay0Props> = ({
           
           <EmailFooter includeSupport={false} />
         </EmailContainer>
-      </Body>
-    </Html>
   );
 };
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Html, Head, Body, Section, Text } from '@react-email/components';
+import { Section, Text } from '@react-email/components';
 import { EmailContainer } from './components/email-container';
 import { EmailHeader } from './components/email-header';
 import { EmailButton } from './components/email-button';
@@ -23,11 +23,8 @@ export const AccountDowngraded: React.FC<AccountDowngradedProps> = ({
   reactivateUrl,
 }) => {
   return (
-    <Html>
-      <Head />
-      <Body style={styles.body}>
-        <EmailContainer preview="Your account has been downgraded due to payment failure">
-          <EmailHeader />
+    <EmailContainer preview="Your account has been downgraded due to payment failure">
+      <EmailHeader />
           
           <Section style={styles.contentSection}>
             <Text style={styles.title}>
@@ -104,8 +101,6 @@ export const AccountDowngraded: React.FC<AccountDowngradedProps> = ({
           
           <EmailFooter includeSupport={false} />
         </EmailContainer>
-      </Body>
-    </Html>
   );
 };
 

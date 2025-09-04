@@ -64,6 +64,12 @@ export interface MockSupabaseAuth {
   setSession: MockFunction;
   refreshSession: MockFunction;
   onAuthStateChange: MockFunction;
+  admin?: {
+    getUserById: MockFunction;
+    updateUserById: MockFunction;
+    deleteUser: MockFunction;
+    listUsers: MockFunction;
+  };
 }
 
 /**
@@ -211,42 +217,54 @@ export function createMockQueryBuilder(
   returnValue: { data?: unknown; error?: unknown } = { data: null, error: null }
 ): MockSupabaseQueryBuilder {
   const mock: MockSupabaseQueryBuilder = {
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    upsert: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    neq: vi.fn().mockReturnThis(),
-    gt: vi.fn().mockReturnThis(),
-    gte: vi.fn().mockReturnThis(),
-    lt: vi.fn().mockReturnThis(),
-    lte: vi.fn().mockReturnThis(),
-    like: vi.fn().mockReturnThis(),
-    ilike: vi.fn().mockReturnThis(),
-    is: vi.fn().mockReturnThis(),
-    in: vi.fn().mockReturnThis(),
-    contains: vi.fn().mockReturnThis(),
-    containedBy: vi.fn().mockReturnThis(),
-    range: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
+    select: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    upsert: vi.fn(),
+    eq: vi.fn(),
+    neq: vi.fn(),
+    gt: vi.fn(),
+    gte: vi.fn(),
+    lt: vi.fn(),
+    lte: vi.fn(),
+    like: vi.fn(),
+    ilike: vi.fn(),
+    is: vi.fn(),
+    in: vi.fn(),
+    contains: vi.fn(),
+    containedBy: vi.fn(),
+    range: vi.fn(),
+    order: vi.fn(),
+    limit: vi.fn(),
     single: vi.fn().mockResolvedValue(returnValue),
     maybeSingle: vi.fn().mockResolvedValue(returnValue),
-    or: vi.fn().mockReturnThis(),
-    filter: vi.fn().mockReturnThis(),
-    match: vi.fn().mockReturnThis(),
+    or: vi.fn(),
+    filter: vi.fn(),
+    match: vi.fn(),
   };
 
-  // Make all methods return the mock for chaining, except single/maybeSingle
+  // Make all methods return the mock for chaining
   Object.keys(mock).forEach(key => {
-    if (key !== 'single' && key !== 'maybeSingle') {
-      const method = mock[key as keyof typeof mock];
-      if (typeof method === 'function' && 'mockReturnValue' in method) {
-        (method as MockFunction).mockReturnValue(mock);
+    const method = mock[key as keyof typeof mock];
+    if (typeof method === 'function' && 'mockReturnValue' in method) {
+      if (key === 'single' || key === 'maybeSingle') {
+        // Keep these as promise-returning
+        return;
       }
+      // All other methods return the mock for chaining
+      (method as MockFunction).mockReturnValue(mock);
     }
   });
+
+  // Make the whole mock also thenable so it acts as a Promise when awaited
+  // This allows patterns like: const { data, error } = await supabase.from().select().eq()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (mock as any).then = (onFulfilled: any) => Promise.resolve(returnValue).then(onFulfilled);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (mock as any).catch = (onRejected: any) => Promise.resolve(returnValue).catch(onRejected);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (mock as any).finally = (onFinally: any) => Promise.resolve(returnValue).finally(onFinally);
 
   return mock;
 }
@@ -257,7 +275,24 @@ export function createMockQueryBuilder(
 export function createMockSupabaseClient(
   overrides: DeepPartial<MockSupabaseClient> = {}
 ): MockSupabaseClient {
-  const queryBuilder = createMockQueryBuilder();
+  // Create a new query builder for each from() call
+  const createQueryBuilderInstance = () => {
+    const builder = createMockQueryBuilder();
+    // Ensure select returns a promise when called without chaining
+    const originalSelect = builder.select;
+    builder.select = vi.fn().mockImplementation((...args) => {
+      // If it's being used in a chain, return the builder
+      // Otherwise return a resolved promise
+      const result = originalSelect.apply(builder, args);
+      // Add then/catch to make it thenable when needed
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      result.then = (onFulfilled: any) => Promise.resolve({ data: null, error: null }).then(onFulfilled);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      result.catch = (onRejected: any) => Promise.resolve({ data: null, error: null }).catch(onRejected);
+      return result;
+    });
+    return builder;
+  };
   
   const defaultMock: MockSupabaseClient = {
     auth: {
@@ -270,8 +305,14 @@ export function createMockSupabaseClient(
       setSession: vi.fn(),
       refreshSession: vi.fn(),
       onAuthStateChange: vi.fn(),
+      admin: {
+        getUserById: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+        updateUserById: vi.fn(),
+        deleteUser: vi.fn(),
+        listUsers: vi.fn(),
+      },
     },
-    from: vi.fn(() => queryBuilder),
+    from: vi.fn(() => createQueryBuilderInstance()),
     rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
     storage: {
       from: vi.fn(() => ({
@@ -286,26 +327,26 @@ export function createMockSupabaseClient(
       invoke: vi.fn().mockResolvedValue({ data: null, error: null }),
     },
     // Add chainable methods directly to the client for tests that need them
-    select: queryBuilder.select,
-    insert: queryBuilder.insert,
-    update: queryBuilder.update,
-    delete: queryBuilder.delete,
-    upsert: queryBuilder.upsert,
-    eq: queryBuilder.eq,
-    neq: queryBuilder.neq,
-    gt: queryBuilder.gt,
-    gte: queryBuilder.gte,
-    lt: queryBuilder.lt,
-    lte: queryBuilder.lte,
-    like: queryBuilder.like,
-    ilike: queryBuilder.ilike,
-    is: queryBuilder.is,
-    in: queryBuilder.in,
-    or: queryBuilder.or,
-    filter: queryBuilder.filter,
-    match: queryBuilder.match,
-    single: queryBuilder.single,
-    maybeSingle: queryBuilder.maybeSingle,
+    select: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    upsert: vi.fn(),
+    eq: vi.fn(),
+    neq: vi.fn(),
+    gt: vi.fn(),
+    gte: vi.fn(),
+    lt: vi.fn(),
+    lte: vi.fn(),
+    like: vi.fn(),
+    ilike: vi.fn(),
+    is: vi.fn(),
+    in: vi.fn(),
+    or: vi.fn(),
+    filter: vi.fn(),
+    match: vi.fn(),
+    single: vi.fn(),
+    maybeSingle: vi.fn(),
   };
 
   // Deep merge overrides
@@ -394,12 +435,16 @@ function mergeDeep<T>(target: T, source: DeepPartial<T>): T {
   const output = Object.assign({}, target);
   if (isObject(target) && isObject(source)) {
     Object.keys(source).forEach(key => {
+      // eslint-disable-next-line security/detect-object-injection
       if (isObject(source[key])) {
         if (!(key in target))
+          // eslint-disable-next-line security/detect-object-injection
           Object.assign(output, { [key]: source[key] });
         else
+          // eslint-disable-next-line security/detect-object-injection
           (output as Record<string, unknown>)[key] = mergeDeep(target[key as keyof T], source[key] as DeepPartial<T[keyof T]>);
       } else {
+        // eslint-disable-next-line security/detect-object-injection
         Object.assign(output, { [key]: source[key] });
       }
     });

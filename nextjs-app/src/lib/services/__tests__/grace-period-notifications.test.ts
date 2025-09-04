@@ -8,7 +8,7 @@ import {
 } from '../grace-period-notifications';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
 import type { MockSupabaseClient } from '@/test/mocks/types';
-import { createMockSupabaseClient } from '@/test/mocks/types';
+import { createMockSupabaseClient, createMockQueryBuilder } from '@/test/mocks/types';
 
 // Mock dependencies
 vi.mock('@/lib/supabase/service', () => ({
@@ -18,7 +18,7 @@ vi.mock('@/lib/supabase/service', () => ({
 vi.mock('@/lib/resend', () => ({
   resend: {
     emails: {
-      send: vi.fn()
+      send: vi.fn().mockResolvedValue({ id: 'email-id' })
     }
   }
 }));
@@ -26,13 +26,73 @@ vi.mock('@/lib/resend', () => ({
 describe('Grace Period Notifications', () => {
   let mockSupabase: MockSupabaseClient;
 
-  beforeEach(() => {
+  // Helper function to setup standard mocks for grace period tests
+  const setupStandardMocks = (notificationData: unknown, accountData?: unknown, userData?: unknown) => {
+    const notificationsQueryBuilder = createMockQueryBuilder({
+      data: notificationData,
+      error: null
+    });
+
+    const accountQueryBuilder = createMockQueryBuilder({
+      data: accountData || {
+        id: 'account-123',
+        name: 'Test Company',
+        tier: 'PRO',
+        grace_period_ends_at: '2025-09-16T09:00:00Z'
+      },
+      error: null
+    });
+
+    const accountUsersQueryBuilder = createMockQueryBuilder({
+      data: userData || {
+        user_id: 'user-123'
+      },
+      error: null
+    });
+
+    mockSupabase.from.mockImplementation((table: string) => {
+      if (table === 'grace_period_notifications') {
+        return notificationsQueryBuilder;
+      } else if (table === 'accounts') {
+        return accountQueryBuilder;
+      } else if (table === 'account_users') {
+        return accountUsersQueryBuilder;
+      }
+      return createMockQueryBuilder();
+    });
+
+    mockSupabase.auth.admin = {
+      getUserById: vi.fn().mockResolvedValue({
+        data: {
+          user: {
+            id: 'user-123',
+            email: 'test@example.com',
+            user_metadata: {
+              full_name: 'John Doe'
+            }
+          }
+        },
+        error: null
+      }),
+      updateUserById: vi.fn(),
+      deleteUser: vi.fn(),
+      listUsers: vi.fn()
+    };
+
+    return { notificationsQueryBuilder, accountQueryBuilder, accountUsersQueryBuilder };
+  };
+
+  beforeEach(async () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     
     mockSupabase = createMockSupabaseClient();
     
     vi.mocked(createSupabaseServiceClient).mockReturnValue(mockSupabase as unknown as ReturnType<typeof createSupabaseServiceClient>);
+    
+    // Reset resend mock to default resolved value
+    const { resend } = await import('@/lib/resend');
+    vi.mocked(resend!.emails.send).mockResolvedValue({ id: 'email-id' });
   });
 
   describe('checkAndSendGracePeriodNotifications', () => {
@@ -40,8 +100,8 @@ describe('Grace Period Notifications', () => {
       const now = new Date('2025-09-02T09:00:00Z');
       vi.setSystemTime(now);
 
-      // Mock scheduled notifications
-      mockSupabase.select!.mockResolvedValue({
+      // Create a mock query builder for the notifications query
+      const notificationsQueryBuilder = createMockQueryBuilder({
         data: [
           {
             id: 'notif-1',
@@ -58,8 +118,8 @@ describe('Grace Period Notifications', () => {
         error: null
       });
 
-      // Mock account data
-      mockSupabase.single!.mockResolvedValue({
+      // Create a mock query builder for the account query
+      const accountQueryBuilder = createMockQueryBuilder({
         data: {
           id: 'account-123',
           name: 'Test Company',
@@ -69,14 +129,41 @@ describe('Grace Period Notifications', () => {
         error: null
       });
 
-      // Mock user data
-      mockSupabase.select!.mockResolvedValueOnce({
-        data: [{
-          email: 'test@example.com',
-          full_name: 'John Doe'
-        }],
+      // Create a mock query builder for the account_users query
+      const accountUsersQueryBuilder = createMockQueryBuilder({
+        data: {
+          user_id: 'user-123'
+        },
         error: null
       });
+
+      // Mock the from() calls to return appropriate query builders
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'grace_period_notifications') {
+          return notificationsQueryBuilder;
+        } else if (table === 'accounts') {
+          return accountQueryBuilder;
+        } else if (table === 'account_users') {
+          return accountUsersQueryBuilder;
+        }
+        return createMockQueryBuilder();
+      });
+
+      // Mock auth.admin.getUserById
+      mockSupabase.auth.admin = {
+        getUserById: vi.fn().mockResolvedValue({
+          data: {
+            user: {
+              id: 'user-123',
+              email: 'test@example.com',
+              user_metadata: {
+                full_name: 'John Doe'
+              }
+            }
+          },
+          error: null
+        })
+      };
 
       const result = await checkAndSendGracePeriodNotifications();
 
@@ -88,7 +175,8 @@ describe('Grace Period Notifications', () => {
       const now = new Date('2025-09-09T09:00:00Z'); // 7 days after failure
       vi.setSystemTime(now);
 
-      mockSupabase.select!.mockResolvedValue({
+      // Setup mock query builders
+      const notificationsQueryBuilder = createMockQueryBuilder({
         data: [
           {
             id: 'notif-2',
@@ -105,14 +193,48 @@ describe('Grace Period Notifications', () => {
         error: null
       });
 
-      mockSupabase.single!.mockResolvedValue({
+      const accountQueryBuilder = createMockQueryBuilder({
         data: {
           id: 'account-123',
+          name: 'Test Company',
           tier: 'PRO',
           grace_period_ends_at: '2025-09-16T09:00:00Z'
         },
         error: null
       });
+
+      const accountUsersQueryBuilder = createMockQueryBuilder({
+        data: {
+          user_id: 'user-123'
+        },
+        error: null
+      });
+
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'grace_period_notifications') {
+          return notificationsQueryBuilder;
+        } else if (table === 'accounts') {
+          return accountQueryBuilder;
+        } else if (table === 'account_users') {
+          return accountUsersQueryBuilder;
+        }
+        return createMockQueryBuilder();
+      });
+
+      mockSupabase.auth.admin = {
+        getUserById: vi.fn().mockResolvedValue({
+          data: {
+            user: {
+              id: 'user-123',
+              email: 'test@example.com',
+              user_metadata: {
+                full_name: 'John Doe'
+              }
+            }
+          },
+          error: null
+        })
+      };
 
       const result = await checkAndSendGracePeriodNotifications();
 
@@ -124,22 +246,19 @@ describe('Grace Period Notifications', () => {
       const now = new Date('2025-09-15T09:00:00Z'); // 13 days after failure
       vi.setSystemTime(now);
 
-      mockSupabase.select!.mockResolvedValue({
-        data: [
-          {
-            id: 'notif-3',
-            account_id: 'account-123',
-            notification_type: 'grace_period_day_13',
-            scheduled_for: now.toISOString(),
-            sent: false,
-            metadata: {
-              tier: 'MAX',
-              grace_period_ends_at: '2025-09-16T09:00:00Z'
-            }
+      setupStandardMocks([
+        {
+          id: 'notif-3',
+          account_id: 'account-123',
+          notification_type: 'grace_period_day_13',
+          scheduled_for: now.toISOString(),
+          sent: false,
+          metadata: {
+            tier: 'MAX',
+            grace_period_ends_at: '2025-09-16T09:00:00Z'
           }
-        ],
-        error: null
-      });
+        }
+      ]);
 
       const result = await checkAndSendGracePeriodNotifications();
 
@@ -150,23 +269,20 @@ describe('Grace Period Notifications', () => {
       const now = new Date('2025-09-16T09:00:00Z'); // 14 days - grace period expired
       vi.setSystemTime(now);
 
-      mockSupabase.select!.mockResolvedValue({
-        data: [
-          {
-            id: 'notif-4',
-            account_id: 'account-123',
-            notification_type: 'account_downgraded',
-            scheduled_for: now.toISOString(),
-            sent: false,
-            metadata: {
-              tier: 'SCALE',
-              old_tier: 'SCALE',
-              new_tier: 'FREE'
-            }
+      setupStandardMocks([
+        {
+          id: 'notif-4',
+          account_id: 'account-123',
+          notification_type: 'account_downgraded',
+          scheduled_for: now.toISOString(),
+          sent: false,
+          metadata: {
+            tier: 'SCALE',
+            old_tier: 'SCALE',
+            new_tier: 'FREE'
           }
-        ],
-        error: null
-      });
+        }
+      ]);
 
       const result = await checkAndSendGracePeriodNotifications();
 
@@ -174,18 +290,15 @@ describe('Grace Period Notifications', () => {
     });
 
     it('should not send already sent notifications', async () => {
-      mockSupabase.select!.mockResolvedValue({
-        data: [
-          {
-            id: 'notif-5',
-            account_id: 'account-123',
-            notification_type: 'grace_period_day_0',
-            scheduled_for: '2025-09-02T09:00:00Z',
-            sent: true // Already sent
-          }
-        ],
-        error: null
-      });
+      setupStandardMocks([
+        {
+          id: 'notif-5',
+          account_id: 'account-123',
+          notification_type: 'grace_period_day_0',
+          scheduled_for: '2025-09-02T09:00:00Z',
+          sent: true // Already sent
+        }
+      ]);
 
       const result = await checkAndSendGracePeriodNotifications();
 
@@ -197,16 +310,17 @@ describe('Grace Period Notifications', () => {
       const now = new Date('2025-09-02T09:00:00Z');
       vi.setSystemTime(now);
 
-      mockSupabase.select!.mockResolvedValue({
-        data: [{
-          id: 'notif-6',
-          account_id: 'account-123',
-          notification_type: 'grace_period_day_0',
-          scheduled_for: now.toISOString(),
-          sent: false
-        }],
-        error: null
-      });
+      setupStandardMocks([{
+        id: 'notif-6',
+        account_id: 'account-123',
+        notification_type: 'grace_period_day_0',
+        scheduled_for: now.toISOString(),
+        sent: false,
+        metadata: {
+          tier: 'PRO',
+          grace_period_ends_at: '2025-09-16T09:00:00Z'
+        }
+      }]);
 
       // Mock email send failure
       const { resend } = await import('@/lib/resend');
@@ -309,25 +423,31 @@ describe('Grace Period Notifications', () => {
       const now = new Date('2025-09-02T09:15:00Z');
       vi.setSystemTime(now);
 
-      mockSupabase.update!.mockResolvedValue({
+      const updateQueryBuilder = createMockQueryBuilder({
         data: { id: 'notif-1' },
         error: null
       });
 
+      mockSupabase.from.mockImplementation(() => updateQueryBuilder);
+
       await markNotificationSent('notif-1');
 
-      expect(mockSupabase.update).toHaveBeenCalledWith({
+      expect(updateQueryBuilder.update).toHaveBeenCalledWith({
         sent: true,
         sent_at: now.toISOString()
       });
+      expect(updateQueryBuilder.eq).toHaveBeenCalledWith('id', 'notif-1');
     });
 
     it('should handle update errors', async () => {
-      mockSupabase.update!.mockResolvedValue({
-        error: new Error('Database error')
+      const updateQueryBuilder = createMockQueryBuilder({
+        data: null,
+        error: { message: 'Database error' }
       });
 
-      await expect(markNotificationSent('notif-1')).rejects.toThrow('Database error');
+      mockSupabase.from.mockImplementation(() => updateQueryBuilder);
+
+      await expect(markNotificationSent('notif-1')).rejects.toThrow('Failed to mark notification as sent: Database error');
     });
   });
 
@@ -386,7 +506,7 @@ describe('Grace Period Notifications', () => {
       const now = new Date('2025-09-02T09:00:00Z');
       vi.setSystemTime(now);
 
-      mockSupabase.select!.mockResolvedValue({
+      const queryBuilder = createMockQueryBuilder({
         data: [
           { id: '1', notification_type: 'grace_period_day_0' },
           { id: '2', notification_type: 'grace_period_day_7' }
@@ -394,11 +514,13 @@ describe('Grace Period Notifications', () => {
         error: null
       });
 
+      mockSupabase.from.mockImplementation(() => queryBuilder);
+
       const notifications = await getScheduledNotifications();
 
       expect(notifications).toHaveLength(2);
-      expect(mockSupabase.lte).toHaveBeenCalledWith('scheduled_for', now.toISOString());
-      expect(mockSupabase.eq).toHaveBeenCalledWith('sent', false);
+      expect(queryBuilder.lte).toHaveBeenCalledWith('scheduled_for', now.toISOString());
+      expect(queryBuilder.eq).toHaveBeenCalledWith('sent', false);
     });
   });
 });
