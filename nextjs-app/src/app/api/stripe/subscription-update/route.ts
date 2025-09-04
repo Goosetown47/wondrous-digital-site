@@ -16,7 +16,6 @@ import {
   updateLastChangeTime, 
   getCooldownErrorMessage 
 } from '@/lib/services/billing-cooldown';
-import { rateLimitWithUser, RATE_LIMITS } from '@/lib/rate-limiter';
 import type { TierName } from '@/types/database';
 import type Stripe from 'stripe';
 
@@ -54,17 +53,6 @@ export async function POST(request: NextRequest) {
         { error: 'You must be logged in to change plans' },
         { status: 401 }
       );
-    }
-
-    // Apply rate limiting
-    const rateLimitResponse = await rateLimitWithUser(
-      request,
-      RATE_LIMITS.subscriptionUpdate,
-      user.id,
-      accountId
-    );
-    if (rateLimitResponse) {
-      return rateLimitResponse;
     }
 
     // Verify the account and get subscription details

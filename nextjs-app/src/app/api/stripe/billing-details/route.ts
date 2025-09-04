@@ -3,7 +3,6 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe/config';
 import { SubscriptionState, getStateDisplayInfo, getAvailableActions } from '@/lib/services/subscription-state';
 import { checkCooldownStatus } from '@/lib/services/billing-cooldown';
-import { rateLimitWithUser, RATE_LIMITS } from '@/lib/rate-limiter';
 import type Stripe from 'stripe';
 
 export async function GET(request: NextRequest) {
@@ -29,17 +28,6 @@ export async function GET(request: NextRequest) {
         { error: 'Account ID is required' },
         { status: 400 }
       );
-    }
-
-    // Apply rate limiting
-    const rateLimitResponse = await rateLimitWithUser(
-      request,
-      RATE_LIMITS.billingDetails,
-      user.id,
-      accountId
-    );
-    if (rateLimitResponse) {
-      return rateLimitResponse;
     }
 
     // Get account details including pending tier changes and grace period
