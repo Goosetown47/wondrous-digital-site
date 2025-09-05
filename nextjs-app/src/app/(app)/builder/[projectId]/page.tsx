@@ -2,15 +2,26 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useHomepage } from '@/hooks/usePages';
+import { useProject } from '@/hooks/useProjects';
+import { useAuth } from '@/providers/auth-provider';
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 export default function BuilderRedirectPage() {
   const params = useParams();
   const router = useRouter();
+  const { setCurrentProject } = useAuth();
   const projectId = params.projectId as string;
   
+  const { data: project } = useProject(projectId);
   const { data: homepage, error } = useHomepage(projectId);
+
+  // Sync current project when project data loads
+  useEffect(() => {
+    if (project) {
+      setCurrentProject(project);
+    }
+  }, [project, setCurrentProject]);
 
   useEffect(() => {
     if (homepage?.id) {

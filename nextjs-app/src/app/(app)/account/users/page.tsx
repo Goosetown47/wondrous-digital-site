@@ -3,14 +3,17 @@
 import { useState } from 'react';
 import { useAuth } from '@/providers/auth-provider';
 import { useAccountUsers, useUpdateUserRole, useRemoveUser } from '@/hooks/useAccountUsers';
+import { useRealtimeAccount } from '@/hooks/useRealtimeAccounts';
 import { 
   useAccountInvitations, 
   useCreateInvitation, 
   useCancelInvitation, 
   useResendInvitation 
 } from '@/hooks/useInvitations';
+import { useAccountTier } from '@/hooks/useAccountTier';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 import { PERMISSIONS } from '@/lib/permissions/constants';
+import { toast } from 'sonner';
 import { RoleBadge } from '@/components/ui/role-badge';
 import {
   Table,
@@ -50,14 +53,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   UserPlus, 
   Mail, 
   MoreHorizontal, 
   RefreshCw, 
   X, 
-  Users
+  Users,
+  Crown
 } from 'lucide-react';
+import Link from 'next/link';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,12 +78,21 @@ export default function AccountUsersPage() {
   const { currentAccount, user: currentUser } = useAuth();
   const { data: users, isLoading: usersLoading } = useAccountUsers(currentAccount?.id || null);
   const { data: invitations, isLoading: invitationsLoading } = useAccountInvitations(currentAccount?.id || null);
+  const { tier, canCreateMore, limits, isUnlocked } = useAccountTier();
+  
+  // Enable real-time updates for this account
+  useRealtimeAccount(currentAccount?.id || null);
   
   const updateRole = useUpdateUserRole();
   const removeUser = useRemoveUser();
   const createInvitation = useCreateInvitation();
   const cancelInvitation = useCancelInvitation();
   const resendInvitation = useResendInvitation();
+  
+  // Calculate current user count (active users + pending invitations)
+  const currentUserCount = (users?.length || 0) + (invitations?.length || 0);
+  const canInviteMoreUsers = isUnlocked || canCreateMore('users', currentUserCount);
+  const userLimit = limits.users;
 
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -86,6 +101,12 @@ export default function AccountUsersPage() {
 
   const handleInviteUser = async () => {
     if (!currentAccount || !inviteEmail) return;
+    
+    // Check if user can invite more users
+    if (!canInviteMoreUsers) {
+      toast.error(`You've reached your user limit (${currentUserCount}/${userLimit}). Upgrade your plan to invite more users.`);
+      return;
+    }
 
     try {
       await createInvitation.mutateAsync({
@@ -130,6 +151,49 @@ export default function AccountUsersPage() {
     }
   };
 
+  // Bulk actions removed - not needed for account-level user management
+  
+  // const handleBulkRoleChange = async () => {
+  //   if (!currentAccount || selectedUsers.size === 0) return;
+
+  //   try {
+  //     const promises = Array.from(selectedUsers).map(userId => 
+  //       updateRole.mutateAsync({
+  //         accountId: currentAccount.id,
+  //         userId,
+  //         role: bulkNewRole,
+  //       })
+  //     );
+      
+  //     await Promise.all(promises);
+  //     toast.success(`Updated ${selectedUsers.size} users successfully`);
+  //     setSelectedUsers(new Set());
+  //     setBulkActionModalOpen(false);
+  //   } catch {
+  //     toast.error('Failed to update some users');
+  //   }
+  // };
+
+  // const handleBulkRemove = async () => {
+  //   if (!currentAccount || selectedUsers.size === 0) return;
+
+  //   try {
+  //     const promises = Array.from(selectedUsers).map(userId => 
+  //       removeUser.mutateAsync({
+  //         accountId: currentAccount.id,
+  //         userId,
+  //       })
+  //     );
+      
+  //     await Promise.all(promises);
+  //     toast.success(`Removed ${selectedUsers.size} users successfully`);
+  //     setSelectedUsers(new Set());
+  //     setBulkActionModalOpen(false);
+  //   } catch {
+  //     toast.error('Failed to remove some users');
+  //   }
+  // };
+
   return (
     <PermissionGate permission={PERMISSIONS.USERS.READ} fallback={
       <div className="container mx-auto p-6">
@@ -138,6 +202,20 @@ export default function AccountUsersPage() {
       </div>
     }>
       <div className="container mx-auto p-6 space-y-8">
+        {/* Upgrade Alert for FREE tier */}
+        {!canInviteMoreUsers && !isUnlocked && tier === 'FREE' && (
+          <Alert className="border-amber-200 bg-amber-50">
+            <Crown className="h-4 w-4 text-amber-600" />
+            <AlertDescription>
+              <strong>You've reached the user limit for the FREE plan.</strong>
+              <Link href="/billing" className="ml-1 underline text-amber-700 font-medium">
+                Upgrade to PRO or higher
+              </Link>
+              {' '}to invite team members and collaborate.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -147,14 +225,20 @@ export default function AccountUsersPage() {
             </h1>
             <p className="text-muted-foreground mt-1">
               Manage your team members and their permissions
+              {!isUnlocked && (
+                <span className="ml-2 text-sm">
+                  ({currentUserCount}/{userLimit} users)
+                </span>
+              )}
             </p>
           </div>
           
           <Dialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled={!canInviteMoreUsers}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Invite User
+                {!canInviteMoreUsers && !isUnlocked && ` (${currentUserCount}/${userLimit} limit)`}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -219,6 +303,7 @@ export default function AccountUsersPage() {
         {/* Current Team Members */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Current Team Members</h2>
+          
           {usersLoading ? (
             <div className="space-y-2">
               {[...Array(3)].map((_, i) => (

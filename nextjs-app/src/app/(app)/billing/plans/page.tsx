@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, Loader2, Zap } from 'lucide-react';
+import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -173,41 +172,43 @@ export default function BillingPlansPage() {
     router.push(`/billing/confirm?${params.toString()}`);
   };
 
-  const handleAddPerform = async () => {
-    if (!accountDetails) return;
+  // TODO: PERFORM addon - Hidden for future release
+  // Will be re-enabled when PERFORM addon is ready to launch
+  // const handleAddPerform = async () => {
+  //   if (!accountDetails) return;
     
-    // Check if user has a premium package
-    if (accountDetails.tier === 'FREE' || accountDetails.tier === 'BASIC') {
-      toast.error('PERFORM addon requires a premium package (PRO, SCALE, or MAX)');
-      return;
-    }
+  //   // Check if user has a premium package
+  //   if (accountDetails.tier === 'FREE' || accountDetails.tier === 'BASIC') {
+  //     toast.error('PERFORM addon requires a premium package (PRO, SCALE, or MAX)');
+  //     return;
+  //   }
     
-    // Redirect to confirmation page for PERFORM addon
-    const params = new URLSearchParams({
-      from: accountDetails.tier,
-      to: accountDetails.tier, // Same tier, just adding addon
-      action: 'addon',
-      addon: 'PERFORM',
-      billing: yearlyBilling ? 'yearly' : 'monthly',
-    });
+  //   // Redirect to confirmation page for PERFORM addon
+  //   const params = new URLSearchParams({
+  //     from: accountDetails.tier,
+  //     to: accountDetails.tier, // Same tier, just adding addon
+  //     action: 'addon',
+  //     addon: 'PERFORM',
+  //     billing: yearlyBilling ? 'yearly' : 'monthly',
+  //   });
     
-    router.push(`/billing/confirm?${params.toString()}`);
-  };
+  //   router.push(`/billing/confirm?${params.toString()}`);
+  // };
 
-  const handleRemovePerform = async () => {
-    if (!accountDetails) return;
+  // const handleRemovePerform = async () => {
+  //   if (!accountDetails) return;
     
-    setCheckoutLoading('PERFORM_REMOVE');
-    try {
-      // TODO: Implement remove PERFORM addon endpoint
-      toast.info('Remove PERFORM feature coming soon');
-      setCheckoutLoading(null);
-    } catch (error) {
-      console.error('Error removing PERFORM addon:', error);
-      toast.error('Failed to remove PERFORM addon');
-      setCheckoutLoading(null);
-    }
-  };
+  //   setCheckoutLoading('PERFORM_REMOVE');
+  //   try {
+  //     // TODO: Implement remove PERFORM addon endpoint
+  //     toast.info('Remove PERFORM feature coming soon');
+  //     setCheckoutLoading(null);
+  //   } catch (error) {
+  //     console.error('Error removing PERFORM addon:', error);
+  //     toast.error('Failed to remove PERFORM addon');
+  //     setCheckoutLoading(null);
+  //   }
+  // };
 
   if (loading || !accountDetails) {
     return (
@@ -218,9 +219,9 @@ export default function BillingPlansPage() {
   }
 
   const currentTier = accountDetails.tier;
-  const hasPerformAddon = accountDetails.has_perform_addon;
+  // const hasPerformAddon = accountDetails.has_perform_addon;
   const hasMarketingSetupFeePaid = accountDetails.setup_fee_paid;
-  const hasPerformSetupFeePaid = accountDetails.perform_setup_fee_paid;
+  // const hasPerformSetupFeePaid = accountDetails.perform_setup_fee_paid;
   const tiers = getPurchasableTiers();
 
   // Exact yearly prices with 10% discount
@@ -233,10 +234,10 @@ export default function BillingPlansPage() {
     return yearlyPrices[tier] || 0;
   };
 
-  // Get yearly price for PERFORM addon
-  const getPerformYearlyPrice = () => {
-    return 4957; // $4,957/year
-  };
+  // TODO: PERFORM addon pricing function for future use
+  // const getPerformYearlyPrice = () => {
+  //   return 4957; // $4,957/year
+  // };
 
   return (
     <div className="container mx-auto py-8 max-w-7xl">
@@ -410,7 +411,8 @@ export default function BillingPlansPage() {
         })}
       </div>
 
-      {/* PERFORM Addon Card */}
+      {/* PERFORM Addon Card - temporarily hidden, will re-enable in future release */}
+      {/* 
       <Card className="mb-6">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -516,6 +518,7 @@ export default function BillingPlansPage() {
           )}
         </CardContent>
       </Card>
+      */}
 
     </div>
   );

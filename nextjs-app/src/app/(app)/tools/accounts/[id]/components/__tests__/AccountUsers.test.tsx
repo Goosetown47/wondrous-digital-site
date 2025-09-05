@@ -14,6 +14,7 @@ const mockUseCancelInvitation = vi.fn();
 const mockUseResendInvitation = vi.fn();
 const mockUseUserProjectCounts = vi.fn();
 const mockUseAccountProjectCount = vi.fn();
+const mockUseAccountTier = vi.fn();
 
 vi.mock('@/hooks/useAccountUsers', () => ({
   useAccountUsers: () => mockUseAccountUsers(),
@@ -31,6 +32,10 @@ vi.mock('@/hooks/useInvitations', () => ({
 vi.mock('@/hooks/useUserProjectCounts', () => ({
   useUserProjectCounts: () => mockUseUserProjectCounts(),
   useAccountProjectCount: () => mockUseAccountProjectCount(),
+}));
+
+vi.mock('@/hooks/useAccountTier', () => ({
+  useAccountTier: () => mockUseAccountTier(),
 }));
 
 // Mock sonner
@@ -175,6 +180,16 @@ describe('AccountUsers', () => {
     mockUseResendInvitation.mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
+    });
+    
+    // Mock tier features - default to FREE tier (1 user limit)
+    mockUseAccountTier.mockReturnValue({
+      canCreateMore: (feature: string, current: number) => {
+        if (feature === 'users') return current < 1; // FREE tier: 1 user
+        return true;
+      },
+      limits: { users: 1, projects: 1 },
+      tier: 'FREE',
     });
   });
 
@@ -370,6 +385,16 @@ describe('AccountUsers', () => {
 
   describe('Invite User Dialog', () => {
     it('should open invite user dialog', () => {
+      // Mock a higher tier to allow inviting users
+      mockUseAccountTier.mockReturnValue({
+        canCreateMore: (feature: string, current: number) => {
+          if (feature === 'users') return current < 5; // PRO tier: 5 users
+          return true;
+        },
+        limits: { users: 5, projects: 5 },
+        tier: 'PRO',
+      });
+      
       renderWithProviders(<AccountUsers accountId={mockAccountId} />);
       
       const inviteButton = screen.getByRole('button', { name: /Invite User/ });
@@ -426,6 +451,16 @@ describe('AccountUsers', () => {
     });
 
     it('should disable send button without email', () => {
+      // Mock a higher tier to allow inviting users
+      mockUseAccountTier.mockReturnValue({
+        canCreateMore: (feature: string, current: number) => {
+          if (feature === 'users') return current < 5; // PRO tier: 5 users
+          return true;
+        },
+        limits: { users: 5, projects: 5 },
+        tier: 'PRO',
+      });
+      
       renderWithProviders(<AccountUsers accountId={mockAccountId} />);
       
       // Open dialog
