@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { TierBadge } from '@/components/ui/tier-badge';
 import { useAuth } from '@/providers/auth-provider';
 
 export function AccountDropdown() {
@@ -69,6 +70,7 @@ export function AccountDropdown() {
               >
                 <div className="flex items-center gap-2">
                   <span>{account.name}</span>
+                  {account.tier && <TierBadge tier={account.tier} size="sm" />}
                   {isAdminUser && (
                     <Shield className="h-3 w-3 text-muted-foreground" />
                   )}

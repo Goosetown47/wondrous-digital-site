@@ -13,11 +13,13 @@ import {
   useUpdateAccount,
   getAccountStatus,
 } from '@/hooks/useAccounts';
+import { useRealtimeAccounts } from '@/hooks/useRealtimeAccounts';
 import { useIsAdmin } from '@/hooks/useRole';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 import { EnhancedTable } from '@/components/ui/enhanced-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { TierBadge } from '@/components/ui/tier-badge';
 import { Switch } from '@/components/ui/switch';
 import {
   AlertDialog,
@@ -44,6 +46,10 @@ import type { AccountWithStats } from '@/lib/services/accounts';
 export default function AccountsPage() {
   const router = useRouter();
   const { data: accounts, isLoading } = useAccounts(true);
+  
+  // Enable real-time updates for accounts
+  useRealtimeAccounts();
+  
   const { 
     suspendAccounts, 
     activateAccounts, 
@@ -96,18 +102,8 @@ export default function AccountsPage() {
       key: 'plan',
       title: 'Plan',
       render: (account: AccountWithStats) => {
-        const planColors: Record<string, string> = {
-          free: 'bg-gray-100 text-gray-700',
-          basic: 'bg-green-100 text-green-700',
-          pro: 'bg-blue-100 text-blue-700',
-          scale: 'bg-indigo-100 text-indigo-700',
-          max: 'bg-purple-100 text-purple-700',
-        };
-        const tierKey = account.tier?.toLowerCase() || 'free';
         return (
-          <Badge className={planColors[tierKey] || planColors.free}>
-            {account.tier || 'FREE'}
-          </Badge>
+          <TierBadge tier={account.tier || 'FREE'} size="sm" />
         );
       },
     },

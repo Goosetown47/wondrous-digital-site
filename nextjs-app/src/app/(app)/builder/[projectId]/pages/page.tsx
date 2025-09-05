@@ -2,15 +2,25 @@
 
 import { useParams } from 'next/navigation';
 import { useProject } from '@/hooks/useProjects';
+import { useAuth } from '@/providers/auth-provider';
 import { PageManager } from '@/components/pages/PageManager';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 export default function ProjectPagesPage() {
   const params = useParams();
+  const { setCurrentProject } = useAuth();
   const projectId = params.projectId as string;
   const { data: project, isLoading } = useProject(projectId);
+
+  // Sync current project when project data loads
+  useEffect(() => {
+    if (project) {
+      setCurrentProject(project);
+    }
+  }, [project, setCurrentProject]);
 
   if (isLoading) {
     return (

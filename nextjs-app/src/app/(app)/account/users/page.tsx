@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/providers/auth-provider';
 import { useAccountUsers, useUpdateUserRole, useRemoveUser } from '@/hooks/useAccountUsers';
+import { useRealtimeAccount } from '@/hooks/useRealtimeAccounts';
 import { 
   useAccountInvitations, 
   useCreateInvitation, 
@@ -79,6 +80,9 @@ export default function AccountUsersPage() {
   const { data: invitations, isLoading: invitationsLoading } = useAccountInvitations(currentAccount?.id || null);
   const { tier, canCreateMore, limits, isUnlocked } = useAccountTier();
   
+  // Enable real-time updates for this account
+  useRealtimeAccount(currentAccount?.id || null);
+  
   const updateRole = useUpdateUserRole();
   const removeUser = useRemoveUser();
   const createInvitation = useCreateInvitation();
@@ -146,6 +150,49 @@ export default function AccountUsersPage() {
       // Error toast handled by hook
     }
   };
+
+  // Bulk actions removed - not needed for account-level user management
+  
+  // const handleBulkRoleChange = async () => {
+  //   if (!currentAccount || selectedUsers.size === 0) return;
+
+  //   try {
+  //     const promises = Array.from(selectedUsers).map(userId => 
+  //       updateRole.mutateAsync({
+  //         accountId: currentAccount.id,
+  //         userId,
+  //         role: bulkNewRole,
+  //       })
+  //     );
+      
+  //     await Promise.all(promises);
+  //     toast.success(`Updated ${selectedUsers.size} users successfully`);
+  //     setSelectedUsers(new Set());
+  //     setBulkActionModalOpen(false);
+  //   } catch {
+  //     toast.error('Failed to update some users');
+  //   }
+  // };
+
+  // const handleBulkRemove = async () => {
+  //   if (!currentAccount || selectedUsers.size === 0) return;
+
+  //   try {
+  //     const promises = Array.from(selectedUsers).map(userId => 
+  //       removeUser.mutateAsync({
+  //         accountId: currentAccount.id,
+  //         userId,
+  //       })
+  //     );
+      
+  //     await Promise.all(promises);
+  //     toast.success(`Removed ${selectedUsers.size} users successfully`);
+  //     setSelectedUsers(new Set());
+  //     setBulkActionModalOpen(false);
+  //   } catch {
+  //     toast.error('Failed to remove some users');
+  //   }
+  // };
 
   return (
     <PermissionGate permission={PERMISSIONS.USERS.READ} fallback={
@@ -256,6 +303,7 @@ export default function AccountUsersPage() {
         {/* Current Team Members */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Current Team Members</h2>
+          
           {usersLoading ? (
             <div className="space-y-2">
               {[...Array(3)].map((_, i) => (

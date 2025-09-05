@@ -4,12 +4,15 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import { 
   useUsers, 
   // useBulkUserOperations,
   useRemoveUserFromAccount,
   useDeleteUser,
+  useBulkDeleteUsers,
 } from '@/hooks/useUsers';
+import { useRealtimeUsers } from '@/hooks/useRealtimeUsers';
 import { PermissionGate } from '@/components/auth/PermissionGate';
 import { useAuth } from '@/providers/auth-provider';
 import { EnhancedTable } from '@/components/ui/enhanced-table';
@@ -51,6 +54,10 @@ export default function UsersPage() {
   const router = useRouter();
   const { user: currentUser } = useAuth();
   const { data: users, isLoading } = useUsers();
+  
+  // Enable real-time updates for users
+  useRealtimeUsers();
+  
   // const { 
   //   updateUserRoles, 
   //   removeUsersFromAccount, 
@@ -59,6 +66,7 @@ export default function UsersPage() {
   
   const removeUserFromAccount = useRemoveUserFromAccount();
   const deleteUser = useDeleteUser();
+  const bulkDeleteUsers = useBulkDeleteUsers();
 
   const [removeDialog, setRemoveDialog] = useState<{ 
     open: boolean; 
@@ -72,6 +80,11 @@ export default function UsersPage() {
     open: boolean;
     user?: UserWithAccounts;
   }>({ open: false });
+
+  const [bulkDeleteDialog, setBulkDeleteDialog] = useState<{
+    open: boolean;
+    users: UserWithAccounts[];
+  }>({ open: false, users: [] });
   
   const [accountsDialog, setAccountsDialog] = useState<{
     open: boolean;
@@ -264,6 +277,30 @@ export default function UsersPage() {
       },
       variant: 'destructive' as const,
     },
+    {
+      label: 'Delete Users',
+      icon: Trash2,
+      onClick: (selectedUsers: UserWithAccounts[]) => {
+        // Filter out admins and current user
+        const usersToDelete = selectedUsers.filter(user => {
+          const isAdmin = user.accounts.some(
+            acc => acc.account_id === '00000000-0000-0000-0000-000000000000' && acc.role === 'admin'
+          );
+          return !isAdmin && user.id !== currentUser?.id;
+        });
+        
+        if (usersToDelete.length === 0) {
+          toast.error('Cannot delete admin users or yourself');
+          return;
+        }
+        
+        setBulkDeleteDialog({ 
+          open: true, 
+          users: usersToDelete 
+        });
+      },
+      variant: 'destructive' as const,
+    },
   ];
 
   // Get unique accounts for filtering
@@ -426,6 +463,35 @@ export default function UsersPage() {
                 className="bg-red-600 hover:bg-red-700"
               >
                 Delete User
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Bulk Delete Confirmation Dialog */}
+        <AlertDialog open={bulkDeleteDialog.open} onOpenChange={(open) => setBulkDeleteDialog({ open, users: open ? bulkDeleteDialog.users : [] })}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete {bulkDeleteDialog.users.length} Users</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete {bulkDeleteDialog.users.length} user{bulkDeleteDialog.users.length === 1 ? '' : 's'}?
+                <br /><br />
+                <strong className="text-red-600">This action cannot be undone.</strong>
+                <br /><br />
+                This will permanently delete the selected users and remove their access to all accounts and resources.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => {
+                  const userIds = bulkDeleteDialog.users.map(u => u.id);
+                  bulkDeleteUsers.mutate(userIds);
+                  setBulkDeleteDialog({ open: false, users: [] });
+                }}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete {bulkDeleteDialog.users.length} User{bulkDeleteDialog.users.length === 1 ? '' : 's'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

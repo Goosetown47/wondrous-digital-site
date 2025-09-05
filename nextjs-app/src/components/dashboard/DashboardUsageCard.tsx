@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { TierBadge } from '@/components/ui/tier-badge';
 import { Users, FolderOpen, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import type { TierName } from '@/types/database';
@@ -28,30 +29,13 @@ export function DashboardUsageCard({
   const userPercentage = isUnlocked ? 0 : (userCount / userLimit) * 100;
 
 
-  const getTierBadgeStyles = () => {
-    switch (tier) {
-      case 'FREE':
-        return 'bg-[#F8F8F6] text-[#404040]';
-      case 'PRO':
-        return 'bg-[#CCF9D0] text-[#60C482]';
-      case 'SCALE':
-        return 'bg-[#DFF8FC] text-[#60B2C4]';
-      case 'MAX':
-        return 'bg-[#EFD0FA] text-[#AA60C4]';
-      default:
-        return 'bg-gray-100 text-gray-600';
-    }
-  };
-
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Usage & Limits</CardTitle>
           <div className="flex items-center gap-2">
-            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getTierBadgeStyles()}`}>
-              {tier}
-            </span>
+            <TierBadge tier={tier} size="sm" />
             {isUnlocked && (
               <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-purple-900">
                 UNLOCKED

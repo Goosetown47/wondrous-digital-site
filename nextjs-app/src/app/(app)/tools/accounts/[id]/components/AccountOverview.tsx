@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { TierBadge } from '@/components/ui/tier-badge';
 import { 
   Users, 
   FolderOpen, 
@@ -104,15 +104,7 @@ export function AccountOverview({ account }: AccountOverviewProps) {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Tier</span>
-              <Badge className={
-                account.tier === 'FREE' ? 'bg-gray-100 text-gray-700' :
-                account.tier === 'PRO' ? 'bg-blue-100 text-blue-700' :
-                account.tier === 'SCALE' ? 'bg-purple-100 text-purple-700' :
-                account.tier === 'MAX' ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-900' :
-                'bg-green-100 text-green-700'
-              }>
-                {account.tier || 'FREE'}
-              </Badge>
+              <TierBadge tier={account.tier || 'FREE'} size="sm" />
             </div>
             {account.subscription_status && (
               <div className="flex justify-between items-center">

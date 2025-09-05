@@ -29,12 +29,34 @@ export function ProjectDropdown() {
     [allProjects, currentAccount?.id]
   );
 
+  // Extract project ID from URL if on project-specific page
+  const projectIdFromUrl = useMemo(() => {
+    // Check if we're on a project-specific route
+    const matches = pathname.match(/\/(builder|project)\/([a-f0-9-]+)/);
+    return matches ? matches[2] : null;
+  }, [pathname]);
+
   useEffect(() => {
+    // If we have a project ID from the URL, sync it
+    if (projectIdFromUrl && projects.length > 0) {
+      const urlProject = projects.find(p => p.id === projectIdFromUrl);
+      if (urlProject && (!currentProject || currentProject.id !== urlProject.id)) {
+        setCurrentProject(urlProject);
+        return;
+      }
+    }
+    
     // If current project is not in the list, clear it
     if (currentProject && !projects.some(p => p.id === currentProject.id)) {
       setCurrentProject(null);
     }
-  }, [projects, currentProject, setCurrentProject]);
+    
+    // Auto-select first project if none selected and projects are available
+    // BUT only if we're not on a project-specific page
+    if (!currentProject && !projectIdFromUrl && projects.length > 0) {
+      setCurrentProject(projects[0]);
+    }
+  }, [projects, currentProject, setCurrentProject, projectIdFromUrl]);
 
   // Only show if account is selected
   if (!currentAccount) {

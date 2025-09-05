@@ -11,11 +11,13 @@ import { useProject } from '@/hooks/useProjects';
 import { usePageById } from '@/hooks/usePages';
 import { useTheme } from '@/hooks/useThemes';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { useAuth } from '@/providers/auth-provider';
 import { useEffect, useState } from 'react';
 
 export default function BuilderPage() {
   const params = useParams();
   const router = useRouter();
+  const { setCurrentProject } = useAuth();
   const projectId = params.projectId as string;
   const pageId = params.pageId as string;
   const { 
@@ -38,6 +40,13 @@ export default function BuilderPage() {
   
   // Fetch theme if project has one
   const { data: theme } = useTheme(project?.theme_id);
+
+  // Sync current project when project data loads
+  useEffect(() => {
+    if (project) {
+      setCurrentProject(project);
+    }
+  }, [project, setCurrentProject]);
 
   // Reset hasLoadedInitialData when pageId changes
   useEffect(() => {

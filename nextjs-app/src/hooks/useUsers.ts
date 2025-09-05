@@ -462,3 +462,40 @@ export function useDeleteUser() {
     },
   });
 }
+
+/**
+ * Hook to bulk delete multiple users
+ */
+export function useBulkDeleteUsers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userIds: string[]) => {
+      const response = await fetch('/api/users/bulk-delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ userIds }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete users');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Invalidate users query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      
+      // Invalidate all account-users queries
+      queryClient.invalidateQueries({ queryKey: ['account-users'] });
+      
+      toast.success(`Successfully deleted ${data.deletedCount || 0} users`);
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete users: ${error.message}`);
+    },
+  });
+}

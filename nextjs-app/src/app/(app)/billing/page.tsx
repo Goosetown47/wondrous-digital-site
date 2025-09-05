@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format, differenceInHours, differenceInMinutes, differenceInDays } from 'date-fns';
+import type { TierName } from '@/types/database';
 import { 
   AlertCircle,
   AlertTriangle,
@@ -21,6 +22,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { TierBadge } from '@/components/ui/tier-badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -577,7 +579,19 @@ function BillingContent() {
                     </div>
                     <div className="flex items-start gap-2">
                       <Check className="h-5 w-5 text-green-500 mt-0.5" />
-                      <p>You are currently on the <strong>{planName}</strong> plan</p>
+                      <p className="flex items-center gap-2">
+                        You are currently on the{' '}
+                        {subscription && account?.tier ? (
+                          <TierBadge 
+                            tier={account.tier as TierName} 
+                            showBillingPeriod={true}
+                            billingPeriod={subscription.billingPeriod}
+                          />
+                        ) : (
+                          <strong>{planName}</strong>
+                        )}{' '}
+                        plan
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1108,12 +1122,13 @@ function BillingContent() {
           </div>
         </TabsContent>
 
-        {/* Addons Preview Tab */}
+        {/* Addons Preview Tab - PERFORM temporarily hidden */}
         <TabsContent value="addons">
           <div>
             <h2 className="text-2xl font-bold mb-2">Addons Preview</h2>
             <p className="text-muted-foreground mb-6">Enhance your plan with powerful addons</p>
             
+            {/* PERFORM addon temporarily hidden - will re-enable in future release
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -1163,6 +1178,16 @@ function BillingContent() {
                     Coming Soon
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+            */}
+            
+            {/* Placeholder message while PERFORM is hidden */}
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">
+                  Exciting addons are in development and will be available soon!
+                </p>
               </CardContent>
             </Card>
           </div>
