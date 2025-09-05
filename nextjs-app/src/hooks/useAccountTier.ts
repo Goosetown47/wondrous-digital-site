@@ -86,14 +86,28 @@ export function useAccountTier() {
   
   const tier = selectedAccount?.tier || 'FREE';
   const hasPerformAddon = selectedAccount?.has_perform_addon || false;
+  const isUnlocked = selectedAccount?.is_unlocked || false;
   
-  // Get limits for current tier
-  const limits = TIER_LIMITS[tier];
+  // If account is unlocked, provide unlimited access
+  const UNLIMITED_LIMITS: TierLimits = {
+    projects: 999999, // Effectively unlimited
+    users: 999999,    // Effectively unlimited
+    customDomains: true,
+    advancedAnalytics: true,
+    prioritySupport: true,
+    whiteLabel: true,
+    apiAccess: true,
+    seoTools: true,
+    marketingPlatform: true,
+  };
   
-  // Override SEO tools if PERFORM addon is active
+  // Get limits for current tier (use unlimited if unlocked)
+  const limits = isUnlocked ? UNLIMITED_LIMITS : TIER_LIMITS[tier];
+  
+  // Override SEO tools if PERFORM addon is active (only if not already unlocked)
   const effectiveLimits: TierLimits = {
     ...limits,
-    seoTools: hasPerformAddon,
+    seoTools: isUnlocked ? true : (hasPerformAddon || limits.seoTools),
   };
   
   /**
@@ -177,6 +191,7 @@ export function useAccountTier() {
   return {
     tier,
     hasPerformAddon,
+    isUnlocked,
     limits: effectiveLimits,
     canUseFeature,
     meetsMinimumTier,

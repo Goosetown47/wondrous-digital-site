@@ -60,15 +60,18 @@ export default function ProjectSettingsPage() {
   // Dialog state
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
 
-  // Initialize form with project data
+  // Initialize form with project data and sync current project
   useEffect(() => {
     if (project) {
       setName(project.name);
       setSlug(project.slug);
       setDescription(project.description || '');
       setThemeId(project.theme_id || 'none');
+      
+      // Sync current project in auth context
+      setCurrentProject(project);
     }
-  }, [project]);
+  }, [project, setCurrentProject]);
 
   // Check for changes
   useEffect(() => {

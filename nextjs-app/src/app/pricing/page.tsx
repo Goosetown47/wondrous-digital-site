@@ -42,7 +42,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { formatCurrency } from '@/lib/stripe/client-utils';
-import { PricingAddons } from '@/components/pricing/pricing-addons';
+// import { PricingAddons } from '@/components/pricing/pricing-addons'; // Temporarily disabled
 import type { TierName } from '@/types/database';
 
 // Interface for Pricing Package Data
@@ -419,8 +419,8 @@ function PricingContent() {
 
       </div>
       
-      {/* Add-ons Section */}
-      <PricingAddons isAnnually={isAnnually} />
+      {/* Add-ons Section - temporarily hidden, will re-enable in future release */}
+      {/* <PricingAddons isAnnually={isAnnually} /> */}
 
       {/* Footer sections moved below add-ons */}
       <div className="container mx-auto">

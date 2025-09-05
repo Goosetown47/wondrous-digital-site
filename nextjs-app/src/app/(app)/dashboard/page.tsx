@@ -4,18 +4,30 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/auth-provider';
 import { useAccountRole } from '@/hooks/useRole';
+import { useAccountTier } from '@/hooks/useAccountTier';
+import { useUserProjectCount } from '@/hooks/useAccountProjects';
+import { useAccountUsers } from '@/hooks/useAccountUsers';
 import { supabase } from '@/lib/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, FolderOpen, Sparkles, Plus, CreditCard } from 'lucide-react';
 import { CreateProjectDialog } from '@/components/projects/CreateProjectDialog';
+import { DashboardUsageCard } from '@/components/dashboard/DashboardUsageCard';
+import { MarketingPlatformButton } from '@/components/dashboard/MarketingPlatformButton';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { currentAccount, currentProject, user } = useAuth();
   const { data: accountRole } = useAccountRole();
+  const { tier, limits, isUnlocked } = useAccountTier();
+  const { data: projectCount } = useUserProjectCount(currentAccount?.id || null, user?.id || null);
+  const { data: accountUsers } = useAccountUsers(currentAccount?.id || '');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [displayName, setDisplayName] = useState<string>('');
+
+  // Calculate current usage
+  const currentProjectCount = projectCount?.total || 0;
+  const currentUserCount = accountUsers?.length || 1; // At least 1 for the owner
 
   // Check if user can create projects (account owner or admin)
   const canCreateProjects = accountRole === 'account_owner' || accountRole === 'admin';
@@ -174,6 +186,25 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Usage and Limits Card + Marketing Platform Button */}
+      {currentAccount && (
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <DashboardUsageCard
+              tier={tier}
+              projectCount={currentProjectCount}
+              projectLimit={limits.projects}
+              userCount={currentUserCount}
+              userLimit={limits.users}
+              isUnlocked={isUnlocked}
+            />
+          </div>
+          <div className="flex flex-col gap-4">
+            <MarketingPlatformButton tier={tier} className="w-full" />
+          </div>
+        </div>
+      )}
 
       {/* Quick Actions */}
       {currentAccount && (

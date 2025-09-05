@@ -10,8 +10,9 @@ import { Resend } from 'resend';
 // Lazy-loaded Resend client to prevent build-time initialization
 let resendClient: Resend | null = null;
 
-// Development mode flag
+// Development/Test mode flag
 const isDevelopment = process.env.NODE_ENV === 'development';
+const isTest = process.env.NODE_ENV === 'test';
 
 /**
  * Get or create Resend client with lazy initialization
@@ -25,8 +26,10 @@ function getResendClient(): Resend | null {
   
   // Handle missing API key
   if (!apiKey) {
-    if (isDevelopment) {
-      console.warn('RESEND_API_KEY not set - emails will be logged to console only');
+    if (isDevelopment || isTest) {
+      if (isDevelopment) {
+        console.warn('RESEND_API_KEY not set - emails will be logged to console only');
+      }
       return null;
     }
     // In production, throw error only when actually trying to send emails
