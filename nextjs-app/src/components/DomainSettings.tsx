@@ -9,9 +9,11 @@ import {
   CheckCircle, Clock, XCircle, Crown
 } from 'lucide-react';
 import { useDomains, useAddDomain, useRemoveDomain, useVerifyDomain, useVercelStatus, useDomainStatus, useDomainDNSConfig, useToggleWWW, useMakePrimary } from '@/hooks/useDomains';
+import { useAccountTier } from '@/hooks/useAccountTier';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import Link from 'next/link';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DNS_PROVIDERS } from '@/lib/dns-providers';
 import { Switch } from '@/components/ui/switch';
@@ -84,9 +86,12 @@ export function DomainSettings({ projectId, projectSlug }: DomainSettingsProps) 
   const [domainError, setDomainError] = useState<string | null>(null);
   const { data: domains, isLoading } = useDomains(projectId);
   const { data: vercelStatus } = useVercelStatus();
+  const { canUseFeature, isUnlocked } = useAccountTier();
   const addDomain = useAddDomain();
   const removeDomain = useRemoveDomain(projectId);
   const verifyDomain = useVerifyDomain();
+  
+  const canUseCustomDomains = isUnlocked || canUseFeature('customDomains');
 
   const handleDomainChange = (value: string) => {
     setNewDomain(value);
@@ -101,6 +106,12 @@ export function DomainSettings({ projectId, projectSlug }: DomainSettingsProps) 
 
   const handleAddDomain = () => {
     if (!newDomain) return;
+    
+    // Check tier limits
+    if (!canUseCustomDomains) {
+      toast.error('Custom domains are not available on the FREE plan. Please upgrade to PRO or higher.');
+      return;
+    }
     
     const error = validateDomain(newDomain);
     if (error) {
@@ -139,8 +150,22 @@ export function DomainSettings({ projectId, projectSlug }: DomainSettingsProps) 
         </p>
       </div>
 
+      {/* Tier Restriction Notice */}
+      {!canUseCustomDomains && (
+        <Alert className="border-amber-200 bg-amber-50">
+          <Crown className="h-4 w-4 text-amber-600" />
+          <AlertDescription>
+            <strong>Custom domains are not available on the FREE plan.</strong>
+            <Link href="/billing" className="ml-1 underline text-amber-700 font-medium">
+              Upgrade to PRO or higher
+            </Link>
+            {' '}to add custom domains to your project.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Vercel Configuration Status */}
-      {vercelStatus && !vercelStatus.configured && (
+      {vercelStatus && !vercelStatus.configured && canUseCustomDomains && (
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
@@ -185,15 +210,16 @@ export function DomainSettings({ projectId, projectSlug }: DomainSettingsProps) 
         <div className="space-y-2">
           <div className="flex space-x-2">
             <Input
-              placeholder="yourdomain.com"
+              placeholder={canUseCustomDomains ? "yourdomain.com" : "Upgrade to add custom domains"}
               value={newDomain}
               onChange={(e) => handleDomainChange(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !domainError && handleAddDomain()}
+              onKeyPress={(e) => e.key === 'Enter' && !domainError && canUseCustomDomains && handleAddDomain()}
               className={domainError ? 'border-red-500' : ''}
+              disabled={!canUseCustomDomains}
             />
             <Button 
               onClick={handleAddDomain}
-              disabled={!newDomain || !!domainError || addDomain.isPending}
+              disabled={!canUseCustomDomains || !newDomain || !!domainError || addDomain.isPending}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Domain

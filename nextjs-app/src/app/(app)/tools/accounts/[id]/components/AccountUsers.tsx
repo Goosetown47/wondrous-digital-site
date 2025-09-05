@@ -9,6 +9,7 @@ import {
   useResendInvitation 
 } from '@/hooks/useInvitations';
 import { useUserProjectCounts, useAccountProjectCount } from '@/hooks/useUserProjectCounts';
+import { useAccountTier } from '@/hooks/useAccountTier';
 import {
   Card,
   CardContent,
@@ -96,12 +97,18 @@ export function AccountUsers({ accountId }: AccountUsersProps) {
   const { data: invitations, isLoading: invitationsLoading } = useAccountInvitations(accountId);
   const { data: userProjectCounts } = useUserProjectCounts(accountId);
   const { data: totalProjects } = useAccountProjectCount(accountId);
+  const { canCreateMore, limits } = useAccountTier();
   
   const updateRole = useUpdateUserRole();
   const removeUser = useRemoveUser();
   const createInvitation = useCreateInvitation();
   const cancelInvitation = useCancelInvitation();
   const resendInvitation = useResendInvitation();
+  
+  // Calculate current user count (active users + pending invitations)
+  const currentUserCount = (users?.length || 0) + (invitations?.length || 0);
+  const canInviteMoreUsers = canCreateMore('users', currentUserCount);
+  const userLimit = limits.users;
 
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -118,6 +125,12 @@ export function AccountUsers({ accountId }: AccountUsersProps) {
     
     // Clear any previous errors
     setInviteError('');
+    
+    // Check if user can invite more users
+    if (!canInviteMoreUsers) {
+      setInviteError(`You've reached your user limit (${currentUserCount}/${userLimit}). Upgrade your plan to invite more users.`);
+      return;
+    }
 
     try {
       await createInvitation.mutateAsync({
@@ -311,9 +324,10 @@ export function AccountUsers({ accountId }: AccountUsersProps) {
               }
             }}>
               <DialogTrigger asChild>
-                <Button>
+                <Button disabled={!canInviteMoreUsers}>
                   <Plus className="mr-2 h-4 w-4" />
                   Invite User
+                  {!canInviteMoreUsers && ` (${currentUserCount}/${userLimit} limit)`}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">

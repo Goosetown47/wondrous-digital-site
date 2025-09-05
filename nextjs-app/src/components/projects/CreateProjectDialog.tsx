@@ -6,6 +6,8 @@ import { useAuth } from '@/providers/auth-provider';
 import { useCreateProject } from '@/hooks/useProjects';
 import { useThemes } from '@/hooks/useThemes';
 import { useHasPermission } from '@/hooks/usePermissions';
+import { useAccountTier } from '@/hooks/useAccountTier';
+import { useUserProjectCount } from '@/hooks/useAccountProjects';
 import { updateProject } from '@/lib/services/projects';
 import { validateSlug } from '@/lib/services/slug-validation';
 import { cn } from '@/lib/utils';
@@ -38,16 +40,24 @@ interface CreateProjectDialogProps {
 
 export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogProps) {
   const router = useRouter();
-  const { currentAccount, setCurrentProject } = useAuth();
+  const { currentAccount, setCurrentProject, user } = useAuth();
   const { data: themes, isLoading: themesLoading } = useThemes();
   const { mutate: createProject, isPending } = useCreateProject();
   const { data: isAdmin } = useHasPermission('system:admin');
+  const { tier, canCreateMore, getRemainingCount, limits } = useAccountTier();
+  const { data: projectCount } = useUserProjectCount(currentAccount?.id || null, user?.id || null);
   
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [themeId, setThemeId] = useState('none');
   const [customSlug, setCustomSlug] = useState(false);
   const [slugValidation, setSlugValidation] = useState<ReturnType<typeof validateSlug> | null>(null);
+
+  // Check if user can create more projects
+  const currentProjectCount = projectCount?.total || 0;
+  const canCreateProject = canCreateMore('projects', currentProjectCount);
+  const remainingProjects = getRemainingCount('projects', currentProjectCount);
+  const projectLimit = limits.projects;
 
   // Auto-generate slug from name
   useEffect(() => {
@@ -86,6 +96,12 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
     
     if (!name || !slug || !currentAccount) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    // Check if user can create more projects
+    if (!canCreateProject) {
+      toast.error(`You've reached your project limit (${currentProjectCount}/${projectLimit})`);
       return;
     }
 
@@ -133,10 +149,30 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
             <DialogTitle>Create New Project</DialogTitle>
             <DialogDescription>
               Create a new project in {currentAccount?.name}
+              {canCreateProject && (
+                <span className="block mt-1 text-sm">
+                  {remainingProjects} of {projectLimit} projects remaining
+                </span>
+              )}
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
+            {!canCreateProject && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  You've reached your project limit ({currentProjectCount}/{projectLimit} projects).
+                  {tier !== 'MAX' && (
+                    <span className="block mt-2">
+                      <a href="/billing" className="underline font-medium">
+                        Upgrade your plan
+                      </a> to create more projects.
+                    </span>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
               <Label htmlFor="project-name">Project Name</Label>
               <Input
@@ -146,6 +182,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                 placeholder="My Awesome Website"
                 required
                 autoFocus
+                disabled={!canCreateProject || isPending}
               />
             </div>
 
@@ -169,6 +206,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                 pattern="[a-z0-9\-]+"
                 title="Only lowercase letters, numbers, and hyphens"
                 required
+                disabled={!canCreateProject || isPending}
                 className={cn(
                   slugValidation && !slugValidation.isValid && !isAdmin && "border-red-500"
                 )}
@@ -239,7 +277,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
             </Button>
             <Button 
               type="submit" 
-              disabled={isPending || !!(slugValidation && !slugValidation.isValid && !isAdmin)}
+              disabled={!canCreateProject || isPending || !!(slugValidation && !slugValidation.isValid && !isAdmin)}
             >
               {isPending ? (
                 <>
