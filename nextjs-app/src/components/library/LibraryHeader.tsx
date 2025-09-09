@@ -13,6 +13,7 @@ interface LibraryHeaderProps {
   onPublishedChange: (show: boolean) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  hideTitle?: boolean;
 }
 
 export function LibraryHeader({
@@ -22,15 +23,18 @@ export function LibraryHeader({
   onPublishedChange,
   searchQuery,
   onSearchChange,
+  hideTitle = false,
 }: LibraryHeaderProps) {
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Library</h1>
-        <p className="text-muted-foreground">
-          Manage and publish templates for use in projects
-        </p>
-      </div>
+      {!hideTitle && (
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Library</h1>
+          <p className="text-muted-foreground">
+            Manage and publish templates for use in projects
+          </p>
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4 flex-1">

@@ -29,27 +29,30 @@ interface MenuItemProps {
       icon: React.ComponentType<{ className?: string }>;
     }>;
   };
+  isCollapsed?: boolean;
 }
 
-export function SidebarMenuItemComponent({ item }: MenuItemProps) {
+export function SidebarMenuItemComponent({ item, isCollapsed = false }: MenuItemProps) {
   const pathname = usePathname();
   const isActive = pathname?.startsWith(item.href);
   const [isOpen, setIsOpen] = useState(isActive);
 
-  if (item.subItems) {
+  if (item.subItems && !isCollapsed) {
     return (
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
             <SidebarMenuButton className="pr-2.5">
               <item.icon className="h-4 w-4" />
-              <span>{item.title}</span>
-              <ChevronRight
-                className={cn(
-                  "ml-auto h-4 w-4 transition-transform duration-200",
-                  isOpen && "rotate-90"
-                )}
-              />
+              {!isCollapsed && <span>{item.title}</span>}
+              {!isCollapsed && (
+                <ChevronRight
+                  className={cn(
+                    "ml-auto h-4 w-4 transition-transform duration-200",
+                    isOpen && "rotate-90"
+                  )}
+                />
+              )}
             </SidebarMenuButton>
           </CollapsibleTrigger>
           <CollapsibleContent>
@@ -62,7 +65,7 @@ export function SidebarMenuItemComponent({ item }: MenuItemProps) {
                   >
                     <Link href={subItem.href}>
                       <subItem.icon className="h-4 w-4" />
-                      <span>{subItem.title}</span>
+                      {!isCollapsed && <span>{subItem.title}</span>}
                     </Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
@@ -77,9 +80,9 @@ export function SidebarMenuItemComponent({ item }: MenuItemProps) {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={item.href}>
+        <Link href={item.href} title={isCollapsed ? item.title : undefined}>
           <item.icon className="h-4 w-4" />
-          <span>{item.title}</span>
+          {!isCollapsed && <span>{item.title}</span>}
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>

@@ -49,8 +49,6 @@ export function AccountSettings({ account }: AccountSettingsProps) {
   const {
     register,
     handleSubmit,
-    setValue,
-    watch,
     formState: { errors, isDirty },
     reset,
   } = useForm<UpdateAccountForm>({

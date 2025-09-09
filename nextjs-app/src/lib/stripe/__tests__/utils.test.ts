@@ -262,7 +262,7 @@ describe('Stripe Utils', () => {
         tier: 'PRO',
         stripe_customer_id: 'cus_123',
         stripe_subscription_id: 'sub_123',
-        subscription_status: 'active',
+        subscription_state: 'active',
         setup_fee_paid: true,
         setup_fee_paid_at: expect.any(String),
       });
@@ -321,7 +321,7 @@ describe('Stripe Utils', () => {
 
       expect(updateMock).toHaveBeenCalledWith({
         grace_period_ends_at: expect.any(String),
-        subscription_status: 'past_due',
+        subscription_state: 'past_due',
       });
 
       // Check that grace period is roughly 10 days from now

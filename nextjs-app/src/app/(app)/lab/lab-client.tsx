@@ -109,7 +109,7 @@ export default function LabClient() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredDrafts.map((draft) => (
-                <Link key={draft.id} href={`/lab/${draft.id}`}>
+                <Link key={draft.id} href={draft.type === 'theme' ? `/lab/themes/${draft.id}` : `/lab/${draft.id}`}>
                   <Card className="cursor-pointer transition-shadow hover:shadow-lg">
                     <CardHeader>
                       <div className="flex items-start justify-between">

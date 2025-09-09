@@ -2,6 +2,7 @@ import { getStripe, STRIPE_CONFIG } from './config';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 // import { createSupabaseServiceClient } from '@/lib/supabase/service';
 import { getAppUrl } from '@/lib/utils/app-url';
+import { SubscriptionState } from '@/lib/services/subscription-state';
 import type { TierName } from '@/types/database';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
@@ -176,7 +177,7 @@ export async function updateAccountTier(
       tier,
       stripe_customer_id: stripeCustomerId,
       stripe_subscription_id: stripeSubscriptionId,
-      subscription_status: 'active',
+      subscription_state: SubscriptionState.ACTIVE,
       setup_fee_paid: true,
       setup_fee_paid_at: new Date().toISOString(),
     })
@@ -219,7 +220,7 @@ export async function startGracePeriod(
     .from('accounts')
     .update({
       grace_period_ends_at: gracePeriodEnd.toISOString(),
-      subscription_status: 'past_due',
+      subscription_state: SubscriptionState.PAST_DUE,
     })
     .eq('id', accountId);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
@@ -19,7 +19,8 @@ interface AuthContextType {
   refreshAccounts: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
+// eslint-disable-next-line react-refresh/only-export-components
+export const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   accounts: [],
@@ -41,8 +42,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const router = useRouter();
 
+  // Load persisted selections from localStorage on mount
+  useEffect(() => {
+    const savedAccountId = localStorage.getItem('currentAccountId');
+    const savedProjectId = localStorage.getItem('currentProjectId');
+    const savedAccount = localStorage.getItem('currentAccount');
+    const savedProject = localStorage.getItem('currentProject');
+
+    if (savedAccount && savedAccountId) {
+      try {
+        const account = JSON.parse(savedAccount);
+        if (account.id === savedAccountId) {
+          setCurrentAccount(account);
+        }
+      } catch (e) {
+        console.error('Error loading saved account:', e);
+      }
+    }
+
+    if (savedProject && savedProjectId) {
+      try {
+        const project = JSON.parse(savedProject);
+        if (project.id === savedProjectId) {
+          setCurrentProject(project);
+        }
+      } catch (e) {
+        console.error('Error loading saved project:', e);
+      }
+    }
+  }, []);
+
   // Fetch accounts for the current user
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     if (!user) {
       setAccounts([]);
       setIsAdmin(false);
@@ -67,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error fetching accounts:', error);
     }
-  };
+  }, [user, currentAccount]);
 
   useEffect(() => {
     // Check active sessions and sets the user
@@ -114,21 +145,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentAccount(null);
       setIsAdmin(false);
     }
-  }, [user]);
+  }, [user, fetchAccounts]);
 
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
       setCurrentAccount(null);
+      setCurrentProject(null);
+      
+      // Clear persisted selections
+      localStorage.removeItem('currentAccountId');
+      localStorage.removeItem('currentAccount');
+      localStorage.removeItem('currentProjectId');
+      localStorage.removeItem('currentProject');
     } catch (error) {
       console.error('Error signing out:', error);
     }
   };
 
-  // Handle account change - clear project selection
+  // Handle account change - clear project selection and persist
   const handleSetCurrentAccount = (account: Account | null) => {
     setCurrentAccount(account);
     setCurrentProject(null); // Clear project when account changes
+    
+    // Persist to localStorage
+    if (account) {
+      localStorage.setItem('currentAccountId', account.id);
+      localStorage.setItem('currentAccount', JSON.stringify(account));
+      localStorage.removeItem('currentProjectId');
+      localStorage.removeItem('currentProject');
+    } else {
+      localStorage.removeItem('currentAccountId');
+      localStorage.removeItem('currentAccount');
+      localStorage.removeItem('currentProjectId');
+      localStorage.removeItem('currentProject');
+    }
+  };
+
+  // Handle project change and persist
+  const handleSetCurrentProject = (project: Project | null) => {
+    setCurrentProject(project);
+    
+    // Persist to localStorage
+    if (project) {
+      localStorage.setItem('currentProjectId', project.id);
+      localStorage.setItem('currentProject', JSON.stringify(project));
+    } else {
+      localStorage.removeItem('currentProjectId');
+      localStorage.removeItem('currentProject');
+    }
   };
 
   return (
@@ -140,7 +205,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       currentAccount, 
       setCurrentAccount: handleSetCurrentAccount, 
       currentProject,
-      setCurrentProject,
+      setCurrentProject: handleSetCurrentProject,
       signOut,
       refreshAccounts: fetchAccounts
     }}>
@@ -156,3 +221,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
