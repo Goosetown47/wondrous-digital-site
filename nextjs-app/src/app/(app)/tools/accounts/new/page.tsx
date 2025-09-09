@@ -108,8 +108,8 @@ export default function NewAccountPage() {
         </div>
       }
     >
-      <div className="container mx-auto py-8">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">Create New Account</h1>

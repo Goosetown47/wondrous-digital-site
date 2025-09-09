@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, ChevronsUpDown, Building2, Shield } from 'lucide-react';
+import type { Account } from '@/types/database';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,7 +59,7 @@ export function AccountDropdown() {
               No accounts available
             </DropdownMenuItem>
           ) : (
-            accounts.map((account) => (
+            accounts.map((account: Account) => (
               <DropdownMenuItem
                 key={account.id}
                 onSelect={() => {

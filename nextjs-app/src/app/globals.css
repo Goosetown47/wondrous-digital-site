@@ -41,6 +41,18 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Module theme variables - dynamically set by theme store */
+    --module-primary: #6B7280;
+    --module-secondary: #9CA3AF;
+    --module-accent: #EFEFEF;
+    --module-background: #F9FAFB;
+    
+    /* RGB versions for opacity support */
+    --module-primary-rgb: 107, 114, 128;
+    --module-secondary-rgb: 156, 163, 175;
+    --module-accent-rgb: 239, 239, 239;
+    --module-background-rgb: 249, 250, 251;
   }
 
   .dark {
@@ -84,6 +96,52 @@
 }
 
 @layer components {
+  /* Module theme classes */
+  .bg-module-primary {
+    background-color: var(--module-primary);
+  }
+  
+  .bg-module-secondary {
+    background-color: var(--module-secondary);
+  }
+  
+  .bg-module-accent {
+    background-color: var(--module-accent);
+  }
+  
+  .bg-module-background {
+    background-color: var(--module-background);
+  }
+  
+  .text-module-primary {
+    color: var(--module-primary);
+  }
+  
+  .text-module-secondary {
+    color: var(--module-secondary);
+  }
+  
+  .text-module-accent {
+    color: var(--module-accent);
+  }
+  
+  .border-module-primary {
+    border-color: var(--module-primary);
+  }
+  
+  .border-module-secondary {
+    border-color: var(--module-secondary);
+  }
+  
+  /* Module theme with opacity */
+  .bg-module-primary-50 {
+    background-color: rgba(var(--module-primary-rgb), 0.5);
+  }
+  
+  .bg-module-primary-10 {
+    background-color: rgba(var(--module-primary-rgb), 0.1);
+  }
+  
   /* Hue slider gradient */
   .hue-slider [data-slider-track] {
     background: linear-gradient(
