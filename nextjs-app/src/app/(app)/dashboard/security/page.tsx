@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield, Key, Smartphone, AlertTriangle, Check, Loader2 } from 'lucide-react';
+import { Shield, Key, AlertTriangle, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/providers/auth-provider';
@@ -171,29 +171,6 @@ export default function SecurityPage() {
               </CardContent>
             </Card>
 
-            {/* Two-Factor Authentication */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Smartphone className="h-5 w-5" />
-                  Two-Factor Authentication
-                </CardTitle>
-                <CardDescription>
-                  Add an extra layer of security to your account
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-lg border border-dashed p-8 text-center">
-                  <h3 className="text-lg font-semibold mb-2">Coming Soon</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Two-factor authentication will be available in a future update.
-                  </p>
-                  <Button variant="outline" disabled>
-                    Enable 2FA
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
