@@ -133,13 +133,16 @@ export function ProfileForm() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Get public URL with cache busting parameter
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
+      
+      // Add timestamp to URL to bust cache
+      const avatarUrlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
 
       // Update profile with avatar URL
-      await updateProfile.mutateAsync({ avatar_url: publicUrl });
+      await updateProfile.mutateAsync({ avatar_url: avatarUrlWithTimestamp });
       
     } catch (error) {
       // Only show error if it's not from updateProfile (which logs to console)
