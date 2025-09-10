@@ -142,6 +142,10 @@ export async function POST(request: NextRequest) {
     } else if (action === 'switch-billing') {
       // Same tier, different billing period
       const currentTier = account.tier as Exclude<TierName, 'FREE' | 'BASIC'>;
+      // Validate tier is in TIER_PRICING to prevent object injection
+      if (currentTier !== 'PRO' && currentTier !== 'SCALE' && currentTier !== 'MAX') {
+        return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
+      }
       const tierPricing = TIER_PRICING[currentTier];
       newPriceId = billingPeriod === 'yearly' 
         ? tierPricing.yearlyPriceId 

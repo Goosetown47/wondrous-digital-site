@@ -619,7 +619,7 @@ function DomainCard({
                           Step {stepNumber}: Add {recordTitle}
                         </div>
                         <div className="text-xs text-muted-foreground space-y-1">
-                          {DNS_PROVIDERS[selectedProvider].instructions.a_record.location.map((step, i) => (
+                          {(selectedProvider && DNS_PROVIDERS[selectedProvider as keyof typeof DNS_PROVIDERS]?.instructions?.a_record?.location || []).map((step, i) => (
                             <div key={i}>• {step}</div>
                           ))}
                         </div>
@@ -660,7 +660,7 @@ function DomainCard({
                     <div className="rounded-lg bg-muted/50 p-3 space-y-2">
                       <div className="font-medium">Step 2: Add Verification Record</div>
                       <div className="text-xs text-muted-foreground space-y-1">
-                        {DNS_PROVIDERS[selectedProvider].instructions.txt_record?.location.map((step, i) => (
+                        {(selectedProvider && DNS_PROVIDERS[selectedProvider as keyof typeof DNS_PROVIDERS]?.instructions?.txt_record?.location || []).map((step, i) => (
                           <div key={i}>• {step}</div>
                         ))}
                       </div>

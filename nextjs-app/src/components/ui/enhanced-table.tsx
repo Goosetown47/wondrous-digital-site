@@ -131,7 +131,7 @@ export function EnhancedTable<T>({
       filtered = filtered.filter(item => {
         return Object.entries(activeFilters).every(([key, value]) => {
           if (value === 'all' || !value) return true;
-          const itemValue = (item as Record<string, unknown>)[key];
+          const itemValue = Object.prototype.hasOwnProperty.call(item, key) ? (item as Record<string, unknown>)[key] : undefined;
           return String(itemValue) === value;
         });
       });

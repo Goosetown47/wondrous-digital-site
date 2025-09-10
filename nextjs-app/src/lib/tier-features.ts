@@ -92,14 +92,14 @@ export function canUseFeature(
   const tier = account.tier || 'FREE';
   const hasPerformAddon = account.has_perform_addon || false;
   
-  const limits = TIER_LIMITS[tier];
+  const limits = Object.prototype.hasOwnProperty.call(TIER_LIMITS, tier) ? TIER_LIMITS[tier] : TIER_LIMITS.FREE;
   
   // Special case for SEO tools - requires PERFORM addon
   if (feature === 'seoTools') {
     return hasPerformAddon;
   }
   
-  const value = limits[feature];
+  const value = Object.prototype.hasOwnProperty.call(limits, feature) ? limits[feature] : 0;
   return typeof value === 'boolean' ? value : value !== 0;
 }
 
@@ -113,7 +113,9 @@ export function meetsMinimumTier(
   if (!account) return false;
   
   const tier = account.tier || 'FREE';
-  return TIER_HIERARCHY[tier] >= TIER_HIERARCHY[minimumTier];
+  const currentHier = Object.prototype.hasOwnProperty.call(TIER_HIERARCHY, tier) ? TIER_HIERARCHY[tier] : 0;
+  const minHier = Object.prototype.hasOwnProperty.call(TIER_HIERARCHY, minimumTier) ? TIER_HIERARCHY[minimumTier] : 0;
+  return currentHier >= minHier;
 }
 
 /**
@@ -167,7 +169,7 @@ export function getUpgradeMessage(
   // Find the minimum tier that has this feature
   const availableTiers = Object.entries(TIER_LIMITS)
     .filter(([, limits]) => {
-      const value = limits[feature];
+      const value = Object.prototype.hasOwnProperty.call(limits, feature) ? limits[feature] : 0;
       return typeof value === 'boolean' ? value : value > 0;
     })
     .map(([tierName]) => tierName as TierName)
@@ -211,7 +213,7 @@ export function canAccessContent(
  * Get list of features available for a tier
  */
 export function getTierFeatures(tier: TierName, hasPerformAddon = false): string[] {
-  const limits = TIER_LIMITS[tier];
+  const limits = Object.prototype.hasOwnProperty.call(TIER_LIMITS, tier) ? TIER_LIMITS[tier] : TIER_LIMITS.FREE;
   const features: string[] = [];
   
   if (limits.projects > 0) {

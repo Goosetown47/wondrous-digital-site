@@ -102,7 +102,7 @@ export function useAccountTier() {
   };
   
   // Get limits for current tier (use unlimited if unlocked)
-  const limits = isUnlocked ? UNLIMITED_LIMITS : TIER_LIMITS[tier];
+  const limits = isUnlocked ? UNLIMITED_LIMITS : (Object.prototype.hasOwnProperty.call(TIER_LIMITS, tier) ? TIER_LIMITS[tier] : TIER_LIMITS.FREE);
   
   // Override SEO tools if PERFORM addon is active (only if not already unlocked)
   const effectiveLimits: TierLimits = {
@@ -114,7 +114,7 @@ export function useAccountTier() {
    * Check if a specific feature is available for the current tier
    */
   const canUseFeature = (feature: keyof TierLimits): boolean => {
-    const value = effectiveLimits[feature];
+    const value = Object.prototype.hasOwnProperty.call(effectiveLimits, feature) ? effectiveLimits[feature] : false;
     return typeof value === 'boolean' ? value : value !== 0;
   };
   
@@ -122,7 +122,9 @@ export function useAccountTier() {
    * Check if the current tier meets or exceeds a minimum tier requirement
    */
   const meetsMinimumTier = (minimumTier: TierName): boolean => {
-    return TIER_HIERARCHY[tier] >= TIER_HIERARCHY[minimumTier];
+    const currentHierarchy = Object.prototype.hasOwnProperty.call(TIER_HIERARCHY, tier) ? TIER_HIERARCHY[tier] : 0;
+    const minimumHierarchy = Object.prototype.hasOwnProperty.call(TIER_HIERARCHY, minimumTier) ? TIER_HIERARCHY[minimumTier] : 0;
+    return currentHierarchy >= minimumHierarchy;
   };
   
   /**
@@ -132,7 +134,7 @@ export function useAccountTier() {
     resource: 'projects' | 'users',
     currentCount: number
   ): boolean => {
-    const limit = effectiveLimits[resource];
+    const limit = Object.prototype.hasOwnProperty.call(effectiveLimits, resource) ? effectiveLimits[resource] : 0;
     // Check if current count is below the limit
     return currentCount < limit;
   };
@@ -144,7 +146,7 @@ export function useAccountTier() {
     resource: 'projects' | 'users',
     currentCount: number
   ): number => {
-    const limit = effectiveLimits[resource];
+    const limit = Object.prototype.hasOwnProperty.call(effectiveLimits, resource) ? effectiveLimits[resource] : 0;
     return Math.max(0, limit - currentCount);
   };
   
@@ -155,8 +157,8 @@ export function useAccountTier() {
     // Find the minimum tier that has this feature
     const availableTiers = Object.entries(TIER_LIMITS)
       .filter(([, limits]) => {
-        const value = limits[feature];
-        return typeof value === 'boolean' ? value : value > 0;
+        const value = Object.prototype.hasOwnProperty.call(limits, feature) ? limits[feature] : undefined;
+        return typeof value === 'boolean' ? value : (typeof value === 'number' && value > 0);
       })
       .map(([tierName]) => tierName as TierName);
     
@@ -164,9 +166,11 @@ export function useAccountTier() {
       return 'This feature is not available in any tier.';
     }
     
-    const minimumTier = availableTiers.reduce((min, current) => 
-      TIER_HIERARCHY[current] < TIER_HIERARCHY[min] ? current : min
-    );
+    const minimumTier = availableTiers.reduce((min, current) => {
+      const currentHier = Object.prototype.hasOwnProperty.call(TIER_HIERARCHY, current) ? TIER_HIERARCHY[current] : 999;
+      const minHier = Object.prototype.hasOwnProperty.call(TIER_HIERARCHY, min) ? TIER_HIERARCHY[min] : 999;
+      return currentHier < minHier ? current : min;
+    });
     
     if (feature === 'seoTools' && !hasPerformAddon) {
       return 'Add the PERFORM SEO addon to access advanced SEO tools.';
