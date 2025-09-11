@@ -243,44 +243,56 @@ export const EMAIL_TEMPLATES = {
 export function getTestAccount(scenario: keyof typeof TEST_SCENARIOS) {
   // Use switch to avoid bracket notation
   switch (scenario) {
-    case 'pro_to_premium':
-      return TEST_SCENARIOS.pro_to_premium.account;
-    case 'premium_to_pro':
-      return TEST_SCENARIOS.premium_to_pro.account;
-    case 'free_to_pro':
-      return TEST_SCENARIOS.free_to_pro.account;
-    case 'pro_to_free':
-      return TEST_SCENARIOS.pro_to_free.account;
+    case 'downgradeMaxToPro':
+      return TEST_SCENARIOS.downgradeMaxToPro.account;
+    case 'downgradeScaleToPro':
+      return TEST_SCENARIOS.downgradeScaleToPro.account;
+    case 'billingYearlyToMonthly':
+      return TEST_SCENARIOS.billingYearlyToMonthly.account;
+    case 'billingMonthlyToYearly':
+      return TEST_SCENARIOS.billingMonthlyToYearly.account;
+    case 'downgradeMaxToScale':
+      return TEST_SCENARIOS.downgradeMaxToScale.account;
+    case 'errorRecovery':
+      return TEST_SCENARIOS.errorRecovery.account;
     default:
-      return TEST_SCENARIOS.pro_to_premium.account;
+      return TEST_SCENARIOS.downgradeMaxToPro.account;
   }
 }
 
 export function getFeatureComparison(scenario: keyof typeof TEST_SCENARIOS) {
   // Use switch to avoid bracket notation
-  let currentFeatures: typeof TEST_SCENARIOS.pro_to_premium.currentFeatures;
-  let targetFeatures: typeof TEST_SCENARIOS.pro_to_premium.targetFeatures;
+  let currentFeatures: typeof TEST_SCENARIOS.downgradeMaxToPro.currentFeatures;
+  let targetFeatures: typeof TEST_SCENARIOS.downgradeMaxToPro.targetFeatures;
   
   switch (scenario) {
-    case 'pro_to_premium':
-      currentFeatures = TEST_SCENARIOS.pro_to_premium.currentFeatures;
-      targetFeatures = TEST_SCENARIOS.pro_to_premium.targetFeatures;
+    case 'downgradeMaxToPro':
+      currentFeatures = TEST_SCENARIOS.downgradeMaxToPro.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.downgradeMaxToPro.targetFeatures;
       break;
-    case 'premium_to_pro':
-      currentFeatures = TEST_SCENARIOS.premium_to_pro.currentFeatures;
-      targetFeatures = TEST_SCENARIOS.premium_to_pro.targetFeatures;
+    case 'downgradeScaleToPro':
+      currentFeatures = TEST_SCENARIOS.downgradeScaleToPro.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.downgradeScaleToPro.targetFeatures;
       break;
-    case 'free_to_pro':
-      currentFeatures = TEST_SCENARIOS.free_to_pro.currentFeatures;
-      targetFeatures = TEST_SCENARIOS.free_to_pro.targetFeatures;
+    case 'billingYearlyToMonthly':
+      currentFeatures = TEST_SCENARIOS.billingYearlyToMonthly.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.billingYearlyToMonthly.targetFeatures;
       break;
-    case 'pro_to_free':
-      currentFeatures = TEST_SCENARIOS.pro_to_free.currentFeatures;
-      targetFeatures = TEST_SCENARIOS.pro_to_free.targetFeatures;
+    case 'billingMonthlyToYearly':
+      currentFeatures = TEST_SCENARIOS.billingMonthlyToYearly.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.billingMonthlyToYearly.targetFeatures;
+      break;
+    case 'downgradeMaxToScale':
+      currentFeatures = TEST_SCENARIOS.downgradeMaxToScale.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.downgradeMaxToScale.targetFeatures;
+      break;
+    case 'errorRecovery':
+      currentFeatures = TEST_SCENARIOS.errorRecovery.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.errorRecovery.targetFeatures;
       break;
     default:
-      currentFeatures = TEST_SCENARIOS.pro_to_premium.currentFeatures;
-      targetFeatures = TEST_SCENARIOS.pro_to_premium.targetFeatures;
+      currentFeatures = TEST_SCENARIOS.downgradeMaxToPro.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.downgradeMaxToPro.targetFeatures;
       break;
   }
   const changes: Record<string, { from: string | number | boolean; to: string | number | boolean }> = {};
@@ -306,15 +318,19 @@ export function getFeatureComparison(scenario: keyof typeof TEST_SCENARIOS) {
 export function getPricingInfo(scenario: keyof typeof TEST_SCENARIOS) {
   // Use switch to avoid bracket notation
   switch (scenario) {
-    case 'pro_to_premium':
-      return TEST_SCENARIOS.pro_to_premium.pricing;
-    case 'premium_to_pro':
-      return TEST_SCENARIOS.premium_to_pro.pricing;
-    case 'free_to_pro':
-      return TEST_SCENARIOS.free_to_pro.pricing;
-    case 'pro_to_free':
-      return TEST_SCENARIOS.pro_to_free.pricing;
+    case 'downgradeMaxToPro':
+      return TEST_SCENARIOS.downgradeMaxToPro.pricing;
+    case 'downgradeScaleToPro':
+      return TEST_SCENARIOS.downgradeScaleToPro.pricing;
+    case 'billingYearlyToMonthly':
+      return TEST_SCENARIOS.billingYearlyToMonthly.pricing;
+    case 'billingMonthlyToYearly':
+      return TEST_SCENARIOS.billingMonthlyToYearly.pricing;
+    case 'downgradeMaxToScale':
+      return TEST_SCENARIOS.downgradeMaxToScale.pricing;
+    case 'errorRecovery':
+      return TEST_SCENARIOS.errorRecovery.pricing;
     default:
-      return TEST_SCENARIOS.pro_to_premium.pricing;
+      return TEST_SCENARIOS.downgradeMaxToPro.pricing;
   }
 }
