@@ -31,7 +31,25 @@ export function getTierPriceDisplay(tier: string): {
     MAX: { monthly: 99700, setup: 150000 },
   };
 
-  const price = prices[tier] || { monthly: 0, setup: 0 };
+  // Use switch to avoid bracket notation
+  let price: { monthly: number; setup: number };
+  switch (tier) {
+    case 'PRO':
+      price = prices.PRO;
+      break;
+    case 'PREMIUM':
+      price = prices.PREMIUM;
+      break;
+    case 'SCALE':
+      price = prices.SCALE;
+      break;
+    case 'MAX':
+      price = prices.MAX;
+      break;
+    default:
+      price = { monthly: 0, setup: 0 };
+      break;
+  }
   
   return {
     monthly: formatCurrency(price.monthly),

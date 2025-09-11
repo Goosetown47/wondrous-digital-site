@@ -153,7 +153,8 @@ async function sendTestEmails() {
   const results = [];
   
   for (let i = 0; i < templates.length; i++) {
-    const template = templates[i];
+    // Use .at() to avoid bracket notation
+    const template = templates.at(i)!;
     
     // Add delay after first email to respect rate limit (2 per second)
     if (i > 0) {
