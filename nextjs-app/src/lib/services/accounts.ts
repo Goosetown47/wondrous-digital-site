@@ -112,12 +112,12 @@ export async function getAccountById(id: string): Promise<AccountWithStats> {
     credentials: 'include',
   });
 
-  let stats = {};
+  let stats: Record<string, unknown> = {};
   if (statsResponse.ok) {
     const statsMap = await statsResponse.json();
     // Use Object.entries to safely access statsMap
-    const entry = Object.entries(statsMap).find(([key]) => key === id);
-    stats = entry ? entry[1] : {};
+    const entry = Object.entries(statsMap as Record<string, unknown>).find(([key]) => key === id);
+    stats = entry ? (entry[1] as Record<string, unknown>) : {};
   }
 
   return {

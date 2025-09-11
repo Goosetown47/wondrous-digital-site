@@ -111,11 +111,14 @@ export function useAccountTier() {
       case 'FREE':
         limits = TIER_LIMITS.FREE;
         break;
+      case 'BASIC':
+        limits = TIER_LIMITS.BASIC;
+        break;
       case 'PRO':
         limits = TIER_LIMITS.PRO;
         break;
-      case 'PREMIUM':
-        limits = TIER_LIMITS.PREMIUM;
+      case 'SCALE':
+        limits = TIER_LIMITS.SCALE;
         break;
       case 'MAX':
         limits = TIER_LIMITS.MAX;
@@ -155,8 +158,8 @@ export function useAccountTier() {
       case 'PRO':
         currentHierarchy = TIER_HIERARCHY.PRO;
         break;
-      case 'PREMIUM':
-        currentHierarchy = TIER_HIERARCHY.PREMIUM;
+      case 'SCALE':
+        currentHierarchy = TIER_HIERARCHY.SCALE;
         break;
       case 'MAX':
         currentHierarchy = TIER_HIERARCHY.MAX;
@@ -174,8 +177,8 @@ export function useAccountTier() {
       case 'PRO':
         minimumHierarchy = TIER_HIERARCHY.PRO;
         break;
-      case 'PREMIUM':
-        minimumHierarchy = TIER_HIERARCHY.PREMIUM;
+      case 'SCALE':
+        minimumHierarchy = TIER_HIERARCHY.SCALE;
         break;
       case 'MAX':
         minimumHierarchy = TIER_HIERARCHY.MAX;
@@ -254,8 +257,8 @@ export function useAccountTier() {
         case 'PRO':
           currentHier = TIER_HIERARCHY.PRO;
           break;
-        case 'PREMIUM':
-          currentHier = TIER_HIERARCHY.PREMIUM;
+        case 'SCALE':
+          currentHier = TIER_HIERARCHY.SCALE;
           break;
         case 'MAX':
           currentHier = TIER_HIERARCHY.MAX;
@@ -273,8 +276,8 @@ export function useAccountTier() {
         case 'PRO':
           minHier = TIER_HIERARCHY.PRO;
           break;
-        case 'PREMIUM':
-          minHier = TIER_HIERARCHY.PREMIUM;
+        case 'SCALE':
+          minHier = TIER_HIERARCHY.SCALE;
           break;
         case 'MAX':
           minHier = TIER_HIERARCHY.MAX;

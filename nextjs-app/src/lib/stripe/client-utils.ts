@@ -37,9 +37,6 @@ export function getTierPriceDisplay(tier: string): {
     case 'PRO':
       price = prices.PRO;
       break;
-    case 'PREMIUM':
-      price = prices.PREMIUM;
-      break;
     case 'SCALE':
       price = prices.SCALE;
       break;

@@ -122,8 +122,6 @@ export function getPricesByTier(tier: TierName): TierPricing | null {
   switch (tier) {
     case 'PRO':
       return priceIds.PRO;
-    case 'PREMIUM':
-      return priceIds.PREMIUM;
     case 'SCALE':
       return priceIds.SCALE;
     case 'MAX':

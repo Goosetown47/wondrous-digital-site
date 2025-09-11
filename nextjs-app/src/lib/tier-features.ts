@@ -101,8 +101,8 @@ export function canUseFeature(
     case 'PRO':
       limits = TIER_LIMITS.PRO;
       break;
-    case 'PREMIUM':
-      limits = TIER_LIMITS.PREMIUM;
+    case 'SCALE':
+      limits = TIER_LIMITS.SCALE;
       break;
     case 'MAX':
       limits = TIER_LIMITS.MAX;
@@ -142,8 +142,8 @@ export function meetsMinimumTier(
     case 'PRO':
       currentHier = TIER_HIERARCHY.PRO;
       break;
-    case 'PREMIUM':
-      currentHier = TIER_HIERARCHY.PREMIUM;
+    case 'SCALE':
+      currentHier = TIER_HIERARCHY.SCALE;
       break;
     case 'MAX':
       currentHier = TIER_HIERARCHY.MAX;
@@ -161,8 +161,8 @@ export function meetsMinimumTier(
     case 'PRO':
       minHier = TIER_HIERARCHY.PRO;
       break;
-    case 'PREMIUM':
-      minHier = TIER_HIERARCHY.PREMIUM;
+    case 'SCALE':
+      minHier = TIER_HIERARCHY.SCALE;
       break;
     case 'MAX':
       minHier = TIER_HIERARCHY.MAX;
@@ -194,8 +194,8 @@ export function canCreateMore(
     case 'PRO':
       tierLimits = TIER_LIMITS.PRO;
       break;
-    case 'PREMIUM':
-      tierLimits = TIER_LIMITS.PREMIUM;
+    case 'SCALE':
+      tierLimits = TIER_LIMITS.SCALE;
       break;
     case 'MAX':
       tierLimits = TIER_LIMITS.MAX;
@@ -239,8 +239,8 @@ export function getRemainingCount(
     case 'PRO':
       tierLimits = TIER_LIMITS.PRO;
       break;
-    case 'PREMIUM':
-      tierLimits = TIER_LIMITS.PREMIUM;
+    case 'SCALE':
+      tierLimits = TIER_LIMITS.SCALE;
       break;
     case 'MAX':
       tierLimits = TIER_LIMITS.MAX;
@@ -297,8 +297,8 @@ export function getUpgradeMessage(
         case 'PRO':
           tierHierarchy = TIER_HIERARCHY.PRO;
           break;
-        case 'PREMIUM':
-          tierHierarchy = TIER_HIERARCHY.PREMIUM;
+        case 'SCALE':
+          tierHierarchy = TIER_HIERARCHY.SCALE;
           break;
         case 'MAX':
           tierHierarchy = TIER_HIERARCHY.MAX;
@@ -316,8 +316,8 @@ export function getUpgradeMessage(
         case 'PRO':
           currentHierarchy = TIER_HIERARCHY.PRO;
           break;
-        case 'PREMIUM':
-          currentHierarchy = TIER_HIERARCHY.PREMIUM;
+        case 'SCALE':
+          currentHierarchy = TIER_HIERARCHY.SCALE;
           break;
         case 'MAX':
           currentHierarchy = TIER_HIERARCHY.MAX;
@@ -339,8 +339,8 @@ export function getUpgradeMessage(
       case 'PRO':
         currentHierarchy = TIER_HIERARCHY.PRO;
         break;
-      case 'PREMIUM':
-        currentHierarchy = TIER_HIERARCHY.PREMIUM;
+      case 'SCALE':
+        currentHierarchy = TIER_HIERARCHY.SCALE;
         break;
       case 'MAX':
         currentHierarchy = TIER_HIERARCHY.MAX;
@@ -365,8 +365,8 @@ export function getUpgradeMessage(
       case 'PRO':
         currentHierarchy = TIER_HIERARCHY.PRO;
         break;
-      case 'PREMIUM':
-        currentHierarchy = TIER_HIERARCHY.PREMIUM;
+      case 'SCALE':
+        currentHierarchy = TIER_HIERARCHY.SCALE;
         break;
       case 'MAX':
         currentHierarchy = TIER_HIERARCHY.MAX;
@@ -384,8 +384,8 @@ export function getUpgradeMessage(
       case 'PRO':
         minHierarchy = TIER_HIERARCHY.PRO;
         break;
-      case 'PREMIUM':
-        minHierarchy = TIER_HIERARCHY.PREMIUM;
+      case 'SCALE':
+        minHierarchy = TIER_HIERARCHY.SCALE;
         break;
       case 'MAX':
         minHierarchy = TIER_HIERARCHY.MAX;
@@ -433,8 +433,8 @@ export function getTierFeatures(tier: TierName, hasPerformAddon = false): string
     case 'PRO':
       limits = TIER_LIMITS.PRO;
       break;
-    case 'PREMIUM':
-      limits = TIER_LIMITS.PREMIUM;
+    case 'SCALE':
+      limits = TIER_LIMITS.SCALE;
       break;
     case 'MAX':
       limits = TIER_LIMITS.MAX;
@@ -477,8 +477,8 @@ export function compareTiers(tier1: TierName, tier2: TierName): -1 | 0 | 1 {
     case 'PRO':
       hierarchy1 = TIER_HIERARCHY.PRO;
       break;
-    case 'PREMIUM':
-      hierarchy1 = TIER_HIERARCHY.PREMIUM;
+    case 'SCALE':
+      hierarchy1 = TIER_HIERARCHY.SCALE;
       break;
     case 'MAX':
       hierarchy1 = TIER_HIERARCHY.MAX;
@@ -496,8 +496,8 @@ export function compareTiers(tier1: TierName, tier2: TierName): -1 | 0 | 1 {
     case 'PRO':
       hierarchy2 = TIER_HIERARCHY.PRO;
       break;
-    case 'PREMIUM':
-      hierarchy2 = TIER_HIERARCHY.PREMIUM;
+    case 'SCALE':
+      hierarchy2 = TIER_HIERARCHY.SCALE;
       break;
     case 'MAX':
       hierarchy2 = TIER_HIERARCHY.MAX;
