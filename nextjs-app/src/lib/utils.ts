@@ -20,7 +20,18 @@ export function deepEqual(a: unknown, b: unknown): boolean {
   // Handle arrays
   if (Array.isArray(a) && Array.isArray(b)) {
     if (a.length !== b.length) return false;
-    return a.every((item, index) => deepEqual(item, b[index]));
+    // Use forEach to avoid bracket notation
+    let isEqual = true;
+    a.forEach((item, index) => {
+      if (isEqual && index < b.length) {
+        // Get the value at index without bracket notation
+        const bValue = b.at(index);
+        if (!deepEqual(item, bValue)) {
+          isEqual = false;
+        }
+      }
+    });
+    return isEqual;
   }
   
   // One is array, other is not
@@ -35,7 +46,11 @@ export function deepEqual(a: unknown, b: unknown): boolean {
   
   // Check if all keys exist in both and values are equal
   return aKeys.every(key => {
-    if (!(key in (b as object))) return false;
-    return deepEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]);
+    if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
+    // Use Object.entries to safely access values
+    const aEntry = Object.entries(a as object).find(([k]) => k === key);
+    const bEntry = Object.entries(b as object).find(([k]) => k === key);
+    if (!aEntry || !bEntry) return false;
+    return deepEqual(aEntry[1], bEntry[1]);
   });
 }

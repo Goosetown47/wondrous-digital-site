@@ -33,9 +33,29 @@ interface DomainSettingsProps {
   projectSlug: string;
 }
 
-// Domain validation regex - matches valid domain names
-// Simplified to avoid ReDoS vulnerability
-const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*(\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*)*\.[a-zA-Z]{2,}$/;
+// Domain validation function - avoiding regex to prevent ReDoS vulnerability
+function isValidDomain(domain: string): boolean {
+  // Basic checks
+  if (!domain || domain.length > 253) return false;
+  
+  // Split into parts
+  const parts = domain.split('.');
+  if (parts.length < 2) return false;
+  
+  // Check each part
+  for (const part of parts) {
+    if (!part || part.length > 63) return false;
+    if (!/^[a-zA-Z0-9]/.test(part)) return false; // Must start with alphanumeric
+    if (!/[a-zA-Z0-9]$/.test(part)) return false; // Must end with alphanumeric
+    if (!/^[a-zA-Z0-9-]+$/.test(part)) return false; // Only alphanumeric and hyphens
+  }
+  
+  // Check TLD is at least 2 chars and only letters
+  const tld = parts[parts.length - 1];
+  if (!/^[a-zA-Z]{2,}$/.test(tld)) return false;
+  
+  return true;
+}
 
 // Check if domain is an apex domain
 function isApexDomain(domain: string): boolean {
@@ -75,7 +95,7 @@ function validateDomain(domain: string): string | null {
   }
   
   // Check domain format
-  if (!DOMAIN_REGEX.test(trimmed)) {
+  if (!isValidDomain(trimmed)) {
     return 'Please enter a valid domain (e.g., example.com or subdomain.example.com)';
   }
   

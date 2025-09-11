@@ -37,6 +37,7 @@ export function applySecurityHeaders(response: NextResponse): NextResponse {
         "img-src 'self' data: https: blob:",
         "font-src 'self' data:",
         "worker-src 'self' blob:",
+        // eslint-disable-next-line no-secrets/no-secrets -- This is a CSP domain pattern, not a secret
         "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.vercel.com",
         "frame-ancestors 'none'",
         "base-uri 'self'",
@@ -60,6 +61,7 @@ export function applySecurityHeaders(response: NextResponse): NextResponse {
         "img-src 'self' data: https: blob:",
         "font-src 'self' data:",
         "worker-src 'self' blob:",
+        // eslint-disable-next-line no-secrets/no-secrets -- Domain pattern, not a secret
         "connect-src 'self' http://localhost:* ws://localhost:* https://*.supabase.co wss://*.supabase.co",
         "frame-ancestors 'none'",
         "base-uri 'self'",

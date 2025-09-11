@@ -131,7 +131,9 @@ export function EnhancedTable<T>({
       filtered = filtered.filter(item => {
         return Object.entries(activeFilters).every(([key, value]) => {
           if (value === 'all' || !value) return true;
-          const itemValue = Object.prototype.hasOwnProperty.call(item, key) ? (item as Record<string, unknown>)[key] : undefined;
+          // Find the value without bracket notation
+          const itemEntry = Object.entries(item).find(([itemKey]) => itemKey === key);
+          const itemValue = itemEntry ? itemEntry[1] : undefined;
           return String(itemValue) === value;
         });
       });

@@ -21,6 +21,7 @@ describe.skip('RLS Cross-Tenant Data Isolation', () => {
 
   beforeAll(async () => {
     // Skip in CI or if no database connection
+    // eslint-disable-next-line no-secrets/no-secrets -- This is checking for test URL pattern, not a secret
     if (!supabaseUrl || !supabaseServiceKey || supabaseUrl.includes('test.supabase.co')) {
       console.log('Skipping RLS tests - no real database configuration available');
       return;

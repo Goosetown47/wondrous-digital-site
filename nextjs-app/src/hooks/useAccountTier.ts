@@ -102,7 +102,29 @@ export function useAccountTier() {
   };
   
   // Get limits for current tier (use unlimited if unlocked)
-  const limits = isUnlocked ? UNLIMITED_LIMITS : (Object.prototype.hasOwnProperty.call(TIER_LIMITS, tier) ? TIER_LIMITS[tier] : TIER_LIMITS.FREE);
+  // Use switch to avoid bracket notation
+  let limits: TierLimits;
+  if (isUnlocked) {
+    limits = UNLIMITED_LIMITS;
+  } else {
+    switch (tier) {
+      case 'FREE':
+        limits = TIER_LIMITS.FREE;
+        break;
+      case 'PRO':
+        limits = TIER_LIMITS.PRO;
+        break;
+      case 'PREMIUM':
+        limits = TIER_LIMITS.PREMIUM;
+        break;
+      case 'MAX':
+        limits = TIER_LIMITS.MAX;
+        break;
+      default:
+        limits = TIER_LIMITS.FREE;
+        break;
+    }
+  }
   
   // Override SEO tools if PERFORM addon is active (only if not already unlocked)
   const effectiveLimits: TierLimits = {
@@ -114,7 +136,9 @@ export function useAccountTier() {
    * Check if a specific feature is available for the current tier
    */
   const canUseFeature = (feature: keyof TierLimits): boolean => {
-    const value = Object.prototype.hasOwnProperty.call(effectiveLimits, feature) ? effectiveLimits[feature] : false;
+    // Use Object.entries to safely access feature value
+    const featureEntry = Object.entries(effectiveLimits).find(([key]) => key === feature);
+    const value = featureEntry ? featureEntry[1] : false;
     return typeof value === 'boolean' ? value : value !== 0;
   };
   
@@ -122,8 +146,44 @@ export function useAccountTier() {
    * Check if the current tier meets or exceeds a minimum tier requirement
    */
   const meetsMinimumTier = (minimumTier: TierName): boolean => {
-    const currentHierarchy = Object.prototype.hasOwnProperty.call(TIER_HIERARCHY, tier) ? TIER_HIERARCHY[tier] : 0;
-    const minimumHierarchy = Object.prototype.hasOwnProperty.call(TIER_HIERARCHY, minimumTier) ? TIER_HIERARCHY[minimumTier] : 0;
+    // Use switch to get hierarchy values
+    let currentHierarchy: number;
+    switch (tier) {
+      case 'FREE':
+        currentHierarchy = TIER_HIERARCHY.FREE;
+        break;
+      case 'PRO':
+        currentHierarchy = TIER_HIERARCHY.PRO;
+        break;
+      case 'PREMIUM':
+        currentHierarchy = TIER_HIERARCHY.PREMIUM;
+        break;
+      case 'MAX':
+        currentHierarchy = TIER_HIERARCHY.MAX;
+        break;
+      default:
+        currentHierarchy = 0;
+        break;
+    }
+    
+    let minimumHierarchy: number;
+    switch (minimumTier) {
+      case 'FREE':
+        minimumHierarchy = TIER_HIERARCHY.FREE;
+        break;
+      case 'PRO':
+        minimumHierarchy = TIER_HIERARCHY.PRO;
+        break;
+      case 'PREMIUM':
+        minimumHierarchy = TIER_HIERARCHY.PREMIUM;
+        break;
+      case 'MAX':
+        minimumHierarchy = TIER_HIERARCHY.MAX;
+        break;
+      default:
+        minimumHierarchy = 0;
+        break;
+    }
     return currentHierarchy >= minimumHierarchy;
   };
   
@@ -134,7 +194,15 @@ export function useAccountTier() {
     resource: 'projects' | 'users',
     currentCount: number
   ): boolean => {
-    const limit = Object.prototype.hasOwnProperty.call(effectiveLimits, resource) ? effectiveLimits[resource] : 0;
+    // Get limit for specific resource
+    let limit: number;
+    if (resource === 'projects') {
+      limit = effectiveLimits.projects;
+    } else if (resource === 'users') {
+      limit = effectiveLimits.users;
+    } else {
+      limit = 0;
+    }
     // Check if current count is below the limit
     return currentCount < limit;
   };
@@ -146,7 +214,15 @@ export function useAccountTier() {
     resource: 'projects' | 'users',
     currentCount: number
   ): number => {
-    const limit = Object.prototype.hasOwnProperty.call(effectiveLimits, resource) ? effectiveLimits[resource] : 0;
+    // Get limit for specific resource
+    let limit: number;
+    if (resource === 'projects') {
+      limit = effectiveLimits.projects;
+    } else if (resource === 'users') {
+      limit = effectiveLimits.users;
+    } else {
+      limit = 0;
+    }
     return Math.max(0, limit - currentCount);
   };
   
@@ -157,7 +233,9 @@ export function useAccountTier() {
     // Find the minimum tier that has this feature
     const availableTiers = Object.entries(TIER_LIMITS)
       .filter(([, limits]) => {
-        const value = Object.prototype.hasOwnProperty.call(limits, feature) ? limits[feature] : undefined;
+        // Use Object.entries to safely access feature value
+        const featureEntry = Object.entries(limits).find(([key]) => key === feature);
+        const value = featureEntry ? featureEntry[1] : undefined;
         return typeof value === 'boolean' ? value : (typeof value === 'number' && value > 0);
       })
       .map(([tierName]) => tierName as TierName);
@@ -167,8 +245,44 @@ export function useAccountTier() {
     }
     
     const minimumTier = availableTiers.reduce((min, current) => {
-      const currentHier = Object.prototype.hasOwnProperty.call(TIER_HIERARCHY, current) ? TIER_HIERARCHY[current] : 999;
-      const minHier = Object.prototype.hasOwnProperty.call(TIER_HIERARCHY, min) ? TIER_HIERARCHY[min] : 999;
+      // Use switch to get hierarchy values
+      let currentHier: number;
+      switch (current) {
+        case 'FREE':
+          currentHier = TIER_HIERARCHY.FREE;
+          break;
+        case 'PRO':
+          currentHier = TIER_HIERARCHY.PRO;
+          break;
+        case 'PREMIUM':
+          currentHier = TIER_HIERARCHY.PREMIUM;
+          break;
+        case 'MAX':
+          currentHier = TIER_HIERARCHY.MAX;
+          break;
+        default:
+          currentHier = 999;
+          break;
+      }
+      
+      let minHier: number;
+      switch (min) {
+        case 'FREE':
+          minHier = TIER_HIERARCHY.FREE;
+          break;
+        case 'PRO':
+          minHier = TIER_HIERARCHY.PRO;
+          break;
+        case 'PREMIUM':
+          minHier = TIER_HIERARCHY.PREMIUM;
+          break;
+        case 'MAX':
+          minHier = TIER_HIERARCHY.MAX;
+          break;
+        default:
+          minHier = 999;
+          break;
+      }
       return currentHier < minHier ? current : min;
     });
     

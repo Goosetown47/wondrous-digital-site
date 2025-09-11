@@ -49,7 +49,12 @@ export function ThemePreviewProvider({
       const colorVars: Record<string, string> = {};
       Object.entries(themeVars).forEach(([key, value]) => {
         if (typeof value === 'string') {
-          colorVars[key] = value;
+          Object.defineProperty(colorVars, key, {
+            value: value,
+            writable: true,
+            enumerable: true,
+            configurable: true
+          });
         }
       });
       

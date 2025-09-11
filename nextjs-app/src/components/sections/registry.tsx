@@ -89,6 +89,7 @@ const HeroTwoColumnAdapter: ComponentType<BaseSectionProps> = (props) => {
 };
 
 // Registry of section components
+// eslint-disable-next-line react-refresh/only-export-components
 export const SECTION_COMPONENTS: Record<string, ComponentType<BaseSectionProps>> = {
   'HeroSection': HeroSectionAdapter,
   'HeroTwoColumn': HeroTwoColumnAdapter,
@@ -99,10 +100,14 @@ export const SECTION_COMPONENTS: Record<string, ComponentType<BaseSectionProps>>
 };
 
 // Helper function to get a section component by name
+// eslint-disable-next-line react-refresh/only-export-components
 export function getSectionComponent(componentName?: string | null): ComponentType<BaseSectionProps> {
   if (!componentName) return GenericSection;
-  // eslint-disable-next-line security/detect-object-injection
-  return SECTION_COMPONENTS[componentName] || GenericSection;
+  
+  // Validate component exists to prevent object injection
+  // Use Object.entries to find the component without bracket notation
+  const entry = Object.entries(SECTION_COMPONENTS).find(([key]) => key === componentName);
+  return entry ? entry[1] : GenericSection;
 }
 
 // Generic section component for sections without specific components

@@ -14,7 +14,9 @@ This is a **Next.js 15 multi-tenant website builder platform**. All active devel
 
 ## 📋 Essential Reading
 
-**IMPORTANT**: Before making any code changes, read these documents in `/nextjs-app/docs/`:
+**IMPORTANT**: Before making any code changes, read these documents in `/nextjs-app/docs/`
+- UNDER NO CIRCUMSTANCES should you use agents.
+
 
 ### CORE PRINCIPLES
 

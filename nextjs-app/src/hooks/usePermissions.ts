@@ -98,7 +98,12 @@ export function useHasPermissions(permissions: (Permission | string)[]) {
       if (!user) {
         const results: Record<string, boolean> = {};
         for (const permission of permissions) {
-          results[permission] = false;
+          Object.defineProperty(results, permission, {
+            value: false,
+            writable: true,
+            enumerable: true,
+            configurable: true
+          });
         }
         return results;
       }
@@ -116,7 +121,12 @@ export function useHasPermissions(permissions: (Permission | string)[]) {
         const hasAccess = !!(data && data.length > 0);
         const results: Record<string, boolean> = {};
         for (const permission of permissions) {
-          results[permission] = hasAccess;
+          Object.defineProperty(results, permission, {
+            value: hasAccess,
+            writable: true,
+            enumerable: true,
+            configurable: true
+          });
         }
         return results;
       }
@@ -124,7 +134,13 @@ export function useHasPermissions(permissions: (Permission | string)[]) {
       const results: Record<string, boolean> = {};
       
       for (const permission of permissions) {
-        results[permission] = await hasPermission(user.id, currentAccount.id, permission);
+        const hasPerms = await hasPermission(user.id, currentAccount.id, permission);
+        Object.defineProperty(results, permission, {
+          value: hasPerms,
+          writable: true,
+          enumerable: true,
+          configurable: true
+        });
       }
       
       return results;

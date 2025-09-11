@@ -286,6 +286,11 @@ export function getProviderInstructions(
   provider: string, 
   recordType: 'a_record' | 'txt_record' | 'cname_record'
 ) {
+  // Validate provider exists to prevent object injection
+  if (!Object.prototype.hasOwnProperty.call(DNS_PROVIDERS, provider)) {
+    return DNS_PROVIDERS.generic.instructions[recordType];
+  }
+  
   const p = DNS_PROVIDERS[provider];
   if (!p) return DNS_PROVIDERS.generic.instructions[recordType];
   return p.instructions[recordType];
