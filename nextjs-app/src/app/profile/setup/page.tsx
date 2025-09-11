@@ -155,6 +155,7 @@ function ProfileSetupContent() {
       errors.password = 'Password must be at least 8 characters';
     }
     
+    // eslint-disable-next-line security/detect-possible-timing-attacks -- Client-side validation only
     if (password !== confirmPassword) {
       errors.confirmPassword = 'Passwords do not match';
     }

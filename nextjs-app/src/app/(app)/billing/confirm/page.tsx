@@ -385,7 +385,7 @@ function BillingConfirmContent() {
   const actualCurrentBillingPeriod = calculations?.currentPlan?.interval || billingPeriod;
   const currentTierPricing = TIER_PRICING[currentTier as keyof typeof TIER_PRICING];
   const currentPrice = calculations?.currentPlan?.amount || 
-    (currentTierPricing ? currentTierPricing[actualCurrentBillingPeriod as 'monthly' | 'yearly'] : 0);
+    (currentTierPricing ? (actualCurrentBillingPeriod === 'yearly' ? currentTierPricing.yearly : currentTierPricing.monthly) : 0);
   
   const targetTierPricing = TIER_PRICING[targetTier as keyof typeof TIER_PRICING];
   const validBillingPeriod = billingPeriod === 'monthly' || billingPeriod === 'yearly' ? billingPeriod : 'monthly';

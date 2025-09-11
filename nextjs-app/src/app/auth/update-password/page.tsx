@@ -118,6 +118,7 @@ export default function UpdatePasswordPage() {
     setError(null);
 
     // Validate passwords match
+    // eslint-disable-next-line security/detect-possible-timing-attacks -- Client-side validation only
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;

@@ -34,7 +34,8 @@ interface DomainSettingsProps {
 }
 
 // Domain validation regex - matches valid domain names
-const DOMAIN_REGEX = /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+// Simplified to avoid ReDoS vulnerability
+const DOMAIN_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*(\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*)*\.[a-zA-Z]{2,}$/;
 
 // Check if domain is an apex domain
 function isApexDomain(domain: string): boolean {

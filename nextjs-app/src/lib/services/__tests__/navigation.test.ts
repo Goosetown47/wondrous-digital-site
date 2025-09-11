@@ -13,6 +13,18 @@ vi.mock('@/lib/supabase/client', () => ({
   },
 }));
 
+// Helper type for mock chain
+type MockSupabaseChain = {
+  insert?: ReturnType<typeof vi.fn>;
+  select?: ReturnType<typeof vi.fn>;
+  single?: ReturnType<typeof vi.fn>;
+  update?: ReturnType<typeof vi.fn>;
+  eq?: ReturnType<typeof vi.fn>;
+  delete?: ReturnType<typeof vi.fn>;
+  order?: ReturnType<typeof vi.fn>;
+  neq?: ReturnType<typeof vi.fn>;
+};
+
 describe('Navigation Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -37,14 +49,14 @@ describe('Navigation Service', () => {
           updated_at: new Date().toISOString(),
         };
 
-        const mockSupabaseChain = {
+        const mockSupabaseChain: MockSupabaseChain = {
           insert: vi.fn().mockReturnThis(),
           select: vi.fn().mockReturnThis(),
           single: vi.fn().mockResolvedValue({ data: mockResponse, error: null }),
         };
 
-        // @ts-expect-error - Mock type doesn't match exactly but works for testing
-        vi.mocked(supabase.from).mockReturnValue(mockSupabaseChain as unknown as ReturnType<typeof supabase.from>);
+        // @ts-expect-error - Mock chain for testing
+        vi.mocked(supabase.from).mockReturnValue(mockSupabaseChain);
 
         const result = await navigationService.create(mockMenu);
 
@@ -63,14 +75,14 @@ describe('Navigation Service', () => {
           is_active: false,
         };
 
-        const mockSupabaseChain = {
+        const mockSupabaseChain: MockSupabaseChain = {
           insert: vi.fn().mockReturnThis(),
           select: vi.fn().mockReturnThis(),
           single: vi.fn().mockResolvedValue({ data: null, error: { message: 'Creation failed' } }),
         };
 
-        // @ts-expect-error - Mock type doesn't match exactly but works for testing
-        vi.mocked(supabase.from).mockReturnValue(mockSupabaseChain as unknown as ReturnType<typeof supabase.from>);
+        // @ts-expect-error - Mock chain for testing
+        vi.mocked(supabase.from).mockReturnValue(mockSupabaseChain);
 
         await expect(navigationService.create(mockMenu)).rejects.toThrow('Creation failed');
       });
@@ -104,14 +116,14 @@ describe('Navigation Service', () => {
           },
         ];
 
-        const mockSupabaseChain = {
+        const mockSupabaseChain: MockSupabaseChain = {
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
           order: vi.fn().mockResolvedValue({ data: mockMenus, error: null }),
         };
 
-        // @ts-expect-error - Mock type doesn't match exactly but works for testing
-        vi.mocked(supabase.from).mockReturnValue(mockSupabaseChain as unknown as ReturnType<typeof supabase.from>);
+        // @ts-expect-error - Mock chain for testing
+        vi.mocked(supabase.from).mockReturnValue(mockSupabaseChain);
 
         const result = await navigationService.getByProject(projectId);
 
@@ -148,15 +160,15 @@ describe('Navigation Service', () => {
           updated_at: new Date().toISOString(),
         };
 
-        const mockSupabaseChain = {
+        const mockSupabaseChain: MockSupabaseChain = {
           update: vi.fn().mockReturnThis(),
           eq: vi.fn().mockReturnThis(),
           select: vi.fn().mockReturnThis(),
           single: vi.fn().mockResolvedValue({ data: mockResponse, error: null }),
         };
 
-        // @ts-expect-error - Mock type doesn't match exactly but works for testing
-        vi.mocked(supabase.from).mockReturnValue(mockSupabaseChain as unknown as ReturnType<typeof supabase.from>);
+        // @ts-expect-error - Mock chain for testing
+        vi.mocked(supabase.from).mockReturnValue(mockSupabaseChain);
 
         const result = await navigationService.update(menuId, updates);
 
@@ -171,13 +183,13 @@ describe('Navigation Service', () => {
       it('should delete a navigation menu', async () => {
         const menuId = 'test-menu-id';
 
-        const mockSupabaseChain = {
+        const mockSupabaseChain: MockSupabaseChain = {
           delete: vi.fn().mockReturnThis(),
           eq: vi.fn().mockResolvedValue({ error: null }),
         };
 
-        // @ts-expect-error - Mock type doesn't match exactly but works for testing
-        vi.mocked(supabase.from).mockReturnValue(mockSupabaseChain as unknown as ReturnType<typeof supabase.from>);
+        // @ts-expect-error - Mock chain for testing
+        vi.mocked(supabase.from).mockReturnValue(mockSupabaseChain);
 
         await navigationService.delete(menuId);
 
@@ -422,7 +434,7 @@ describe('Navigation Service', () => {
       const invalidTree = [
         {
           id: 'item-1',
-          type: 'invalid' as unknown as NavigationItemType,
+          type: 'invalid' as 'link' | 'category' | 'divider',
           label: 'Home',
           url: '/',
           children: [],
@@ -440,7 +452,7 @@ describe('Navigation Service', () => {
           // missing label
           url: '/',
           children: [],
-        } as unknown as NavigationItem,
+        } as NavigationItem,
       ];
 
       expect(() => navigationService.validateTree(invalidTree)).toThrow();
@@ -470,10 +482,8 @@ describe('Navigation Service', () => {
       const menuId = 'menu-1';
       const projectId = 'project-1';
 
-      // Mock data for active menu test (unused but kept for potential future tests)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const mockMenus = [];
-      const mockSupabaseChain = {
+      // Mock data for active menu test
+      const mockSupabaseChain: MockSupabaseChain = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({ 
@@ -484,7 +494,8 @@ describe('Navigation Service', () => {
         neq: vi.fn().mockResolvedValue({ data: [], error: null }),
       };
 
-      vi.mocked(supabase.from).mockReturnValue(mockSupabaseChain as ReturnType<typeof supabase.from>);
+      // @ts-expect-error - Mock chain for testing
+      vi.mocked(supabase.from).mockReturnValue(mockSupabaseChain);
 
       await navigationService.setActive(menuId);
 

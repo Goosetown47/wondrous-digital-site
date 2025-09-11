@@ -143,7 +143,7 @@ const Navbar2 = ({
   const [logoError, setLogoError] = useState(false);
   
   return (
-    <SectionWrapper noPadding className="border-b">
+    <SectionWrapper noPadding className="">
       <div className="w-full">
         {/* Desktop Menu */}
         <nav className="hidden justify-between @[768px]:flex py-4">

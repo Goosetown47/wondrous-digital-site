@@ -22,7 +22,7 @@ export function SectionWrapper({
 }: SectionWrapperProps) {
   return (
     <section className={cn(
-      "w-full bg-background",
+      "w-full",
       className
     )}>
       <div className={cn(

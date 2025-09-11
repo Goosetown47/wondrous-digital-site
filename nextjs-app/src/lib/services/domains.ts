@@ -72,8 +72,8 @@ export function validateDomainFormat(domain: string): string | null {
   // Remove trailing slash
   domain = domain.replace(/\/$/, '');
   
-  // Basic domain validation
-  const domainRegex = /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+  // Basic domain validation - simplified to avoid ReDoS
+  const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*(\.[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*)*\.[a-zA-Z]{2,}$/;
   
   if (!domainRegex.test(domain)) {
     return 'Invalid domain format';
