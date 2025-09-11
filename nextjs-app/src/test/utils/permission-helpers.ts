@@ -96,7 +96,12 @@ export async function assertPermissions(
   
   for (const [permission, expected] of Object.entries(permissions)) {
     const actual = await checkFn(permission);
-    results[permission] = { expected, actual };
+    Object.defineProperty(results, permission, {
+      value: { expected, actual },
+      writable: true,
+      enumerable: true,
+      configurable: true
+    });
   }
   
   const failures = Object.entries(results).filter(
@@ -120,11 +125,25 @@ export function createPermissionMatrix(
   const matrix: Record<string, Record<string, boolean>> = {};
   
   roles.forEach(role => {
-    matrix[role] = {};
+    Object.defineProperty(matrix, role, {
+      value: {},
+      writable: true,
+      enumerable: true,
+      configurable: true
+    });
     const rolePermissions = getPermissionsForRole(role);
     
     resources.forEach(resource => {
-      matrix[role][resource] = rolePermissions.includes(resource);
+      // Use Object.entries to find the role entry then set property
+      const roleObj = Object.entries(matrix).find(([key]) => key === role);
+      if (roleObj) {
+        Object.defineProperty(roleObj[1], resource, {
+          value: rolePermissions.includes(resource),
+          writable: true,
+          enumerable: true,
+          configurable: true
+        });
+      }
     });
   });
   

@@ -241,19 +241,62 @@ export const EMAIL_TEMPLATES = {
 } as const;
 
 export function getTestAccount(scenario: keyof typeof TEST_SCENARIOS) {
-  return TEST_SCENARIOS[scenario].account;
+  // Use switch to avoid bracket notation
+  switch (scenario) {
+    case 'pro_to_premium':
+      return TEST_SCENARIOS.pro_to_premium.account;
+    case 'premium_to_pro':
+      return TEST_SCENARIOS.premium_to_pro.account;
+    case 'free_to_pro':
+      return TEST_SCENARIOS.free_to_pro.account;
+    case 'pro_to_free':
+      return TEST_SCENARIOS.pro_to_free.account;
+    default:
+      return TEST_SCENARIOS.pro_to_premium.account;
+  }
 }
 
 export function getFeatureComparison(scenario: keyof typeof TEST_SCENARIOS) {
-  const { currentFeatures, targetFeatures } = TEST_SCENARIOS[scenario];
+  // Use switch to avoid bracket notation
+  let currentFeatures: typeof TEST_SCENARIOS.pro_to_premium.currentFeatures;
+  let targetFeatures: typeof TEST_SCENARIOS.pro_to_premium.targetFeatures;
+  
+  switch (scenario) {
+    case 'pro_to_premium':
+      currentFeatures = TEST_SCENARIOS.pro_to_premium.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.pro_to_premium.targetFeatures;
+      break;
+    case 'premium_to_pro':
+      currentFeatures = TEST_SCENARIOS.premium_to_pro.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.premium_to_pro.targetFeatures;
+      break;
+    case 'free_to_pro':
+      currentFeatures = TEST_SCENARIOS.free_to_pro.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.free_to_pro.targetFeatures;
+      break;
+    case 'pro_to_free':
+      currentFeatures = TEST_SCENARIOS.pro_to_free.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.pro_to_free.targetFeatures;
+      break;
+    default:
+      currentFeatures = TEST_SCENARIOS.pro_to_premium.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.pro_to_premium.targetFeatures;
+      break;
+  }
   const changes: Record<string, { from: string | number | boolean; to: string | number | boolean }> = {};
 
   for (const [key, value] of Object.entries(currentFeatures)) {
-    if (value !== targetFeatures[key as keyof typeof targetFeatures]) {
-      changes[key] = {
-        from: value,
-        to: targetFeatures[key as keyof typeof targetFeatures]
-      };
+    const targetEntry = Object.entries(targetFeatures).find(([k]) => k === key);
+    if (targetEntry && value !== targetEntry[1]) {
+      Object.defineProperty(changes, key, {
+        value: {
+          from: value,
+          to: targetEntry[1]
+        },
+        writable: true,
+        enumerable: true,
+        configurable: true
+      });
     }
   }
 
@@ -261,5 +304,17 @@ export function getFeatureComparison(scenario: keyof typeof TEST_SCENARIOS) {
 }
 
 export function getPricingInfo(scenario: keyof typeof TEST_SCENARIOS) {
-  return TEST_SCENARIOS[scenario].pricing;
+  // Use switch to avoid bracket notation
+  switch (scenario) {
+    case 'pro_to_premium':
+      return TEST_SCENARIOS.pro_to_premium.pricing;
+    case 'premium_to_pro':
+      return TEST_SCENARIOS.premium_to_pro.pricing;
+    case 'free_to_pro':
+      return TEST_SCENARIOS.free_to_pro.pricing;
+    case 'pro_to_free':
+      return TEST_SCENARIOS.pro_to_free.pricing;
+    default:
+      return TEST_SCENARIOS.pro_to_premium.pricing;
+  }
 }

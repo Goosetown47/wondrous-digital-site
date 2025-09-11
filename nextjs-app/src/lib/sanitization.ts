@@ -46,7 +46,9 @@ function decodeHtmlEntities(text: string): string {
   };
   
   return text.replace(/&[#\w]+;/g, (entity) => {
-    return entities[entity] || entity;
+    // Use Object.entries to safely access entities
+    const entry = Object.entries(entities).find(([key]) => key === entity);
+    return entry ? entry[1] : entity;
   });
 }
 
