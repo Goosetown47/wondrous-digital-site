@@ -244,12 +244,12 @@ export default function LabClient() {
             <AlertDialogTitle>Delete Draft</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete "{draftToDelete?.name}"? This action cannot be undone.
-              {draftToDelete && (
-                <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs">
-                  Note: Drafts that have been promoted to the library cannot be deleted.
-                </div>
-              )}
             </AlertDialogDescription>
+            {draftToDelete && (
+              <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs">
+                Note: Drafts that have been promoted to the library cannot be deleted.
+              </div>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

@@ -203,17 +203,17 @@ export function LibraryCard({ item }: LibraryCardProps) {
             <AlertDialogTitle>Delete {item.type}?</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete "{item.name}"? This action cannot be undone.
-              {item.usage_count > 0 && (
-                <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded text-sm">
-                  <strong>Warning:</strong> This item is being used in {item.usage_count} project{item.usage_count > 1 ? 's' : ''} and cannot be deleted.
-                </div>
-              )}
-              {item.source_draft_id && (
-                <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs">
-                  Note: The draft version will remain in the Lab.
-                </div>
-              )}
             </AlertDialogDescription>
+            {item.usage_count > 0 && (
+              <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded text-sm">
+                <strong>Warning:</strong> This item is being used in {item.usage_count} project{item.usage_count > 1 ? 's' : ''} and cannot be deleted.
+              </div>
+            )}
+            {item.source_draft_id && (
+              <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs">
+                Note: The draft version will remain in the Lab.
+              </div>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
