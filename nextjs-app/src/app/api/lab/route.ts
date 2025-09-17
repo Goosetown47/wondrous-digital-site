@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { name, type, content, version = 1, status = 'draft', metadata = {} } = body;
+    const { name, type, content, version = 1, status = 'draft', metadata = {}, changelog } = body;
 
     if (!name || !type || !content) {
       return NextResponse.json({ 
@@ -170,6 +170,7 @@ export async function POST(request: NextRequest) {
         version,
         status,
         metadata,
+        changelog,
         created_by: user.id
       })
       .select()

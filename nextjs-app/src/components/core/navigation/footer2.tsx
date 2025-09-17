@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import { Logo, LogoImage, LogoText } from "./logo";
 import { SectionWrapper } from "@/components/lab/section-wrapper";
 
@@ -23,6 +26,8 @@ interface Footer2Props {
     text: string;
     url: string;
   }[];
+  editable?: boolean;
+  onLogoChange?: (imageUrl: string | null) => void;
 }
 
 const Footer2 = ({
@@ -78,7 +83,19 @@ const Footer2 = ({
     { text: "Terms and Conditions", url: "#" },
     { text: "Privacy Policy", url: "#" },
   ],
+  editable = false,
+  onLogoChange,
 }: Footer2Props) => {
+  const [currentLogoSrc, setCurrentLogoSrc] = useState(logo.src);
+
+  const handleLogoUpdate = (newImageUrl: string | null) => {
+    if (newImageUrl) {
+      setCurrentLogoSrc(newImageUrl);
+    }
+    if (onLogoChange) {
+      onLogoChange(newImageUrl);
+    }
+  };
   return (
     <SectionWrapper className="border-t">
       <div className="py-20 @[640px]:py-24 @[1024px]:py-32">
@@ -86,12 +103,14 @@ const Footer2 = ({
           <div className="grid grid-cols-2 gap-8 lg:grid-cols-6">
             <div className="col-span-2 mb-8 lg:mb-0">
               <div className="flex items-center gap-2 lg:justify-start">
-                <Logo url={logo.url}>
+                <Logo url={editable ? undefined : logo.url}>
                   <LogoImage
-                    src={logo.src}
+                    src={currentLogoSrc}
                     alt={logo.alt}
                     title={logo.title}
                     className="h-10"
+                    editable={editable}
+                    onUpdate={handleLogoUpdate}
                   />
                   <LogoText className="text-xl">{logo.title}</LogoText>
                 </Logo>

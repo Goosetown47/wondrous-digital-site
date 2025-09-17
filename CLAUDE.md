@@ -20,6 +20,9 @@ This is a **Next.js 15 multi-tenant website builder platform**. All active devel
 
 ### CORE PRINCIPLES
 
+#### SED
+Never use sed commands. They always cause a lot of problems.
+
 #### YAGNI (You Aren't Gonna Need It)
 Avoid building functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
 

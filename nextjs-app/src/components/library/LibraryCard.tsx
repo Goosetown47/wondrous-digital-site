@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { 
+import {
   Eye, MoreVertical, Edit, Trash2, Upload, Download,
-  FileText, Layout, Palette, Globe
+  FileText, Layout, Palette, Globe, GitBranch
 } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,7 +61,51 @@ export function LibraryCard({ item }: LibraryCardProps) {
     router.push(`/lab/${item.source_draft_id || item.id}`);
   };
 
+  const handleCreateNewVersion = async () => {
+    // Create a new draft from this library item
+    // This will track the parent library item and auto-increment the version
+    try {
+      const response = await fetch('/api/lab', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: item.name,
+          type: item.type,
+          type_id: item.type_id,
+          content: item.content,
+          version: (item.version || 1) + 1, // Auto-increment version
+          status: 'draft',
+          library_version: null, // Will be set properly when we migrate to UUID field
+          changelog: `New version created from library v${item.version || 1}`,
+          metadata: {
+            ...item.metadata,
+            parent_library_id: item.id, // Store parent library ID in metadata for now
+            library_item_id: item.id,
+            created_from_library: true,
+            parent_version: item.version || 1,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const newDraft = await response.json();
+        // Navigate to the new draft in LAB
+        router.push(`/lab/${newDraft.id}`);
+      }
+    } catch (error) {
+      console.error('Failed to create new version:', error);
+    }
+  };
+
   const handleDelete = () => {
+    // Check if item is in use
+    if (item.usage_count > 0) {
+      alert(`Cannot delete this ${item.type} - it is being used in ${item.usage_count} project${item.usage_count > 1 ? 's' : ''}`);
+      setShowDeleteDialog(false);
+      return;
+    }
     deleteMutation.mutate(item.id);
     setShowDeleteDialog(false);
   };
@@ -82,9 +126,13 @@ export function LibraryCard({ item }: LibraryCardProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleCreateNewVersion}>
+                  <GitBranch className="mr-2 h-4 w-4" />
+                  Create New Version
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleEdit}>
                   <Edit className="mr-2 h-4 w-4" />
-                  Edit in Lab
+                  Edit Draft
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Eye className="mr-2 h-4 w-4" />
@@ -155,11 +203,25 @@ export function LibraryCard({ item }: LibraryCardProps) {
             <AlertDialogTitle>Delete {item.type}?</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete "{item.name}"? This action cannot be undone.
+              {item.usage_count > 0 && (
+                <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded text-sm">
+                  <strong>Warning:</strong> This item is being used in {item.usage_count} project{item.usage_count > 1 ? 's' : ''} and cannot be deleted.
+                </div>
+              )}
+              {item.source_draft_id && (
+                <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs">
+                  Note: The draft version will remain in the Lab.
+                </div>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground"
+              disabled={item.usage_count > 0}
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

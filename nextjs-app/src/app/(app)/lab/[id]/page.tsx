@@ -1,31 +1,26 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { labDraftService } from '@/lib/supabase/lab-drafts';
-import { coreComponentsService } from '@/lib/supabase/core-components';
-import { useTypes } from '@/hooks/useTypes';
-import { useThemes } from '@/hooks/useThemes';
-import { 
-  ArrowLeft, Save, Upload, Plus, Settings, Maximize, 
-  Monitor, Tablet, Smartphone, Moon, Sun, ChevronDown,
-  Check, ExternalLink, Layers
+import { useTypes, useTypesByCategory } from '@/hooks/useTypes';
+import { useThemes, useTheme } from '@/hooks/useThemes';
+import { ThemeProvider } from '@/components/builder/ThemeProvider';
+import {
+  Monitor, Tablet, Smartphone,
+  Edit2,
+  Settings,
+  History,
+  Plus
 } from 'lucide-react';
-import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { ResizablePreview } from '@/components/lab/resizable-preview';
-import { HeroTwoColumn } from '@/components/sections/hero-two-column';
-import { Navbar2 } from '@/components/core/navigation/navbar2';
-import { Footer2 } from '@/components/core/navigation/footer2';
 import {
   Select,
   SelectContent,
@@ -33,12 +28,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+// import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuTrigger,
+// } from '@/components/ui/dropdown-menu';
 import {
   Sheet,
   SheetContent,
@@ -47,7 +44,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { ImageUpload } from '@/components/lab/image-upload';
+// import Link from 'next/link';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,18 +56,30 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 // import { cn } from '@/lib/utils'; // Unused utility
-import type { LabDraft, CoreComponent } from '@/types/builder';
-import { ComponentSelectorModal } from '@/components/lab/ComponentSelectorModal';
+import type { LabDraft, SectionContent, PageContent } from '@/types/builder';
+import { OpenSavedModal } from '@/components/lab/OpenSavedModal';
+import { SaveDraftModal } from '@/components/lab/SaveDraftModal';
+import { EditDraftModal } from '@/components/lab/EditDraftModal';
+import { VersionHistory } from '@/components/lab/VersionHistory';
+import { ImageUpload } from '@/components/ui/image-upload';
+import { LabCanvas } from '@/components/lab/LabCanvas';
+import { useLabStore } from '@/stores/labStore';
 
 type DeviceView = 'desktop' | 'tablet' | 'mobile';
 
-// Extended theme type from API response
-interface ExtendedTheme {
+interface ThemeWithNestedColors {
   id: string;
   name: string;
   published?: boolean;
-  class_name?: string;
-  variables?: Record<string, unknown>;
+  variables?: {
+    colors?: {
+      primary?: string;
+      secondary?: string;
+      accent?: string;
+      [key: string]: string | undefined;
+    };
+    radius?: string;
+  };
   metadata?: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
@@ -138,17 +147,24 @@ export default function EditDraftPage() {
   const queryClient = useQueryClient();
   const draftId = params.id as string;
 
-  const [isSaving, setIsSaving] = useState(false);
+  // Lab store for multi-section support
+  const { loadDraft, getContent, isDirty, markClean } = useLabStore();
+
+  // const [isSaving, setIsSaving] = useState(false);
   const [deviceView, setDeviceView] = useState<DeviceView>('desktop');
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'preview' | 'code'>('preview');
+  const [isDarkMode] = useState(false);
+  // const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activeTab] = useState<'preview' | 'code'>('preview');
   const [autoSaveEnabled] = useState(true);
-  const [showSettings, setShowSettings] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
-  const [showComponentSelector, setShowComponentSelector] = useState(false);
-  const [selectedComponent, setSelectedComponent] = useState<CoreComponent | null>(null);
-  const [selectedThemeId, setSelectedThemeId] = useState<string>('default');
+  const [showOpenSavedModal, setShowOpenSavedModal] = useState(false);
+  const [showSaveDraftModal, setShowSaveDraftModal] = useState(false);
+  const [selectedThemeId, setSelectedThemeId] = useState<string>('');
+  const [selectedSubType, setSelectedSubType] = useState<string>('');
+  const [showSettings, setShowSettings] = useState(false);
+  const [showEditDraftModal, setShowEditDraftModal] = useState(false);
+  const [showVersionModal, setShowVersionModal] = useState(false);
+  const [selectedType, setSelectedType] = useState<'section' | 'page' | 'site' | 'theme'>('section');
 
   // Hero section state
   const [heroContent, setHeroContent] = useState({
@@ -191,18 +207,20 @@ export default function EditDraftPage() {
     queryFn: () => labDraftService.getById(draftId),
   });
 
-  const { data: drafts = [] } = useQuery({
-    queryKey: ['lab-drafts'],
-    queryFn: () => labDraftService.getAll(),
-  });
+  // const { data: drafts = [] } = useQuery({
+  //   queryKey: ['lab-drafts'],
+  //   queryFn: () => labDraftService.getAll(),
+  // });
 
-  const { data: coreComponents = [] } = useQuery({
-    queryKey: ['core-components'],
-    queryFn: () => coreComponentsService.getAll(),
-  });
 
   const { data: types = [] } = useTypes(draft?.type);
   const { data: themes = [] } = useThemes();
+  const { data: subtypes = [] } = useTypesByCategory(
+    (selectedType === 'section' || selectedType === 'page') ? selectedType : 'section'
+  );
+  
+  // Get the full theme data for the selected theme
+  const { data: selectedTheme } = useTheme(selectedThemeId);
 
   const updateMutation = useMutation({
     mutationFn: (updates: Partial<Omit<LabDraft, 'id' | 'created_at' | 'updated_at'>>) => labDraftService.update(draftId, updates),
@@ -228,90 +246,74 @@ export default function EditDraftPage() {
   });
 
   // Check if draft is out of sync with library
-  const isOutOfSync = () => {
-    if (!draft?.metadata?.library_item_id || !draft?.metadata?.last_synced_content_hash) {
-      return false;
-    }
-    // Compare content hashes to detect actual content changes
-    return draft.content_hash !== draft.metadata.last_synced_content_hash;
-  };
+  // const isOutOfSync = () => {
+  //   if (!draft?.metadata?.library_item_id || !draft?.metadata?.last_synced_content_hash) {
+  //     return false;
+  //   }
+  //   // Compare content hashes to detect actual content changes
+  //   return draft.content_hash !== draft.metadata.last_synced_content_hash;
+  // };
 
-  // Load saved content and component when draft loads
+  // Track if we've loaded this draft to prevent reloading on every save
+  const hasLoadedDraftRef = useRef(false);
+
+  // Load saved content into lab store when draft loads (only once)
   useEffect(() => {
-    if (draft?.content) {
+    if (draft?.content && !hasLoadedDraftRef.current) {
+      // Load the draft into the store (handles both single and multi-section)
+      // Only load if type is 'section' or 'page' (types that support multi-section)
+      if (draft.type === 'section' || draft.type === 'page') {
+        loadDraft(draftId, draft.name, draft.type, draft.content as Record<string, unknown>);
+      }
+      hasLoadedDraftRef.current = true;
+
+      // For backward compatibility with settings panel, extract content
       if (hasHeroContent(draft.content)) {
         setHeroContent(draft.content.heroContent);
       } else if (hasNavigationContent(draft.content)) {
         setNavigationContent(draft.content.navigationContent);
       }
+
+      // Set the selected type from draft
+      if (draft?.type) {
+        setSelectedType(draft.type);
+      }
+
+      // Set the selected subtype if draft has a type_id
+      if (draft?.type_id) {
+        setSelectedSubType(draft.type_id);
+      }
     }
-    
-    // Load the selected component from metadata
-    if (draft?.metadata?.component_name) {
-      // Find the component in core components to set as selected
-      coreComponents.find(c => c.name === draft.metadata.component_name);
-    }
-  }, [draft, coreComponents]);
+  }, [draft, draftId, loadDraft]); // Dependencies but only runs once due to hasLoadedDraftRef
 
   const handleSave = useCallback(async () => {
-    if (!draft) return;
-    setIsSaving(true);
+    if (!draft || !isDirty) return; // Only save if dirty
     try {
-      // Determine what content to save based on component type
-      const componentName = draft.metadata?.component_name as string;
-      let contentToSave = {};
-      
-      if (componentName === 'Navbar2' || componentName === 'Footer2') {
-        contentToSave = {
-          ...(typeof draft.content === 'object' ? draft.content : {}),
-          navigationContent,
-        };
-      } else {
-        contentToSave = {
-          ...(typeof draft.content === 'object' ? draft.content : {}),
-          heroContent,
-        };
-      }
-      
+      // Get the current content from the lab store
+      const contentToSave = getContent();
+
       await updateMutation.mutateAsync({
-        content: contentToSave,
+        content: contentToSave as unknown as SectionContent | PageContent,
       });
-      setTimeout(() => setIsSaving(false), 500);
+
+      // Mark as clean after successful save
+      markClean();
     } catch (error) {
       console.error('Failed to save draft:', error);
-      setIsSaving(false);
     }
-  }, [draft, heroContent, navigationContent, updateMutation]);
+  }, [draft, isDirty, getContent, updateMutation, markClean]);
 
-  // Handle component selection from modal
-  const handleSelectComponent = useCallback(async (component: CoreComponent) => {
-    setSelectedComponent(component);
-    
-    // Update draft metadata with the selected component
-    try {
-      await updateMutation.mutateAsync({
-        metadata: {
-          ...(draft?.metadata || {}),
-          component_name: component.name,
-          component_type: component.type,
-          component_source: component.source,
-        },
-      });
-    } catch (error) {
-      console.error('Failed to update component selection:', error);
-    }
-  }, [draft, updateMutation]);
 
   // Auto-save functionality
   useEffect(() => {
-    if (!autoSaveEnabled || !draft) return;
+    if (!autoSaveEnabled || !draft || !isDirty) return;
 
     const timeoutId = setTimeout(() => {
       handleSave();
     }, 2000);
 
     return () => clearTimeout(timeoutId);
-  }, [heroContent, navigationContent, autoSaveEnabled, draft, handleSave]);
+  }, [isDirty, autoSaveEnabled, draft, handleSave]); // Only trigger on isDirty change, not sections
 
   const getDeviceWidth = () => {
     switch (deviceView) {
@@ -324,9 +326,9 @@ export default function EditDraftPage() {
     }
   };
 
-  const handleViewInBrowser = () => {
-    window.open(`/lab/${draftId}/preview`, '_blank');
-  };
+  // const handleViewInBrowser = () => {
+  //   window.open(`/lab/${draftId}/preview`, '_blank');
+  // };
 
   if (isDraftLoading) {
     return <div className="text-center py-8">Loading draft...</div>;
@@ -339,157 +341,290 @@ export default function EditDraftPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="border-b bg-background">
-        <div className="flex items-center justify-between px-4 py-3">
-          {/* Left side */}
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/lab">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  {draft.name}
-                  <ChevronDown className="h-4 w-4" />
+      <header className="border-b bg-background" role="banner">
+        {/* Top Header Row */}
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Left side - Draft Name and Description */}
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-semibold">{draft.name || 'Draft Name'}</h1>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6"
+                  onClick={() => setShowEditDraftModal(true)}
+                >
+                  <Edit2 className="h-3 w-3" />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                {drafts.map((d) => (
-                  <DropdownMenuItem
-                    key={d.id}
-                    onClick={() => router.push(`/lab/${d.id}`)}
-                  >
-                    {d.name}
-                    {d.id === draft.id && <Check className="ml-auto h-4 w-4" />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Building:</span>
-              <Select 
-                value={draft.type} 
-                onValueChange={(value) => updateMutation.mutate({ type: value as 'section' | 'page' | 'site' | 'theme' })}
-              >
-                <SelectTrigger className="h-8 w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="section">Section</SelectItem>
-                  <SelectItem value="page">Page</SelectItem>
-                  <SelectItem value="site">Site</SelectItem>
-                  <SelectItem value="theme">Theme</SelectItem>
-                </SelectContent>
-              </Select>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {(draft.metadata?.description as string) || 'Add a description for this draft'}
+              </p>
             </div>
-            <Badge variant={draft.status === 'promoted' ? 'default' : 'secondary'}>
-              {draft.status}
-            </Badge>
-            {draft.library_version && (
-              <Badge variant="outline">v{draft.library_version}</Badge>
-            )}
-            {draft.status === 'promoted' && isOutOfSync() && (
-              <Badge variant="destructive">Out of Sync</Badge>
-            )}
-          </div>
 
-          {/* Right side */}
-          <div className="flex items-center gap-2">
-            {isSaving && (
-              <span className="text-sm text-muted-foreground">Saving...</span>
-            )}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowComponentSelector(true)}
-            >
-              <Layers className="mr-2 h-4 w-4" />
-              {selectedComponent || draft?.metadata?.component_name ? 
-                `Component: ${selectedComponent?.name || draft?.metadata?.component_name}` : 
-                'Add Component'
-              }
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/lab/new">
-                <Plus className="mr-2 h-4 w-4" />
-                New Draft
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleSave}>
-              <Save className="mr-2 h-4 w-4" />
-              Save
-            </Button>
-            {draft.status === 'promoted' && draft.metadata?.library_item_id ? (
+            {/* Right side - Action Buttons */}
+            <div className="flex items-center gap-2">
+              {/* Save status indicator */}
+              {isDirty && (
+                <span className="text-xs text-amber-600 font-medium mr-2">
+                  Unsaved changes
+                </span>
+              )}
+
               <Button 
-                size="sm" 
-                onClick={() => setShowUpdateDialog(true)}
-                disabled={updateLibraryMutation.isPending}
+                className="bg-primary text-primary-foreground hover:bg-primary/90" 
+                size="sm"
+                onClick={() => setShowOpenSavedModal(true)}
               >
-                <Upload className="mr-2 h-4 w-4" />
-                {updateLibraryMutation.isPending ? 'Updating...' : 'Update in Library'}
+                Open Saved
               </Button>
-            ) : (
-              <Button 
-                size="sm" 
-                onClick={() => promoteMutation.mutate()}
-                disabled={promoteMutation.isPending}
+
+              <Button
+                className="bg-primary text-primary-foreground hover:bg-primary/90 relative"
+                size="sm"
+                onClick={() => setShowSaveDraftModal(true)}
               >
-                <Upload className="mr-2 h-4 w-4" />
-                {promoteMutation.isPending ? 'Promoting...' : 'Promote to Library'}
+                {isDirty && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                )}
+                Save Draft
               </Button>
-            )}
-            <Sheet open={showSettings} onOpenChange={setShowSettings}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Settings className="h-4 w-4" />
+
+              <Button
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                size="sm"
+                onClick={() => {
+                  // Check if this draft is linked to a library item (either already promoted or created from library)
+                  const hasLibraryLink = (draft.status === 'promoted' && draft.metadata?.library_item_id) ||
+                                       draft.metadata?.parent_library_id;
+                  if (hasLibraryLink) {
+                    setShowUpdateDialog(true);
+                  } else {
+                    promoteMutation.mutate();
+                  }
+                }}
+                disabled={promoteMutation.isPending || updateLibraryMutation.isPending}
+              >
+                {((draft.status === 'promoted' && draft.metadata?.library_item_id) || draft.metadata?.parent_library_id)
+                  ? 'Update Library Item'
+                  : 'Promote to Library'}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Header Row */}
+        <div className="border-t px-4 py-2">
+          <div className="flex items-center justify-between">
+            {/* Left side - Configuration Dropdowns */}
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground">Sections</span>
+                <Button
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-8"
+                  size="sm"
+                  onClick={() => {
+                    // Get LabCanvas instance and trigger add section at the end
+                    const labCanvasElement = document.querySelector('[data-lab-canvas]');
+                    if (labCanvasElement) {
+                      labCanvasElement.dispatchEvent(new CustomEvent('add-section'));
+                    }
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Section
                 </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Settings</SheetTitle>
-                  <SheetDescription>
-                    Configure your draft settings and properties
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="mt-6 space-y-6">
-                  <div>
-                    <h3 className="font-semibold mb-3">Draft Settings</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="draft-name">Name</Label>
-                        <Input
-                          id="draft-name"
-                          value={draft.name}
-                          onChange={(e) => updateMutation.mutate({ name: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="draft-description">Description</Label>
-                        <Textarea
-                          id="draft-description"
-                          value={(draft.metadata?.description as string) || ''}
-                          onChange={(e) => updateMutation.mutate({
-                            metadata: { ...(draft.metadata || {}), description: e.target.value }
-                          })}
-                          rows={3}
-                        />
-                      </div>
-                      {(() => {
-                        const componentName = draft?.metadata?.component_name as string;
-                        
-                        // Don't show type selector for navigation components
-                        if (componentName !== 'Navbar2' && componentName !== 'Footer2') {
-                          return (
-                            <>
-                              <div>
-                                <Label htmlFor="type">Category</Label>
-                                <Select
-                                  value={draft.type_id || ''}
-                                  onValueChange={(value) => updateMutation.mutate({ type_id: value })}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground">Theme</span>
+                <Select value={selectedThemeId} onValueChange={setSelectedThemeId}>
+                  <SelectTrigger className="h-8 w-80" aria-label="Theme">
+                    <SelectValue placeholder="Select Theme" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(themes as ThemeWithNestedColors[])
+                      ?.filter(theme => theme.published !== false)
+                      ?.map((theme) => (
+                        <SelectItem key={theme.id} value={theme.id}>
+                          <div className="flex items-center gap-2">
+                            <div className="flex gap-1">
+                              {/* Show color swatches */}
+                              {theme.variables?.colors?.primary && (
+                                <div 
+                                  className="w-4 h-4 rounded-full border border-border"
+                                  style={{ 
+                                    backgroundColor: `hsl(${theme.variables.colors.primary.replace(/\s+/g, ', ')})` 
+                                  }}
+                                />
+                              )}
+                              {theme.variables?.colors?.secondary && (
+                                <div 
+                                  className="w-4 h-4 rounded-full border border-border"
+                                  style={{ 
+                                    backgroundColor: `hsl(${theme.variables.colors.secondary.replace(/\s+/g, ', ')})` 
+                                  }}
+                                />
+                              )}
+                              {theme.variables?.colors?.accent && (
+                                <div 
+                                  className="w-4 h-4 rounded-full border border-border"
+                                  style={{ 
+                                    backgroundColor: `hsl(${theme.variables.colors.accent.replace(/\s+/g, ', ')})` 
+                                  }}
+                                />
+                              )}
+                            </div>
+                            <span>{theme.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground">Type</span>
+                <Select
+                  value={selectedType}
+                  onValueChange={(value) => {
+                    const newType = value as 'section' | 'page' | 'site' | 'theme';
+                    setSelectedType(newType);
+                    setSelectedSubType(''); // Reset subtype when type changes
+                    updateMutation.mutate({ type: newType });
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-28" aria-label="Type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="section">Section</SelectItem>
+                    <SelectItem value="page">Page</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground">Sub Type</span>
+                <Select 
+                  value={selectedSubType} 
+                  onValueChange={(value) => {
+                    setSelectedSubType(value);
+                    updateMutation.mutate({ type_id: value });
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-32" aria-label="Subtype">
+                    <SelectValue placeholder="Select Subtype" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subtypes.map((subtype) => (
+                      <SelectItem key={subtype.id} value={subtype.id}>
+                        {subtype.display_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground">Version</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => setShowVersionModal(true)}
+                >
+                  <History className="h-3 w-3 mr-1" />
+                  Version History
+                </Button>
+              </div>
+            </div>
+
+            {/* Right side - Viewport Toggles */}
+            <div className="flex items-center gap-1">
+              <Button
+                variant={deviceView === 'desktop' ? 'default' : 'ghost'}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setDeviceView('desktop')}
+                aria-label="Desktop"
+              >
+                <Monitor className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={deviceView === 'tablet' ? 'default' : 'ghost'}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setDeviceView('tablet')}
+                aria-label="Tablet"
+              >
+                <Tablet className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={deviceView === 'mobile' ? 'default' : 'ghost'}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setDeviceView('mobile')}
+                aria-label="Mobile"
+              >
+                <Smartphone className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Settings Sheet - Moved outside header */}
+      <Sheet open={showSettings} onOpenChange={setShowSettings}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="hidden">
+            <Settings className="h-4 w-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Settings</SheetTitle>
+            <SheetDescription>
+              Configure your draft settings and properties
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-6">
+            <div>
+              <h3 className="font-semibold mb-3">Draft Settings</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="draft-name">Name</Label>
+                  <Input
+                    id="draft-name"
+                    value={draft.name}
+                    onChange={(e) => updateMutation.mutate({ name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="draft-description">Description</Label>
+                  <Textarea
+                    id="draft-description"
+                    value={(draft.metadata?.description as string) || ''}
+                    onChange={(e) => updateMutation.mutate({
+                      metadata: { ...(draft.metadata || {}), description: e.target.value }
+                    })}
+                    rows={3}
+                  />
+                </div>
+                {(() => {
+                  const componentName = draft?.metadata?.component_name as string;
+                  
+                  // Don't show type selector for navigation components
+                  if (componentName !== 'Navbar2' && componentName !== 'Footer2') {
+                    return (
+                      <>
+                        <div>
+                          <Label htmlFor="type">Category</Label>
+                          <Select
+                            value={draft.type_id || ''}
+                            onValueChange={(value) => updateMutation.mutate({ type_id: value })}
                                 >
                                   <SelectTrigger id="type">
                                     <SelectValue placeholder="Select a category" />
@@ -770,118 +905,12 @@ export default function EditDraftPage() {
 
                   <Separator />
 
-                  <div>
-                    <h3 className="font-semibold mb-3">Components</h3>
-                    <ScrollArea className="h-[200px]">
-                      <div className="space-y-2">
-                        {coreComponents.map((component: CoreComponent) => (
-                          <Card key={component.id} className="cursor-pointer hover:bg-muted/50">
-                            <CardHeader className="p-3">
-                              <CardTitle className="text-sm">{component.name}</CardTitle>
-                              <CardDescription className="text-xs">
-                                {component.type}
-                              </CardDescription>
-                            </CardHeader>
-                          </Card>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
                 </div>
               </SheetContent>
             </Sheet>
-          </div>
-        </div>
-
-        {/* Sub-header with controls */}
-        <div className="border-t px-4 py-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'preview' | 'code')}>
-                <TabsList className="h-8">
-                  <TabsTrigger value="preview" className="text-xs">Preview</TabsTrigger>
-                  <TabsTrigger value="code" className="text-xs">Code</TabsTrigger>
-                </TabsList>
-              </Tabs>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setIsDarkMode(!isDarkMode)}
-                >
-                  {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                </Button>
-
-                <Select value={selectedThemeId} onValueChange={setSelectedThemeId}>
-                  <SelectTrigger className="h-8 w-40">
-                    <SelectValue placeholder="Select theme" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="default">Default</SelectItem>
-                    {(themes as ExtendedTheme[])
-                      ?.filter(theme => theme.published !== false)
-                      ?.map((theme) => (
-                        <SelectItem key={theme.id} value={theme.id}>
-                          {theme.name}
-                        </SelectItem>
-                      ))
-                    }
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <Button
-                variant={deviceView === 'desktop' ? 'default' : 'ghost'}
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setDeviceView('desktop')}
-              >
-                <Monitor className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={deviceView === 'tablet' ? 'default' : 'ghost'}
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setDeviceView('tablet')}
-              >
-                <Tablet className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={deviceView === 'mobile' ? 'default' : 'ghost'}
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setDeviceView('mobile')}
-              >
-                <Smartphone className="h-4 w-4" />
-              </Button>
-              <Separator orientation="vertical" className="mx-2 h-6" />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={handleViewInBrowser}
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-              >
-                <Maximize className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden" data-testid="lab-canvas">
         {/* Preview Area */}
         <div className="h-full bg-muted/30 overflow-auto">
           {activeTab === 'preview' ? (
@@ -890,48 +919,11 @@ export default function EditDraftPage() {
               minWidth={320}
               maxWidth={1400}
               isDarkMode={isDarkMode}
-              className={(themes as ExtendedTheme[])?.find(t => t.id === selectedThemeId)?.class_name || ''}
+              data-testid="resizable-preview"
             >
-              {(() => {
-                const componentName = selectedComponent?.name || (draft?.metadata?.component_name as string);
-                
-                // Render navigation components
-                if (componentName === 'Navbar2') {
-                  return <Navbar2 {...navigationContent} />;
-                } else if (componentName === 'Footer2') {
-                  return <Footer2 {...navigationContent} />;
-                } else if (!componentName) {
-                  // No component selected yet
-                  return (
-                    <div className="flex flex-col items-center justify-center h-64 text-center">
-                      <Layers className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">No Component Selected</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Click "Add Component" in the header to select a component from the Core library
-                      </p>
-                      <Button onClick={() => setShowComponentSelector(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Select Component
-                      </Button>
-                    </div>
-                  );
-                }
-                
-                // Default to HeroTwoColumn for other sections
-                return (
-                  <HeroTwoColumn
-                    {...heroContent}
-                    editable={true}
-                    onHeadingChange={(heading) => setHeroContent({ ...heroContent, heading })}
-                    onSubtextChange={(subtext) => setHeroContent({ ...heroContent, subtext })}
-                    onButtonTextChange={(buttonText) => setHeroContent({ ...heroContent, buttonText })}
-                    onImageChange={(file) => {
-                      // Handle image upload here
-                      console.log('Image uploaded:', file);
-                    }}
-                  />
-                );
-              })()}
+              <ThemeProvider theme={selectedTheme} className="min-h-full">
+                <LabCanvas />
+              </ThemeProvider>
             </ResizablePreview>
           ) : (
             <div className="p-8">
@@ -1006,12 +998,44 @@ export default function EditDraftPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Component Selector Modal */}
-      <ComponentSelectorModal
-        open={showComponentSelector}
-        onOpenChange={setShowComponentSelector}
-        onSelectComponent={handleSelectComponent}
-        currentComponentName={selectedComponent?.name || (draft?.metadata?.component_name as string)}
+      <OpenSavedModal
+        open={showOpenSavedModal}
+        onOpenChange={setShowOpenSavedModal}
+      />
+
+      <SaveDraftModal
+        open={showSaveDraftModal}
+        onOpenChange={setShowSaveDraftModal}
+        currentDraftId={draftId}
+        currentDraftName={draft?.name || ''}
+        currentDraftType={draft?.type as 'section' | 'page' || 'section'}
+        currentDraft={draft}
+      />
+
+      <EditDraftModal
+        open={showEditDraftModal}
+        onOpenChange={setShowEditDraftModal}
+        draftName={draft.name}
+        draftDescription={(draft.metadata?.description as string) || ''}
+        onSave={async (name, description) => {
+          await updateMutation.mutateAsync({
+            name,
+            metadata: {
+              ...(draft.metadata || {}),
+              description,
+            },
+          });
+        }}
+      />
+
+      <VersionHistory
+        open={showVersionModal}
+        onOpenChange={setShowVersionModal}
+        currentDraft={draft}
+        onLoadVersion={(selectedDraft) => {
+          // Navigate to the selected version
+          router.push(`/lab/${selectedDraft.id}`);
+        }}
       />
     </div>
   );

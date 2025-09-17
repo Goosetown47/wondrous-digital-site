@@ -22,7 +22,7 @@ export function SectionWrapper({
 }: SectionWrapperProps) {
   return (
     <section className={cn(
-      "w-full",
+      "w-full flex justify-center relative",
       className
     )}>
       <div className={cn(
@@ -32,7 +32,7 @@ export function SectionWrapper({
         // Add default padding unless disabled
         !noPadding && "py-4 @[768px]:py-8 @[1024px]:py-12",
         // Add container max-width unless full width
-        !fullWidth && "container"
+        !fullWidth && "container mx-auto"
       )}>
         {children}
       </div>

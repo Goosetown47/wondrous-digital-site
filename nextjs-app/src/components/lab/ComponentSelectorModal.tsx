@@ -10,13 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Search, Package, Code, Check } from 'lucide-react';
+import { Plus, Search, Check } from 'lucide-react';
 import type { CoreComponent } from '@/types/builder';
 
 interface ComponentSelectorModalProps {
@@ -33,23 +32,24 @@ export function ComponentSelectorModal({
   currentComponentName,
 }: ComponentSelectorModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTab, setSelectedTab] = useState<'components' | 'sections'>('sections');
 
-  // Fetch all core components
-  const { data: coreComponents = [], isLoading } = useQuery({
+  // Fetch all core components from database (sections only)
+  const { data: allComponents = [], isLoading } = useQuery({
     queryKey: ['core-components'],
-    queryFn: () => coreComponentsService.getAll(),
+    queryFn: async () => {
+      const components = await coreComponentsService.getAll();
+      // Filter to only show sections
+      return components.filter(c => c.type === 'section');
+    },
     enabled: open,
   });
 
-  // Filter components by type and search term
-  const filteredComponents = coreComponents.filter((component) => {
-    const matchesType = selectedTab === 'components' 
-      ? component.type === 'component' 
-      : component.type === 'section';
-    const matchesSearch = searchTerm === '' || 
-      component.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesType && matchesSearch;
+  // Filter components based on search
+  const filteredComponents = allComponents.filter(component => {
+    const matchesSearch = searchTerm === '' ||
+      component.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (component.description && component.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesSearch;
   });
 
   const handleSelectComponent = (component: CoreComponent) => {
@@ -80,93 +80,82 @@ export function ComponentSelectorModal({
             />
           </div>
 
-          {/* Tabs */}
-          <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as 'components' | 'sections')}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="sections" className="flex items-center gap-2">
-                <Code className="h-4 w-4" />
-                Sections
-              </TabsTrigger>
-              <TabsTrigger value="components" className="flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                Components
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value={selectedTab} className="mt-4">
-              <ScrollArea className="h-[400px] pr-4">
-                {isLoading ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Loading components...
-                  </div>
-                ) : filteredComponents.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    {searchTerm ? 'No components found matching your search' : 'No components available'}
-                  </div>
-                ) : (
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {filteredComponents.map((component) => (
-                      <Card 
-                        key={component.id} 
-                        className={`cursor-pointer transition-all hover:shadow-md ${
-                          currentComponentName === component.name ? 'ring-2 ring-primary' : ''
-                        }`}
-                        onClick={() => handleSelectComponent(component)}
-                      >
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-1">
-                              <CardTitle className="text-base flex items-center gap-2">
-                                {component.name}
-                                {currentComponentName === component.name && (
-                                  <Check className="h-4 w-4 text-primary" />
-                                )}
-                              </CardTitle>
-                              <CardDescription className="text-xs">
-                                {component.type === 'section' ? 'Page Section' : 'UI Component'}
-                              </CardDescription>
-                            </div>
-                            <div className="flex gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                {component.source}
-                              </Badge>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pb-3">
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs text-muted-foreground">
-                              {component.dependencies?.length || 0} dependencies
-                            </div>
-                            <Button 
-                              size="sm" 
-                              variant={currentComponentName === component.name ? "secondary" : "default"}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSelectComponent(component);
-                              }}
-                            >
-                              {currentComponentName === component.name ? (
-                                <>
-                                  <Check className="mr-1 h-3 w-3" />
-                                  Selected
-                                </>
-                              ) : (
-                                <>
-                                  <Plus className="mr-1 h-3 w-3" />
-                                  Select
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-            </TabsContent>
-          </Tabs>
+          {/* Components List */}
+          <ScrollArea className="h-[450px] pr-4">
+            {isLoading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Loading components...
+              </div>
+            ) : filteredComponents.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {searchTerm
+                  ? 'No components found matching your search'
+                  : 'No components available'}
+              </div>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2">
+                {filteredComponents.map((component) => (
+                  <Card
+                    key={component.id}
+                    className={`cursor-pointer transition-all hover:shadow-md ${
+                      currentComponentName === component.name ? 'ring-2 ring-primary' : ''
+                    }`}
+                    onClick={() => handleSelectComponent(component)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            {component.name}
+                            {currentComponentName === component.name && (
+                              <Check className="h-4 w-4 text-primary" />
+                            )}
+                          </CardTitle>
+                          {component.description && (
+                            <CardDescription className="text-xs">
+                              {component.description}
+                            </CardDescription>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {component.source}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs text-muted-foreground">
+                          {component.dependencies?.length || 0} dependencies
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={currentComponentName === component.name ? "secondary" : "default"}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectComponent(component);
+                          }}
+                        >
+                          {currentComponentName === component.name ? (
+                            <>
+                              <Check className="mr-1 h-3 w-3" />
+                              Selected
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="mr-1 h-3 w-3" />
+                              Select
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
         </div>
       </DialogContent>
     </Dialog>

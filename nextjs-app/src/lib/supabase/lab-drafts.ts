@@ -247,10 +247,10 @@ export const labDraftService = {
       throw new Error('Draft not found');
     }
     
-    // Check if draft has a linked library item
-    const libraryItemId = draft.metadata?.library_item_id;
+    // Check if draft has a linked library item (either from promotion or parent)
+    const libraryItemId = draft.metadata?.library_item_id || draft.metadata?.parent_library_id;
     if (!libraryItemId) {
-      throw new Error('Draft has not been promoted to library yet');
+      throw new Error('Draft has no linked library item');
     }
     
     // Get current library item to increment version
@@ -280,7 +280,7 @@ export const labDraftService = {
           library_item_id: libraryItemId,
           version: currentLibraryItem.version,
           content: currentLibraryItem.content,
-          change_notes: `Version ${currentLibraryItem.version} snapshot before update`,
+          change_notes: draft.changelog || `Version ${currentLibraryItem.version} snapshot before update`,
           created_by: draft.created_by,
         });
       
@@ -317,9 +317,11 @@ export const labDraftService = {
     
     // Update draft to mark it as synced with new version and content hash
     await this.update(draftId, {
+      status: 'promoted', // Mark as promoted if it wasn't already
       library_version: updatedLibraryItem.version,
       metadata: {
         ...draft.metadata,
+        library_item_id: libraryItemId, // Ensure library item ID is set
         last_synced_at: new Date().toISOString(),
         last_synced_content_hash: await calculateContentHash(draft.content),
       },

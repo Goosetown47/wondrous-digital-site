@@ -137,8 +137,11 @@ export function ResizablePreview({
               : '100%',
         }}
       >
-        {/* Inner Container with scroll */}
-        <div className="h-full w-full overflow-y-auto overflow-x-hidden">
+        {/* Inner Container with scroll - Apply theme class here to isolate it */}
+        <div className={cn(
+          "h-full w-full overflow-y-auto overflow-x-hidden",
+          "isolate" // Ensures theme doesn't leak to parent
+        )}>
           {children}
         </div>
         

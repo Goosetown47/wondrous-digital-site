@@ -5,6 +5,7 @@ import React, { useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { SectionWrapper } from "@/components/lab/section-wrapper";
+import { EditableLogoImage } from '@/components/shared/content-editor';
 
 import {
   Accordion,
@@ -54,6 +55,8 @@ interface Navbar2Props {
       url: string;
     };
   };
+  editable?: boolean;
+  onLogoChange?: (imageUrl: string | null) => void;
 }
 
 const Navbar2 = ({
@@ -139,8 +142,19 @@ const Navbar2 = ({
     login: { title: "Login", url: "#" },
     signup: { title: "Sign up", url: "#" },
   },
+  editable = false,
+  onLogoChange,
 }: Navbar2Props) => {
-  const [logoError, setLogoError] = useState(false);
+  const [currentLogoSrc, setCurrentLogoSrc] = useState(logo.src);
+
+  const handleLogoUpdate = (newImageUrl: string | null) => {
+    if (newImageUrl) {
+      setCurrentLogoSrc(newImageUrl);
+    }
+    if (onLogoChange) {
+      onLogoChange(newImageUrl);
+    }
+  };
   
   return (
     <SectionWrapper noPadding className="">
@@ -148,19 +162,21 @@ const Navbar2 = ({
         {/* Desktop Menu */}
         <nav className="hidden justify-between @[768px]:flex py-4">
           {/* Logo */}
-          <a href={logo.url} className="flex items-center gap-2">
-            {!logoError ? (
-              <img 
-                src={logo.src} 
-                className="max-h-8" 
-                alt={logo.alt}
-                onError={() => setLogoError(true)}
-              />
-            ) : (
-              <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-primary-foreground font-bold">
-                {logo.title.charAt(0).toUpperCase()}
-              </div>
-            )}
+          <a
+            href={editable ? undefined : logo.url}
+            className="flex items-center gap-2"
+            onClick={editable ? (e) => e.preventDefault() : undefined}
+          >
+            <EditableLogoImage
+              src={currentLogoSrc}
+              alt={logo.alt}
+              title={logo.title}
+              className="max-h-8"
+              fallbackText={logo.title}
+              onUpdate={handleLogoUpdate}
+              editable={editable}
+              showFallback={true}
+            />
             <span className="text-lg font-semibold tracking-tighter">
               {logo.title}
             </span>
@@ -187,19 +203,21 @@ const Navbar2 = ({
         {/* Mobile Menu */}
         <div className="block @[768px]:hidden py-4">
           <div className="flex items-center justify-between">
-            <a href={logo.url} className="flex items-center gap-2">
-              {!logoError ? (
-                <img 
-                  src={logo.src} 
-                  className="max-h-8" 
-                  alt={logo.alt}
-                  onError={() => setLogoError(true)}
-                />
-              ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-primary-foreground font-bold">
-                  {logo.title.charAt(0).toUpperCase()}
-                </div>
-              )}
+            <a
+              href={editable ? undefined : logo.url}
+              className="flex items-center gap-2"
+              onClick={editable ? (e) => e.preventDefault() : undefined}
+            >
+              <EditableLogoImage
+                src={currentLogoSrc}
+                alt={logo.alt}
+                title={logo.title}
+                className="max-h-8"
+                fallbackText={logo.title}
+                onUpdate={handleLogoUpdate}
+                editable={editable}
+                showFallback={true}
+              />
               <span className="text-lg font-semibold tracking-tighter @[768px]:hidden">
                 {logo.title}
               </span>
@@ -213,19 +231,21 @@ const Navbar2 = ({
               <SheetContent className="overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>
-                    <a href={logo.url} className="flex items-center gap-2">
-                      {!logoError ? (
-                        <img 
-                          src={logo.src} 
-                          className="max-h-8" 
-                          alt={logo.alt}
-                          onError={() => setLogoError(true)}
-                        />
-                      ) : (
-                        <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-primary-foreground font-bold">
-                          {logo.title.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                    <a
+                      href={editable ? undefined : logo.url}
+                      className="flex items-center gap-2"
+                      onClick={editable ? (e) => e.preventDefault() : undefined}
+                    >
+                      <EditableLogoImage
+                        src={currentLogoSrc}
+                        alt={logo.alt}
+                        title={logo.title}
+                        className="max-h-8"
+                        fallbackText={logo.title}
+                        onUpdate={handleLogoUpdate}
+                        editable={editable}
+                        showFallback={true}
+                      />
                       <span className="text-lg font-semibold tracking-tighter">
                         {logo.title}
                       </span>
@@ -264,7 +284,7 @@ const renderMenuItem = (item: MenuItem) => {
     return (
       <NavigationMenuItem key={item.title}>
         <NavigationMenuTrigger>{item.title}</NavigationMenuTrigger>
-        <NavigationMenuContent className="origin-top-center relative top-11 w-full overflow-hidden rounded-md border shadow data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52 data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52 data-[motion^=from-]:animate-in data-[motion^=from-]:fade-in data-[motion^=to-]:animate-out data-[motion^=to-]:fade-out data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:zoom-in-90 md:absolute md:left-1/2 md:w-80 md:-translate-x-1/2">
+        <NavigationMenuContent className="origin-top-center absolute top-full mt-2 z-50 w-full overflow-hidden rounded-md border bg-popover shadow-lg data-[motion=from-end]:slide-in-from-right-52 data-[motion=from-start]:slide-in-from-left-52 data-[motion=to-end]:slide-out-to-right-52 data-[motion=to-start]:slide-out-to-left-52 data-[motion^=from-]:animate-in data-[motion^=from-]:fade-in data-[motion^=to-]:animate-out data-[motion^=to-]:fade-out data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:zoom-in-90 md:left-1/2 md:w-80 md:-translate-x-1/2">
           {item.items.map((subItem) => (
             <NavigationMenuLink asChild key={subItem.title} className="w-full">
               <SubMenuLink item={subItem} />
@@ -279,7 +299,7 @@ const renderMenuItem = (item: MenuItem) => {
     <NavigationMenuItem key={item.title}>
       <NavigationMenuLink
         href={item.url}
-        className="group inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+        className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-background hover:text-accent-foreground"
       >
         {item.title}
       </NavigationMenuLink>
@@ -313,7 +333,7 @@ const renderMobileMenuItem = (item: MenuItem) => {
 const SubMenuLink = ({ item }: { item: MenuItem }) => {
   return (
     <a
-      className="flex flex-row gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none hover:bg-muted hover:text-accent-foreground"
+      className="flex flex-row gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none hover:bg-accent hover:text-accent-foreground"
       href={item.url}
     >
       <div className="text-muted-foreground">{item.icon}</div>
@@ -342,7 +362,7 @@ const NavigationMenuWithoutViewport = ({
       data-slot="navigation-menu"
       data-viewport={viewport}
       className={cn(
-        "group/navigation-menu relative flex max-w-max flex-1 items-center justify-center",
+        "group/navigation-menu relative z-50 flex max-w-max flex-1 items-center justify-center",
         className,
       )}
       {...props}

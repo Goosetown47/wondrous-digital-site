@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload } from 'lucide-react';
-import Image from 'next/image';
+import { EditableImage, EditableText } from '@/components/shared/content-editor';
+import { SmartText } from '@/components/shared';
 
 interface HeroTwoColumnProps {
   heading?: string;
@@ -30,55 +30,40 @@ export function HeroTwoColumn({
   onImageChange,
   editable = false,
 }: HeroTwoColumnProps) {
-  const [isEditingHeading, setIsEditingHeading] = useState(false);
-  const [isEditingSubtext, setIsEditingSubtext] = useState(false);
-  const [isEditingButton, setIsEditingButton] = useState(false);
-  const [tempHeading, setTempHeading] = useState(heading);
-  const [tempSubtext, setTempSubtext] = useState(subtext);
-  const [tempButtonText, setTempButtonText] = useState(buttonText);
+  const [currentImageUrl, setCurrentImageUrl] = useState(imageUrl || null);
 
-  // Sync local state with props when they change
+  // Sync image URL with props when it changes
   useEffect(() => {
-    setTempHeading(heading);
-  }, [heading]);
+    setCurrentImageUrl(imageUrl || null);
+  }, [imageUrl]);
 
-  useEffect(() => {
-    setTempSubtext(subtext);
-  }, [subtext]);
-
-  useEffect(() => {
-    setTempButtonText(buttonText);
-  }, [buttonText]);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && onImageChange) {
-      onImageChange(file);
+  const handleImageUpdate = (newImageUrl: string | null) => {
+    setCurrentImageUrl(newImageUrl);
+    // In a real implementation, this would save to the database
+    // For now, we'll just update local state
+    if (onImageChange && newImageUrl) {
+      // Convert URL back to file if needed
+      // This is a placeholder - actual implementation would handle URLs directly
+      // onImageChange(newImageUrl);
     }
   };
 
-  const handleHeadingSave = () => {
-    // Only trigger change if content actually changed
-    if (onHeadingChange && tempHeading !== heading) {
-      onHeadingChange(tempHeading);
+  const handleHeadingChange = (value: string) => {
+    if (onHeadingChange) {
+      onHeadingChange(value);
     }
-    setIsEditingHeading(false);
   };
 
-  const handleSubtextSave = () => {
-    // Only trigger change if content actually changed
-    if (onSubtextChange && tempSubtext !== subtext) {
-      onSubtextChange(tempSubtext);
+  const handleSubtextChange = (value: string) => {
+    if (onSubtextChange) {
+      onSubtextChange(value);
     }
-    setIsEditingSubtext(false);
   };
 
-  const handleButtonSave = () => {
-    // Only trigger change if content actually changed
-    if (onButtonTextChange && tempButtonText !== buttonText) {
-      onButtonTextChange(tempButtonText);
+  const handleButtonTextChange = (value: string) => {
+    if (onButtonTextChange) {
+      onButtonTextChange(value);
     }
-    setIsEditingButton(false);
   };
 
   return (
@@ -88,86 +73,49 @@ export function HeroTwoColumn({
           {/* Left Column - Text Content */}
           <div className="flex flex-col justify-center space-y-6 order-1 @[1000px]:order-1 text-center @[1000px]:text-left">
             <div className="space-y-4">
-              {isEditingHeading && editable ? (
-                <input
-                  type="text"
-                  value={tempHeading}
-                  onChange={(e) => setTempHeading(e.target.value)}
-                  onBlur={handleHeadingSave}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleHeadingSave();
-                    if (e.key === 'Escape') {
-                      setTempHeading(heading); // Reset to original
-                      setIsEditingHeading(false);
-                    }
-                  }}
-                  className="text-3xl font-bold tracking-tight text-foreground @[640px]:text-4xl @[768px]:text-5xl @[1280px]:text-6xl bg-transparent border-b-2 border-primary focus:outline-none w-full text-center @[1000px]:text-left"
-                  autoFocus
-                />
-              ) : (
-                <h1
-                  className={`text-3xl font-bold tracking-tight text-foreground @[640px]:text-4xl @[768px]:text-5xl @[1280px]:text-6xl ${
-                    editable ? 'cursor-pointer hover:opacity-80' : ''
-                  }`}
-                  onClick={() => editable && setIsEditingHeading(true)}
-                >
+              <EditableText
+                value={heading}
+                type="heading"
+                onUpdate={handleHeadingChange}
+                editable={editable}
+                placeholder="Enter heading..."
+                maxLength={100}
+              >
+                <h1 className="text-3xl font-bold tracking-tight text-foreground @[640px]:text-4xl @[768px]:text-5xl @[1280px]:text-6xl">
                   {heading}
                 </h1>
-              )}
+              </EditableText>
               
-              {isEditingSubtext && editable ? (
-                <textarea
-                  value={tempSubtext}
-                  onChange={(e) => setTempSubtext(e.target.value)}
-                  onBlur={handleSubtextSave}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      setTempSubtext(subtext); // Reset to original
-                      setIsEditingSubtext(false);
-                    }
-                  }}
-                  className="text-base @[640px]:text-lg text-muted-foreground bg-transparent border-b-2 border-primary focus:outline-none w-full resize-none text-center @[1000px]:text-left"
-                  rows={3}
-                  autoFocus
+              <EditableText
+                value={subtext}
+                type="paragraph"
+                onUpdate={handleSubtextChange}
+                editable={editable}
+                placeholder="Enter description..."
+                maxLength={500}
+                richText={true}
+              >
+                <SmartText
+                  content={subtext}
+                  as="p"
+                  className="text-base @[640px]:text-lg text-muted-foreground"
                 />
-              ) : (
-                <p
-                  className={`text-base @[640px]:text-lg text-muted-foreground ${
-                    editable ? 'cursor-pointer hover:opacity-80' : ''
-                  }`}
-                  onClick={() => editable && setIsEditingSubtext(true)}
-                >
-                  {subtext}
-                </p>
-              )}
+              </EditableText>
             </div>
             
             <div className="flex flex-col @[640px]:flex-row gap-4 justify-center @[1000px]:justify-start">
-              {isEditingButton && editable ? (
-                <input
-                  type="text"
-                  value={tempButtonText}
-                  onChange={(e) => setTempButtonText(e.target.value)}
-                  onBlur={handleButtonSave}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleButtonSave();
-                    if (e.key === 'Escape') {
-                      setTempButtonText(buttonText); // Reset to original
-                      setIsEditingButton(false);
-                    }
-                  }}
-                  className="px-4 py-2 bg-transparent border-b-2 border-primary focus:outline-none"
-                  autoFocus
-                />
-              ) : (
-                <Button
-                  size="lg"
-                  onClick={() => editable ? setIsEditingButton(true) : null}
-                  className={editable ? 'cursor-pointer' : ''}
-                >
+              <EditableText
+                value={buttonText}
+                type="button"
+                onUpdate={handleButtonTextChange}
+                editable={editable}
+                placeholder="Button text..."
+                maxLength={50}
+              >
+                <Button size="lg">
                   {buttonText}
                 </Button>
-              )}
+              </EditableText>
               
               <Button size="lg" variant="outline" className="text-foreground">
                 View on GitHub
@@ -177,42 +125,14 @@ export function HeroTwoColumn({
           
           {/* Right Column - Image */}
           <div className="flex items-center justify-center order-2 @[1000px]:order-2">
-            <div className="relative w-full aspect-[4/3] @[640px]:aspect-square @[1024px]:aspect-[4/3] max-w-md @[1024px]:max-w-none bg-muted rounded-lg overflow-hidden">
-              {imageUrl ? (
-                <Image
-                  src={imageUrl}
-                  alt={imageAlt}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  {/* Geometric shape placeholder similar to ShadcnBlocks */}
-                  <svg
-                    viewBox="0 0 200 200"
-                    className="w-32 h-32 @[640px]:w-40 @[640px]:h-40 @[1024px]:w-48 @[1024px]:h-48 text-muted-foreground"
-                    fill="currentColor"
-                  >
-                    <path d="M100 30 L170 70 L170 130 L100 170 L30 130 L30 70 Z" />
-                  </svg>
-                </div>
-              )}
-              
-              {editable && onImageChange && (
-                <label className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
-                  <div className="text-white text-center">
-                    <Upload className="w-8 h-8 mx-auto mb-2" />
-                    <span>Click to upload image</span>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </label>
-              )}
-            </div>
+            <EditableImage
+              src={currentImageUrl}
+              alt={imageAlt}
+              aspectRatio="4:3"
+              className="w-full max-w-md @[1024px]:max-w-none rounded-lg overflow-hidden"
+              onUpdate={handleImageUpdate}
+              editable={editable}
+            />
           </div>
         </div>
       </div>
