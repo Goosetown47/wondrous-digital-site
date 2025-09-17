@@ -119,6 +119,7 @@ describe('Content Interceptor', () => {
     it('should return null for non-existent path', () => {
       const tree = {
         type: 'div',
+        path: 'div',
         children: []
       } as ElementNode;
 
