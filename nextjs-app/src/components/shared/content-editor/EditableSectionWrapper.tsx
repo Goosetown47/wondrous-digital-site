@@ -6,6 +6,7 @@ import { getValueAtPath, setValueAtPath } from '@/lib/editable-field-detector';
 import type { EditableFieldConfig } from '@/lib/component-registry';
 import { EditableText } from './EditableText';
 import { EditableImage } from './EditableImage';
+import { useEditableContent } from '@/lib/with-editable-content';
 
 interface EditableSectionWrapperProps {
   /** Name of the component in the registry */
@@ -18,6 +19,8 @@ interface EditableSectionWrapperProps {
   onContentUpdate: (updates: Record<string, unknown>) => void;
   /** The component to render */
   children: ReactElement;
+  /** Use interceptor mode for automatic field detection (experimental) */
+  useInterceptor?: boolean;
 }
 
 /**
@@ -30,6 +33,7 @@ export function EditableSectionWrapper({
   editable,
   onContentUpdate,
   children,
+  useInterceptor = false,
 }: EditableSectionWrapperProps) {
   const [localContent, setLocalContent] = useState(content);
 
@@ -60,9 +64,26 @@ export function EditableSectionWrapper({
     [localContent, onContentUpdate]
   );
 
+  // If using interceptor mode, use the HOC approach
+  const interceptedContent = useEditableContent(
+    React.cloneElement(children, localContent),
+    componentName,
+    editable && useInterceptor,
+    onContentUpdate
+  );
+
   // If not editable or no field configs, render as-is
   if (!editable || editableFields.length === 0) {
     return React.cloneElement(children, content);
+  }
+
+  // If using interceptor mode, return the intercepted content
+  if (useInterceptor) {
+    return (
+      <div className="editable-section-wrapper relative">
+        {interceptedContent}
+      </div>
+    );
   }
 
   // Process the component to inject editable wrappers
