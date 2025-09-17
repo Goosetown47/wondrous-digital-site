@@ -7,6 +7,68 @@ export type ComponentTypeCategory = 'section' | 'navigation' | 'page' | 'theme';
 // Subcategory will be dynamic from database - using string type
 export type ComponentSubCategory = string;
 
+/**
+ * Types of editable fields
+ */
+export type EditableFieldType =
+  | 'text'        // Plain text (headings, labels)
+  | 'richText'    // Rich text with formatting
+  | 'image'       // Image with upload
+  | 'url'         // URL/link
+  | 'button'      // Button with text and link
+  | 'array'       // Array of items
+  | 'object'      // Nested object
+  | 'select'      // Dropdown selection
+  | 'boolean'     // Checkbox/toggle
+  | 'number';     // Numeric input
+
+/**
+ * Configuration for an editable field
+ */
+export interface EditableFieldConfig {
+  /** Path to the field in the content object (e.g., 'heading' or 'logo.src') */
+  path: string;
+
+  /** Type of the editable field */
+  type: EditableFieldType;
+
+  /** User-friendly label for the field */
+  label: string;
+
+  /** Optional description or help text */
+  description?: string;
+
+  /** Whether the field is required */
+  required?: boolean;
+
+  /** Placeholder text for inputs */
+  placeholder?: string;
+
+  /** Maximum length for text fields */
+  maxLength?: number;
+
+  /** Minimum value for number fields */
+  min?: number;
+
+  /** Maximum value for number fields */
+  max?: number;
+
+  /** Options for select fields */
+  options?: Array<{ label: string; value: string }>;
+
+  /** For array fields - configuration for each item */
+  itemFields?: EditableFieldConfig[];
+
+  /** For object fields - nested field configurations */
+  nestedFields?: EditableFieldConfig[];
+
+  /** Allowed file types for image fields */
+  allowedFormats?: string[];
+
+  /** Default value if not provided */
+  defaultValue?: unknown;
+}
+
 export interface ComponentRegistryEntry {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   component: ComponentType<any>;
@@ -20,6 +82,9 @@ export interface ComponentRegistryEntry {
   source?: 'shadcn' | 'aceternity' | 'expansions' | 'custom';
   dependencies?: string[];
   imports?: string[];
+
+  /** Configuration for editable fields - enables automatic editing */
+  editableFields?: EditableFieldConfig[];
 }
 
 interface RegisterOptions {

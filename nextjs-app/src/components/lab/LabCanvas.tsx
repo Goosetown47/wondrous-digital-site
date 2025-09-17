@@ -5,6 +5,7 @@ import { MultiSectionCanvas, type CanvasSection } from '@/components/shared/canv
 import { ComponentRegistry } from '@/lib/register-components';
 import { useLabStore, type LabSection } from '@/stores/labStore';
 import { ComponentSelectorModal } from './ComponentSelectorModal';
+import { EditableSectionWrapper } from '@/components/shared/content-editor';
 import type { CoreComponent } from '@/types/builder';
 import { getComponentCodeName } from '@/lib/component-name-mapping';
 
@@ -85,11 +86,34 @@ export function LabCanvas({ className = '' }: LabCanvasProps) {
 
     const Component = registryEntry.component;
 
-    // Prepare content based on component type
+    // Check if component has editable fields configuration
+    const hasEditableFields = registryEntry.editableFields && registryEntry.editableFields.length > 0;
+
+    // Handle content update
+    const handleContentUpdate = (updatedContent: Record<string, unknown>) => {
+      updateSection(section.id, { content: updatedContent });
+    };
+
+    // If component has editable fields, use the wrapper
+    if (hasEditableFields) {
+      return (
+        <EditableSectionWrapper
+          componentName={componentName}
+          content={section.content}
+          editable={true}
+          onContentUpdate={handleContentUpdate}
+        >
+          <Component {...section.content} />
+        </EditableSectionWrapper>
+      );
+    }
+
+    // Backward compatibility: Handle components without field configs (old way)
     let contentProps = section.content;
 
-    // Handle special component types
+    // Handle special component types that haven't migrated yet
     if (componentName === 'HeroTwoColumn') {
+      // HeroTwoColumn should use the new system, but keep as fallback
       contentProps = {
         ...section.content,
         editable: true,
@@ -107,7 +131,7 @@ export function LabCanvas({ className = '' }: LabCanvasProps) {
         })
       };
     } else if (componentName === 'Navbar2' || componentName === 'Footer2' || componentName === 'NavBar3') {
-      // Navigation components need editable props for logo editing
+      // Navigation components with partial editability
       contentProps = {
         ...section.content,
         editable: true,
@@ -122,7 +146,7 @@ export function LabCanvas({ className = '' }: LabCanvasProps) {
         })
       };
     } else {
-      // All other components also get editable prop
+      // All other components get basic editable prop
       contentProps = {
         ...section.content,
         editable: true

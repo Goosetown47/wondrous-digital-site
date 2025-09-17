@@ -4,6 +4,7 @@
  */
 
 import { ComponentRegistry } from './component-registry';
+import { generateEditableFields } from './editable-field-detector';
 import { Navbar2 } from '@/components/core/navigation/navbar2';
 import { Footer2 } from '@/components/core/navigation/footer2';
 import { HeroTwoColumn } from '@/components/sections/hero-two-column';
@@ -34,6 +35,8 @@ const defaultHeroContent = {
   subtext: "Build something amazing with our platform",
   buttonText: "Get Started",
   buttonLink: "#",
+  secondaryButtonText: "View on GitHub",
+  secondaryButtonLink: "#",
   imageUrl: ""
 };
 
@@ -54,7 +57,44 @@ export function registerAllComponents() {
     category: undefined, // Will be set from database type_id when selected
     defaultContent: defaultNavigationContent,
     description: 'Modern navigation bar with dropdown support',
-    source: 'shadcn'
+    source: 'shadcn',
+    // Navigation uses specialized editor, only non-menu fields are editable here
+    editableFields: [
+      {
+        path: 'logo.src',
+        type: 'image',
+        label: 'Logo Image',
+        description: 'Your brand logo',
+        allowedFormats: ['png', 'jpg', 'svg', 'webp'],
+      },
+      {
+        path: 'logo.alt',
+        type: 'text',
+        label: 'Logo Alt Text',
+        description: 'Alternative text for accessibility',
+        maxLength: 100,
+      },
+      {
+        path: 'logo.title',
+        type: 'text',
+        label: 'Brand Name',
+        description: 'Your company or brand name',
+        maxLength: 50,
+      },
+      {
+        path: 'auth.login.title',
+        type: 'text',
+        label: 'Login Button Text',
+        maxLength: 30,
+      },
+      {
+        path: 'auth.signup.title',
+        type: 'text',
+        label: 'Sign Up Button Text',
+        maxLength: 30,
+      },
+      // Menu structure handled by specialized navigation editor
+    ]
   });
 
   ComponentRegistry.register('Footer2', {
@@ -73,7 +113,43 @@ export function registerAllComponents() {
     category: undefined, // Will be set from database type_id when selected
     defaultContent: defaultHeroContent,
     description: 'Hero section with two column layout',
-    source: 'custom'
+    source: 'custom',
+    // Use automatic field detection with some overrides
+    editableFields: generateEditableFields(defaultHeroContent, [
+      {
+        path: 'heading',
+        type: 'text',
+        label: 'Main Heading',
+        maxLength: 100,
+        required: true,
+      },
+      {
+        path: 'subtext',
+        type: 'richText',
+        label: 'Description',
+        maxLength: 500,
+        description: 'Supporting text with rich formatting',
+      },
+      {
+        path: 'buttonText',
+        type: 'text', // Not 'button' since we're just editing the text
+        label: 'Button Label',
+        maxLength: 30,
+      },
+      {
+        path: 'secondaryButtonText',
+        type: 'text',
+        label: 'Secondary Button Label',
+        maxLength: 30,
+      },
+      {
+        path: 'imageUrl',
+        type: 'image',
+        label: 'Hero Image',
+        description: 'Featured image for the hero section',
+        allowedFormats: ['jpg', 'jpeg', 'png', 'webp'],
+      },
+    ])
   });
 
   // Add more components as you import them from shadcn

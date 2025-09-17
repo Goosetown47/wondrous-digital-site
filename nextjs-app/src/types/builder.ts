@@ -31,6 +31,15 @@ export interface CoreComponent {
   registered_by?: string;
   default_content?: Record<string, unknown>;
   type_id?: string;
+  editable_fields?: Array<{
+    path: string;
+    type: string;
+    label: string;
+    description?: string;
+    required?: boolean;
+    maxLength?: number;
+    [key: string]: unknown;
+  }>;
 }
 
 // Lab draft types

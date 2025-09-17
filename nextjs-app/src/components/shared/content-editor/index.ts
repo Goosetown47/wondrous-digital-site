@@ -6,3 +6,4 @@ export { EditableLogoImage } from './EditableLogoImage';
 export { EditableText, type TextType } from './EditableText';
 export { TextEditorModal } from './TextEditorModal';
 export { RichTextDisplay } from './RichTextDisplay';
+export { EditableSectionWrapper, useEditableFields } from './EditableSectionWrapper';

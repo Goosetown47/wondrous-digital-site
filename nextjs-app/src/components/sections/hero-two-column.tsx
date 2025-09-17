@@ -9,11 +9,13 @@ interface HeroTwoColumnProps {
   heading?: string;
   subtext?: string;
   buttonText?: string;
+  secondaryButtonText?: string;
   imageUrl?: string;
   imageAlt?: string;
   onHeadingChange?: (value: string) => void;
   onSubtextChange?: (value: string) => void;
   onButtonTextChange?: (value: string) => void;
+  onSecondaryButtonTextChange?: (value: string) => void;
   onImageChange?: (file: File) => void;
   editable?: boolean;
 }
@@ -22,11 +24,13 @@ export function HeroTwoColumn({
   heading = "Blocks Built With Shadcn & Tailwind",
   subtext = "Finely crafted components built with React, Tailwind and Shadcn UI. Developers can copy and paste these blocks directly into their project.",
   buttonText = "Discover all components",
+  secondaryButtonText = "View on GitHub",
   imageUrl,
   imageAlt = "Hero image",
   onHeadingChange,
   onSubtextChange,
   onButtonTextChange,
+  onSecondaryButtonTextChange,
   onImageChange,
   editable = false,
 }: HeroTwoColumnProps) {
@@ -63,6 +67,12 @@ export function HeroTwoColumn({
   const handleButtonTextChange = (value: string) => {
     if (onButtonTextChange) {
       onButtonTextChange(value);
+    }
+  };
+
+  const handleSecondaryButtonTextChange = (value: string) => {
+    if (onSecondaryButtonTextChange) {
+      onSecondaryButtonTextChange(value);
     }
   };
 
@@ -116,10 +126,19 @@ export function HeroTwoColumn({
                   {buttonText}
                 </Button>
               </EditableText>
-              
-              <Button size="lg" variant="outline" className="text-foreground">
-                View on GitHub
-              </Button>
+
+              <EditableText
+                value={secondaryButtonText}
+                type="button"
+                onUpdate={handleSecondaryButtonTextChange}
+                editable={editable}
+                placeholder="Secondary button text..."
+                maxLength={50}
+              >
+                <Button size="lg" variant="outline" className="text-foreground">
+                  {secondaryButtonText}
+                </Button>
+              </EditableText>
             </div>
           </div>
           

@@ -35,7 +35,7 @@ if (typeof window !== 'undefined') {
         .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '');
 
       // If config specifies no tags allowed, strip all HTML
-      if (config?.ALLOWED_TAGS && config.ALLOWED_TAGS.length === 0) {
+      if (config?.ALLOWED_TAGS && Array.isArray(config.ALLOWED_TAGS) && config.ALLOWED_TAGS.length === 0) {
         cleaned = cleaned.replace(/<[^>]+>/g, '');
       }
 
