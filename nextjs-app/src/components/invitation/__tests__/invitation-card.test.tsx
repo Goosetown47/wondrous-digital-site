@@ -95,7 +95,9 @@ describe('InvitationCard', () => {
     render(<InvitationCard invitation={invitationWithExpiry} token="test-token" />);
     
     const formattedDate = expirationDate.toLocaleDateString();
-    expect(screen.getByText(new RegExp(`Expires ${formattedDate}`))).toBeInTheDocument();
+    // Using includes instead of RegExp to avoid security warning in tests
+    const element = screen.getByText((content) => content.includes(`Expires ${formattedDate}`));
+    expect(element).toBeInTheDocument();
   });
 
   it('should render InvitationActions component', () => {

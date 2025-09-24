@@ -80,10 +80,7 @@ export function getPasswordStrengthMessage(password: string): string {
 }
 
 export function isValidEmail(email: string): boolean {
-  // More strict email validation regex
-  // Ensures proper format with valid characters and structure
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-  
+  // Email validation without complex regex to avoid ReDoS
   // Additional validation rules
   if (!email || email.length > 254) return false;
   if (email.startsWith('.') || email.endsWith('.')) return false;
@@ -91,7 +88,10 @@ export function isValidEmail(email: string): boolean {
   if (email.split('@').length !== 2) return false;
   
   const [localPart, domain] = email.split('@');
-  if (localPart.length > 64) return false;
+  if (localPart.length > 64 || localPart.length === 0) return false;
+  
+  // Check allowed characters in local part (simple regex)
+  if (!/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+$/.test(localPart)) return false;
   
   // Check domain has at least one dot (for TLD)
   if (!domain.includes('.')) return false;
@@ -101,5 +101,14 @@ export function isValidEmail(email: string): boolean {
   const tld = domainParts[domainParts.length - 1];
   if (tld.length < 2 || tld.length > 63) return false;
   
-  return emailRegex.test(email);
+  // Validate each domain part
+  for (const part of domainParts) {
+    if (!part || part.length > 63) return false;
+    // Domain parts should only contain alphanumeric and hyphens
+    if (!/^[a-zA-Z0-9-]+$/.test(part)) return false;
+    // Cannot start or end with hyphen
+    if (part.startsWith('-') || part.endsWith('-')) return false;
+  }
+  
+  return true;
 }

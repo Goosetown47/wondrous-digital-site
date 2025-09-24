@@ -14,7 +14,7 @@ export interface Section {
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-interface BuilderState {
+export interface BuilderState {
   // Current working sections (draft)
   sections: Section[];
   

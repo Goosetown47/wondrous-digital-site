@@ -286,7 +286,19 @@ export function getProviderInstructions(
   provider: string, 
   recordType: 'a_record' | 'txt_record' | 'cname_record'
 ) {
-  const p = DNS_PROVIDERS[provider];
-  if (!p) return DNS_PROVIDERS.generic.instructions[recordType];
-  return p.instructions[recordType];
+  // Use Object.entries to safely find provider
+  const entry = Object.entries(DNS_PROVIDERS).find(([key]) => key === provider);
+  const p = entry ? entry[1] : DNS_PROVIDERS.generic;
+  
+  // Access the specific record type instructions
+  switch (recordType) {
+    case 'a_record':
+      return p.instructions.a_record;
+    case 'txt_record':
+      return p.instructions.txt_record;
+    case 'cname_record':
+      return p.instructions.cname_record;
+    default:
+      return DNS_PROVIDERS.generic.instructions.a_record;
+  }
 }

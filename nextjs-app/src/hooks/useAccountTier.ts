@@ -102,7 +102,32 @@ export function useAccountTier() {
   };
   
   // Get limits for current tier (use unlimited if unlocked)
-  const limits = isUnlocked ? UNLIMITED_LIMITS : TIER_LIMITS[tier];
+  // Use switch to avoid bracket notation
+  let limits: TierLimits;
+  if (isUnlocked) {
+    limits = UNLIMITED_LIMITS;
+  } else {
+    switch (tier) {
+      case 'FREE':
+        limits = TIER_LIMITS.FREE;
+        break;
+      case 'BASIC':
+        limits = TIER_LIMITS.BASIC;
+        break;
+      case 'PRO':
+        limits = TIER_LIMITS.PRO;
+        break;
+      case 'SCALE':
+        limits = TIER_LIMITS.SCALE;
+        break;
+      case 'MAX':
+        limits = TIER_LIMITS.MAX;
+        break;
+      default:
+        limits = TIER_LIMITS.FREE;
+        break;
+    }
+  }
   
   // Override SEO tools if PERFORM addon is active (only if not already unlocked)
   const effectiveLimits: TierLimits = {
@@ -114,7 +139,9 @@ export function useAccountTier() {
    * Check if a specific feature is available for the current tier
    */
   const canUseFeature = (feature: keyof TierLimits): boolean => {
-    const value = effectiveLimits[feature];
+    // Use Object.entries to safely access feature value
+    const featureEntry = Object.entries(effectiveLimits).find(([key]) => key === feature);
+    const value = featureEntry ? featureEntry[1] : false;
     return typeof value === 'boolean' ? value : value !== 0;
   };
   
@@ -122,7 +149,45 @@ export function useAccountTier() {
    * Check if the current tier meets or exceeds a minimum tier requirement
    */
   const meetsMinimumTier = (minimumTier: TierName): boolean => {
-    return TIER_HIERARCHY[tier] >= TIER_HIERARCHY[minimumTier];
+    // Use switch to get hierarchy values
+    let currentHierarchy: number;
+    switch (tier) {
+      case 'FREE':
+        currentHierarchy = TIER_HIERARCHY.FREE;
+        break;
+      case 'PRO':
+        currentHierarchy = TIER_HIERARCHY.PRO;
+        break;
+      case 'SCALE':
+        currentHierarchy = TIER_HIERARCHY.SCALE;
+        break;
+      case 'MAX':
+        currentHierarchy = TIER_HIERARCHY.MAX;
+        break;
+      default:
+        currentHierarchy = 0;
+        break;
+    }
+    
+    let minimumHierarchy: number;
+    switch (minimumTier) {
+      case 'FREE':
+        minimumHierarchy = TIER_HIERARCHY.FREE;
+        break;
+      case 'PRO':
+        minimumHierarchy = TIER_HIERARCHY.PRO;
+        break;
+      case 'SCALE':
+        minimumHierarchy = TIER_HIERARCHY.SCALE;
+        break;
+      case 'MAX':
+        minimumHierarchy = TIER_HIERARCHY.MAX;
+        break;
+      default:
+        minimumHierarchy = 0;
+        break;
+    }
+    return currentHierarchy >= minimumHierarchy;
   };
   
   /**
@@ -132,7 +197,15 @@ export function useAccountTier() {
     resource: 'projects' | 'users',
     currentCount: number
   ): boolean => {
-    const limit = effectiveLimits[resource];
+    // Get limit for specific resource
+    let limit: number;
+    if (resource === 'projects') {
+      limit = effectiveLimits.projects;
+    } else if (resource === 'users') {
+      limit = effectiveLimits.users;
+    } else {
+      limit = 0;
+    }
     // Check if current count is below the limit
     return currentCount < limit;
   };
@@ -144,7 +217,15 @@ export function useAccountTier() {
     resource: 'projects' | 'users',
     currentCount: number
   ): number => {
-    const limit = effectiveLimits[resource];
+    // Get limit for specific resource
+    let limit: number;
+    if (resource === 'projects') {
+      limit = effectiveLimits.projects;
+    } else if (resource === 'users') {
+      limit = effectiveLimits.users;
+    } else {
+      limit = 0;
+    }
     return Math.max(0, limit - currentCount);
   };
   
@@ -155,8 +236,10 @@ export function useAccountTier() {
     // Find the minimum tier that has this feature
     const availableTiers = Object.entries(TIER_LIMITS)
       .filter(([, limits]) => {
-        const value = limits[feature];
-        return typeof value === 'boolean' ? value : value > 0;
+        // Use Object.entries to safely access feature value
+        const featureEntry = Object.entries(limits).find(([key]) => key === feature);
+        const value = featureEntry ? featureEntry[1] : undefined;
+        return typeof value === 'boolean' ? value : (typeof value === 'number' && value > 0);
       })
       .map(([tierName]) => tierName as TierName);
     
@@ -164,9 +247,47 @@ export function useAccountTier() {
       return 'This feature is not available in any tier.';
     }
     
-    const minimumTier = availableTiers.reduce((min, current) => 
-      TIER_HIERARCHY[current] < TIER_HIERARCHY[min] ? current : min
-    );
+    const minimumTier = availableTiers.reduce((min, current) => {
+      // Use switch to get hierarchy values
+      let currentHier: number;
+      switch (current) {
+        case 'FREE':
+          currentHier = TIER_HIERARCHY.FREE;
+          break;
+        case 'PRO':
+          currentHier = TIER_HIERARCHY.PRO;
+          break;
+        case 'SCALE':
+          currentHier = TIER_HIERARCHY.SCALE;
+          break;
+        case 'MAX':
+          currentHier = TIER_HIERARCHY.MAX;
+          break;
+        default:
+          currentHier = 999;
+          break;
+      }
+      
+      let minHier: number;
+      switch (min) {
+        case 'FREE':
+          minHier = TIER_HIERARCHY.FREE;
+          break;
+        case 'PRO':
+          minHier = TIER_HIERARCHY.PRO;
+          break;
+        case 'SCALE':
+          minHier = TIER_HIERARCHY.SCALE;
+          break;
+        case 'MAX':
+          minHier = TIER_HIERARCHY.MAX;
+          break;
+        default:
+          minHier = 999;
+          break;
+      }
+      return currentHier < minHier ? current : min;
+    });
     
     if (feature === 'seoTools' && !hasPerformAddon) {
       return 'Add the PERFORM SEO addon to access advanced SEO tools.';

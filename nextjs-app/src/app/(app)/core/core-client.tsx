@@ -2,23 +2,53 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useCoreComponents } from '@/hooks/useCoreComponents';
+import { useCoreComponents, useDeleteComponent } from '@/hooks/useCoreComponents';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, Code, Package, Loader2 } from 'lucide-react';
+import { Plus, Search, Code, Package, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 import type { ComponentFilters } from '@/lib/supabase/core-components';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function CoreClient() {
   const [filters, setFilters] = useState<ComponentFilters>({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; id: string; name: string }>({
+    open: false,
+    id: '',
+    name: ''
+  });
   const { data: components, isLoading } = useCoreComponents(filters);
+  const deleteComponent = useDeleteComponent();
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setFilters(prev => ({ ...prev, search: value }));
+  };
+
+  const handleDeleteClick = (componentId: string, componentName: string) => {
+    setDeleteDialog({ open: true, id: componentId, name: componentName });
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteComponent.mutateAsync(deleteDialog.id);
+      setDeleteDialog({ open: false, id: '', name: '' });
+    } catch (error) {
+      console.error('Failed to delete component:', error);
+      // Could add a toast notification here instead of alert
+    }
   };
 
   const handleTypeFilter = (type: string) => {
@@ -105,7 +135,7 @@ export default function CoreClient() {
             <Card key={component.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div>
+                  <div className="flex-1">
                     <CardTitle className="text-lg">{component.name}</CardTitle>
                     <CardDescription className="mt-1">
                       {component.type === 'component' ? (
@@ -116,7 +146,14 @@ export default function CoreClient() {
                       {component.type}
                     </CardDescription>
                   </div>
-                  <Badge variant="secondary">{component.source}</Badge>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge variant="secondary">{component.source}</Badge>
+                    {component.usage && component.usage.totalUsage > 0 && (
+                      <Badge variant="outline" className="text-xs">
+                        Used {component.usage.totalUsage}x
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -126,14 +163,20 @@ export default function CoreClient() {
                       Dependencies: {component.dependencies.length}
                     </div>
                   )}
+                  {component.usage && component.usage.totalUsage > 0 && (
+                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" />
+                      Used by {component.usage.draftCount} draft{component.usage.draftCount !== 1 ? 's' : ''}, {component.usage.libraryCount} library item{component.usage.libraryCount !== 1 ? 's' : ''}
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/core/${component.id}`}>
                         View Details
                       </Link>
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={(e) => {
                         e.preventDefault();
@@ -141,6 +184,16 @@ export default function CoreClient() {
                       }}
                     >
                       Copy Code
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteClick(component.id, component.name)}
+                      disabled={deleteComponent.isPending || (component.usage?.isInUse ?? false)}
+                      className="text-destructive hover:text-destructive disabled:opacity-50"
+                      title={component.usage?.isInUse ? 'Cannot delete: Component is in use' : 'Delete component'}
+                    >
+                      <Trash2 className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
@@ -161,6 +214,28 @@ export default function CoreClient() {
           </Button>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Component</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteDialog.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleteComponent.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteComponent.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

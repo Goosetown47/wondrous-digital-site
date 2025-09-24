@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { cookies } from 'next/headers';
 import { env } from '@/env.mjs';
 import { isAdminServer, isStaffServer } from '@/lib/permissions/server-checks';
+import { ensureComponentName } from '@/lib/services/naming-service';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -147,7 +148,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { name, type, content, version = 1, status = 'draft', metadata = {} } = body;
+    const { name, type, content, version = 1, status = 'draft', metadata = {}, changelog } = body;
 
     if (!name || !type || !content) {
       return NextResponse.json({ 
@@ -160,6 +161,9 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 [API/Lab] Creating lab draft with service role...');
 
+    // Ensure component_name is properly set in metadata
+    const finalMetadata = ensureComponentName(content, metadata, type);
+
     // Create the lab draft using service role
     const { data: newDraft, error: createError } = await serviceClient
       .from('lab_drafts')
@@ -169,7 +173,8 @@ export async function POST(request: NextRequest) {
         content,
         version,
         status,
-        metadata,
+        metadata: finalMetadata,
+        changelog,
         created_by: user.id
       })
       .select()

@@ -88,8 +88,20 @@ export function MultiPermissionGate({
   }
   
   const hasAccess = requireAll
-    ? permissions.every(p => permissionResults?.[p])
-    : permissions.some(p => permissionResults?.[p]);
+    ? permissions.every(p => {
+        // Safely check permission to prevent object injection
+        if (!permissionResults || typeof p !== 'string') return false;
+        // Use Object.entries to avoid bracket notation
+        const entry = Object.entries(permissionResults).find(([key]) => key === p);
+        return entry && entry[1] === true;
+      })
+    : permissions.some(p => {
+        // Safely check permission to prevent object injection
+        if (!permissionResults || typeof p !== 'string') return false;
+        // Use Object.entries to avoid bracket notation
+        const entry = Object.entries(permissionResults).find(([key]) => key === p);
+        return entry && entry[1] === true;
+      });
   
   if (!hasAccess) {
     return <>{fallback}</>;

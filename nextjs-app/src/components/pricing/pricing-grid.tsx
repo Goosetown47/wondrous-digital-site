@@ -21,7 +21,19 @@ export function PricingGrid({
     <div className="grid gap-8 md:grid-cols-3">
       {tiers.map((tier) => {
         const pricing = getPricesByTier(tier);
-        const features = TIER_FEATURES[tier];
+        // Get features without bracket notation to avoid object injection
+        let features = null;
+        switch (tier) {
+          case 'PRO':
+            features = TIER_FEATURES.PRO;
+            break;
+          case 'SCALE':
+            features = TIER_FEATURES.SCALE;
+            break;
+          case 'MAX':
+            features = TIER_FEATURES.MAX;
+            break;
+        }
         
         if (!pricing || !features) return null;
 

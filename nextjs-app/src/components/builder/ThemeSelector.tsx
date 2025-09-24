@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { Check, Palette, X } from 'lucide-react';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
+import { useState, useEffect } from 'react';
+import { Check, X } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
   SelectValue,
   SelectSeparator
 } from '@/components/ui/select';
@@ -36,6 +36,11 @@ export function ThemeSelector({ projectId, currentThemeId }: ThemeSelectorProps)
   const { setTheme, isApplying } = useProjectTheme(projectId, currentThemeId);
   const [selectedThemeId, setSelectedThemeId] = useState<string>(currentThemeId || 'none');
 
+  // Sync internal state when currentThemeId prop changes
+  useEffect(() => {
+    setSelectedThemeId(currentThemeId || 'none');
+  }, [currentThemeId]);
+
   const handleThemeChange = async (value: string) => {
     const themeId = value === 'none' ? null : value;
     setSelectedThemeId(value);
@@ -45,7 +50,6 @@ export function ThemeSelector({ projectId, currentThemeId }: ThemeSelectorProps)
   if (isLoading) {
     return (
       <div className="flex items-center gap-2">
-        <Palette className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">Loading themes...</span>
       </div>
     );
@@ -53,9 +57,8 @@ export function ThemeSelector({ projectId, currentThemeId }: ThemeSelectorProps)
 
   return (
     <div className="flex items-center gap-2">
-      <Palette className="h-4 w-4 text-muted-foreground" />
-      <Select 
-        value={selectedThemeId} 
+      <Select
+        value={selectedThemeId}
         onValueChange={handleThemeChange}
         disabled={isApplying}
       >

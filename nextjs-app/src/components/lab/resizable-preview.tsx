@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 
 interface ResizablePreviewProps {
   children: React.ReactNode;
+  className?: string;
   minWidth?: number;
   maxWidth?: number;
   presetWidth?: number | null;
@@ -14,7 +15,7 @@ interface ResizablePreviewProps {
 
 export function ResizablePreview({
   children,
-  // className,
+  className,
   minWidth = 320,
   maxWidth = 1400,
   // defaultWidth,
@@ -125,7 +126,8 @@ export function ResizablePreview({
         className={cn(
           "relative h-full transition-all container-type-inline-size",
           isResizing && "transition-none",
-          isDarkMode && "dark"
+          isDarkMode && "dark",
+          className
         )}
         style={{ 
           width: isResizing 
@@ -135,8 +137,11 @@ export function ResizablePreview({
               : '100%',
         }}
       >
-        {/* Inner Container with scroll */}
-        <div className="h-full w-full overflow-y-auto overflow-x-hidden">
+        {/* Inner Container - Apply theme class here to isolate it */}
+        <div className={cn(
+          "h-full w-full overflow-hidden",
+          "isolate" // Ensures theme doesn't leak to parent
+        )}>
           {children}
         </div>
         

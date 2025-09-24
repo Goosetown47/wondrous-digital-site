@@ -83,6 +83,11 @@ const config: Config = {
   		}
   	}
   },
-  plugins: [require('@tailwindcss/container-queries')],
+  plugins: [
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('@tailwindcss/typography'),
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('@tailwindcss/container-queries')
+  ],
 }
 export default config;

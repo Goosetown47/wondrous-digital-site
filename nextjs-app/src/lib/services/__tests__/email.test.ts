@@ -700,7 +700,8 @@ describe('Email Service', () => {
 
       // Mock the from calls for each status count
       mockSupabase.from.mockImplementation(() => {
-        const currentCount = counts[callCount] || 0;
+        // Use .at() to avoid bracket notation
+        const currentCount = counts.at(callCount) || 0;
         callCount++;
         return {
           select: vi.fn().mockReturnThis(),

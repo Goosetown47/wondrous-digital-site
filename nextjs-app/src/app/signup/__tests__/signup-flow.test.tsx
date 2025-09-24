@@ -33,16 +33,16 @@ vi.mock('@/components/ui/signup-stepper', () => ({
 
 // Mock sessionStorage
 const mockSessionStorage = {
-  store: {} as Record<string, string>,
-  getItem: vi.fn((key: string) => mockSessionStorage.store[key] || null),
+  store: new Map<string, string>(),
+  getItem: vi.fn((key: string) => mockSessionStorage.store.get(key) || null),
   setItem: vi.fn((key: string, value: string) => {
-    mockSessionStorage.store[key] = value;
+    mockSessionStorage.store.set(key, value);
   }),
   removeItem: vi.fn((key: string) => {
-    delete mockSessionStorage.store[key];
+    mockSessionStorage.store.delete(key);
   }),
   clear: vi.fn(() => {
-    mockSessionStorage.store = {};
+    mockSessionStorage.store.clear();
   }),
 };
 
@@ -66,7 +66,7 @@ describe('Signup Flow Navigation', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSessionStorage.store = {};
+    mockSessionStorage.store = new Map();
     
     mockRouter = {
       push: vi.fn(),
@@ -211,7 +211,7 @@ describe('Signup Flow Navigation', () => {
         expect(mockSessionStorage.setItem).toHaveBeenCalledWith('invitationToken', 'inv_token_123');
       }, { timeout: 100 });
       
-      expect(mockSessionStorage.store['invitationToken']).toBe('inv_token_123');
+      expect(mockSessionStorage.store.get('invitationToken')).toBe('inv_token_123');
     });
 
     it('should show loading state during submission', async () => {
@@ -336,7 +336,7 @@ describe('Signup Flow Navigation', () => {
         expect(mockSessionStorage.setItem).toHaveBeenCalledWith('invitationToken', 'inv_token_456');
       }, { timeout: 100 });
       
-      expect(mockSessionStorage.store['invitationToken']).toBe('inv_token_456');
+      expect(mockSessionStorage.store.get('invitationToken')).toBe('inv_token_456');
     });
 
     it('should pass invitation token to account creation', async () => {
@@ -353,7 +353,7 @@ describe('Signup Flow Navigation', () => {
         expect(mockSessionStorage.setItem).toHaveBeenCalledWith('invitationToken', 'inv_token_789');
       }, { timeout: 100 });
       
-      expect(mockSessionStorage.store['invitationToken']).toBe('inv_token_789');
+      expect(mockSessionStorage.store.get('invitationToken')).toBe('inv_token_789');
     });
   });
 

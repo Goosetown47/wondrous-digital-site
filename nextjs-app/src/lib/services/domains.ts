@@ -72,11 +72,29 @@ export function validateDomainFormat(domain: string): string | null {
   // Remove trailing slash
   domain = domain.replace(/\/$/, '');
   
-  // Basic domain validation
-  const domainRegex = /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
-  
-  if (!domainRegex.test(domain)) {
+  // Basic domain validation - avoiding regex to prevent ReDoS vulnerability
+  if (!isValidDomain(domain)) {
     return 'Invalid domain format';
+  }
+  
+  // Helper function to validate domain
+  function isValidDomain(domain: string): boolean {
+    if (!domain || domain.length > 253) return false;
+    
+    const parts = domain.split('.');
+    if (parts.length < 2) return false;
+    
+    for (const part of parts) {
+      if (!part || part.length > 63) return false;
+      if (!/^[a-zA-Z0-9]/.test(part)) return false;
+      if (!/[a-zA-Z0-9]$/.test(part)) return false;
+      if (!/^[a-zA-Z0-9-]+$/.test(part)) return false;
+    }
+    
+    const tld = parts[parts.length - 1];
+    if (!/^[a-zA-Z]{2,}$/.test(tld)) return false;
+    
+    return true;
   }
   
   // Check for reserved domains

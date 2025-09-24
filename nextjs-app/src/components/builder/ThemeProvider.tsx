@@ -11,11 +11,24 @@ interface ThemeProviderProps {
   className?: string;
 }
 
-export function ThemeProvider({ 
-  theme, 
+// List of known color variable names
+const colorKeys = [
+  'background', 'foreground',
+  'primary', 'primary-foreground',
+  'secondary', 'secondary-foreground',
+  'accent', 'accent-foreground',
+  'muted', 'muted-foreground',
+  'card', 'card-foreground',
+  'popover', 'popover-foreground',
+  'destructive', 'destructive-foreground',
+  'border', 'input', 'ring'
+];
+
+export function ThemeProvider({
+  theme,
   overrides,
   children,
-  className 
+  className
 }: ThemeProviderProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -23,7 +36,7 @@ export function ThemeProvider({
     if (!containerRef.current) return;
 
     const container = containerRef.current;
-    
+
     // Clear any existing theme variables
     const existingVars = Array.from(container.style.cssText.matchAll(/--[\w-]+:/g));
     existingVars.forEach(match => {
@@ -33,17 +46,32 @@ export function ThemeProvider({
 
     if (!theme?.variables) return;
 
-    // Apply theme colors
-    if (theme.variables.colors) {
-      Object.entries(theme.variables.colors).forEach(([key, value]) => {
-        container.style.setProperty(`--${key}`, value as string);
+    // Handle both nested and flat color structures
+    // First check if colors are nested under 'colors' property
+    const colorVars = theme.variables.colors || theme.variables;
+
+    // Apply color variables
+    if (colorVars) {
+      Object.entries(colorVars).forEach(([key, value]) => {
+        // Only apply if it's a known color variable
+        if (colorKeys.includes(key) && typeof value === 'string') {
+          container.style.setProperty(`--${key}`, value);
+        }
       });
     }
 
-    // Apply other theme variables
+    // Apply non-color theme variables (like radius)
     if (theme.variables.radius) {
       container.style.setProperty('--radius', theme.variables.radius as string);
     }
+
+    // Apply any other direct variables that aren't colors
+    Object.entries(theme.variables).forEach(([key, value]) => {
+      // Skip 'colors' object and already processed color keys
+      if (key !== 'colors' && !colorKeys.includes(key) && key !== 'radius' && typeof value === 'string') {
+        container.style.setProperty(`--${key}`, value);
+      }
+    });
 
     // Apply any overrides
     if (overrides) {
@@ -57,16 +85,32 @@ export function ThemeProvider({
     // Cleanup function
     return () => {
       if (!container) return;
-      
+
       // Remove all theme variables
-      if (theme.variables.colors) {
-        Object.keys(theme.variables.colors).forEach(key => {
-          container.style.removeProperty(`--${key}`);
+      const colorVars = theme.variables.colors || theme.variables;
+
+      // Remove color variables
+      if (colorVars) {
+        Object.keys(colorVars).forEach(key => {
+          if (colorKeys.includes(key)) {
+            container.style.removeProperty(`--${key}`);
+          }
         });
       }
+
+      // Remove radius
       if (theme.variables.radius) {
         container.style.removeProperty('--radius');
       }
+
+      // Remove any other direct variables
+      Object.keys(theme.variables).forEach(key => {
+        if (key !== 'colors' && !colorKeys.includes(key) && key !== 'radius') {
+          container.style.removeProperty(`--${key}`);
+        }
+      });
+
+      // Remove overrides
       if (overrides) {
         Object.keys(overrides).forEach(key => {
           container.style.removeProperty(`--${key}`);

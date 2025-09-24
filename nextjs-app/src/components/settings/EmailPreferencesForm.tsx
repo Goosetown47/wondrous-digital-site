@@ -69,6 +69,12 @@ export function EmailPreferencesForm() {
   const handleToggle = (key: keyof Omit<EmailPreferences, 'user_id' | 'created_at' | 'updated_at'>, value: boolean) => {
     if (!localPreferences) return;
 
+    // Validate key exists in localPreferences to prevent object injection
+    if (!Object.prototype.hasOwnProperty.call(localPreferences, key)) {
+      console.warn('Invalid preference key:', key);
+      return;
+    }
+
     const newPreferences = { ...localPreferences, [key]: value };
     setLocalPreferences(newPreferences);
 
@@ -197,7 +203,11 @@ export function EmailPreferencesForm() {
                   </Label>
                   <Switch
                     id={category.key}
-                    checked={localPreferences[category.key]}
+                    checked={
+                      localPreferences && Object.prototype.hasOwnProperty.call(localPreferences, category.key)
+                        ? localPreferences[category.key]
+                        : false
+                    }
                     onCheckedChange={(value) => handleToggle(category.key, value)}
                     disabled={category.required || updatePreferences.isPending}
                   />

@@ -96,10 +96,16 @@ export function useHasPermissions(permissions: (Permission | string)[]) {
     queryKey: ['has-permissions', user?.id, currentAccount?.id, ...permissions],
     queryFn: async () => {
       if (!user) {
-        return permissions.reduce((acc, permission) => {
-          acc[permission] = false;
-          return acc;
-        }, {} as Record<string, boolean>);
+        const results: Record<string, boolean> = {};
+        for (const permission of permissions) {
+          Object.defineProperty(results, permission, {
+            value: false,
+            writable: true,
+            enumerable: true,
+            configurable: true
+          });
+        }
+        return results;
       }
       
       // If no current account, check if user is admin/staff
@@ -113,16 +119,28 @@ export function useHasPermissions(permissions: (Permission | string)[]) {
           .limit(1);
           
         const hasAccess = !!(data && data.length > 0);
-        return permissions.reduce((acc, permission) => {
-          acc[permission] = hasAccess;
-          return acc;
-        }, {} as Record<string, boolean>);
+        const results: Record<string, boolean> = {};
+        for (const permission of permissions) {
+          Object.defineProperty(results, permission, {
+            value: hasAccess,
+            writable: true,
+            enumerable: true,
+            configurable: true
+          });
+        }
+        return results;
       }
       
       const results: Record<string, boolean> = {};
       
       for (const permission of permissions) {
-        results[permission] = await hasPermission(user.id, currentAccount.id, permission);
+        const hasPerms = await hasPermission(user.id, currentAccount.id, permission);
+        Object.defineProperty(results, permission, {
+          value: hasPerms,
+          writable: true,
+          enumerable: true,
+          configurable: true
+        });
       }
       
       return results;

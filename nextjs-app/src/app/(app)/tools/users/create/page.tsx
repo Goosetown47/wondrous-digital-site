@@ -90,6 +90,7 @@ export default function CreateUserPage() {
   // Generate random password
   const generatePassword = () => {
     const length = 16;
+    // eslint-disable-next-line no-secrets/no-secrets -- This is a character set for password generation, not a secret
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
     let password = '';
     for (let i = 0; i < length; i++) {

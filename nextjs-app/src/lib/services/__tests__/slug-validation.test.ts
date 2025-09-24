@@ -339,8 +339,11 @@ describe('Slug Validation Service', () => {
 
       expectedCategories.forEach(category => {
         expect(categories).toHaveProperty(category);
-        expect(Array.isArray(categories[category])).toBe(true);
-        expect(categories[category].length).toBeGreaterThan(0);
+        // Use Object.entries to safely access category
+        const entry = Object.entries(categories).find(([key]) => key === category);
+        expect(entry).toBeDefined();
+        expect(Array.isArray(entry?.[1])).toBe(true);
+        expect(entry?.[1].length).toBeGreaterThan(0);
       });
     });
   });

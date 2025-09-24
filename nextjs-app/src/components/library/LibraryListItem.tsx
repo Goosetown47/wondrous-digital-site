@@ -46,7 +46,10 @@ export function LibraryListItem({ item }: LibraryListItemProps) {
   const deleteMutation = useDeleteLibraryItem();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const Icon = typeIcons[item.type];
+  // Validate type exists to prevent object injection
+  const Icon = Object.prototype.hasOwnProperty.call(typeIcons, item.type) 
+    ? typeIcons[item.type as keyof typeof typeIcons]
+    : Layout; // fallback icon
 
   const handlePublishToggle = () => {
     publishMutation.mutate({ id: item.id, published: !item.published });
