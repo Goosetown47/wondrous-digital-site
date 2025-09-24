@@ -160,7 +160,7 @@ const Navbar2 = ({
     <SectionWrapper noPadding className="">
       <div className="w-full">
         {/* Desktop Menu */}
-        <nav className="hidden justify-between @[768px]:flex py-4">
+        <nav className="hidden justify-between md:flex py-4">
           {/* Logo */}
           <a
             href={editable ? undefined : logo.url}
@@ -201,7 +201,7 @@ const Navbar2 = ({
         </nav>
 
         {/* Mobile Menu */}
-        <div className="block @[768px]:hidden py-4">
+        <div className="block md:hidden py-4">
           <div className="flex items-center justify-between">
             <a
               href={editable ? undefined : logo.url}
@@ -218,7 +218,7 @@ const Navbar2 = ({
                 editable={editable}
                 showFallback={true}
               />
-              <span className="text-lg font-semibold tracking-tighter @[768px]:hidden">
+              <span className="text-lg font-semibold tracking-tighter md:hidden">
                 {logo.title}
               </span>
             </a>

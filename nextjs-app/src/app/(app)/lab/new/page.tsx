@@ -68,12 +68,11 @@ export default function NewDraftPage() {
   const getInitialContent = (type: string): SectionContent | PageContent | SiteContent | ThemeVariables => {
     switch (type) {
       case 'section': {
-        const sectionContent: SectionContent = {
-          components: [],
-          layout: {
-            container: true,
-            spacing: 'default',
-          },
+        // Return multi-section format with empty sections array
+        // This ensures the lab editor starts with no pre-populated components
+        const sectionContent: PageContent = {
+          sections: [],
+          metadata: {}
         };
         return sectionContent;
       }

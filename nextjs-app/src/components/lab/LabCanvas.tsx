@@ -7,13 +7,16 @@ import { useLabStore, type LabSection } from '@/stores/labStore';
 import { ComponentSelectorModal } from './ComponentSelectorModal';
 import { EditableSectionWrapper } from '@/components/shared/content-editor';
 import type { CoreComponent } from '@/types/builder';
-import { getComponentCodeName } from '@/lib/component-name-mapping';
+import { getCodeName } from '@/lib/services/naming-service';
+import { IframePreview } from '@/components/shared/preview/IframePreview';
+import type { Theme } from '@/types/builder';
 
 interface LabCanvasProps {
   className?: string;
+  theme?: Theme | null;
 }
 
-export function LabCanvas({ className = '' }: LabCanvasProps) {
+export function LabCanvas({ className = '', theme }: LabCanvasProps) {
   const {
     sections,
     selectedSectionId,
@@ -36,19 +39,21 @@ export function LabCanvas({ className = '' }: LabCanvasProps) {
 
   // Handle component selection from modal
   const handleSelectComponent = useCallback((component: CoreComponent) => {
-    // Get the actual component code name from the display name
-    const componentCodeName = component.metadata?.component_code as string ||
-                            getComponentCodeName(component.name);
+    // Use code_name field if available (for new components), fallback to naming service
+    const componentCodeName = component.code_name ||
+                            component.metadata?.component_code as string ||
+                            getCodeName(component.name);
 
     const newSection = {
       id: `section-${Date.now()}`,
-      component_name: componentCodeName, // Use the code name, not display name
+      component_name: componentCodeName, // Use the code name for registry lookup
       content: component.default_content || {},
       order: insertIndex ?? sections.length,
       metadata: {
         component_type: component.type,
         component_source: component.source,
-        display_name: component.name // Keep the display name for UI
+        display_name: component.name, // Keep the display name for UI
+        component_name: componentCodeName // Also store in metadata for lab_drafts table
       }
     };
 
@@ -70,7 +75,7 @@ export function LabCanvas({ className = '' }: LabCanvasProps) {
     // If the component isn't found, try mapping from display name
     let registryEntry = ComponentRegistry.get(componentName);
     if (!registryEntry && section.component_name) {
-      componentName = getComponentCodeName(section.component_name);
+      componentName = getCodeName(section.component_name);
       registryEntry = ComponentRegistry.get(componentName);
     }
 
@@ -179,23 +184,25 @@ export function LabCanvas({ className = '' }: LabCanvasProps) {
 
   return (
     <>
-      <div data-lab-canvas>
-        <MultiSectionCanvas
-          sections={sections as CanvasSection[]}
-          selectedSectionId={selectedSectionId}
-          onSectionSelect={setSelectedSection}
-          onSectionMove={moveSection}
-          onSectionDelete={removeSection}
-          onSectionSettings={handleSectionSettings}
-          onAddSection={handleAddSection}
-          onReorder={(newSections) => reorderSections(newSections as LabSection[])}
-          renderSection={renderSection}
-          emptyStateMessage="No sections in this draft"
-          emptyStateDescription="Click 'Add Section' in the header to add your first section"
-          showAddButtons={false} // Removed dividers between sections
-          enableDragReorder={true}
-          className={className}
-        />
+      <div data-lab-canvas className={className}>
+        <IframePreview className="w-full" theme={theme}>
+          <MultiSectionCanvas
+            sections={sections as CanvasSection[]}
+            selectedSectionId={selectedSectionId}
+            onSectionSelect={setSelectedSection}
+            onSectionMove={moveSection}
+            onSectionDelete={removeSection}
+            onSectionSettings={handleSectionSettings}
+            onAddSection={handleAddSection}
+            onReorder={(newSections) => reorderSections(newSections as LabSection[])}
+            renderSection={renderSection}
+            emptyStateMessage="No sections in this draft"
+            emptyStateDescription="Click 'Add Section' in the header to add your first section"
+            showAddButtons={false} // Removed dividers between sections
+            enableDragReorder={true}
+            className=""
+          />
+        </IframePreview>
       </div>
 
       <ComponentSelectorModal

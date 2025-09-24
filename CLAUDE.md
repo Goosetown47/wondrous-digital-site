@@ -7,128 +7,85 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **Next.js 15 multi-tenant website builder platform**. All active development is in the `/nextjs-app/` directory. The legacy React/Vite app exists but is not in use.
 
-**Production Version:** v0.1.5 
-**Development Version:** v0.1.6 
+**Production Version:** v0.1.6 
+**Development Version:** v0.1.7 
 **Deployment Branch:** `nextjs-pagebuilder-core` (NOT master/main!)
 
 
 ## 📋 Essential Reading
 
-**IMPORTANT**: Before making any code changes, read these documents in `/nextjs-app/docs/`
-- UNDER NO CIRCUMSTANCES should you use agents.
+**IMPORTANT**: Before making any code changes, read these documents:
+- @docs/PRINCIPLES.md - Learn about our most important principles
+- @docs/PROCESS.md - Learn about our process
+- @docs/CODE-CHECKLIST.md - Learn about our code standards
+- @docs/Release_Notes/v#.#.#.md - Find the latest release notes & log 
 
 
-### CORE PRINCIPLES
+## PROCESS OVERVIEW
 
-#### SED
-Never use sed commands. They always cause a lot of problems.
+### Overview
+This system is designed to maintain a searchable system of "live" documents based at the feature/system/bug level that we can use as reference or to build on when we're working on our application.
 
-#### YAGNI (You Aren't Gonna Need It)
-Avoid building functionality on speculation. Implement features only when they are needed, not when you anticipate they might be useful in the future.
+We manage our architecture, systems, features, and bugs as individual markdown files. 
+- Each file contains everything you need to know about that particular item.
+  - Overview
+  - Tasks (In Progress, Planned, Completed)
+  - Technical Documentation: Covers how the system works for future reference
+  - Log: Everything we do, we should create a log, titled with the date (day, month, year) and a list of what we did.
 
-#### KISS (Keep It Simple, Stupid)
-Simplicity should be a key goal in design. Choose straightforward solutions over complex ones whenever possible. Simple solutions are easier to understand, maintain, and debug.
+#### Document Formatting
 
-#### Design Principles
-- Dependency Inversion: High-level modules should not depend on low-level modules. Both should depend on abstractions.
-- Open/Closed Principle: Software entities should be open for extension but closed for modification.
-- Single Responsibility: Each function, class, and module should have one clear purpose.
-- Fail Fast: Check for potential errors early and raise exceptions immediately when issues occur.
+  **Titles**
+  When creating a document use the following:
+  - Architecture: `ARCHITECTURE_Title_Case_Name.md` 
+  - System: `SYSTEM_Title_Case_Name.md`
+  - Feature: `Title_Case_Name.md`
+  - Bug: `BUG_Title_Case_Name.md`
 
-#### Updating Documents
-- ONLY update the ACTIVE-SPRINT.md file during development. The user will maintain BACKLOG and STATUS-LOG.
+### @docs/Backlog/
+- Things we haven't worked on yet go into this folder. 
+- We use the @docs/Templates/Feature_Doc.md template to structure each file.
+- We pull features from here and place them into our @docs/In_Progress/ folder to work on them for the sprint
 
-#### File and Function Limits
-- Never create a file longer than 500 lines of code. If approaching this limit, refactor by splitting into modules.
-- Functions should be under 50 lines with a single, clear responsibility.
-- Classes should be under 100 lines and represent a single concept or entity.
-- Organize code into clearly separated modules, grouped by feature or responsibility.
-- Line length should be max 100 characters
+### @docs/In_Progress/
+- These are the things we're currently working on in the sprint.
+- Can pull from @docs/Tech_Docs (which is completed features, that need more work) or @docs/Backlog/ to bring in new features.
+- Found Work: Create a new file for the system, feature, or bug and figure out what to do with it (put it in the Backlog folder to work on it later, or keep it in the In_Progress folder to get to it eventually)
 
+### @docs/Tech_Docs/ 
+- This is where all completed features, systems, and bugs go when we're done with them.
+- We can continue to work on them, by bringing them back into the In_Progress folder.
+- When we need to learn about how something works, this should be the first folder we look in.
+- Serves as technical documentation for the whole project.
 
-## DOCUMENTATION
-
-### Code Documentation
-- Every module should have a docstring explaining its purpose
-- Complex logic should have inline comments with # Reason: prefix
-- Keep README.md updated with setup instructions and examples
-- Maintain CHANGELOG.md for version history
-
-### CONTEXT DOCS
-**[PRD Design & Build System](./nextjs-app/docs/PRD%20Design%20%26%20Build%20System.md)** - Product vision, architecture, and implementation phases
-**[STARTUP-PROMPT.md](./nextjs-app/docs/prompts/STARTUP-PROMPT.md)** - Quick context for new development sessions
-
-### DEVELOPMENT DOCS
-1. **[CODE-CHECKLIST.md](./nextjs-app/docs/OPERATIONS/CODE-CHECKLIST.md)** - This document serves as a **MANDATORY** checklist that must be followed for every feature, fix, or code change. It was created after spending multiple days fixing 452 TypeScript errors, 304+ ESLint errors, and numerous build/deployment issues.
-2. **[DEV-LIFECYCLE.md](./nextjs-app/docs/DEV-LIFECYCLE.md)** - This is our development lifecycle. This is how we process the items in our active sprint. These steps are **MANDATORY** to complete before a sprint can be finished. Includes three process modes: Full Feature Mode (with TDD), Fast Track Mode (bug fixes), and Emergency Mode.
-3. **[DEV-TOOLS.md](./nextjs-app/docs/OPERATIONS/DEV-TOOLS.md)** - This document outlines what our platform is, what tools are available, and a guide for what to use, when, and how. It should contain every single command, and Claude user stories on when to use what, mapped to each part of our DEV-LIFECYCLE.
+### @docs/Release_Notes/v#.#.#.md
+- We keep a record of the things we work on and the release notes.
+- This is how we identify what major epics we're working on.
+- Intended to be very succinct. Details go in each feature file.
 
 
-### OPERATIONAL DOCS
-#### We are using 4 documents to manage our tasks, in a modified agile development process.
-1. **[BACKLOG] (./nextjs-app/docs/BACKLOG.md)** - This is our full list of tasks and things we pull from into our active-sprint. Whenever we have new things to add we put them here. This is arranged in priority sections P1, P2, P Low.
-2. **[ACTIVE-SPRINT] (./nextjs-app/docs/ACTIVE-SPRINT.md)** - We pull from our backlog document into our ACTIVE_SPRINT, which maps to a release number. 
-3. **[STATUS-LOG] (./nextjs-app/docs/STATUS-LOG.md)** - This is an ongoing log of everything we do across the application, from bug fixes to whatever. The user will update this as we close sprints. Do not update this yourself unless prompted.
-4. **[RELEASE NOTES] (.nextjs-app/docs/Release_Notes/)** - This is where we create a release notes for each release. 
-  **Release Notes Format**
-  Identify which version this is and set up a “Release Notes” document add to Release_Notes folder.
-    1. Identify which versions dev is on, which version production is on. The Release will be what we are deploying to production.
-    2. This will have a list of features added, bugs fixed, etc. 
-    3. It should be in a “customer facing” format that non technical people can read and understand. It will be public facing information. 
-    4. It should NOT contain any critical or sensitive information. Just new features and bug fixes.
+## PROCESS
+
+### SPRINT Planning
+1. User will create a list of things to work on in a Release file.
+2. User will move items from @docs/Backlog/ into @docs/In_Progress
+3. User will create any missing documents for the sprint
+4. Everything should have its own file.
+
+### SPRINT Start Development
+1. CLAUDE checks our Release file for an overview of what we're working on
+2. CLAUDE finds and reads files in @docs/In_Progress to ensure everything matches
+3. CLAUDE asks user to start server on port 3000 (waits for confirmation)
+4. CLAUDE follows @docs/PROCESS.md checklist
+
+### SPRINT Complete Development
+1. We deploy to staging to test
+2. Once tested and working, we merge with PROD.
+3. Have user apply applicable migrations to PROD.
+4. Assist user by writing Release Notes in release file.
 
 
 ## ---------------------------------------------- ##
-# Sprint Process Guide (for reference)
-
-## Sprint Planning (Start of Sprint)
-
-  1. [User will] Review BACKLOG.md → Pull priority items into ACTIVE-SPRINT.md
-  2. [User will] Set version number → Decide scope (major.minor.patch)
-  3. [User will] Move packets → Cut H4 sections from BACKLOG to ACTIVE-SPRINT
-  4. [User will] Order packets → Arrange by priority/dependency
-
-
-## During Sprint Execution
-
-### Per Packet Workflow:
-
-  1. Follow DEV-LIFECYCLE.md → Full/Fast Track/Emergency mode per packet
-    - First verify with user what dev mode each packet should use.
-    - Full Feature Mode: TDD approach with RED-GREEN-REFACTOR cycle
-    - Fast Track Mode: For bug fixes and small improvements
-    - Emergency Mode: For critical production issues
-    - ACTIVE SPRINT → Write in tasks from our LIFECYCLE process as part of the packet tasks.
-  2. Update ACTIVE-SPRINT.md → Log progress after each packet
-  3. Check off tasks → Mark complete in ACTIVE-SPRINT.md
-  4. Complete PACKET requires all features tested on DEV, deploy to PROD before next packet
-  5. [User will] Move to Sprint Backlog → When packet done, grab next
-
-### Daily Flow:
-
-  - Start: Check Current Focus in ACTIVE-SPRINT.md
-  - Work: Follow DEV-LIFECYCLE for that packet
-  - Discover: Add found issues to appropriate section
-  - End: Update ACTIVE-SPRINT with progress
-
-### Sprint Completion
-
-  1. All packets done → Verify all tasks checked
-  2. Create Release Notes → /docs/Release_Notes/v0.1.1.md
-  3. [User will] Archive sprint content → Copy ACTIVE-SPRINT to STATUS-LOG
-  4. [User will] Clear ACTIVE-SPRINT.md → Reset for next sprint
-  5. [User will] Update version numbers → Production/Development in all docs
-
-
-## Key Rules
-
-  - COMPLETE DEV-LIFECYCLE per packet before moving on
-  - DOCUMENT found work immediately
-  - NEVER skip DEV-LIFECYCLE steps
-  - Always use CODE-CHECKLIST
-
-## ---------------------------------------------- ##
-
 
 
 # 🏗️ Architecture Overview
@@ -163,17 +120,55 @@ Feature Branch → staging branch → nextjs-pagebuilder-core
 
 ## 💻 Development Commands
 
+
+### CRITICAL: Preventing Port Conflicts
+- **NEVER** start servers on ports 3001, 3002 (corrupts `.next/routes-manifest`)
+- Server runs on port 3000 ONLY
+- Choose either direct method (`npm run dev`) OR PM2 method - don't mix them
+
 **IMPORTANT**: Always work in the `/nextjs-app/` directory!
 
 ```bash
 cd nextjs-app
 ```
 
-### Development Server
+### Development Server (Two Methods)
+
+#### Method 1: Direct Development (Recommended for Active Development)
 ```bash
-# Start development server
+# Start development server with live logs in terminal
 npm run dev
 
+# Stop with Ctrl+C
+# Restart by stopping (Ctrl+C) and running npm run dev again
+```
+**Best for:** Active development when you want to see logs immediately in terminal
+
+#### Method 2: PM2 Background Process (Optional)
+```bash
+# Start as background daemon
+npm run pm2:start
+
+# Stop server
+npm run pm2:stop
+
+# Restart server
+npm run pm2:restart
+
+# View logs
+npm run pm2:logs
+
+# Check status
+npm run pm2:status
+```
+**Best for:** Running server in background while using terminal for other tasks
+
+### When Server Needs Restart:
+- **If using direct method:** Stop with Ctrl+C and run `npm run dev` again
+- **If using PM2:** Run `npm run pm2:restart`
+
+### Other Commands
+```bash
 # Build for production
 npm run build
 
@@ -184,43 +179,19 @@ npm run lint
 npm run preview
 ```
 
-### PM2 Commands (Recommended)
-```bash
-# Start as background daemon
-npm run dev:start
-
-# Stop server
-npm run dev:stop
-
-# Restart server
-npm run dev:restart
-
-# View logs
-npm run dev:logs
-
-# Check status
-npm run dev:status
-```
-
-## ⚠️ Development Server Management
-
-### CRITICAL: Preventing Port Conflicts
-- **ALWAYS** check server status first: `npm run dev:status`
-- **NEVER** start servers on ports 3001, 3002 (corrupts `.next/routes-manifest`)
-- **ONLY** use PM2 commands for server management
-- Server runs on port 3000 ONLY
-
-### When Server Needs Restart:
-1. Claude asks: "Please restart the server by running: `npm run dev:restart`"
-2. User runs command in their terminal
-3. Claude verifies restart succeeded
-
 ### If Routes Manifest Corrupted:
 ```bash
-npm run dev:stop
+# If using PM2:
+npm run pm2:stop
 rm -rf .next
-npm run dev:start
+npm run pm2:start
+
+# If using direct method:
+# Stop server with Ctrl+C, then:
+rm -rf .next
+npm run dev
 ```
+
 
 # 🗄️ Database Management
 
@@ -285,39 +256,6 @@ YYYYMMDDHHMMSS_descriptive_name.sql
   - `NEXT_PUBLIC_SUPABASE_URL=https://bpdhbxvsguklkbusqtke.supabase.co`
   - Database Password: Controlled by user
 
-## 🎨 Current Implementation
-
-See /nextjs-app/docs/MASTER-TASK-LIST.MD 
-
-## 🧪 Test-Driven Development (TDD)
-
-### RED-GREEN-REFACTOR Cycle
-1. **RED**: Write failing tests first
-2. **GREEN**: Write minimal code to pass tests
-3. **REFACTOR**: Improve code while keeping tests green
-
-### Coverage Requirements
-- **Critical Paths (100% Required)**:
-  - `/api/stripe/*` - All payment routes
-  - `/lib/services/billing-*` - Billing services  
-  - `/lib/permissions/*` - Permission checks
-  - `/lib/supabase/auth/*` - Authentication
-- **Overall Target**: 85% minimum, 90% goal
-- **New Code**: Must not decrease coverage
-
-### Test Commands
-```bash
-npm test                    # Run all tests
-npm test -- --watch         # Watch mode during development
-npm test -- --coverage      # Check coverage
-npm test -- --run           # Run once (CI mode)
-```
-
-### Manual E2E Testing
-- Claude creates TodoWrite checklist from user stories
-- User and Claude test together on DEV, then STAGING
-- Real-time issue discovery and fixing
-- Update automated tests based on findings
 
 ## 🛠️ Technology Stack
 
@@ -360,63 +298,3 @@ npm test -- --run           # Run once (CI mode)
 └── /public/            # Static assets
 ```
 
-## ⚠️ Important Guidelines
-
-1. **Follow KISS, DRY, and SOLID principles**
-2. **No throwaway work** - Everything must be production-ready
-3. **Maintain clear separation** between app code and project code
-4. **Test thoroughly** before marking tasks complete (follow TDD approach)
-5. **Update documentation** as you make changes
-6. **Use appropriate DEV-LIFECYCLE mode**: Full Feature (TDD), Fast Track (bugs), or Emergency
-7. **Complete each packet fully** before moving to next (including PROD deployment)
-
-## 🚨 CRITICAL: TypeScript Checking Process
-
-**LESSON LEARNED (2025-09-03)**: We accumulated 192 TypeScript errors because we were using the WRONG verification method.
-
-### ❌ INVALID TypeScript Checks:
-- `npm run build` - Only checks app code, IGNORES test files
-- "App runs fine" - Runtime != compile-time type safety
-- Build success - Does NOT mean zero TypeScript errors
-
-### ✅ ONLY VALID TypeScript Check:
-```bash
-npm run type-check  # or: npx tsc --noEmit
-```
-**This command checks ALL TypeScript files including tests. ZERO errors is the only acceptable result.**
-
-### Why This Matters:
-- Test files can have 100+ type errors while build passes
-- Type errors accumulate silently in test files
-- Each feature adds more unchecked test errors
-- Eventually you have 192 errors to fix (like we did)
-- ✅ DO tell me if we're doing something that rubs against the grain for the tech stack we are using. If we're doing something VERY atypical that could cause us headaches down the road, SOUND THE ALARM!
-- ✅ Everything we do must be work that is saved and critical to our production environment.
-- ✅ DO tell me what you really think. Don't agree with me just to agree. Disagree with me if you disagree.
-- ✅ Do review your assumptions
-- ✅ DO collaborate with me along the way to test things (anything non-code that I can do, you should ask me to)
-- ✅ Do have conversations with me vs defaulting to plans right away
-- ✅ DO interview me before responding if needed to clarify missing data or thoughts.
-
-
-## 🚨 Common Pitfalls to Avoid
-
-1. Don't work in the root `/src/` directory (that's the old React app)
-2. Don't create temporary hardcoded examples
-3. Don't mix project-level code with app-level code
-4. Don't skip updating the task list when completing work
-- 🚫 Do not be destructive in our build process, meaning our work unless specified, must not break functionality we’ve built.
-- 🚫 Don't start the project on a new port if the main port isn't working. Verify WHY it isn't working and work to resolve that issue first.
-- 🚫 Do not mix project level code with app level code. Our application must remain independent from the projects and themes contained within it. Users will be building websites with themes and templates. Our app will use Core components and themes, but the projects being created must be their own independent websites.
-- 🚫 DO NOT let us spin our wheels trying to solve something over and over. Always step back and look at the macro and micro and think deeply about what we’re doing.
-
-
-## 📚 Additional Resources
-
-For specific implementation details, see:
-- [Vercel Deployment Guide](./nextjs-app/VERCEL-DEPLOYMENT-GUIDE.md)
-- [How to Use Supabase](./nextjs-app/docs/HowTo/HOW-TO-USE-SUPABASE.md)
-
----
-
-**Remember**: This is a production system building a scalable SaaS platform. Quality and architecture matter!

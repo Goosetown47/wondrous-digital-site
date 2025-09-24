@@ -51,7 +51,7 @@ export function ImageManagerModal({
     }
   }, [open, context]);
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = useCallback(async (file: File) => {
     setUploading(true);
     setUploadProgress(0);
 
@@ -92,7 +92,7 @@ export function ImageManagerModal({
       }
       setPreviewUrl(null);
     }
-  };
+  }, [context, onUpdate, onOpenChange]);
 
   const handleDelete = async () => {
     if (currentImage) {

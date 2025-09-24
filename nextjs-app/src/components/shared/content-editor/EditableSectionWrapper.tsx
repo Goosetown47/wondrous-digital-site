@@ -1,12 +1,10 @@
 'use client';
 
-import React, { ReactElement, useCallback, useMemo, useState, useEffect } from 'react';
-import { ComponentRegistry } from '@/lib/register-components';
-import { getValueAtPath, setValueAtPath } from '@/lib/editable-field-detector';
+import React, { useState, useEffect, useMemo, useCallback, ReactElement } from 'react';
 import type { EditableFieldConfig } from '@/lib/component-registry';
-import { EditableText } from './EditableText';
-import { EditableImage } from './EditableImage';
-import { useEditableContent } from '@/lib/with-editable-content';
+import { useEditableContent } from '@/lib/with-editable-content-utils';
+import { useComponentConfig } from '@/hooks/useComponentConfig';
+import { setValueAtPath } from '@/lib/editable-field-detector';
 
 interface EditableSectionWrapperProps {
   /** Name of the component in the registry */
@@ -37,10 +35,8 @@ export function EditableSectionWrapper({
 }: EditableSectionWrapperProps) {
   const [localContent, setLocalContent] = useState(content);
 
-  // Get component configuration from registry
-  const componentConfig = useMemo(() => {
-    return ComponentRegistry.get(componentName);
-  }, [componentName]);
+  // Get component configuration from registry AND database
+  const componentConfig = useComponentConfig(componentName);
 
   // Get editable fields configuration
   const editableFields = useMemo(() => {
@@ -66,10 +62,12 @@ export function EditableSectionWrapper({
 
   // If using interceptor mode, use the HOC approach
   const interceptedContent = useEditableContent(
-    React.cloneElement(children, localContent),
     componentName,
-    editable && useInterceptor,
-    onContentUpdate
+    localContent,
+    {
+      editable: editable && useInterceptor,
+      onContentUpdate
+    }
   );
 
   // If not editable or no field configs, render as-is
@@ -77,11 +75,11 @@ export function EditableSectionWrapper({
     return React.cloneElement(children, content);
   }
 
-  // If using interceptor mode, return the intercepted content
+  // If using interceptor mode, return the component with intercepted props
   if (useInterceptor) {
     return (
       <div className="editable-section-wrapper relative">
-        {interceptedContent}
+        {React.cloneElement(children, interceptedContent)}
       </div>
     );
   }
@@ -146,88 +144,4 @@ export function EditableSectionWrapper({
       {enhancedChild}
     </div>
   );
-}
-
-/**
- * Hook to automatically wrap content with editable fields
- * This provides a more flexible approach for complex components
- */
-export function useEditableFields(
-  componentName: string,
-  content: Record<string, unknown>,
-  onUpdate: (updates: Record<string, unknown>) => void
-) {
-  const componentConfig = ComponentRegistry.get(componentName);
-  const fields = componentConfig?.editableFields || [];
-
-  const handlers = useMemo(() => {
-    const handlerMap: Record<string, (value: unknown) => void> = {};
-
-    fields.forEach(field => {
-      handlerMap[field.path] = (value: unknown) => {
-        const updated = setValueAtPath({ ...content }, field.path, value);
-        onUpdate(updated);
-      };
-    });
-
-    return handlerMap;
-  }, [fields, content, onUpdate]);
-
-  const wrapField = useCallback(
-    (fieldPath: string, element: ReactElement) => {
-      const field = fields.find(f => f.path === fieldPath);
-      if (!field) return element;
-
-      const value = getValueAtPath(content, fieldPath);
-      const handler = handlers[fieldPath];
-
-      switch (field.type) {
-        case 'text':
-          return (
-            <EditableText
-              value={value as string}
-              type="plain"
-              onUpdate={handler}
-              editable={true}
-              placeholder={field.placeholder}
-              maxLength={field.maxLength}
-            >
-              {element}
-            </EditableText>
-          );
-
-        case 'richText':
-          return (
-            <EditableText
-              value={value as string}
-              type="rich"
-              onUpdate={handler}
-              editable={true}
-              placeholder={field.placeholder}
-              maxLength={field.maxLength}
-              richText={true}
-            >
-              {element}
-            </EditableText>
-          );
-
-        case 'image':
-          return (
-            <EditableImage
-              src={value as string | null}
-              alt={field.label}
-              onUpdate={handler}
-              editable={true}
-              className={(element.props as { className?: string })?.className || ''}
-            />
-          );
-
-        default:
-          return element;
-      }
-    },
-    [fields, content, handlers]
-  );
-
-  return { fields, handlers, wrapField };
 }

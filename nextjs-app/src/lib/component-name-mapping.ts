@@ -18,6 +18,7 @@ const COMPONENT_NAME_MAP: Record<string, string> = {
   'Hero 2 Column': 'HeroTwoColumn',
   'Hero Section': 'HeroTwoColumn',
   'Nav Bar 3': 'NavBar3',
+  'Services1': 'Services1',
 
   // Add more mappings as components are imported
 };
@@ -37,6 +38,12 @@ export function getComponentCodeName(displayName: string): string {
     }
   }
 
+  // Check if already in PascalCase format (no spaces/hyphens and has uppercase letters)
+  const isPascalCase = /^[A-Z][a-zA-Z0-9]*$/.test(displayName) && /[A-Z]/.test(displayName.slice(1));
+  if (isPascalCase || /^[A-Z][a-z0-9]*$/.test(displayName)) {
+    return displayName; // Already in correct format
+  }
+
   // Try to extract from metadata if it's stored there
   // This will be used for future components that store the code name
 
@@ -45,7 +52,7 @@ export function getComponentCodeName(displayName: string): string {
   // "Hero Two Column" -> "HeroTwoColumn"
   const codeName = displayName
     .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join('');
 
   return codeName;

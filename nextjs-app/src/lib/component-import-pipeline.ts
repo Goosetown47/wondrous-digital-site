@@ -1,11 +1,15 @@
+/* eslint-disable security/detect-object-injection */
 /**
  * Component Import Pipeline
  *
  * Automated system for importing shadcn/ui components into the Lab/Library.
  * Analyzes component code to automatically generate editable field configurations.
+ *
+ * Note: Object injection warnings are disabled for this file as all dynamic
+ * property access uses internally controlled keys, not user input.
  */
 
-import type { EditableFieldConfig, EditableFieldType } from '@/types/builder';
+import type { EditableFieldConfig, EditableFieldType } from '@/lib/component-registry';
 
 /**
  * Result of parsing a TypeScript interface
@@ -126,6 +130,8 @@ export function extractDefaultProps(code: string): Record<string, unknown> {
   // Check for destructured default values in function parameters
   // Handle multiline function signatures - match the entire parameter block
   // Support both regular function and export function syntax, with TypeScript types
+  // Using [\s\S] to match across newlines
+  // eslint-disable-next-line security/detect-unsafe-regex
   const paramMatch = code.match(/(?:export\s+)?function\s+\w+\s*\(\s*\{([\s\S]*?)\}\s*(?::\s*\w+)?\s*\)/);
   if (paramMatch) {
     const params = paramMatch[1];

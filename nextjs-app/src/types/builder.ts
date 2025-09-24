@@ -31,6 +31,7 @@ export interface CoreComponent {
   registered_by?: string;
   default_content?: Record<string, unknown>;
   type_id?: string;
+  code_name?: string;
   editable_fields?: Array<{
     path: string;
     type: string;
@@ -40,6 +41,13 @@ export interface CoreComponent {
     maxLength?: number;
     [key: string]: unknown;
   }>;
+  usage?: {
+    componentName: string;
+    totalUsage: number;
+    draftCount: number;
+    libraryCount: number;
+    isInUse: boolean;
+  };
 }
 
 // Lab draft types

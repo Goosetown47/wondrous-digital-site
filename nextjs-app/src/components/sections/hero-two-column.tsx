@@ -78,10 +78,10 @@ export function HeroTwoColumn({
 
   return (
     <section className="w-full bg-background">
-      <div className="w-full py-12 @[768px]:py-24 @[1024px]:py-32 px-12 @[1000px]:px-4 @[1024px]:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 gap-8 @[1000px]:grid-cols-2 @[1000px]:gap-12 items-center">
+      <div className="w-full py-4 md:py-6 lg:py-8 px-4 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 items-center">
           {/* Left Column - Text Content */}
-          <div className="flex flex-col justify-center space-y-6 order-1 @[1000px]:order-1 text-center @[1000px]:text-left">
+          <div className="flex flex-col justify-center space-y-6 order-1 lg:order-1 text-center lg:text-left">
             <div className="space-y-4">
               <EditableText
                 value={heading}
@@ -91,7 +91,7 @@ export function HeroTwoColumn({
                 placeholder="Enter heading..."
                 maxLength={100}
               >
-                <h1 className="text-3xl font-bold tracking-tight text-foreground @[640px]:text-4xl @[768px]:text-5xl @[1280px]:text-6xl">
+                <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl xl:text-6xl">
                   {heading}
                 </h1>
               </EditableText>
@@ -108,12 +108,12 @@ export function HeroTwoColumn({
                 <SmartText
                   content={subtext}
                   as="p"
-                  className="text-base @[640px]:text-lg text-muted-foreground"
+                  className="text-base sm:text-lg text-muted-foreground"
                 />
               </EditableText>
             </div>
             
-            <div className="flex flex-col @[640px]:flex-row gap-4 justify-center @[1000px]:justify-start">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <EditableText
                 value={buttonText}
                 type="button"
@@ -143,12 +143,12 @@ export function HeroTwoColumn({
           </div>
           
           {/* Right Column - Image */}
-          <div className="flex items-center justify-center order-2 @[1000px]:order-2">
+          <div className="flex items-center justify-center order-2 lg:order-2">
             <EditableImage
               src={currentImageUrl}
               alt={imageAlt}
               aspectRatio="4:3"
-              className="w-full max-w-md @[1024px]:max-w-none rounded-lg overflow-hidden"
+              className="w-full max-w-md lg:max-w-none rounded-lg overflow-hidden"
               onUpdate={handleImageUpdate}
               editable={editable}
             />

@@ -98,7 +98,7 @@ const Footer2 = ({
   };
   return (
     <SectionWrapper className="border-t">
-      <div className="py-20 @[640px]:py-24 @[1024px]:py-32">
+      <div className="py-20 sm:py-24 lg:py-32">
         <footer>
           <div className="grid grid-cols-2 gap-8 lg:grid-cols-6">
             <div className="col-span-2 mb-8 lg:mb-0">

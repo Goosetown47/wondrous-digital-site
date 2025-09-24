@@ -136,24 +136,46 @@ export const useLabStore = create<LabState>()(
               selectedSectionId: null,
               isDirty: false
             });
-          } else {
-            // Convert single section to multi-section format for consistency
+          } else if (content && Object.keys(content).length > 0 && !('metadata' in content && Object.keys(content).length === 1)) {
+            // Only convert to single section if there's actual content (not just empty metadata)
             const contentRecord = content as Record<string, unknown>;
             const metadata = contentRecord.metadata as Record<string, unknown> | undefined;
             const componentName = contentRecord.component_name as string ||
-                                metadata?.component_name as string ||
-                                'HeroTwoColumn';
+                                metadata?.component_name as string;
 
+            // Only create a section if we have a component name
+            if (componentName) {
+              set({
+                draftId,
+                draftName,
+                draftType,
+                sections: [{
+                  id: `section-${Date.now()}`,
+                  component_name: componentName,
+                  content: content as Record<string, unknown>,
+                  order: 0
+                }],
+                selectedSectionId: null,
+                isDirty: false
+              });
+            } else {
+              // No component name and no sections - start with empty sections
+              set({
+                draftId,
+                draftName,
+                draftType,
+                sections: [],
+                selectedSectionId: null,
+                isDirty: false
+              });
+            }
+          } else {
+            // Empty content or only metadata - start with empty sections
             set({
               draftId,
               draftName,
               draftType,
-              sections: [{
-                id: `section-${Date.now()}`,
-                component_name: componentName,
-                content: content as Record<string, unknown>,
-                order: 0
-              }],
+              sections: [],
               selectedSectionId: null,
               isDirty: false
             });

@@ -6,6 +6,8 @@ import { env } from '@/env.mjs';
 import { isAdminServer, isStaffServer } from '@/lib/permissions/server-checks';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { getMultipleComponentUsage } from '@/lib/services/component-usage-service';
+import { getCodeName, getFileName, isValidComponentName } from '@/lib/services/naming-service';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -97,6 +99,37 @@ export async function GET(request: NextRequest) {
     console.log('✅ [API/CoreComponents] Service role query successful!');
     console.log('📊 [API/CoreComponents] Found components:', components?.length || 0);
 
+    // Get usage statistics for all components
+    if (components && components.length > 0) {
+      console.log('📊 [API/CoreComponents] Fetching usage statistics for components...');
+
+      // Use display names for querying (the usage service will handle variations)
+      const componentNames = components.map(c => c.name);
+      const usageMap = await getMultipleComponentUsage(componentNames);
+
+      // Add usage data to each component
+      const componentsWithUsage = components.map(component => {
+        const usage = usageMap.get(component.name);
+
+        if (usage && usage.totalUsage > 0) {
+          console.log(`✅ [API/CoreComponents] ${component.name} has usage:`, usage);
+        }
+
+        return {
+          ...component,
+          usage: usage || {
+            componentName: component.name,
+            totalUsage: 0,
+            draftCount: 0,
+            libraryCount: 0,
+            isInUse: false
+          }
+        };
+      });
+
+      return NextResponse.json(componentsWithUsage);
+    }
+
     return NextResponse.json(components || []);
 
   } catch (error) {
@@ -156,18 +189,21 @@ function validateComponentCode(code: string): { valid: boolean; error?: string }
 
 /**
  * Helper function to convert component name to file name
+ * Now uses naming service for consistency
  */
 function componentNameToFileName(name: string): string {
-  // Convert "Hero Two Column" to "hero-two-column"
-  return name.toLowerCase().replace(/\s+/g, '-');
+  // Use naming service to get the file name without extension
+  const fileName = getFileName(name);
+  return fileName.replace('.tsx', '');
 }
 
 /**
  * Helper function to convert component name to class name
+ * Now uses naming service for consistency
  */
 function componentNameToClassName(name: string): string {
-  // Convert "Hero Two Column" to "HeroTwoColumn"
-  return name.replace(/\s+/g, '');
+  // Use naming service to get the code name
+  return getCodeName(name);
 }
 
 /**
@@ -408,16 +444,25 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { 
-      name, 
-      type, 
-      source, 
-      code, 
-      dependencies = [], 
-      imports = {}, 
+    const {
+      name,
+      type,
+      source,
+      code,
+      dependencies = [],
+      imports = {},
       description,
-      metadata = {} 
+      metadata = {}
     } = body;
+
+    // Extract editable_fields and default_content from metadata if provided
+    const editableFields = metadata.editable_fields || [];
+    const defaultContent = metadata.default_content || {};
+
+    // Clean metadata to remove these fields (they have their own columns)
+    const cleanMetadata = { ...metadata };
+    delete cleanMetadata.editable_fields;
+    delete cleanMetadata.default_content;
 
     if (!name || !type || !source || !code) {
       return NextResponse.json({
@@ -438,18 +483,32 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 [API/CoreComponents] Creating core component with service role...');
 
+    // Validate component name
+    if (!isValidComponentName(name)) {
+      return NextResponse.json({
+        error: 'Invalid component name. Must start with a letter and contain only letters, numbers, spaces, hyphens, or underscores.'
+      }, { status: 400 });
+    }
+
+    // Generate code name using naming service
+    const codeName = getCodeName(name);
+    console.log(`📝 [API/CoreComponents] Generated code name: ${name} -> ${codeName}`);
+
     // Create the core component using service role
     const { data: newComponent, error: createError } = await serviceClient
       .from('core_components')
       .insert({
         name,
+        code_name: codeName,  // Set the code_name field
         type,
         source,
         code,
         dependencies,
         imports,
         description,
-        metadata,
+        metadata: cleanMetadata,
+        editable_fields: editableFields,  // Save parsed editable fields
+        default_content: defaultContent,   // Save extracted default content
         is_registered: true // Mark as registered since we're creating all necessary files
       })
       .select()
@@ -480,7 +539,7 @@ export async function POST(request: NextRequest) {
         .from('core_components')
         .update({
           metadata: {
-            ...metadata,
+            ...cleanMetadata,
             component_code: className
           }
         })

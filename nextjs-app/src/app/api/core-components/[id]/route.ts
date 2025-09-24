@@ -4,6 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { cookies } from 'next/headers';
 import { env } from '@/env.mjs';
 import { isAdminServer, isStaffServer } from '@/lib/permissions/server-checks';
+import { deleteComponentCompletely } from '@/lib/services/component-delete-service';
+import { getDetailedComponentUsage } from '@/lib/services/component-usage-service';
 
 export async function GET(
   request: NextRequest,
@@ -271,12 +273,34 @@ export async function DELETE(
     // Create service role client (bypasses RLS)
     const serviceClient = createAdminClient();
 
-    // Get component info for logging before deletion
+    // Get component info for logging and comprehensive deletion
     const { data: componentInfo } = await serviceClient
       .from('core_components')
-      .select('name, type, source')
+      .select('name, type, source, code_name')
       .eq('id', id)
       .single();
+
+    if (!componentInfo) {
+      return NextResponse.json({ error: 'Component not found' }, { status: 404 });
+    }
+
+    // Check if component is in use before allowing deletion
+    const codeName = componentInfo.code_name || componentInfo.name;
+    const usage = await getDetailedComponentUsage(codeName);
+
+    if (usage.isInUse) {
+      console.log('❌ [API/CoreComponents/Id] Component is in use, cannot delete');
+      return NextResponse.json({
+        error: 'Component cannot be deleted because it is in use',
+        usage: {
+          totalUsage: usage.totalUsage,
+          draftCount: usage.draftCount,
+          libraryCount: usage.libraryCount,
+          drafts: usage.drafts.map(d => ({ id: d.id, name: d.name, type: d.type })),
+          libraryItems: usage.libraryItems.map(i => ({ id: i.id, name: i.name, type: i.type }))
+        }
+      }, { status: 409 }); // 409 Conflict
+    }
 
     // Delete the core component using service role
     const { error: deleteError } = await serviceClient
@@ -292,7 +316,17 @@ export async function DELETE(
       return NextResponse.json({ error: deleteError.message }, { status: 500 });
     }
 
-    console.log('✅ [API/CoreComponents/Id] Component deleted:', id);
+    console.log('✅ [API/CoreComponents/Id] Component deleted from database:', id);
+
+    // Comprehensive deletion from codebase (files, registry, mappings)
+    // codeName was already defined above when checking usage
+    const deleteResults = await deleteComponentCompletely(codeName);
+
+    console.log('🗑️ [API/CoreComponents/Id] Comprehensive deletion results:', {
+      componentName: codeName,
+      source: componentInfo.source,
+      results: deleteResults
+    });
 
     // Log the action
     await serviceClient
@@ -304,14 +338,20 @@ export async function DELETE(
         resource_type: 'core_component',
         resource_id: id,
         metadata: {
-          component_name: componentInfo?.name || 'Unknown',
-          component_type: componentInfo?.type || 'Unknown',
-          source: componentInfo?.source || 'Unknown',
-          deleted_via_api: true
+          component_name: componentInfo.name,
+          component_code_name: codeName,
+          component_type: componentInfo.type,
+          source: componentInfo.source,
+          deleted_via_api: true,
+          comprehensive_deletion: deleteResults,
+          deletion_errors: deleteResults.errors
         }
       });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      deletionResults: deleteResults
+    });
 
   } catch (error) {
     console.error('❌ [API/CoreComponents/Id] Unexpected error:', error);

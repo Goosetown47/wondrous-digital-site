@@ -9,6 +9,7 @@ import { Navbar2 } from '@/components/core/navigation/navbar2';
 import { Footer2 } from '@/components/core/navigation/footer2';
 import { HeroTwoColumn } from '@/components/sections/hero-two-column';
 import { Navbar6 as NavBar3 } from '@/components/core/sections/nav-bar-3';
+import { Services1 } from '@/components/core/sections/services1';
 
 // Default content structures for each component type
 const defaultNavigationContent = {
@@ -170,6 +171,25 @@ export function registerAllComponents() {
     description: 'Nav Bar 3',
     source: 'expansions'
   });
+
+  ComponentRegistry.register('Services1', {
+    component: Services1,
+    type: 'section',
+    category: undefined,
+    defaultContent: defaultHeroContent,
+    description: 'Services1',
+    source: 'expansions'
+  });
+
+  
+
+  
+
+  
+
+  
+
+  
 }
 
 // Initialize components on module load

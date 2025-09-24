@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCreateComponent } from '@/hooks/useCoreComponents';
+import { importComponent } from '@/lib/component-import-pipeline';
+import type { EditableFieldConfig } from '@/lib/component-registry';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,7 +19,7 @@ import type { CreateComponentInput } from '@/lib/supabase/core-components';
 export default function AddComponentPage() {
   const router = useRouter();
   const createComponent = useCreateComponent();
-  
+
   const [formData, setFormData] = useState<CreateComponentInput>({
     name: '',
     type: 'component',
@@ -27,15 +29,44 @@ export default function AddComponentPage() {
     imports: [],
     metadata: {},
   });
-  
+
   const [dependencyInput, setDependencyInput] = useState('');
   const [importInput, setImportInput] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    let editableFields: EditableFieldConfig[] = [];
+    let defaultContent: Record<string, unknown> = {};
+
+    // Try to parse the component (but don't fail if it doesn't work)
     try {
-      await createComponent.mutateAsync(formData);
+      const result = await importComponent({
+        code: formData.code,
+        path: formData.type === 'section' ? '/sections/' : '/components/',
+      });
+
+      if (result.success && result.component) {
+        editableFields = result.component.editableFields || [];
+        defaultContent = result.component.defaultContent || {};
+      }
+    } catch {
+      // Parsing failed, but that's OK - continue anyway
+      console.log('Could not auto-parse component, proceeding without editable fields');
+    }
+
+    try {
+      // Submit with whatever we have
+      const dataToSubmit = {
+        ...formData,
+        metadata: {
+          ...formData.metadata,
+          editable_fields: editableFields,
+          default_content: defaultContent,
+        },
+      };
+
+      await createComponent.mutateAsync(dataToSubmit);
       router.push('/core');
     } catch (error) {
       console.error('Failed to create component:', error);

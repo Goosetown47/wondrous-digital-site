@@ -1,6 +1,10 @@
+/* eslint-disable security/detect-object-injection */
 /**
  * Utilities for detecting and configuring editable fields in components
  * This module provides automatic detection of editable fields based on prop names and content structure
+ *
+ * Note: Object injection warnings are disabled for this file as all dynamic
+ * property access uses internally controlled keys, not user input.
  */
 
 import type { EditableFieldConfig, EditableFieldType } from './component-registry';

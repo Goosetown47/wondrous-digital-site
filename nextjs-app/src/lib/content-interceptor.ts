@@ -1,6 +1,13 @@
 import React, { ReactElement, ReactNode, isValidElement, Children, cloneElement } from 'react';
 import type { EditableFieldConfig } from './component-registry';
 
+// Types for React props
+type ReactProps = {
+  children?: ReactNode;
+  src?: string;
+  [key: string]: unknown;
+};
+
 // Types for the content interceptor system
 export interface ElementNode {
   type: string;
@@ -57,7 +64,7 @@ export function analyzeComponentTree(element: ReactNode): ComponentAnalysis {
 
       // For fragments, traverse children directly without adding to path
       if (elementType === 'fragment') {
-        const children = Children.toArray(node.props.children)
+        const children = Children.toArray((node.props as ReactProps).children)
           .map(child => traverse(child, parentPath))
           .filter(Boolean) as ElementNode[];
 
@@ -77,15 +84,16 @@ export function analyzeComponentTree(element: ReactNode): ComponentAnalysis {
 
       // Extract text content for editable elements
       let content: string | undefined;
+      const props = node.props as ReactProps;
       if (EDITABLE_ELEMENTS.includes(elementType) &&
-          typeof node.props.children === 'string') {
-        content = node.props.children;
-      } else if (elementType === 'img' && node.props.src) {
-        content = node.props.src as string;
+          typeof props.children === 'string') {
+        content = props.children;
+      } else if (elementType === 'img' && props.src) {
+        content = props.src as string;
       }
 
       // Traverse children
-      const children = Children.toArray(node.props.children)
+      const children = Children.toArray((node.props as ReactProps).children)
         .map(child => traverse(child, currentPath))
         .filter(Boolean) as ElementNode[];
 
@@ -93,7 +101,7 @@ export function analyzeComponentTree(element: ReactNode): ComponentAnalysis {
         type: elementType,
         path: currentPath,
         content,
-        props: node.props,
+        props: (node.props as ReactProps) || {},
         children
       };
 
@@ -155,10 +163,11 @@ export function injectWrapper(
   // Mock wrapper components for testing
   // In production, these would be actual imports
   function EditableText(props: Record<string, unknown>) {
+    const { children, ...restProps } = props;
     return React.createElement('div', {
       'data-testid': 'EditableText',
-      ...props
-    }, props.children);
+      ...restProps
+    }, children as ReactNode);
   }
 
   function EditableImage(props: Record<string, unknown>) {
@@ -169,21 +178,22 @@ export function injectWrapper(
   }
 
   const elementType = typeof element.type === 'string' ? element.type : 'component';
+  const props = element.props as ReactProps;
 
   // Determine the wrapper based on element and field type
   if (config.fieldType === 'image' || elementType === 'img') {
     return React.createElement(EditableImage, {
-      src: element.props.src || element.props.children,
-      alt: element.props.alt || '',
+      src: props.src || props.children as string,
+      alt: (props.alt as string) || '',
       onUpdate: config.onUpdate,
       editable: config.editable !== false,
-      className: element.props.className
+      className: props.className
     });
   }
 
   // For text elements
-  const textContent = typeof element.props.children === 'string'
-    ? element.props.children
+  const textContent = typeof props.children === 'string'
+    ? props.children
     : '';
 
   // Determine text type based on element
@@ -211,7 +221,7 @@ export function injectWrapper(
  */
 export function preserveStructure(original: ReactElement): ReactElement {
   // Clone the element with all its props and children
-  return cloneElement(original, original.props);
+  return cloneElement(original, original.props as ReactProps);
 }
 
 /**
@@ -223,7 +233,7 @@ export function attachClickHandlers(
   handler: (path: string) => void,
   editMode = false
 ): ReactElement {
-  const originalOnClick = element.props.onClick;
+  const originalOnClick = (element.props as ReactProps).onClick as ((event: React.MouseEvent) => void) | undefined;
 
   const newOnClick = (event: React.MouseEvent) => {
     if (editMode) {
@@ -241,9 +251,9 @@ export function attachClickHandlers(
   };
 
   return cloneElement(element, {
-    ...element.props,
+    ...(element.props as ReactProps),
     onClick: newOnClick
-  });
+  } as ReactProps);
 }
 
 /**
@@ -290,7 +300,7 @@ export function interceptContent(
 
       // Process children recursively
       const processedChildren = Children.map(
-        element.props.children,
+        (element.props as ReactProps).children,
         child => processElement(child, elementPath)
       );
 
@@ -302,9 +312,9 @@ export function interceptContent(
                            : processedChildren;
 
       return cloneElement(element, {
-        ...element.props,
+        ...(element.props as ReactProps),
         children: finalChildren
-      });
+      } as ReactProps);
     }
 
     // Return other types as-is

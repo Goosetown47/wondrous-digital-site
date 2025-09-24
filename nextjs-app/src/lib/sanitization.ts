@@ -21,18 +21,19 @@ if (typeof window !== 'undefined') {
       if (!dirty) return '';
 
       // Basic server-side sanitization
+      // Using simpler, safer regex patterns to avoid ReDoS
       let cleaned = dirty
-        // Remove script tags
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        // Remove on* event handlers
-        .replace(/on\w+\s*=\s*"[^"]*"/gi, '')
-        .replace(/on\w+\s*=\s*'[^']*'/gi, '')
+        // Remove script tags - simplified pattern
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        // Remove on* event handlers - simplified patterns
+        .replace(/\bon\w+\s*=\s*"[^"]*"/gi, '')
+        .replace(/\bon\w+\s*=\s*'[^']*'/gi, '')
         // Remove javascript: protocol
         .replace(/javascript:/gi, '')
-        // Remove data: protocol in src/href
-        .replace(/(?:src|href)\s*=\s*["']?data:[^"'\s]*/gi, '')
-        // Remove iframe tags
-        .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '');
+        // Remove data: protocol in src/href - simplified
+        .replace(/(?:src|href)\s*=\s*["']?data:/gi, '')
+        // Remove iframe tags - simplified pattern
+        .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, '');
 
       // If config specifies no tags allowed, strip all HTML
       if (config?.ALLOWED_TAGS && Array.isArray(config.ALLOWED_TAGS) && config.ALLOWED_TAGS.length === 0) {

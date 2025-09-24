@@ -59,6 +59,7 @@ vi.mock('@/lib/supabase/core-components', () => ({
 
 vi.mock('@/hooks/useTypes', () => ({
   useTypes: vi.fn(() => ({ data: [] })),
+  useTypesByCategory: vi.fn(() => ({ data: [] })),
 }));
 
 vi.mock('@/hooks/useThemes', () => ({

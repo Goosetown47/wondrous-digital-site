@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { cookies } from 'next/headers';
 import { env } from '@/env.mjs';
+import { ensureComponentName } from '@/lib/services/naming-service';
 
 export async function GET(
   request: NextRequest,
@@ -138,10 +139,22 @@ export async function PUT(
     if (content !== undefined) updates.content = content;
     if (version !== undefined) updates.version = version;
     if (status !== undefined) updates.status = status;
-    if (metadata !== undefined) updates.metadata = metadata;
     if (changelog !== undefined) updates.changelog = changelog;
     if (library_version !== undefined) updates.library_version = library_version;
     if (content_hash !== undefined) updates.content_hash = content_hash;
+
+    // Ensure component_name is properly set in metadata if content or metadata is being updated
+    if (content !== undefined || metadata !== undefined) {
+      // Get the type from the existing draft if not provided
+      const { data: existingDraft } = await serviceClient
+        .from('lab_drafts')
+        .select('type')
+        .eq('id', id)
+        .single();
+
+      const draftType = type || existingDraft?.type;
+      updates.metadata = ensureComponentName(content || {}, metadata || {}, draftType);
+    }
 
     // Update the lab draft using service role
     const { data: updatedDraft, error: updateError } = await serviceClient
@@ -239,21 +252,29 @@ export async function DELETE(
     // Get draft info for logging before deletion
     const { data: draftInfo } = await serviceClient
       .from('lab_drafts')
-      .select('name, type')
+      .select('name, type, status')
       .eq('id', id)
       .single();
 
-    // Check if draft has been promoted to library (prevent deletion if so)
+    // Check if draft has been promoted to library AND library item still exists
     const { data: libraryItems } = await serviceClient
       .from('library_items')
-      .select('id')
+      .select('id, name')
       .eq('source_draft_id', id)
       .limit(1);
 
     if (libraryItems && libraryItems.length > 0) {
-      return NextResponse.json({ 
-        error: 'Cannot delete draft that has been promoted to library' 
-      }, { status: 400 });
+      // Library item exists - check if it's in use
+      // TODO: In the future, check if library item is used in projects
+      // For now, we'll allow deletion with a warning that library item will be orphaned
+
+      console.log(`⚠️ [API/Lab/Id] Draft has library item: ${libraryItems[0].name}`);
+
+      // Only prevent deletion if we're in strict mode (which we're not for now)
+      // This allows users to clean up drafts even if library items exist
+      // return NextResponse.json({
+      //   error: 'Cannot delete draft that has been promoted to library'
+      // }, { status: 400 });
     }
 
     // Delete the lab draft using service role

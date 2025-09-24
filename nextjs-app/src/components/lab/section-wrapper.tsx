@@ -27,10 +27,8 @@ export function SectionWrapper({
     )}>
       <div className={cn(
         "w-full",
-        // Enable container queries
-        "@container",
         // Add default padding unless disabled
-        !noPadding && "py-4 @[768px]:py-8 @[1024px]:py-12",
+        !noPadding && "py-4 md:py-8 lg:py-12",
         // Add container max-width unless full width
         !fullWidth && "container mx-auto"
       )}>

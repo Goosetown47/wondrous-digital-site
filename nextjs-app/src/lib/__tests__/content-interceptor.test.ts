@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import React from 'react';
+import React, { type ReactElement } from 'react';
 import {
   analyzeComponentTree,
   findElementByPath,
@@ -10,6 +10,35 @@ import {
   type InterceptorConfig,
   type ElementNode
 } from '../content-interceptor';
+import type { EditableFieldConfig } from '../component-registry';
+
+// Type helpers for test assertions
+interface EditableTextProps {
+  value: string;
+  type: string;
+  onUpdate: () => void;
+  editable: boolean;
+  children?: React.ReactNode;
+}
+
+interface EditableImageProps {
+  src: string;
+  alt: string;
+  onUpdate: () => void;
+  editable: boolean;
+}
+
+interface TestElementProps {
+  className?: string;
+  id?: string;
+  'data-id'?: string;
+  style?: React.CSSProperties;
+  children?: React.ReactNode;
+  onClick?: (event: React.MouseEvent) => void;
+  content?: Record<string, unknown>;
+  onImageChange?: (url: string) => void;
+  onHeadingChange?: (text: string) => void;
+}
 
 describe('Content Interceptor', () => {
   describe('analyzeComponentTree', () => {
@@ -155,9 +184,14 @@ describe('Content Interceptor', () => {
 
       const wrapped = injectWrapper(element, config);
 
-      expect(wrapped.type.name).toBe('EditableText');
-      expect(wrapped.props.value).toBe('Original Text');
-      expect(wrapped.props.type).toBe('heading');
+      // Type assertion for component function
+      const componentType = wrapped.type as React.FC<EditableTextProps>;
+      expect(componentType.name).toBe('EditableText');
+
+      // Type assertion for props
+      const props = wrapped.props as EditableTextProps;
+      expect(props.value).toBe('Original Text');
+      expect(props.type).toBe('heading');
     });
 
     it('should wrap element with EditableImage for images', () => {
@@ -173,9 +207,14 @@ describe('Content Interceptor', () => {
 
       const wrapped = injectWrapper(element, config);
 
-      expect(wrapped.type.name).toBe('EditableImage');
-      expect(wrapped.props.src).toBe('/test.jpg');
-      expect(wrapped.props.alt).toBe('Test Image');
+      // Type assertion for component function
+      const componentType = wrapped.type as React.FC<EditableImageProps>;
+      expect(componentType.name).toBe('EditableImage');
+
+      // Type assertion for props
+      const props = wrapped.props as EditableImageProps;
+      expect(props.src).toBe('/test.jpg');
+      expect(props.alt).toBe('Test Image');
     });
 
     it('should preserve original props', () => {
@@ -190,10 +229,12 @@ describe('Content Interceptor', () => {
       };
 
       const wrapped = injectWrapper(element, config);
-      const innerElement = wrapped.props.children;
+      const wrappedProps = wrapped.props as EditableTextProps;
+      const innerElement = wrappedProps.children as ReactElement;
+      const innerProps = innerElement.props as TestElementProps;
 
-      expect(innerElement.props.className).toBe('text-lg');
-      expect(innerElement.props.id).toBe('main-heading');
+      expect(innerProps.className).toBe('text-lg');
+      expect(innerProps.id).toBe('main-heading');
     });
 
     it('should handle button elements', () => {
@@ -206,9 +247,12 @@ describe('Content Interceptor', () => {
 
       const wrapped = injectWrapper(element, config);
 
-      expect(wrapped.type.name).toBe('EditableText');
-      expect(wrapped.props.type).toBe('button');
-      expect(wrapped.props.value).toBe('Click Me');
+      const componentType = wrapped.type as React.FC<EditableTextProps>;
+      expect(componentType.name).toBe('EditableText');
+
+      const props = wrapped.props as EditableTextProps;
+      expect(props.type).toBe('button');
+      expect(props.value).toBe('Click Me');
     });
   });
 
@@ -224,9 +268,15 @@ describe('Content Interceptor', () => {
       const preserved = preserveStructure(original);
 
       expect(preserved.type).toBe('div');
-      expect(preserved.props.className).toBe('container');
-      expect(preserved.props.children.type).toBe('section');
-      expect(preserved.props.children.props.id).toBe('main');
+
+      const preservedProps = preserved.props as TestElementProps;
+      expect(preservedProps.className).toBe('container');
+
+      const childElement = preservedProps.children as ReactElement;
+      expect(childElement.type).toBe('section');
+
+      const childProps = childElement.props as TestElementProps;
+      expect(childProps.id).toBe('main');
     });
 
     it('should preserve all props and children', () => {
@@ -243,10 +293,13 @@ describe('Content Interceptor', () => {
 
       const preserved = preserveStructure(original);
 
-      expect(preserved.props.className).toBe('post');
-      expect(preserved.props['data-id']).toBe('123');
-      expect(preserved.props.style).toEqual({ color: 'red' });
-      expect(preserved.props.children).toHaveLength(2);
+      const preservedProps = preserved.props as TestElementProps;
+      expect(preservedProps.className).toBe('post');
+      expect(preservedProps['data-id']).toBe('123');
+      expect(preservedProps.style).toEqual({ color: 'red' });
+
+      const children = React.Children.toArray(preservedProps.children);
+      expect(children).toHaveLength(2);
     });
 
     it('should handle null and undefined children', () => {
@@ -257,10 +310,12 @@ describe('Content Interceptor', () => {
       );
 
       const preserved = preserveStructure(original);
-      const children = React.Children.toArray(preserved.props.children);
+      const preservedProps = preserved.props as TestElementProps;
+      const children = React.Children.toArray(preservedProps.children);
 
       expect(children).toHaveLength(1);
-      expect(children[0].type).toBe('p');
+      const firstChild = children[0] as ReactElement;
+      expect(firstChild.type).toBe('p');
     });
   });
 
@@ -271,8 +326,16 @@ describe('Content Interceptor', () => {
 
       const result = attachClickHandlers(element, 'heading', handler);
 
-      expect(result.props.onClick).toBeDefined();
-      result.props.onClick(new MouseEvent('click'));
+      const resultProps = result.props as TestElementProps;
+      expect(resultProps.onClick).toBeDefined();
+
+      // Create a mock event with proper type
+      const mockEvent = {
+        preventDefault: vi.fn(),
+        stopPropagation: vi.fn()
+      } as unknown as React.MouseEvent;
+
+      resultProps.onClick?.(mockEvent);
       expect(handler).toHaveBeenCalledWith('heading');
     });
 
@@ -285,10 +348,15 @@ describe('Content Interceptor', () => {
 
       const result = attachClickHandlers(element, 'button', editHandler);
 
-      const event = new MouseEvent('click');
-      result.props.onClick(event);
+      const mockEvent = {
+        preventDefault: vi.fn(),
+        stopPropagation: vi.fn()
+      } as unknown as React.MouseEvent;
 
-      expect(existingHandler).toHaveBeenCalledWith(event);
+      const resultProps = result.props as TestElementProps;
+      resultProps.onClick?.(mockEvent);
+
+      expect(existingHandler).toHaveBeenCalledWith(mockEvent);
       expect(editHandler).toHaveBeenCalledWith('button');
     });
 
@@ -303,9 +371,10 @@ describe('Content Interceptor', () => {
       const event = {
         preventDefault: vi.fn(),
         stopPropagation: vi.fn()
-      };
+      } as unknown as React.MouseEvent;
 
-      result.props.onClick(event);
+      const resultProps = result.props as TestElementProps;
+      resultProps.onClick?.(event);
 
       expect(event.preventDefault).toHaveBeenCalled();
       expect(event.stopPropagation).toHaveBeenCalled();
@@ -320,10 +389,10 @@ describe('Content Interceptor', () => {
         React.createElement('button', {}, 'Action')
       );
 
-      const fieldConfigs = [
-        { path: 'h1', type: 'text', label: 'Title' },
-        { path: 'p', type: 'richText', label: 'Description' },
-        { path: 'button', type: 'text', label: 'Button Text' }
+      const fieldConfigs: EditableFieldConfig[] = [
+        { path: 'h1', type: 'text' as const, label: 'Title' },
+        { path: 'p', type: 'richText' as const, label: 'Description' },
+        { path: 'button', type: 'text' as const, label: 'Button Text' }
       ];
 
       const onUpdate = vi.fn();
@@ -331,7 +400,8 @@ describe('Content Interceptor', () => {
 
       // The intercepted content should have wrappers injected
       expect(intercepted).toBeDefined();
-      expect(intercepted.props.children).toBeDefined();
+      const interceptedProps = intercepted.props as TestElementProps;
+      expect(interceptedProps.children).toBeDefined();
     });
 
     it('should handle complex nested structures', () => {
@@ -346,11 +416,11 @@ describe('Content Interceptor', () => {
         )
       );
 
-      const fieldConfigs = [
-        { path: 'header.h1', type: 'text', label: 'Title' },
-        { path: 'header.p', type: 'text', label: 'Author' },
-        { path: 'section.p[0]', type: 'richText', label: 'First Para' },
-        { path: 'section.p[1]', type: 'richText', label: 'Second Para' }
+      const fieldConfigs: EditableFieldConfig[] = [
+        { path: 'header.h1', type: 'text' as const, label: 'Title' },
+        { path: 'header.p', type: 'text' as const, label: 'Author' },
+        { path: 'section.p[0]', type: 'richText' as const, label: 'First Para' },
+        { path: 'section.p[1]', type: 'richText' as const, label: 'Second Para' }
       ];
 
       const onUpdate = vi.fn();
@@ -367,18 +437,21 @@ describe('Content Interceptor', () => {
         React.createElement('p', {}, 'Editable')
       );
 
-      const fieldConfigs = [
-        { path: 'h1', type: 'text', label: 'Heading' },
-        { path: 'p', type: 'text', label: 'Paragraph' }
+      const fieldConfigs: EditableFieldConfig[] = [
+        { path: 'h1', type: 'text' as const, label: 'Heading' },
+        { path: 'p', type: 'text' as const, label: 'Paragraph' }
       ];
 
       const onUpdate = vi.fn();
       const intercepted = interceptContent(component, fieldConfigs, onUpdate);
 
       // Span should remain untouched
-      const children = React.Children.toArray(intercepted.props.children);
-      expect(children[1].type).toBe('span');
-      expect(children[1].props.children).toBe('Not Editable');
+      const interceptedProps = intercepted.props as TestElementProps;
+      const children = React.Children.toArray(interceptedProps.children);
+      const spanChild = children[1] as ReactElement;
+      expect(spanChild.type).toBe('span');
+      const spanProps = spanChild.props as TestElementProps;
+      expect(spanProps.children).toBe('Not Editable');
     });
   });
 });
