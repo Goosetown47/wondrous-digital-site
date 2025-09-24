@@ -4,6 +4,7 @@ import { ReactNode, useCallback } from 'react';
 import { AnimatePresence, Reorder } from 'framer-motion';
 import { SectionWrapper } from './SectionWrapper';
 import { AddSectionButton } from './AddSectionButton';
+import { HoverZone } from '@/components/builder/HoverZone';
 import { Layers } from 'lucide-react';
 
 export interface CanvasSection {
@@ -29,6 +30,8 @@ interface MultiSectionCanvasProps {
   emptyStateDescription?: string;
   showAddButtons?: boolean;
   enableDragReorder?: boolean;
+  useHoverZones?: boolean;
+  onHoverZoneClick?: (position: number) => void;
   className?: string;
 }
 
@@ -46,6 +49,8 @@ export function MultiSectionCanvas({
   emptyStateDescription = "Add a section to get started",
   showAddButtons = true,
   enableDragReorder = false,
+  useHoverZones = false,
+  onHoverZoneClick,
   className = ""
 }: MultiSectionCanvasProps) {
   const handleMoveSection = useCallback(
@@ -72,6 +77,20 @@ export function MultiSectionCanvas({
 
   // Empty state
   if (sections.length === 0) {
+    // Use HoverZone for builder mode
+    if (useHoverZones && onHoverZoneClick) {
+      return (
+        <div className={`min-h-[400px] ${className} relative pl-14`}>
+          <HoverZone
+            position={0}
+            onAddClick={onHoverZoneClick}
+            isEmpty={true}
+          />
+        </div>
+      );
+    }
+
+    // Default empty state for non-builder mode
     return (
       <div className={`min-h-[400px] flex items-center justify-center ${className}`}>
         <div className="text-center">
@@ -98,7 +117,7 @@ export function MultiSectionCanvas({
   // Sections with drag reordering
   if (enableDragReorder && onReorder) {
     return (
-      <div className={className}>
+      <div className={`${className} relative pl-14`}>
         <Reorder.Group
           axis="y"
           values={sections}
@@ -106,13 +125,17 @@ export function MultiSectionCanvas({
           className="space-y-0"
         >
           <AnimatePresence mode="sync">
+            {/* HoverZone or Add button before first section */}
+            {useHoverZones && onHoverZoneClick ? (
+              <HoverZone position={0} onAddClick={onHoverZoneClick} />
+            ) : (
+              showAddButtons && onAddSection && (
+                <AddSectionButton onClick={() => onAddSection(0)} />
+              )
+            )}
+
             {sections.map((section, index) => (
               <div key={section.id}>
-                {/* Add button before first section */}
-                {showAddButtons && index === 0 && onAddSection && (
-                  <AddSectionButton onClick={() => onAddSection(0)} />
-                )}
-
                 <Reorder.Item
                   key={section.id}
                   value={section}
@@ -133,9 +156,13 @@ export function MultiSectionCanvas({
                   </SectionWrapper>
                 </Reorder.Item>
 
-                {/* Add button after each section */}
-                {showAddButtons && onAddSection && (
-                  <AddSectionButton onClick={() => onAddSection(index + 1)} />
+                {/* HoverZone or Add button after each section */}
+                {useHoverZones && onHoverZoneClick ? (
+                  <HoverZone position={index + 1} onAddClick={onHoverZoneClick} />
+                ) : (
+                  showAddButtons && onAddSection && (
+                    <AddSectionButton onClick={() => onAddSection(index + 1)} />
+                  )
                 )}
               </div>
             ))}
@@ -147,15 +174,19 @@ export function MultiSectionCanvas({
 
   // Sections without drag reordering
   return (
-    <div className={className}>
+    <div className={`${className} relative pl-14`}>
       <AnimatePresence mode="sync">
+        {/* HoverZone or Add button before first section */}
+        {useHoverZones && onHoverZoneClick ? (
+          <HoverZone position={0} onAddClick={onHoverZoneClick} />
+        ) : (
+          showAddButtons && onAddSection && (
+            <AddSectionButton onClick={() => onAddSection(0)} />
+          )
+        )}
+
         {sections.map((section, index) => (
           <div key={section.id}>
-            {/* Add button before first section */}
-            {showAddButtons && index === 0 && onAddSection && (
-              <AddSectionButton onClick={() => onAddSection(0)} />
-            )}
-
             <SectionWrapper
               id={section.id}
               index={index}
@@ -170,9 +201,13 @@ export function MultiSectionCanvas({
               {renderSection(section)}
             </SectionWrapper>
 
-            {/* Add button after each section */}
-            {showAddButtons && onAddSection && (
-              <AddSectionButton onClick={() => onAddSection(index + 1)} />
+            {/* HoverZone or Add button after each section */}
+            {useHoverZones && onHoverZoneClick ? (
+              <HoverZone position={index + 1} onAddClick={onHoverZoneClick} />
+            ) : (
+              showAddButtons && onAddSection && (
+                <AddSectionButton onClick={() => onAddSection(index + 1)} />
+              )
             )}
           </div>
         ))}

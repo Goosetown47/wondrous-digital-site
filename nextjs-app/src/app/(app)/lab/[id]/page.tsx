@@ -12,7 +12,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { labDraftService } from '@/lib/supabase/lab-drafts';
 import { useTypes, useTypesByCategory } from '@/hooks/useTypes';
 import { useThemes, useTheme } from '@/hooks/useThemes';
-import { ThemeProvider } from '@/components/builder/ThemeProvider';
 import {
   Monitor, Tablet, Smartphone,
   Edit2,
@@ -921,9 +920,7 @@ export default function EditDraftPage() {
               isDarkMode={isDarkMode}
               data-testid="resizable-preview"
             >
-              <ThemeProvider theme={selectedTheme} className="min-h-full">
-                <LabCanvas />
-              </ThemeProvider>
+              <LabCanvas theme={selectedTheme} />
             </ResizablePreview>
           ) : (
             <div className="p-8">

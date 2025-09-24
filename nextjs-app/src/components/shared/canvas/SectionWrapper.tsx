@@ -24,9 +24,9 @@ export function SectionWrapper({
   id,
   index,
   totalSections,
-  isSelected = false,
+  isSelected: _isSelected = false, // eslint-disable-line @typescript-eslint/no-unused-vars
   children,
-  onSelect,
+  onSelect: _onSelect, // eslint-disable-line @typescript-eslint/no-unused-vars
   onMoveUp,
   onMoveDown,
   onDelete,
@@ -63,7 +63,6 @@ export function SectionWrapper({
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onSelect}
       {...dragHandleProps}
     >
       {/* Background layer that ensures full wrapper is hoverable */}
@@ -79,7 +78,7 @@ export function SectionWrapper({
           onMoveDown={onMoveDown || (() => {})}
           onDelete={onDelete || (() => {})}
           onSettings={onSettings}
-          isVisible={isHovered || isSelected}
+          isVisible={isHovered} // Only show on hover, not on selected
         />
       )}
 

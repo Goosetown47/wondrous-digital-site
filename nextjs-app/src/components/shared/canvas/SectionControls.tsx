@@ -34,11 +34,11 @@ export function SectionControls({
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -10 }}
           transition={{ duration: 0.2 }}
-          className="absolute top-2 right-2 z-30 flex items-center gap-1 bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg p-1"
+          className="absolute -left-12 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-1 bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg p-1"
         >
           {/* Drag Handle */}
           <div className="px-1 py-1 cursor-move text-muted-foreground hover:text-foreground">

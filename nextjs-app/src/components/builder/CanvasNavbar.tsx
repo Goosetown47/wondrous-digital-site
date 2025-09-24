@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { ThemeSelector } from '@/components/builder/ThemeSelector';
 import { useProjectPages, usePublishPage } from '@/hooks/usePages';
 import { useRouter } from 'next/navigation';
-import { Save, Loader2, Eye, Plus, FileText, Calendar, Check, AlertCircle, Upload } from 'lucide-react';
+import { Loader2, Eye, Plus, Calendar, AlertCircle, Upload, Monitor, Tablet, Smartphone } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useBuilderStore } from '@/stores/builderStore';
@@ -31,9 +31,10 @@ interface CanvasNavbarProps {
   themeId?: string;
   sectionCount: number;
   lastSaved: Date | null;
-  onSave: () => void;
   saveSuccess?: boolean;
   saveError?: Error | null;
+  deviceView?: 'desktop' | 'tablet' | 'mobile';
+  onDeviceViewChange?: (view: 'desktop' | 'tablet' | 'mobile') => void;
 }
 
 export function CanvasNavbar({
@@ -43,14 +44,15 @@ export function CanvasNavbar({
   currentPage,
   themeId,
   sectionCount,
-  onSave,
+  deviceView = 'desktop',
+  onDeviceViewChange,
 }: CanvasNavbarProps) {
   const router = useRouter();
   const { data: pages } = useProjectPages(projectId);
   const publishPage = usePublishPage();
   
   // Get save status and unpublished changes from Zustand (single source of truth)
-  const { saveStatus, lastSavedAt, saveError: storeSaveError, isDirty, hasUnpublishedChanges } = useBuilderStore();
+  const { saveStatus, saveError: storeSaveError, isDirty, hasUnpublishedChanges } = useBuilderStore();
 
   const handlePageChange = (pageId: string) => {
     router.push(`/builder/${projectId}/${pageId}`);
@@ -68,123 +70,47 @@ export function CanvasNavbar({
 
   return (
     <div className="sticky top-0 z-40 bg-background border-b">
+      {/* First Row - Page Context & Primary Actions */}
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">
-          {/* Left side - Page info and metrics */}
-          <div className="flex items-center gap-4">
-            {/* Page selector */}
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <Select value={currentPageId} onValueChange={handlePageChange}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select a page">
-                    {currentPage?.title || 'Loading...'}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {pages?.map((page) => (
-                    <SelectItem key={page.id} value={page.id}>
-                      {page.title}
-                      {page.path === '/' && (
-                        <span className="ml-2 text-xs text-muted-foreground">(Home)</span>
-                      )}
-                    </SelectItem>
-                  ))}
-                  <div className="border-t mt-1 pt-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start"
-                      asChild
-                    >
-                      <Link href={`/builder/${projectId}/pages`}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create New Page
-                      </Link>
-                    </Button>
-                  </div>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Divider */}
-            <div className="h-6 w-px bg-border" />
-
-            {/* Page metrics */}
-            <div className="flex items-center gap-3 text-sm">
-              <span className="text-muted-foreground">
-                {sectionCount} section{sectionCount !== 1 ? 's' : ''}
-              </span>
-              
-              {currentPage?.status && (
-                <Badge 
-                  variant={currentPage.status === 'published' ? 'default' : 'secondary'}
-                >
-                  {currentPage.status === 'published' ? 'Live' : 'Draft'}
-                </Badge>
-              )}
-
-              {currentPage?.version && (
-                <span className="text-muted-foreground">
-                  v{currentPage.version}
-                </span>
-              )}
-
-              {currentPage?.updated_at && (
-                <span className="text-muted-foreground flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {format(new Date(currentPage.updated_at), 'MMM d, h:mm a')}
-                </span>
-              )}
-            </div>
+          {/* Left side - Page selector */}
+          <div className="flex items-center gap-2">
+            <Select value={currentPageId} onValueChange={handlePageChange}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select a page">
+                  {currentPage?.title || 'Loading...'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {pages?.map((page) => (
+                  <SelectItem key={page.id} value={page.id}>
+                    {page.title}
+                    {page.path === '/' && (
+                      <span className="ml-2 text-xs text-muted-foreground">(Home)</span>
+                    )}
+                  </SelectItem>
+                ))}
+                <div className="border-t mt-1 pt-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start"
+                    asChild
+                  >
+                    <Link href={`/builder/${projectId}/pages`}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create New Page
+                    </Link>
+                  </Button>
+                </div>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Right side - Actions */}
+          {/* Right side - Primary Actions */}
           <div className="flex items-center gap-3">
-            {/* Theme selector */}
-            <ThemeSelector 
-              projectId={projectId} 
-              currentThemeId={themeId} 
-            />
-
-            <div className="h-6 w-px bg-border" />
-
-            {/* Preview button */}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => {
-                // Navigate directly to preview - it will use Zustand state
-                router.push(`/preview/${projectId}/${currentPageId}`);
-              }}
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Preview
-            </Button>
-
-            {/* Publish button */}
-            <Button 
-              onClick={handlePublish}
-              disabled={publishPage.isPending || !hasUnpublishedChanges()}
-              size="sm"
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              {publishPage.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Publishing...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Publish Changes
-                </>
-              )}
-            </Button>
-
-            {/* Auto-save status indicator */}
-            <div className="flex items-center gap-2">
-              {/* Save status indicator */}
+            {/* Save status indicator - only show when active */}
+            {(saveStatus === 'saving' || saveStatus === 'error' || isDirty || hasUnpublishedChanges()) && (
               <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-muted/50">
                 {saveStatus === 'saving' && (
                   <>
@@ -192,16 +118,7 @@ export function CanvasNavbar({
                     <span className="text-xs text-blue-600">Saving draft...</span>
                   </>
                 )}
-                
-                {saveStatus === 'saved' && !isDirty && (
-                  <>
-                    <Check className="w-3 h-3 text-green-600" />
-                    <span className="text-xs text-green-600">
-                      Draft saved {lastSavedAt ? format(lastSavedAt, 'h:mm a') : ''}
-                    </span>
-                  </>
-                )}
-                
+
                 {saveStatus === 'error' && (
                   <>
                     <AlertCircle className="w-3 h-3 text-red-600" />
@@ -210,7 +127,7 @@ export function CanvasNavbar({
                     </span>
                   </>
                 )}
-                
+
                 {isDirty && saveStatus !== 'saving' && (
                   <>
                     <div className="w-2 h-2 rounded-full bg-orange-500" />
@@ -225,18 +142,123 @@ export function CanvasNavbar({
                   </>
                 )}
               </div>
+            )}
 
-              {/* Manual save button (for edge cases) */}
-              <Button 
-                size="sm" 
-                variant="ghost"
-                onClick={onSave}
-                disabled={saveStatus === 'saving' || !isDirty}
-                title="Force save draft now"
+            {/* Preview button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // Navigate directly to preview - it will use Zustand state
+                router.push(`/preview/${projectId}/${currentPageId}`);
+              }}
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Preview
+            </Button>
+
+            {/* Publish button */}
+            <Button
+              onClick={handlePublish}
+              disabled={publishPage.isPending || !hasUnpublishedChanges()}
+              size="sm"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              {publishPage.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Publish Changes
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Second Row - Canvas Controls & Configuration */}
+      <div className="border-t px-4 py-2">
+        <div className="flex items-center justify-between">
+          {/* Left side - Page metrics */}
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-muted-foreground">
+              {sectionCount} section{sectionCount !== 1 ? 's' : ''}
+            </span>
+
+            {currentPage?.status && (
+              <Badge
+                variant={currentPage.status === 'published' ? 'default' : 'secondary'}
+                className="h-5"
               >
-                <Save className="w-4 h-4" />
-              </Button>
+                {currentPage.status === 'published' ? 'Live' : 'Draft'}
+              </Badge>
+            )}
+
+            {currentPage?.version && (
+              <span className="text-muted-foreground">
+                v{currentPage.version}
+              </span>
+            )}
+
+            {currentPage?.updated_at && (
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {format(new Date(currentPage.updated_at), 'MMM d, h:mm a')}
+              </span>
+            )}
+          </div>
+
+          {/* Right side - Canvas controls */}
+          <div className="flex items-center gap-3">
+            {/* Viewport controls */}
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground">Viewport</span>
+              <div className="flex items-center gap-1" data-testid="viewport-controls">
+                <Button
+                  variant={deviceView === 'desktop' ? 'default' : 'ghost'}
+                  size="icon"
+                  className={`h-8 w-8 ${deviceView === 'desktop' ? 'bg-primary' : ''}`}
+                  onClick={() => onDeviceViewChange?.('desktop')}
+                  aria-label="Desktop view"
+                >
+                  <Monitor className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={deviceView === 'tablet' ? 'default' : 'ghost'}
+                  size="icon"
+                  className={`h-8 w-8 ${deviceView === 'tablet' ? 'bg-primary' : ''}`}
+                  onClick={() => onDeviceViewChange?.('tablet')}
+                  aria-label="Tablet view"
+                >
+                  <Tablet className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={deviceView === 'mobile' ? 'default' : 'ghost'}
+                  size="icon"
+                  className={`h-8 w-8 ${deviceView === 'mobile' ? 'bg-primary' : ''}`}
+                  onClick={() => onDeviceViewChange?.('mobile')}
+                  aria-label="Mobile view"
+                >
+                  <Smartphone className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
+
+            <div className="h-6 w-px bg-border" />
+
+            {/* Theme selector with label */}
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground">Theme</span>
+              <ThemeSelector
+                projectId={projectId}
+                currentThemeId={themeId}
+              />
+            </div>
+
           </div>
         </div>
       </div>
