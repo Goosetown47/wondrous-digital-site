@@ -141,7 +141,6 @@ export async function PUT(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-
   } catch (error) {
     console.error('Unexpected error in profile update:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

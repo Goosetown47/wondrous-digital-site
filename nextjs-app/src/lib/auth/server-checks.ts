@@ -1,37 +1,33 @@
-import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { redirect } from 'next/navigation';
 import { env } from '@/env.mjs';
+import { getBuildSafeCookieStore } from '@/lib/cookies/build-safe';
 
 /**
  * Server-side authentication and role checks for Next.js App Router
  */
 
-export async function getServerUser() {
-  const cookieStore = await cookies();
-  
-  const supabase = createServerClient(
+async function createAuthClient() {
+  const cookieStore = await getBuildSafeCookieStore();
+
+  return createServerClient(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
+        getAll: () => cookieStore.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
         },
       },
     }
   );
+}
+
+export async function getServerUser() {
+  const supabase = await createAuthClient();
 
   const { data: { user }, error } = await supabase.auth.getUser();
   
@@ -54,29 +50,7 @@ export async function requireAuth() {
 
 export async function requireAdminOrStaff() {
   const user = await requireAuth();
-  
-  const cookieStore = await cookies();
-  
-  const supabase = createServerClient(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Ignore in Server Components
-          }
-        },
-      },
-    }
-  );
+  const supabase = await createAuthClient();
 
   // Check if user is admin or staff
   const { data: platformRole } = await supabase
@@ -95,29 +69,7 @@ export async function requireAdminOrStaff() {
 
 export async function requireAdmin() {
   const user = await requireAuth();
-  
-  const cookieStore = await cookies();
-  
-  const supabase = createServerClient(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Ignore in Server Components
-          }
-        },
-      },
-    }
-  );
+  const supabase = await createAuthClient();
 
   // Check if user is admin
   const { data: platformRole } = await supabase

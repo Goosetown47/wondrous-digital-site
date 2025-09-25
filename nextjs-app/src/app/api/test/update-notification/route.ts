@@ -58,7 +58,6 @@ export async function POST(request: NextRequest) {
       },
       nextStep: 'Run GET /api/cron/grace-period?testEmail=your-email to send the notification'
     });
-
   } catch (error) {
     console.error('Failed to update notification:', error);
     return NextResponse.json(

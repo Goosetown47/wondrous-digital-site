@@ -64,7 +64,6 @@ export async function POST(request: NextRequest) {
         stripeCustomerId: data.stripe_customer_id
       }
     });
-
   } catch (error) {
     console.error('Failed to set subscription:', error);
     return NextResponse.json(

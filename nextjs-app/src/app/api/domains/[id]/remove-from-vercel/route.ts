@@ -33,7 +33,7 @@ export async function DELETE(
     // Remove domain from Vercel
     try {
       await removeDomainFromVercel(domain.domain);
-    } catch (vercelError) {
+  } catch (vercelError) {
       // If domain doesn't exist in Vercel, that's okay
       console.warn('Error removing domain from Vercel:', vercelError);
     }

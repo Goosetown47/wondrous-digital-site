@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
     try {
       adminClient = createAdminClient();
       console.log('✅ [API/Users/Create] Admin client created successfully');
-    } catch (adminError) {
+  } catch (adminError) {
       console.error('❌ [API/Users/Create] Failed to create admin client:', adminError);
       return NextResponse.json({ 
         error: 'Failed to initialize admin client. Check SUPABASE_SERVICE_ROLE_KEY.' 
@@ -367,7 +367,6 @@ export async function POST(req: NextRequest) {
     
     console.log('🔍 [API/Users/Create] Sending response:', responseData);
     return NextResponse.json(responseData);
-
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error('❌ [API/Users/Create] Validation error:', error.issues);

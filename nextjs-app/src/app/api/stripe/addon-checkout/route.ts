@@ -168,7 +168,6 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ url: session.url });
-    
   } catch (error) {
     console.error('Addon checkout error:', error);
     return NextResponse.json(

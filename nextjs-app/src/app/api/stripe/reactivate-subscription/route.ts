@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
           account.stripe_subscription_id,
           { cancel_at_period_end: true }
         );
-      } catch (revertError) {
+  } catch (revertError) {
         console.error('Failed to revert Stripe reactivation:', revertError);
       }
 
@@ -145,7 +145,6 @@ export async function POST(request: NextRequest) {
         ? new Date((updatedSubscription as any).current_period_end * 1000).toISOString()
         : null,
     });
-
   } catch (error) {
     console.error('Reactivate subscription error:', error);
     return NextResponse.json(

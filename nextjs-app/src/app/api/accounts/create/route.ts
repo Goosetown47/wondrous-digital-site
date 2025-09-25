@@ -154,7 +154,6 @@ export async function POST(request: NextRequest) {
       name: account.name,
       slug: account.slug,
     });
-
   } catch (error) {
     console.error('Unexpected error in account creation:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

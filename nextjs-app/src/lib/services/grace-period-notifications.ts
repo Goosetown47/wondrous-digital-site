@@ -154,7 +154,6 @@ export async function checkAndSendGracePeriodNotifications(
       
       result.sent++;
       result.notificationTypes.push(notification.notification_type);
-      
     } catch (error) {
       const errorMessage = `Failed to send notification ${notification.id}: ${error}`;
       console.error(errorMessage);

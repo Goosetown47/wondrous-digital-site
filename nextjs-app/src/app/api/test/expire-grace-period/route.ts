@@ -66,7 +66,6 @@ export async function POST(request: NextRequest) {
       },
       nextStep: 'Run GET /api/cron/grace-period to process the expiration and downgrade'
     });
-
   } catch (error) {
     console.error('Failed to expire grace period:', error);
     return NextResponse.json(

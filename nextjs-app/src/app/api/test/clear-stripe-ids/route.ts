@@ -54,7 +54,6 @@ export async function POST(request: NextRequest) {
         stripeSubscriptionId: data.stripe_subscription_id
       }
     });
-
   } catch (error) {
     console.error('Failed to clear Stripe IDs:', error);
     return NextResponse.json(

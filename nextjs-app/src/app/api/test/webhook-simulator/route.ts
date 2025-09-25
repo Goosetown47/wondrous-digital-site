@@ -146,7 +146,6 @@ export async function POST(request: NextRequest) {
         '2. Verify subscription is active'
       ]
     });
-
   } catch (error) {
     console.error('Webhook simulation failed:', error);
     return NextResponse.json(

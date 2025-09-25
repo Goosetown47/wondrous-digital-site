@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { getBuildSafeCookieStore } from '@/lib/cookies/build-safe';
 import { env } from '@/env.mjs';
 import { isAdmin, isStaff } from '@/lib/permissions';
 
@@ -20,23 +20,17 @@ export async function PUT(
     }
 
     // Create server-side Supabase client
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const supabase = createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Ignore cookie setting errors in server components
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -139,7 +133,7 @@ export async function PUT(
             reassigned_by: user.email
           }
         });
-    } catch (logError) {
+  } catch (logError) {
       console.error('Failed to log account reassignment:', logError);
       // Continue despite logging failure
     }
@@ -151,7 +145,6 @@ export async function PUT(
       message: 'Project account updated successfully',
       project: updatedProject
     });
-
   } catch (error) {
     console.error('Account reassignment error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

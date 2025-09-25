@@ -460,7 +460,6 @@ export async function POST(request: NextRequest) {
       stripeLineItems: lineItems,
       stripeInvoiceTotal: upcomingInvoice.amount_due / 100,
     });
-    
   } catch (error) {
     console.error('Subscription preview error:', error);
     return NextResponse.json(

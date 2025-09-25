@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { getBuildSafeCookieStore } from '@/lib/cookies/build-safe';
 import { env } from '@/env.mjs';
 import { isAdmin, isStaff, getUserRole, getUserAccounts } from '@/lib/permissions';
 
@@ -22,7 +22,7 @@ export async function GET() {
     };
 
     // Step 1: Analyze all cookies
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const allCookies = cookieStore.getAll();
     
     result.step1_cookies = {
@@ -47,17 +47,11 @@ export async function GET() {
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch (e) {
-              console.warn('Could not set cookies:', e);
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -140,7 +134,7 @@ export async function GET() {
     let userAccountsError = null;
     try {
       userAccounts = await getUserAccounts(user.id, supabase);
-    } catch (e) {
+  } catch (e) {
       userAccountsError = e instanceof Error ? e.message : 'Unknown error';
     }
 
@@ -241,7 +235,6 @@ export async function GET() {
     };
 
     return NextResponse.json(result, { status: 200 });
-
   } catch (error) {
     console.error('❌ [DEBUG/Auth] Error:', error);
     return NextResponse.json({

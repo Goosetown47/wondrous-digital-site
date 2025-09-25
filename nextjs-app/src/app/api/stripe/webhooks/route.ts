@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import { WEBHOOK_EVENTS } from '@/lib/stripe/config';
 import { verifyWebhookSignature, updateAccountTier, startGracePeriod } from '@/lib/stripe/utils';
 import { createSupabaseServiceClient } from '@/lib/supabase/service';
@@ -14,11 +13,10 @@ export async function POST(request: NextRequest) {
   console.log('Timestamp:', new Date().toISOString());
   console.log('Environment:', getEnvironmentName());
   console.log('Stripe Mode:', getStripeMode());
-  
+
   try {
     const body = await request.text();
-    const headersList = await headers();
-    const signature = headersList.get('stripe-signature');
+    const signature = request.headers.get('stripe-signature');
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     
     console.log('Webhook secret exists?', !!webhookSecret);
@@ -35,7 +33,7 @@ export async function POST(request: NextRequest) {
     let event: Stripe.Event;
     try {
       event = verifyWebhookSignature(body, signature, webhookSecret);
-    } catch (err) {
+  } catch (err) {
       console.error('Webhook signature verification failed:', err);
       return NextResponse.json(
         { error: 'Invalid signature' },
@@ -210,8 +208,7 @@ export async function POST(request: NextRequest) {
               });
               
             console.log('✅ Billing history logged');
-            
-          } catch (error) {
+  } catch (error) {
             console.error('Failed to process upgrade after payment:', error);
             // Payment succeeded but upgrade failed - this needs manual review
           }
@@ -758,8 +755,7 @@ export async function POST(request: NextRequest) {
               });
               
             console.log('✅ Billing history logged for upgrade');
-            
-          } catch (error) {
+  } catch (error) {
             console.error('Failed to process upgrade after invoice payment:', error);
             // Payment succeeded but upgrade failed - this needs manual review
             // Log error to billing history
@@ -792,7 +788,6 @@ export async function POST(request: NextRequest) {
       .eq('stripe_event_id', event.id);
 
     return NextResponse.json({ received: true });
-    
   } catch (error) {
     console.error('Webhook processing error:', error);
     

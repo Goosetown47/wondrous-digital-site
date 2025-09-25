@@ -83,8 +83,7 @@ export async function POST(request: NextRequest) {
       console.log('Portal session created successfully');
 
       return NextResponse.json({ url: session.url });
-
-    } catch (stripeError) {
+  } catch (stripeError) {
       console.error('Stripe error creating portal session:', stripeError);
 
       // Check if it's the configuration error

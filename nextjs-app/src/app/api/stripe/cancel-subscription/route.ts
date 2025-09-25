@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
           account.stripe_subscription_id,
           { cancel_at_period_end: false }
         );
-      } catch (revertError) {
+  } catch (revertError) {
         console.error('Failed to revert Stripe cancellation:', revertError);
       }
 
@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
       });
 
       console.log('Cancellation notification email sent to hello@wondrousdigital.com');
-    } catch (emailError) {
+  } catch (emailError) {
       // Log error but don't fail the cancellation
       console.error('Failed to send cancellation notification email:', emailError);
       // Could store this in a failed_notifications table for retry later
@@ -214,7 +214,6 @@ export async function POST(request: NextRequest) {
       cancelDate: cancelDate.toISOString(),
       currentTier: account.tier,
     });
-
   } catch (error) {
     console.error('Cancel subscription error:', error);
     return NextResponse.json(

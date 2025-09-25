@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         account.tier
       );
       updates.performed.push('Scheduled 4 grace period notifications');
-    } catch (notifError) {
+  } catch (notifError) {
       updates.errors.push(`Failed to schedule notifications: ${notifError instanceof Error ? notifError.message : 'Unknown error'}`);
     }
 
@@ -145,7 +145,6 @@ export async function POST(request: NextRequest) {
         '5. To clear: POST /api/test/clear-grace-period with { accountId: \'' + accountId + '\' }'
       ]
     });
-
   } catch (error) {
     console.error('Test grace period trigger failed:', error);
     return NextResponse.json(

@@ -338,7 +338,7 @@ export async function POST(
               await supabase.from('project_domains').delete().eq('id', added.id);
               try {
                 await removeDomainFromVercel(added.domain);
-              } catch (e) {
+  } catch (e) {
                 console.error(`[DOMAIN] Failed to rollback ${added.domain} from Vercel:`, e);
               }
             }
@@ -439,7 +439,7 @@ export async function DELETE(
       try {
         await removeDomainFromVercel(domainToRemove.domain);
         console.log(`[DOMAIN] Removed ${domainToRemove.domain} from Vercel`);
-      } catch (vercelError) {
+  } catch (vercelError) {
         console.warn(`[DOMAIN] Error removing ${domainToRemove.domain} from Vercel:`, vercelError);
         // Continue anyway - domain might not exist in Vercel
       }

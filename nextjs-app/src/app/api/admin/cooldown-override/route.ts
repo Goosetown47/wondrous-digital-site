@@ -59,7 +59,6 @@ export async function POST(request: NextRequest) {
       }`,
       cooldownOverride: enabled
     });
-    
   } catch (error) {
     console.error('Cooldown override error:', error);
     return NextResponse.json(

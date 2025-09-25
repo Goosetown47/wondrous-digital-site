@@ -94,7 +94,6 @@ export async function GET(request: NextRequest) {
     console.log(`[${timestamp}] Grace Period Cron Job - Completed in ${executionTime}ms`);
     
     return NextResponse.json(response);
-    
   } catch (error) {
     console.error('Grace period cron job failed:', error);
     return NextResponse.json(
@@ -163,7 +162,6 @@ export async function POST(request: NextRequest) {
       action,
       ...(typeof result === 'object' && result !== null ? result : { result })
     });
-    
   } catch (error) {
     console.error('Manual grace period trigger failed:', error);
     return NextResponse.json(

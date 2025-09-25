@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
           account.stripe_subscription_id,
           { expand: ['customer', 'items.data.price'] }
         );
-      } catch (error) {
+  } catch (error) {
         console.error('Error fetching subscription:', error);
       }
     }
@@ -466,7 +466,6 @@ export async function GET(request: NextRequest) {
       upcomingInvoice,
       pendingChange,
     });
-    
   } catch (error) {
     console.error('Billing details error:', error);
     return NextResponse.json(

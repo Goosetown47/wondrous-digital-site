@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
         }) as React.ReactElement,
       });
       results.push({ type: 'Day 13 - Urgent Reminder', success: !!day13Result.data });
-    } catch (day13Error) {
+  } catch (day13Error) {
       console.error('Day 13 email error:', day13Error);
       results.push({ type: 'Day 13 - Urgent Reminder', success: false, error: day13Error instanceof Error ? day13Error.message : 'Unknown error' });
     }
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
         }) as React.ReactElement,
       });
       results.push({ type: 'Day 14 - Account Downgraded', success: !!downgradeResult.data });
-    } catch (downgradeError) {
+  } catch (downgradeError) {
       console.error('Day 14 email error:', downgradeError);
       results.push({ type: 'Day 14 - Account Downgraded', success: false, error: downgradeError instanceof Error ? downgradeError.message : 'Unknown error' });
     }
@@ -115,7 +115,6 @@ export async function GET(request: NextRequest) {
       results,
       note: 'Check your inbox for all 4 test emails. They are marked with [TEST] in the subject.'
     });
-
   } catch (error) {
     console.error('Failed to send test emails:', error);
     return NextResponse.json(

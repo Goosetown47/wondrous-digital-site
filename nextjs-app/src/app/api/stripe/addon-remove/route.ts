@@ -176,7 +176,6 @@ export async function POST(request: NextRequest) {
         status: updatedSubscription.status,
       }
     });
-    
   } catch (error) {
     console.error('Addon removal error:', error);
     return NextResponse.json(

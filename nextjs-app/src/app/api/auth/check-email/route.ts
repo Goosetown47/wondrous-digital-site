@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
       available: !emailExists,
       message: emailExists ? 'This email is already registered' : 'Email is available'
     });
-
   } catch (error) {
     console.error('Check email error:', error);
     return NextResponse.json(

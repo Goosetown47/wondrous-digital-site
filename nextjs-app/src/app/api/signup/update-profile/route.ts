@@ -127,7 +127,7 @@ export async function POST(request: Request) {
       profile,
       message: 'Profile updated successfully'
     });
-    
+
   } catch (error) {
     console.error('Unexpected error updating profile:', error);
     return NextResponse.json(

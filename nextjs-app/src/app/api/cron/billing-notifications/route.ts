@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
         }
 
         console.log(`${type}: Processed ${typeResults.processed}, Sent ${typeResults.sent}, Skipped ${typeResults.skipped}, Failed ${typeResults.failed}`);
-      } catch (error) {
+  } catch (error) {
         const errorMessage = `Error processing ${type} notifications: ${error instanceof Error ? error.message : 'Unknown error'}`;
         console.error(errorMessage);
         results.errors.push(errorMessage);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { cookies } from 'next/headers';
+import { getBuildSafeCookieStore } from '@/lib/cookies/build-safe';
 import { env } from '@/env.mjs';
 import { ensureComponentName } from '@/lib/services/naming-service';
 
@@ -14,23 +14,17 @@ export async function GET(
 
   try {
     // Verify authentication
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const authClient = createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Ignore cookie setting errors
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -75,7 +69,6 @@ export async function GET(
     };
 
     return NextResponse.json(formattedDraft);
-
   } catch (error) {
     console.error('❌ [API/Lab/Id] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -91,23 +84,17 @@ export async function PUT(
 
   try {
     // Verify authentication
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const authClient = createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Ignore cookie setting errors
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -199,7 +186,6 @@ export async function PUT(
     };
 
     return NextResponse.json(formattedDraft);
-
   } catch (error) {
     console.error('❌ [API/Lab/Id] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -215,23 +201,17 @@ export async function DELETE(
 
   try {
     // Verify authentication
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const authClient = createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Ignore cookie setting errors
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -310,7 +290,6 @@ export async function DELETE(
       });
 
     return NextResponse.json({ success: true });
-
   } catch (error) {
     console.error('❌ [API/Lab/Id] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

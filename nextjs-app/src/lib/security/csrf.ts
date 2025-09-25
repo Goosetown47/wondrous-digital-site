@@ -33,15 +33,18 @@ export async function verifyCSRFToken(token: string): Promise<boolean> {
 export async function setCSRFCookie(): Promise<string> {
   const token = await generateCSRFToken();
   const cookieStore = await cookies();
-  
-  cookieStore.set(CSRF_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    path: '/',
-    maxAge: 60 * 60 * 24, // 24 hours
-  });
-  
+
+  // Add build-time safety check
+  if (cookieStore?.set) {
+    cookieStore.set(CSRF_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 60 * 60 * 24, // 24 hours
+    });
+  }
+
   return token;
 }
 
@@ -52,7 +55,8 @@ export async function validateCSRFRequest(request: NextRequest): Promise<boolean
   }
 
   const cookieStore = await cookies();
-  const cookieToken = cookieStore.get(CSRF_COOKIE_NAME)?.value;
+  // Add build-time safety check
+  const cookieToken = cookieStore?.get?.(CSRF_COOKIE_NAME)?.value;
   const headerToken = request.headers.get(CSRF_HEADER_NAME);
   
   if (!cookieToken || !headerToken) {
