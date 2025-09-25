@@ -90,7 +90,7 @@ export default function CreateUserPage() {
   // Generate random password
   const generatePassword = () => {
     const length = 16;
-    // eslint-disable-next-line no-secrets/no-secrets -- This is a character set for password generation, not a secret
+    // eslint-disable-next-line-- This is a character set for password generation, not a secret
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
     let password = '';
     for (let i = 0; i < length; i++) {
@@ -106,14 +106,14 @@ export default function CreateUserPage() {
 
     try {
       console.log('Submitting user creation form with values:', values);
-      
+
       // Clean up the data - convert empty strings to undefined
       const cleanedValues = {
         ...values,
         display_name: values.display_name || undefined,
         account_id: values.account_id || undefined,
       };
-      
+
       const result = await createUser(cleanedValues);
 
       if (result.success) {

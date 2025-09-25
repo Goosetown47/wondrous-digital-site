@@ -59,7 +59,7 @@ describe('PrimarySidebar', () => {
     forward: vi.fn(),
     replace: vi.fn(),
     prefetch: vi.fn(),
-  } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  } as any;
 
   const mockSetModule = vi.fn();
   const mockSignOut = vi.fn();
@@ -76,7 +76,7 @@ describe('PrimarySidebar', () => {
         display_name: 'John Doe',
         avatar_url: null,
       },
-    } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    } as any);
     vi.mocked(useAuth).mockReturnValue({
       signOut: mockSignOut,
       user: null,
@@ -94,7 +94,7 @@ describe('PrimarySidebar', () => {
   describe('Module Icon Tooltips', () => {
     it('should render Dashboard module button', () => {
       render(<PrimarySidebar isAdmin={true} />);
-      
+
       const buttons = screen.getAllByRole('button');
       expect(buttons[0]).toBeInTheDocument();
       // Dashboard button should exist
@@ -102,7 +102,7 @@ describe('PrimarySidebar', () => {
 
     it('should render Builder module button', () => {
       render(<PrimarySidebar isAdmin={true} />);
-      
+
       const buttons = screen.getAllByRole('button');
       expect(buttons[1]).toBeInTheDocument();
       // Builder button should exist
@@ -110,7 +110,7 @@ describe('PrimarySidebar', () => {
 
     it('should render Admin module button when user is admin', () => {
       render(<PrimarySidebar isAdmin={true} />);
-      
+
       const buttons = screen.getAllByRole('button');
       expect(buttons[2]).toBeInTheDocument();
       // Admin button should exist
@@ -118,7 +118,7 @@ describe('PrimarySidebar', () => {
 
     it('should not show Admin module when user is not admin', () => {
       render(<PrimarySidebar isAdmin={false} />);
-      
+
       const buttons = screen.getAllByRole('button');
       // Should have Dashboard, Builder, Help, Profile - but not Admin
       expect(buttons.length).toBeLessThan(5);
@@ -129,10 +129,10 @@ describe('PrimarySidebar', () => {
     it('should switch to Dashboard module when clicked', async () => {
       const user = userEvent.setup();
       render(<PrimarySidebar isAdmin={true} />);
-      
+
       const dashboardButton = screen.getAllByRole('button')[0];
       await user.click(dashboardButton);
-      
+
       expect(mockSetModule).toHaveBeenCalledWith('dashboard');
       expect(mockRouter.push).toHaveBeenCalledWith('/dashboard');
     });
@@ -140,10 +140,10 @@ describe('PrimarySidebar', () => {
     it('should switch to Builder module when clicked', async () => {
       const user = userEvent.setup();
       render(<PrimarySidebar isAdmin={true} />);
-      
+
       const builderButton = screen.getAllByRole('button')[1];
       await user.click(builderButton);
-      
+
       expect(mockSetModule).toHaveBeenCalledWith('builder');
       expect(mockRouter.push).toHaveBeenCalledWith('/builder');
     });
@@ -151,10 +151,10 @@ describe('PrimarySidebar', () => {
     it('should switch to Admin module when clicked', async () => {
       const user = userEvent.setup();
       render(<PrimarySidebar isAdmin={true} />);
-      
+
       const adminButton = screen.getAllByRole('button')[2];
       await user.click(adminButton);
-      
+
       expect(mockSetModule).toHaveBeenCalledWith('admin');
       expect(mockRouter.push).toHaveBeenCalledWith('/admin');
     });
@@ -166,9 +166,9 @@ describe('PrimarySidebar', () => {
         currentModule: 'dashboard',
         setModule: mockSetModule,
       });
-      
+
       render(<PrimarySidebar isAdmin={true} />);
-      
+
       const dashboardButton = screen.getAllByRole('button')[0];
       // Check that the active module has the correct background color
       expect(dashboardButton).toHaveStyle({ backgroundColor: '#EFEFEF' });
@@ -179,9 +179,9 @@ describe('PrimarySidebar', () => {
         currentModule: 'builder',
         setModule: mockSetModule,
       });
-      
+
       render(<PrimarySidebar isAdmin={true} />);
-      
+
       const builderButton = screen.getAllByRole('button')[1];
       expect(builderButton).toHaveStyle({ backgroundColor: '#AA60C4' });
     });
@@ -191,10 +191,10 @@ describe('PrimarySidebar', () => {
     it('should open profile dropdown when avatar is clicked', async () => {
       const user = userEvent.setup();
       render(<PrimarySidebar isAdmin={true} />);
-      
+
       const avatar = screen.getByText('JD'); // Initials from John Doe
       await user.click(avatar);
-      
+
       expect(screen.getByText('Profile Settings')).toBeInTheDocument();
       expect(screen.getByText('Security')).toBeInTheDocument();
       expect(screen.getByText('Sign Out')).toBeInTheDocument();
@@ -203,26 +203,26 @@ describe('PrimarySidebar', () => {
     it('should navigate to profile when Profile option is clicked', async () => {
       const user = userEvent.setup();
       render(<PrimarySidebar isAdmin={true} />);
-      
+
       const avatar = screen.getByText('JD');
       await user.click(avatar);
-      
+
       const profileOption = screen.getByText('Profile Settings');
       await user.click(profileOption);
-      
+
       expect(mockRouter.push).toHaveBeenCalledWith('/dashboard/profile');
     });
 
     it('should sign out when Sign Out option is clicked', async () => {
       const user = userEvent.setup();
       render(<PrimarySidebar isAdmin={true} />);
-      
+
       const avatar = screen.getByText('JD');
       await user.click(avatar);
-      
+
       const signOutOption = screen.getByText('Sign Out');
       await user.click(signOutOption);
-      
+
       expect(mockSignOut).toHaveBeenCalled();
     });
   });
@@ -231,12 +231,12 @@ describe('PrimarySidebar', () => {
     it('should open help dropdown when help icon is clicked', async () => {
       const user = userEvent.setup();
       render(<PrimarySidebar isAdmin={true} />);
-      
+
       // Find the help button (it's before the profile avatar)
       const buttons = screen.getAllByRole('button');
       const helpButton = buttons[buttons.length - 2]; // Second to last button
       await user.click(helpButton);
-      
+
       expect(screen.getByText('Read Documentation')).toBeInTheDocument();
       expect(screen.getByText('Make a Request')).toBeInTheDocument();
       expect(screen.getByText('Get Support')).toBeInTheDocument();

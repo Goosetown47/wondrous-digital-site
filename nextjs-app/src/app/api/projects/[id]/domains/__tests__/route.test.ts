@@ -17,17 +17,17 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { addDomainToVercel, checkDomainStatus } from '@/lib/services/domains.server';
 
 describe('Domain Route - Reserved Subdomain Protection', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   let mockSupabase: any;
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    
+
     // Create a chainable mock that returns itself for most methods
     const createChainableMock = () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const mock: any = {
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -44,7 +44,7 @@ describe('Domain Route - Reserved Subdomain Protection', () => {
         limit: vi.fn(),
         delete: vi.fn().mockReturnThis(),
       };
-      
+
       // Make methods return the mock itself for chaining
       mock.from.mockReturnValue(mock);
       mock.select.mockReturnValue(mock);
@@ -52,10 +52,10 @@ describe('Domain Route - Reserved Subdomain Protection', () => {
       mock.in.mockReturnValue(mock);
       mock.insert.mockReturnValue(mock);
       mock.delete.mockReturnValue(mock);
-      
+
       return mock;
     };
-    
+
     mockSupabase = createChainableMock();
 
     vi.mocked(createSupabaseServerClient).mockResolvedValue(mockSupabase);
@@ -213,7 +213,7 @@ describe('Domain Route - Reserved Subdomain Protection', () => {
       });
 
       const response = await POST(request, { params: Promise.resolve({ id: 'project-123' }) });
-      
+
       // Should pass because neither example.com nor www.example.com have reserved subdomains
       expect(response.status).not.toBe(403);
     });

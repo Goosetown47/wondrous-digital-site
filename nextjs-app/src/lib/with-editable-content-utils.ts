@@ -55,9 +55,9 @@ export function withEditableContent<P extends Record<string, unknown>>(
       // Build nested object from path
       let current: Record<string, unknown> = updates;
       for (let i = 0; i < pathParts.length - 1; i++) {
-        // eslint-disable-next-line security/detect-object-injection
+
         current[pathParts[i]] = {};
-        // eslint-disable-next-line security/detect-object-injection
+
         current = current[pathParts[i]] as Record<string, unknown>;
       }
       current[pathParts[pathParts.length - 1]] = value;

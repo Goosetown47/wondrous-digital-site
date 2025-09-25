@@ -16,9 +16,9 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 function getResendClient(): Resend | null {
   // Return cached client if already initialized
   if (resendClient) return resendClient;
-  
+
   const apiKey = process.env.RESEND_API_KEY;
-  
+
   // Handle missing API key
   if (!apiKey) {
     if (isDevelopment) {
@@ -28,7 +28,7 @@ function getResendClient(): Resend | null {
     // In production, throw error only when actually trying to send emails
     throw new Error('RESEND_API_KEY is required in production');
   }
-  
+
   // Initialize and cache the client
   resendClient = new Resend(apiKey);
   return resendClient;
@@ -99,7 +99,7 @@ export async function sendEmail(options: EmailOptions): Promise<{
 
     // Get Resend client (may be null in development without API key)
     const client = getResendClient();
-    
+
     // Without API key, log to console instead of sending
     if (!client) {
       console.log('📧 Email (Development Mode - No API Key):', {
@@ -314,7 +314,7 @@ export async function processEmailQueue(limit: number = 10): Promise<{
  */
 function applyTemplate(template: string, data: Record<string, unknown>): string {
   return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-    // eslint-disable-next-line security/detect-object-injection
+
     return data[key] !== undefined ? String(data[key]) : match;
   });
 }
@@ -394,7 +394,6 @@ export async function getEmailQueueStats(): Promise<{
         .select('*', { count: 'exact', head: true })
         .eq('status', status);
 
-      // eslint-disable-next-line security/detect-object-injection
       stats[status] = count || 0;
     }
 

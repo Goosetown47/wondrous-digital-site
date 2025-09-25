@@ -70,12 +70,12 @@ export interface EditableFieldConfig {
 }
 
 export interface ComponentRegistryEntry {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   component: ComponentType<any>;
   type: ComponentTypeCategory;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   defaultContent?: Record<string, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   contentSchema?: Record<string, any>;
   category?: ComponentSubCategory;
   description?: string;

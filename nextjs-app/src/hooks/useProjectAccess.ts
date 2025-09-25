@@ -150,7 +150,7 @@ export function useRevokeProjectAccess() {
     mutationFn: async ({
       projectId,
       userId,
-      accountId, // eslint-disable-line @typescript-eslint/no-unused-vars
+      accountId,
     }: {
       projectId: string;
       userId: string;

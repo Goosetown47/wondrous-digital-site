@@ -9,7 +9,7 @@ export function getPermissionsForRole(role: 'admin' | 'staff' | 'account_owner' 
     case 'admin':
       // Admins have all permissions
       return Object.values(PERMISSIONS).flatMap(group => Object.values(group));
-      
+
     case 'staff':
       // Staff have limited admin permissions
       return [
@@ -25,7 +25,7 @@ export function getPermissionsForRole(role: 'admin' | 'staff' | 'account_owner' 
         PERMISSIONS.ACCOUNT.READ,
         PERMISSIONS.USERS.READ,
       ];
-      
+
     case 'account_owner':
       // Account owners have full control over their account
       return [
@@ -47,7 +47,7 @@ export function getPermissionsForRole(role: 'admin' | 'staff' | 'account_owner' 
         PERMISSIONS.USERS.UPDATE,
         PERMISSIONS.USERS.REMOVE,
       ];
-      
+
     case 'user':
       // Regular users have limited permissions
       return [
@@ -93,7 +93,7 @@ export async function assertPermissions(
   checkFn: (permission: string) => Promise<boolean>
 ) {
   const results: Record<string, { expected: boolean; actual: boolean }> = {};
-  
+
   for (const [permission, expected] of Object.entries(permissions)) {
     const actual = await checkFn(permission);
     Object.defineProperty(results, permission, {
@@ -103,11 +103,11 @@ export async function assertPermissions(
       configurable: true
     });
   }
-  
+
   const failures = Object.entries(results).filter(
     ([, { expected, actual }]) => expected !== actual
   );
-  
+
   if (failures.length > 0) {
     const failureMessages = failures.map(
       ([permission, { expected, actual }]) =>
@@ -123,7 +123,7 @@ export function createPermissionMatrix(
   resources: string[]
 ) {
   const matrix: Record<string, Record<string, boolean>> = {};
-  
+
   roles.forEach(role => {
     Object.defineProperty(matrix, role, {
       value: {},
@@ -132,7 +132,7 @@ export function createPermissionMatrix(
       configurable: true
     });
     const rolePermissions = getPermissionsForRole(role);
-    
+
     resources.forEach(resource => {
       // Use Object.entries to find the role entry then set property
       const roleObj = Object.entries(matrix).find(([key]) => key === role);
@@ -146,7 +146,7 @@ export function createPermissionMatrix(
       }
     });
   });
-  
+
   return matrix;
 }
 
@@ -213,12 +213,11 @@ export function createRLSTest(
     setup,
     expectedResult,
     async execute(supabaseClient: SupabaseClient<Database>) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const context = await setup() as any;
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       let result: { data: any; error: any };
-      
+
       switch (operation) {
         case 'select':
           result = await supabaseClient.from(table).select('*');
@@ -235,15 +234,15 @@ export function createRLSTest(
         default:
           throw new Error(`Unknown operation: ${operation}`);
       }
-      
+
       const { data, error } = result;
-      
+
       if (expectedResult === 'allow') {
         if (error) throw new Error(`Expected operation to succeed but got error: ${error.message}`);
       } else {
         if (!error) throw new Error('Expected operation to fail but it succeeded');
       }
-      
+
       return { success: true, data, error };
     },
   };

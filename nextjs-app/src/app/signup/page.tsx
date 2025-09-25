@@ -26,7 +26,7 @@ function SignupPageContent() {
     const token = searchParams.get('token')
     const inviteEmail = searchParams.get('email')
     const flow = searchParams.get('flow')
-    
+
     if (token && inviteEmail) {
       setEmail(inviteEmail)
       // Store token in session storage for later use
@@ -66,7 +66,6 @@ function SignupPageContent() {
       return
     }
 
-    // eslint-disable-next-line security/detect-possible-timing-attacks
     if (password !== confirmPassword) {
       setError('Passwords do not match')
       return
@@ -76,7 +75,7 @@ function SignupPageContent() {
 
     try {
       const supabase = createClient()
-      
+
       // Create auth user
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -99,7 +98,7 @@ function SignupPageContent() {
       if (data?.user) {
         // Store email in session storage for the next step
         sessionStorage.setItem('signupEmail', email)
-        
+
         // Redirect to email confirmation page with flow parameter if present
         const flow = searchParams.get('flow')
         const confirmUrl = flow ? `/signup/confirm?flow=${flow}` : '/signup/confirm'
@@ -137,7 +136,7 @@ function SignupPageContent() {
           <div className="h-[52px]"></div>
           <Card className="p-8">
             <h2 className="text-2xl font-semibold mb-6">Login Creation Form</h2>
-            
+
             <form onSubmit={handleSignup} className="space-y-6">
               {error && (
                 <Alert variant="destructive">

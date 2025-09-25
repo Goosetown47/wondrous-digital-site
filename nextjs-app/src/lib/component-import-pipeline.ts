@@ -1,4 +1,3 @@
-/* eslint-disable security/detect-object-injection */
 /**
  * Component Import Pipeline
  *
@@ -131,7 +130,6 @@ export function extractDefaultProps(code: string): Record<string, unknown> {
   // Handle multiline function signatures - match the entire parameter block
   // Support both regular function and export function syntax, with TypeScript types
   // Using [\s\S] to match across newlines
-  // eslint-disable-next-line security/detect-unsafe-regex
   const paramMatch = code.match(/(?:export\s+)?function\s+\w+\s*\(\s*\{([\s\S]*?)\}\s*(?::\s*\w+)?\s*\)/);
   if (paramMatch) {
     const params = paramMatch[1];

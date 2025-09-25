@@ -44,7 +44,7 @@ export async function PUT(
 
     // Get authenticated user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
+
     if (userError || !user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
@@ -128,7 +128,7 @@ export async function PUT(
             project_name: currentProject.name,
             previous_account: {
               id: currentProject.account_id,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
               name: Array.isArray(currentProject.accounts) ? currentProject.accounts[0]?.name : (currentProject.accounts as any)?.name || 'Unknown'
             },
             new_account: {
@@ -144,7 +144,6 @@ export async function PUT(
       // Continue despite logging failure
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const previousAccountName = Array.isArray(currentProject.accounts) ? currentProject.accounts[0]?.name : (currentProject.accounts as any)?.name || 'Unknown';
     console.log(`✅ Project "${currentProject.name}" reassigned from account "${previousAccountName}" to "${targetAccount.name}"`);
 

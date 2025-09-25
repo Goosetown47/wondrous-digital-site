@@ -8,14 +8,14 @@ const SANITIZE_CONFIGS = {
     ALLOWED_ATTR: [],
     KEEP_CONTENT: true,
   },
-  
+
   // For rich text content (descriptions, comments)
   rich: {
     ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li'],
     ALLOWED_ATTR: ['href', 'target', 'rel'],
     KEEP_CONTENT: true,
   },
-  
+
   // For HTML content (blog posts, pages)
   html: {
     ALLOWED_TAGS: [
@@ -30,33 +30,32 @@ const SANITIZE_CONFIGS = {
 
 export function sanitizeInput(input: string, type: 'plain' | 'rich' | 'html' = 'plain'): string {
   if (!input) return '';
-  
-  // eslint-disable-next-line security/detect-object-injection
+
   const config = SANITIZE_CONFIGS[type];
   return DOMPurify.sanitize(input, config);
 }
 
 export function sanitizeEmail(email: string): string {
   if (!email) return '';
-  
+
   // Remove any HTML tags
   const sanitized = sanitizeInput(email, 'plain');
-  
+
   // Additional email-specific validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(sanitized)) {
     return '';
   }
-  
+
   return sanitized.toLowerCase().trim();
 }
 
 export function sanitizeUrl(url: string): string {
   if (!url) return '';
-  
+
   // Remove any HTML tags
   const sanitized = sanitizeInput(url, 'plain');
-  
+
   // Validate URL format
   try {
     const urlObj = new URL(sanitized);
@@ -76,10 +75,10 @@ export function sanitizeFormData<T extends Record<string, unknown>>(
   fieldTypes: Partial<Record<keyof T, 'plain' | 'rich' | 'html' | 'email' | 'url'>>
 ): T {
   const sanitized = { ...data };
-  
+
   for (const [key, value] of Object.entries(data)) {
     const fieldType = fieldTypes[key as keyof T];
-    
+
     if (typeof value === 'string') {
       if (fieldType === 'email') {
         sanitized[key as keyof T] = sanitizeEmail(value) as T[keyof T];
@@ -93,7 +92,7 @@ export function sanitizeFormData<T extends Record<string, unknown>>(
       }
     }
   }
-  
+
   return sanitized;
 }
 
@@ -106,19 +105,19 @@ export function escapeSQLIdentifier(identifier: string): string {
 // Prevent NoSQL injection in object keys
 export function sanitizeObjectKeys<T extends Record<string, unknown>>(obj: T): T {
   const sanitized: Record<string, unknown> = {};
-  
+
   for (const [key, value] of Object.entries(obj)) {
     // Remove any keys that start with $ or contain dots (MongoDB operators)
     if (!key.startsWith('$') && !key.includes('.')) {
       if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        // eslint-disable-next-line security/detect-object-injection
+
         sanitized[key] = sanitizeObjectKeys(value as Record<string, unknown>);
       } else {
-        // eslint-disable-next-line security/detect-object-injection
+
         sanitized[key] = value;
       }
     }
   }
-  
+
   return sanitized as T;
 }

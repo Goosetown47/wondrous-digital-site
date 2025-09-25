@@ -111,14 +111,14 @@ async function removeFromRegistry(componentName: string): Promise<boolean> {
     // Match: import { Services4 } from '@/components/...';
     // Escape component name for safe RegExp usage
     const escapedName = componentName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // eslint-disable-next-line security/detect-non-literal-regexp
+
     const importRegex = new RegExp(`^import\\s*{[^}]*${escapedName}[^}]*}\\s*from\\s*['"][^'"]+['"];?$`, 'gm');
     content = content.replace(importRegex, '');
 
     // Remove registration block
     // Match: ComponentRegistry.register('Services4', { ... });
     // This needs to handle multi-line blocks
-    // eslint-disable-next-line security/detect-non-literal-regexp
+
     const registerRegex = new RegExp(
       `ComponentRegistry\\.register\\(['"]${escapedName}['"],\\s*{[^}]*}\\s*\\);?`,
       'gs'
@@ -155,7 +155,7 @@ async function removeFromNameMapping(componentName: string): Promise<boolean> {
     // Match: 'Any Name': 'Services4',
     // Escape component name for safe RegExp usage
     const escapedName = componentName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // eslint-disable-next-line security/detect-non-literal-regexp
+
     const mappingRegex = new RegExp(`^\\s*['"][^'"]+['"]\\s*:\\s*['"]${escapedName}['"],?$`, 'gm');
     content = content.replace(mappingRegex, '');
 

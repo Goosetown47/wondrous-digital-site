@@ -74,7 +74,7 @@ export function RoleBadge({ role, size = 'md', showIcon = false }: RoleBadgeProp
       sizeClass = sizeClasses.md;
       break;
   }
-  
+
   return (
     <Badge 
       variant={config.variant}
@@ -91,7 +91,7 @@ export function RoleBadge({ role, size = 'md', showIcon = false }: RoleBadgeProp
 /**
  * Get the display label for a role
  */
-// eslint-disable-next-line react-refresh/only-export-components
+
 export function getRoleLabel(role: string): string {
   // Use switch to avoid bracket notation
   switch (role) {
@@ -111,7 +111,7 @@ export function getRoleLabel(role: string): string {
 /**
  * Get the color classes for a role (for custom implementations)
  */
-// eslint-disable-next-line react-refresh/only-export-components
+
 export function getRoleColorClasses(role: string): string {
   // Use switch to avoid bracket notation
   switch (role) {

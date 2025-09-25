@@ -49,7 +49,7 @@ describe('InvitationPage', () => {
 
     // Mock supabase auth check
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       data: { user: null } as any,
       error: null,
     });
@@ -76,7 +76,7 @@ describe('InvitationPage', () => {
     // Look for loading card structure since Skeleton components may not have specific class names
     const card = container.querySelector('.max-w-md');
     expect(card).toBeInTheDocument();
-    
+
     // Check if we have the Card structure with loading state
     const cardContent = container.querySelector('[class*="card"]');
     expect(cardContent).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe('InvitationPage', () => {
 
     // Mock supabase auth check
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       data: { user: null } as any,
       error: null,
     });
@@ -119,7 +119,7 @@ describe('InvitationPage', () => {
           }),
         }),
       }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     } as any);
 
     render(<InvitationPage />);
@@ -137,7 +137,7 @@ describe('InvitationPage', () => {
 
     // Mock supabase auth check
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       data: { user: null } as any,
       error: null,
     });
@@ -167,7 +167,7 @@ describe('InvitationPage', () => {
           }),
         }),
       }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     } as any);
 
     render(<InvitationPage />);
@@ -185,7 +185,7 @@ describe('InvitationPage', () => {
 
     // Mock supabase auth check
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       data: { user: null } as any,
       error: null,
     });
@@ -215,7 +215,7 @@ describe('InvitationPage', () => {
           }),
         }),
       }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     } as any);
 
     render(<InvitationPage />);
@@ -233,7 +233,7 @@ describe('InvitationPage', () => {
 
     // Mock supabase auth check
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       data: { user: null } as any,
       error: null,
     });
@@ -248,7 +248,7 @@ describe('InvitationPage', () => {
           }),
         }),
       }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     } as any);
 
     render(<InvitationPage />);
@@ -266,7 +266,7 @@ describe('InvitationPage', () => {
 
     // Mock supabase auth check
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       data: { user: null } as any,
       error: null,
     });

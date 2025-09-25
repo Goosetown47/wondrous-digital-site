@@ -15,7 +15,7 @@ vi.mock('@/lib/services/email');
 
 describe('BillingNotificationService', () => {
   // Create a mock Supabase client with proper chaining
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   let mockSupabase: any;
 
   beforeEach(() => {
@@ -127,14 +127,14 @@ describe('BillingNotificationService', () => {
     it('should handle timezone considerations correctly', async () => {
       const todayUTC = new Date('2025-08-31T00:00:00Z');
       const todayPST = new Date('2025-08-31T08:00:00Z'); // 8 hours ahead
-      
+
       // Mock the final method in the chain for both calls
       mockSupabase.eq.mockReturnValueOnce({ data: [mockAccounts[0]], error: null });
 
       const accountsUTC = await checkPendingChanges(30, todayUTC);
-      
+
       mockSupabase.eq.mockReturnValueOnce({ data: [mockAccounts[0]], error: null });
-      
+
       const accountsPST = await checkPendingChanges(30, todayPST);
 
       expect(accountsUTC).toHaveLength(1);
@@ -156,7 +156,7 @@ describe('BillingNotificationService', () => {
     it('should account for already sent notifications', async () => {
       const changeDate = new Date('2025-09-30');
       const accountId = 'acc-1';
-      
+
       // Mock the final method in the chain
       mockSupabase.single.mockReturnValueOnce({ 
         data: { id: 'notification-1' }, 
@@ -173,10 +173,10 @@ describe('BillingNotificationService', () => {
 
       expect(dates['30_days']).toEqual(new Date('2024-01-30'));
       expect(dates['14_days']).toEqual(new Date('2024-02-15'));
-      
+
       const monthBoundary = new Date('2025-05-01');
       const boundaryDates = calculateNotificationDates(monthBoundary);
-      
+
       expect(boundaryDates['30_days']).toEqual(new Date('2025-04-01'));
     });
   });
@@ -198,7 +198,7 @@ describe('BillingNotificationService', () => {
       mockSupabase.single.mockReturnValueOnce({ data: null, error: { code: 'PGRST116' } });
       // Mock the insert operation
       mockSupabase.insert.mockReturnValueOnce({ data: { id: 'notif-1' }, error: null });
-      
+
       const result = await sendBillingChangeReminder(mockAccount, '30_days');
 
       expect(result.success).toBe(true);
@@ -211,7 +211,7 @@ describe('BillingNotificationService', () => {
       mockSupabase.single.mockReturnValueOnce({ data: null, error: { code: 'PGRST116' } });
       // Mock the insert operation
       mockSupabase.insert.mockReturnValueOnce({ data: { id: 'notif-1' }, error: null });
-      
+
       const result = await sendBillingChangeReminder(mockAccount, '14_days');
 
       expect(result.success).toBe(true);
@@ -223,7 +223,7 @@ describe('BillingNotificationService', () => {
       mockSupabase.single.mockReturnValueOnce({ data: null, error: { code: 'PGRST116' } });
       // Mock the insert operation
       mockSupabase.insert.mockReturnValueOnce({ data: { id: 'notif-1' }, error: null });
-      
+
       const result = await sendBillingChangeReminder(mockAccount, '7_days');
 
       expect(result.success).toBe(true);
@@ -235,7 +235,7 @@ describe('BillingNotificationService', () => {
       mockSupabase.single.mockReturnValueOnce({ data: null, error: { code: 'PGRST116' } });
       // Mock the insert operation
       mockSupabase.insert.mockReturnValueOnce({ data: { id: 'notif-1' }, error: null });
-      
+
       const result = await sendBillingChangeReminder(mockAccount, '1_day');
 
       expect(result.success).toBe(true);
@@ -247,9 +247,9 @@ describe('BillingNotificationService', () => {
       mockSupabase.single.mockReturnValueOnce({ data: null, error: { code: 'PGRST116' } });
       // Mock the insert operation
       mockSupabase.insert.mockReturnValueOnce({ data: { id: 'notif-1' }, error: null });
-      
+
       await sendBillingChangeReminder(mockAccount, '30_days');
-      
+
       expect(mockSupabase.insert).toHaveBeenCalledWith(
         expect.objectContaining({
           account_id: 'acc-1',
@@ -281,14 +281,14 @@ describe('BillingNotificationService', () => {
         success: false,
         error: 'Invalid email address',
       });
-      
+
       const failAccount = { 
         ...mockAccount, 
         email: 'invalid-email',
         tier: 'MAX' as TierName,
         pending_tier_change: 'PRO' as TierName
       };
-      
+
       const result = await sendBillingChangeReminder(failAccount, '30_days');
 
       expect(result.success).toBe(false);
@@ -302,9 +302,9 @@ describe('BillingNotificationService', () => {
         tier: 'MAX' as TierName,
         pending_tier_change: 'PRO' as TierName
       };
-      
+
       const scenarios = ['30_days', '14_days', '7_days', '1_day'] as const;
-      
+
       for (const scenario of scenarios) {
         // No mocks needed for test emails as they skip database operations
         const result = await sendBillingChangeReminder(testAccount, scenario);
@@ -374,7 +374,6 @@ describe('BillingNotificationService', () => {
         pending_tier_change_date: null,
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(() => formatBillingChangeData(invalidAccount as any, '30_days')).toThrow('Account does not have pending tier change');
     });
   });

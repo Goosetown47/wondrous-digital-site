@@ -5,7 +5,6 @@ import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const metadata: Metadata = {
   title: "PageBuilder - Next.js",
   description: "Visual website builder with Next.js",

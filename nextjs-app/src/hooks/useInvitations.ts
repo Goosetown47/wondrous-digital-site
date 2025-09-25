@@ -70,7 +70,7 @@ export function useCancelInvitation() {
   return useMutation({
     mutationFn: async ({
       invitationId,
-      accountId, // eslint-disable-line @typescript-eslint/no-unused-vars
+      accountId,
     }: {
       invitationId: string;
       accountId: string;
@@ -108,7 +108,7 @@ export function useResendInvitation() {
   return useMutation({
     mutationFn: async ({
       invitationId,
-      accountId, // eslint-disable-line @typescript-eslint/no-unused-vars
+      accountId,
     }: {
       invitationId: string;
       accountId: string;

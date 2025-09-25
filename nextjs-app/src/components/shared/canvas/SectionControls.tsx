@@ -26,7 +26,7 @@ export function SectionControls({
   onMoveUp,
   onMoveDown,
   onDelete,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   onSettings: _onSettings, // Reserved for future use
   isVisible
 }: SectionControlsProps) {

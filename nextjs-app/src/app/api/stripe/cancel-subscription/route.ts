@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe();
     const supabase = await createSupabaseServerClient();
     const body = await request.json();
-    
+
     const { accountId, reason, feedback } = body as { 
       accountId: string;
       reason?: string;
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
+
     if (userError || !user) {
       return NextResponse.json(
         { error: 'You must be logged in to cancel subscription' },
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       .select('*')
       .eq('id', accountId)
       .single();
-    
+
     if (accountError || !account) {
       return NextResponse.json(
         { error: 'Account not found' },
@@ -64,12 +64,12 @@ export async function POST(request: NextRequest) {
       .select('role, account_id')
       .eq('user_id', user.id)
       .in('account_id', [accountId, '00000000-0000-0000-0000-000000000000']);
-    
+
     const isOwner = accountUser?.some(u => u.account_id === accountId && u.role === 'account_owner');
     const isPlatformAdmin = accountUser?.some(u => 
       u.account_id === '00000000-0000-0000-0000-000000000000' && u.role === 'admin'
     );
-    
+
     if (!isOwner && !isPlatformAdmin) {
       return NextResponse.json(
         { error: 'Only account owners or platform admins can cancel subscriptions' },
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       {
         expand: ['items.data.price']
       }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     ) as any; // Cast to any to access properties - Stripe types are complex
 
     // Update account in database
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
       .eq('id', accountId)
       .select()
       .single();
-    
+
     if (updateError) {
       console.error('Error updating account:', updateError);
       // Try to revert Stripe cancellation
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       } catch (revertError) {
         console.error('Failed to revert Stripe cancellation:', revertError);
       }
-      
+
       return NextResponse.json(
         { error: 'Failed to update account' },
         { status: 500 }
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
 
     // Format date properly for display using date-fns (e.g., "September 3, 2026")
     const cancelDateFormatted = format(cancelDate, 'MMMM d, yyyy');
-    
+
     // Send cancellation notification email to hello@wondrousdigital.com
     // This is non-blocking - we don't want email failure to prevent cancellation
     try {
@@ -175,11 +175,11 @@ export async function POST(request: NextRequest) {
         .select('full_name')
         .eq('id', user.id)
         .single();
-      
+
       // Determine user's role in the account
       const userRole = isOwner ? 'Account Owner' : 
                        isPlatformAdmin ? 'Platform Admin' : 'User';
-      
+
       // Send notification email
       await sendEmail({
         to: 'hello@wondrousdigital.com',
@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
           stripeSubscriptionId: account.stripe_subscription_id,
         }),
       });
-      
+
       console.log('Cancellation notification email sent to hello@wondrousdigital.com');
     } catch (emailError) {
       // Log error but don't fail the cancellation
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
       cancelDate: cancelDate.toISOString(),
       currentTier: account.tier,
     });
-    
+
   } catch (error) {
     console.error('Cancel subscription error:', error);
     return NextResponse.json(

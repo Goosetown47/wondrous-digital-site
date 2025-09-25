@@ -16,7 +16,7 @@ export default function AccountDetailsPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: Record<string, unknown> } | null>(null)
-  
+
   // Form fields
   const [accountName, setAccountName] = useState('')
   const [website, setWebsite] = useState('')
@@ -36,20 +36,20 @@ export default function AccountDetailsPage() {
       router.push('/signup/profile?flow=invitation')
       return
     }
-    
+
     const supabase = createClient()
     const { data: { user }, error } = await supabase.auth.getUser()
-    
+
     console.log('Auth check:', { user, error })
-    
+
     if (!user) {
       console.error('No user found, redirecting to signup')
       router.push('/signup/login')
       return
     }
-    
+
     setUser(user)
-    
+
     // Pre-fill account name from email if available
     const emailUsername = user.email?.split('@')[0] || ''
     setAccountName(emailUsername.charAt(0).toUpperCase() + emailUsername.slice(1))
@@ -79,17 +79,17 @@ export default function AccountDetailsPage() {
           description,
         }),
       })
-      
+
       const data = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create account')
       }
-      
+
       // Store account info in session for later steps
       sessionStorage.setItem('signupAccountId', data.account.id)
       sessionStorage.setItem('signupAccountName', accountName)
-      
+
       // Move to Step 4: Personal Details
       router.push('/signup/profile')
     } catch (err: unknown) {
@@ -135,7 +135,7 @@ export default function AccountDetailsPage() {
           <div className="h-[52px]"></div>
           <Card className="p-8">
             <h2 className="text-2xl font-semibold mb-6">Account Details Form</h2>
-            
+
             <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <Alert variant="destructive">
@@ -219,7 +219,7 @@ export default function AccountDetailsPage() {
                   'Continue'
                 )}
               </Button>
-              
+
               {/* Show skip option for invited users */}
               {Boolean(user?.user_metadata?.invitation_token) && (
                 <Button

@@ -63,7 +63,7 @@ describe.skip('Email System Integration Tests', () => {
     vi.clearAllMocks();
     vi.stubEnv('NODE_ENV', 'development'); // Test in development mode to avoid RESEND_API_KEY requirement
     vi.stubEnv('RESEND_API_KEY', 'test-api-key'); // Provide a test API key
-    
+
     // Setup mock Supabase client with proper chaining
     mockSupabase = {
       from: vi.fn().mockReturnThis(),
@@ -84,7 +84,7 @@ describe.skip('Email System Integration Tests', () => {
       sql: vi.fn((template) => template),
       rpc: vi.fn(),
     };
-    
+
     // Make sure chaining works properly
     mockSupabase.from.mockReturnValue(mockSupabase);
     mockSupabase.select.mockReturnValue(mockSupabase);
@@ -96,8 +96,7 @@ describe.skip('Email System Integration Tests', () => {
     mockSupabase.lt.mockReturnValue(mockSupabase);
     mockSupabase.order.mockReturnValue(mockSupabase);
     mockSupabase.limit.mockReturnValue(mockSupabase);
-    
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     (createAdminClient as any).mockReturnValue(mockSupabase);
 
     // Setup mock Resend
@@ -107,7 +106,7 @@ describe.skip('Email System Integration Tests', () => {
         send: vi.fn().mockResolvedValue({ data: { id: 'mock-email-id' }, error: null }),
       },
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     (Resend as any).mockImplementation(() => mockResend);
   });
 
@@ -200,7 +199,7 @@ describe.skip('Email System Integration Tests', () => {
 
     it('should respect email preferences when sending invitations', async () => {
       const userEmail = 'existing@example.com';
-      
+
       // Mock checking if user has email preferences
       mockSupabase.maybeSingle.mockResolvedValueOnce({
         data: {
@@ -345,7 +344,7 @@ describe.skip('Email System Integration Tests', () => {
             .select('weekly_digest')
             .eq('email', email.to_email)
             .maybeSingle();
-          
+
           return prefs?.weekly_digest !== false;
         }
         return true;

@@ -139,10 +139,9 @@ function getMockDataForTable(table: string) {
 }
 
 // Mock specific responses for testing scenarios
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export function mockSupabaseResponse(client: any, table: string, method: string, response: unknown) {
   const query = client.from(table);
-  // eslint-disable-next-line security/detect-object-injection, @typescript-eslint/no-explicit-any
   const mockMethod = (query as any)[method];
   if (mockMethod && typeof mockMethod.mockReturnValueOnce === 'function') {
     mockMethod.mockReturnValueOnce({
@@ -158,7 +157,7 @@ export function mockSupabaseResponse(client: any, table: string, method: string,
 // Mock auth responses
 export function mockAuthResponse(client: Record<string, unknown>, method: string, response: unknown) {
   const auth = client.auth as Record<string, unknown>;
-  // eslint-disable-next-line security/detect-object-injection
+
   const authMethod = auth[method] as { mockResolvedValueOnce?: (response: unknown) => void };
   if (authMethod && authMethod.mockResolvedValueOnce) {
     authMethod.mockResolvedValueOnce(response);
@@ -183,7 +182,7 @@ export function setupAuthScenario(client: Record<string, unknown>, scenario: 'ad
       });
       mockRpcResponse(client, 'is_platform_admin', { data: true, error: null });
       break;
-    
+
     case 'owner':
       mockAuthResponse(client, 'getUser', {
         data: { user: { id: 'owner-user-id', email: 'owner@testcompany.com' } },
@@ -191,7 +190,7 @@ export function setupAuthScenario(client: Record<string, unknown>, scenario: 'ad
       });
       mockRpcResponse(client, 'is_platform_admin', { data: false, error: null });
       break;
-    
+
     case 'user':
       mockAuthResponse(client, 'getUser', {
         data: { user: { id: 'user-user-id', email: 'user@testcompany.com' } },
@@ -199,7 +198,7 @@ export function setupAuthScenario(client: Record<string, unknown>, scenario: 'ad
       });
       mockRpcResponse(client, 'is_platform_admin', { data: false, error: null });
       break;
-    
+
     case 'unauthenticated':
       mockAuthResponse(client, 'getUser', {
         data: { user: null },

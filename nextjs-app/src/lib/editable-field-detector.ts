@@ -1,4 +1,3 @@
-/* eslint-disable security/detect-object-injection */
 /**
  * Utilities for detecting and configuring editable fields in components
  * This module provides automatic detection of editable fields based on prop names and content structure

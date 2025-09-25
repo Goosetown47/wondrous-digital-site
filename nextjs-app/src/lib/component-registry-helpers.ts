@@ -20,11 +20,11 @@ export async function getComponentsByDatabaseType(typeId: string): Promise<Recor
  */
 export function registerComponentWithType(
   name: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   component: React.ComponentType<any>,
   type: 'section' | 'navigation' | 'page' | 'theme',
   typeId?: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   defaultContent?: Record<string, any>
 ) {
   ComponentRegistry.register(name, {

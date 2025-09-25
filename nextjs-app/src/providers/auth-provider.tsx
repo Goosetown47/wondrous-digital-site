@@ -19,7 +19,6 @@ interface AuthContextType {
   refreshAccounts: () => Promise<void>;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
@@ -85,11 +84,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.ok) {
         const userAccounts = await response.json();
         setAccounts(userAccounts);
-        
+
         // Check if user is admin (has platform account access)
         const adminCheckResponse = await fetch('/api/platform/admins');
         setIsAdmin(adminCheckResponse.ok);
-        
+
         // Set current account if not set
         if (!currentAccount && userAccounts.length > 0) {
           setCurrentAccount(userAccounts[0]);
@@ -106,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ?? null);
-        
+
         // Don't fetch accounts here - let another effect handle it
       } catch (error) {
         console.error('Error checking auth session:', error);
@@ -121,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setUser(session?.user ?? null);
-        
+
         // Handle auth events
         if (event === 'SIGNED_IN') {
           // Refresh the page to update server-side data
@@ -152,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
       setCurrentAccount(null);
       setCurrentProject(null);
-      
+
       // Clear persisted selections
       localStorage.removeItem('currentAccountId');
       localStorage.removeItem('currentAccount');
@@ -167,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleSetCurrentAccount = (account: Account | null) => {
     setCurrentAccount(account);
     setCurrentProject(null); // Clear project when account changes
-    
+
     // Persist to localStorage
     if (account) {
       localStorage.setItem('currentAccountId', account.id);
@@ -185,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Handle project change and persist
   const handleSetCurrentProject = (project: Project | null) => {
     setCurrentProject(project);
-    
+
     // Persist to localStorage
     if (project) {
       localStorage.setItem('currentProjectId', project.id);
@@ -214,7 +213,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

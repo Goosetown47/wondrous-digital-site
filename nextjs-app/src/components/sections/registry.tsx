@@ -21,7 +21,7 @@ export interface BaseSectionProps {
 
 // Adapter components to match BaseSectionProps interface
 const HeroSectionAdapter: ComponentType<BaseSectionProps> = (props) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   return <HeroSection content={props.content as any} isEditing={props.isEditing} onContentChange={props.onContentChange as any} />;
 };
 
@@ -35,7 +35,7 @@ const HeroTwoColumnAdapter: ComponentType<BaseSectionProps> = (props) => {
     imageUrl?: string;
     imageAlt?: string;
   };
-  
+
   // Only pass event handlers when in editing mode
   if (props.isEditing) {
     return (
@@ -74,7 +74,7 @@ const HeroTwoColumnAdapter: ComponentType<BaseSectionProps> = (props) => {
       />
     );
   }
-  
+
   // For non-editing mode (public site), don't pass event handlers
   return (
     <HeroTwoColumn
@@ -89,7 +89,7 @@ const HeroTwoColumnAdapter: ComponentType<BaseSectionProps> = (props) => {
 };
 
 // Registry of section components
-// eslint-disable-next-line react-refresh/only-export-components
+
 export const SECTION_COMPONENTS: Record<string, ComponentType<BaseSectionProps>> = {
   'HeroSection': HeroSectionAdapter,
   'HeroTwoColumn': HeroTwoColumnAdapter,
@@ -100,10 +100,10 @@ export const SECTION_COMPONENTS: Record<string, ComponentType<BaseSectionProps>>
 };
 
 // Helper function to get a section component by name
-// eslint-disable-next-line react-refresh/only-export-components
+
 export function getSectionComponent(componentName?: string | null): ComponentType<BaseSectionProps> {
   if (!componentName) return GenericSection;
-  
+
   // Validate component exists to prevent object injection
   // Use Object.entries to find the component without bracket notation
   const entry = Object.entries(SECTION_COMPONENTS).find(([key]) => key === componentName);

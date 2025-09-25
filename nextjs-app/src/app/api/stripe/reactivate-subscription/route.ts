@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe();
     const supabase = await createSupabaseServerClient();
     const body = await request.json();
-    
+
     const { accountId } = body as { accountId: string };
 
     if (!accountId) {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
+
     if (userError || !user) {
       return NextResponse.json(
         { error: 'You must be logged in to reactivate subscription' },
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       .select('*')
       .eq('id', accountId)
       .single();
-    
+
     if (accountError || !account) {
       return NextResponse.json(
         { error: 'Account not found' },
@@ -57,12 +57,12 @@ export async function POST(request: NextRequest) {
       .select('role, account_id')
       .eq('user_id', user.id)
       .in('account_id', [accountId, '00000000-0000-0000-0000-000000000000']);
-    
+
     const isOwner = accountUser?.some(u => u.account_id === accountId && u.role === 'account_owner');
     const isPlatformAdmin = accountUser?.some(u => 
       u.account_id === '00000000-0000-0000-0000-000000000000' && u.role === 'admin'
     );
-    
+
     if (!isOwner && !isPlatformAdmin) {
       return NextResponse.json(
         { error: 'Only account owners or platform admins can reactivate subscriptions' },
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
     // Check if subscription is actually scheduled for cancellation
     const subscription = await stripe.subscriptions.retrieve(account.stripe_subscription_id);
-    
+
     if (!subscription.cancel_at_period_end) {
       return NextResponse.json(
         { error: 'Subscription is not scheduled for cancellation' },
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       .eq('id', accountId)
       .select()
       .single();
-    
+
     if (updateError) {
       console.error('Error updating account:', updateError);
       // Try to revert Stripe reactivation
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
       } catch (revertError) {
         console.error('Failed to revert Stripe reactivation:', revertError);
       }
-      
+
       return NextResponse.json(
         { error: 'Failed to update account' },
         { status: 500 }
@@ -125,9 +125,9 @@ export async function POST(request: NextRequest) {
         metadata: {
           reactivated_by: user.id,
           reactivated_at: new Date().toISOString(),
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
           next_billing_date: (updatedSubscription as any).current_period_end
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             ? new Date((updatedSubscription as any).current_period_end * 1000).toISOString()
             : null,
         },
@@ -139,13 +139,13 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Your ${account.tier} subscription has been reactivated successfully.`,
       tier: account.tier,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       nextBillingDate: (updatedSubscription as any).current_period_end
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         ? new Date((updatedSubscription as any).current_period_end * 1000).toISOString()
         : null,
     });
-    
+
   } catch (error) {
     console.error('Reactivate subscription error:', error);
     return NextResponse.json(

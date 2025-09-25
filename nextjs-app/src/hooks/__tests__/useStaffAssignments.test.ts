@@ -40,7 +40,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { supabase } from '@/lib/supabase/client';
 
 // Get reference to mocked supabase
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mockSupabaseClient = supabase as any;
 
 describe('Staff Assignment Hooks', () => {
@@ -198,12 +198,12 @@ describe('Staff Assignment Hooks', () => {
   describe('useStaffAssignments', () => {
     it('should fetch assignments for a specific staff member', async () => {
       const staffUserId = 'staff-1';
-      
+
       // Mock useAuth
       (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ 
         user: { id: 'user-123', email: 'user@example.com' } 
       });
-      
+
       const mockAssignments = [
         {
           id: 'assign-1',
@@ -675,7 +675,7 @@ describe('Staff Assignment Hooks', () => {
     it('should prevent staff from accessing unassigned accounts', async () => {
       // This would be enforced by RLS policies
       const staffUser = { id: 'staff-1', email: 'staff@wondrousdigital.com' };
-      
+
       // Mock that staff has no assignments to a specific account
       mockSupabaseClient.from.mockImplementation((table: string) => {
         if (table === 'staff_account_assignments') {
@@ -709,7 +709,7 @@ describe('Staff Assignment Hooks', () => {
           .select('*')
           .eq('staff_user_id', staffUser.id)
           .eq('account_id', accountId);
-        
+
         return data && data.length > 0;
       };
 

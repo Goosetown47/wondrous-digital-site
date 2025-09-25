@@ -1,4 +1,3 @@
-/* eslint-disable security/detect-object-injection */
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getComponentUsage } from '@/lib/services/component-usage-service';

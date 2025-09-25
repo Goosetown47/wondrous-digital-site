@@ -10,7 +10,6 @@ let DOMPurifyInstance: {
 
 if (typeof window !== 'undefined') {
   // Client-side: Use full DOMPurify
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const DOMPurify = require('dompurify');
   DOMPurifyInstance = DOMPurify;
 } else {
@@ -89,7 +88,7 @@ function decodeHtmlEntities(text: string): string {
     '&#x60;': '`',
     '&#x3D;': '='
   };
-  
+
   return text.replace(/&[#\w]+;/g, (entity) => {
     // Use Object.entries to safely access entities
     const entry = Object.entries(entities).find(([key]) => key === entity);
@@ -103,18 +102,18 @@ function decodeHtmlEntities(text: string): string {
 function containsHtml(text: string): boolean {
   // More specific HTML tag pattern - must have tag name after <
   const htmlTagPattern = /<\/?[a-zA-Z][^>]*>/i;
-  
+
   // Check for actual HTML tags
   if (htmlTagPattern.test(text)) {
     return true;
   }
-  
+
   // Check for encoded HTML entities that would become tags
   const decoded = decodeHtmlEntities(text);
   if (decoded !== text && htmlTagPattern.test(decoded)) {
     return true;
   }
-  
+
   // Check for common XSS patterns
   const xssPatterns = [
     /javascript:/i,
@@ -126,7 +125,7 @@ function containsHtml(text: string): boolean {
     /<svg/i,
     /<img/i
   ];
-  
+
   return xssPatterns.some(pattern => pattern.test(text) || pattern.test(decoded));
 }
 
@@ -157,7 +156,7 @@ export function sanitizeInput(input: string, maxLength: number = 255): string {
       }
       return sanitized;
     }
-    
+
     // It has actual HTML tags - sanitize directly
     const sanitized = sanitizeText(input);
     // Then enforce length limit
@@ -166,13 +165,13 @@ export function sanitizeInput(input: string, maxLength: number = 255): string {
     }
     return sanitized;
   }
-  
+
   // No HTML detected, return as-is with length limit
   // Don't run through DOMPurify for plain text to avoid escaping < and >
   if (input.length > maxLength) {
     return input.substring(0, maxLength);
   }
-  
+
   return input;
 }
 
@@ -211,13 +210,13 @@ export function sanitizeRichText(dirty: string): string {
 export function sanitizeUrl(url: string): string {
   // Only allow http, https, mailto, and relative URLs
   const sanitized = sanitizeText(url);
-  
+
   // Check for dangerous protocols
   const dangerousProtocols = /^(javascript|data|vbscript|file):/i;
   if (dangerousProtocols.test(sanitized)) {
     return '#';
   }
-  
+
   return sanitized;
 }
 
@@ -263,19 +262,19 @@ export const INPUT_LIMITS = {
   email: 255,
   password: 128,
   displayName: 100,
-  
+
   // Project/Account fields
   projectName: 100,
   projectDescription: 500,
   accountName: 100,
   accountSlug: 50,
-  
+
   // Content fields
   pageTitle: 100,
   pageSlug: 100,
   metaDescription: 160,
   sectionContent: 5000,
-  
+
   // General
   shortText: 255,
   longText: 1000,

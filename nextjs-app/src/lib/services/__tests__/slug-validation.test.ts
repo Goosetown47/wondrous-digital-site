@@ -16,12 +16,11 @@ describe('Slug Validation Service', () => {
       });
 
       it('should reject null or undefined', () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const result1 = validateSlug(null as any);
         expect(result1.isValid).toBe(false);
         expect(result1.message).toBe('Slug is required and must be a string.');
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result2 = validateSlug(undefined as any);
         expect(result2.isValid).toBe(false);
         expect(result2.message).toBe('Slug is required and must be a string.');
@@ -319,7 +318,7 @@ describe('Slug Validation Service', () => {
     it('should return patterns organized by category', () => {
       const categories = getReservedPatternsByCategory();
       expect(typeof categories).toBe('object');
-      
+
       // Check that all expected categories exist
       const expectedCategories = [
         'coreInfrastructure',

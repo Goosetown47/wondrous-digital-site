@@ -28,7 +28,7 @@ vi.mock('next/headers', () => ({
 
 vi.mock('@/env.mjs', () => ({
   env: {
-    // eslint-disable-next-line no-secrets/no-secrets -- This is a mock URL for testing, not a real secret
+    // eslint-disable-next-line-- This is a mock URL for testing, not a real secret
     NEXT_PUBLIC_SUPABASE_URL: 'http://test.supabase.co',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
   },

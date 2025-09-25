@@ -12,10 +12,9 @@ describe('Themed Components', () => {
   beforeEach(() => {
     // Reset mocks
     vi.clearAllMocks();
-    
+
     // Setup default mock return
-    (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-line @typescript-eslint/no-explicit-any
-      currentModule: 'dashboard',
+    (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-linecurrentModule: 'dashboard',
       getCurrentModuleColors: () => ({
         primary: '#6B7280',
         secondary: '#9CA3AF',
@@ -28,19 +27,18 @@ describe('Themed Components', () => {
   describe('Button Component', () => {
     it('should apply module primary color to primary button', () => {
       render(<Button variant="default">Test Button</Button>);
-      
+
       const button = screen.getByRole('button');
-      
+
       // Button should use CSS variable
       expect(button.className).toContain('bg-primary');
     });
 
     it('should update button color when module changes', () => {
       const { rerender } = render(<Button variant="default">Test Button</Button>);
-      
+
       // Change to builder module
-      (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-line @typescript-eslint/no-explicit-any
-        currentModule: 'builder',
+      (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-linecurrentModule: 'builder',
         getCurrentModuleColors: () => ({
           primary: '#AA60C4',
           secondary: '#73248F',
@@ -48,23 +46,23 @@ describe('Themed Components', () => {
           background: '#F4E0FC',
         }),
       });
-      
+
       rerender(<Button variant="default">Test Button</Button>);
-      
+
       const button = screen.getByRole('button');
       expect(button.className).toContain('bg-primary');
     });
 
     it('should apply module secondary color to secondary button', () => {
       render(<Button variant="secondary">Secondary Button</Button>);
-      
+
       const button = screen.getByRole('button');
       expect(button.className).toContain('bg-secondary');
     });
 
     it('should maintain outline variant with module color border', () => {
       render(<Button variant="outline">Outline Button</Button>);
-      
+
       const button = screen.getByRole('button');
       expect(button.className).toContain('border');
       expect(button.className).toContain('border-input');
@@ -74,17 +72,16 @@ describe('Themed Components', () => {
   describe('Badge Component', () => {
     it('should apply module accent color to badge', () => {
       render(<Badge variant="secondary">Test Badge</Badge>);
-      
+
       const badge = screen.getByText('Test Badge');
       expect(badge.className).toContain('bg-secondary');
     });
 
     it('should update badge color when module changes', () => {
       const { rerender } = render(<Badge variant="secondary">Test Badge</Badge>);
-      
+
       // Change to admin module
-      (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-line @typescript-eslint/no-explicit-any
-        currentModule: 'admin',
+      (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-linecurrentModule: 'admin',
         getCurrentModuleColors: () => ({
           primary: '#E382A5',
           secondary: '#B5406B',
@@ -92,9 +89,9 @@ describe('Themed Components', () => {
           background: '#FCEDFB',
         }),
       });
-      
+
       rerender(<Badge variant="secondary">Test Badge</Badge>);
-      
+
       const badge = screen.getByText('Test Badge');
       expect(badge.className).toContain('bg-secondary');
     });
@@ -107,11 +104,11 @@ describe('Themed Components', () => {
           <Badge variant="outline">Outline</Badge>
         </>
       );
-      
+
       const defaultBadge = screen.getByText('Default');
       const secondaryBadge = screen.getByText('Secondary');
       const outlineBadge = screen.getByText('Outline');
-      
+
       expect(defaultBadge.className).toContain('bg-primary');
       expect(secondaryBadge.className).toContain('bg-secondary');
       expect(outlineBadge.className).toContain('border');
@@ -121,7 +118,7 @@ describe('Themed Components', () => {
   describe('Typography Components', () => {
     it('should apply module primary color to H1 headings', () => {
       render(<h1 className="text-module-primary">Test Heading</h1>);
-      
+
       const heading = screen.getByText('Test Heading');
       expect(heading.className).toContain('text-module-primary');
     });
@@ -134,7 +131,7 @@ describe('Themed Components', () => {
           <h3 className="text-module-accent">H3 Heading</h3>
         </>
       );
-      
+
       expect(screen.getByText('H1 Heading').className).toContain('text-module-primary');
       expect(screen.getByText('H2 Heading').className).toContain('text-module-secondary');
       expect(screen.getByText('H3 Heading').className).toContain('text-module-accent');
@@ -147,9 +144,9 @@ describe('Themed Components', () => {
       const MockIcon = ({ className }: { className?: string }) => (
         <svg className={className || ''} data-testid="icon">Icon</svg>
       );
-      
+
       render(<MockIcon className="text-module-primary" />);
-      
+
       const icon = screen.getByTestId('icon');
       expect(icon.getAttribute('class')).toContain('text-module-primary');
     });
@@ -158,16 +155,15 @@ describe('Themed Components', () => {
       const MockIcon = ({ className }: { className?: string }) => (
         <svg className={className || ''} data-testid="icon">Icon</svg>
       );
-      
+
       const { rerender } = render(<MockIcon className="text-module-primary" />);
-      
+
       // Verify initial state
       let icon = screen.getByTestId('icon');
       expect(icon.getAttribute('class')).toContain('text-module-primary');
-      
+
       // Change module and rerender
-      (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-line @typescript-eslint/no-explicit-any
-        currentModule: 'builder',
+      (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-linecurrentModule: 'builder',
         getCurrentModuleColors: () => ({
           primary: '#AA60C4',
           secondary: '#73248F',
@@ -175,9 +171,9 @@ describe('Themed Components', () => {
           background: '#F4E0FC',
         }),
       });
-      
+
       rerender(<MockIcon className="text-module-primary" />);
-      
+
       icon = screen.getByTestId('icon');
       expect(icon.getAttribute('class')).toContain('text-module-primary');
     });
@@ -185,8 +181,7 @@ describe('Themed Components', () => {
 
   describe('Module-Specific Styling', () => {
     it('should apply dashboard greyscale theme', () => {
-      (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-line @typescript-eslint/no-explicit-any
-        currentModule: 'dashboard',
+      (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-linecurrentModule: 'dashboard',
         getCurrentModuleColors: () => ({
           primary: '#6B7280',
           secondary: '#9CA3AF',
@@ -194,16 +189,15 @@ describe('Themed Components', () => {
           background: '#F9FAFB',
         }),
       });
-      
+
       render(<div className="bg-module-background">Dashboard Content</div>);
-      
+
       const content = screen.getByText('Dashboard Content');
       expect(content.className).toContain('bg-module-background');
     });
 
     it('should apply builder purple theme', () => {
-      (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-line @typescript-eslint/no-explicit-any
-        currentModule: 'builder',
+      (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-linecurrentModule: 'builder',
         getCurrentModuleColors: () => ({
           primary: '#AA60C4',
           secondary: '#73248F',
@@ -211,16 +205,15 @@ describe('Themed Components', () => {
           background: '#F4E0FC',
         }),
       });
-      
+
       render(<div className="bg-module-background">Builder Content</div>);
-      
+
       const content = screen.getByText('Builder Content');
       expect(content.className).toContain('bg-module-background');
     });
 
     it('should apply admin pink theme', () => {
-      (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-line @typescript-eslint/no-explicit-any
-        currentModule: 'admin',
+      (useModuleThemeStore as any).mockReturnValue({ // eslint-disable-linecurrentModule: 'admin',
         getCurrentModuleColors: () => ({
           primary: '#E382A5',
           secondary: '#B5406B',
@@ -228,9 +221,9 @@ describe('Themed Components', () => {
           background: '#FCEDFB',
         }),
       });
-      
+
       render(<div className="bg-module-background">Admin Content</div>);
-      
+
       const content = screen.getByText('Admin Content');
       expect(content.className).toContain('bg-module-background');
     });

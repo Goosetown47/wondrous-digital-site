@@ -24,9 +24,9 @@ export function SectionWrapper({
   id,
   index,
   totalSections,
-  isSelected: _isSelected = false, // eslint-disable-line @typescript-eslint/no-unused-vars
+  isSelected: _isSelected = false,
   children,
-  onSelect: _onSelect, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onSelect: _onSelect,
   onMoveUp,
   onMoveDown,
   onDelete,

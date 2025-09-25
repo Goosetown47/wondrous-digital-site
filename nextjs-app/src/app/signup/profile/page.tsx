@@ -18,10 +18,10 @@ import { toast } from 'sonner'
 function formatPhoneNumber(value: string): string {
   // Remove all non-digits
   const phoneNumber = value.replace(/\D/g, '')
-  
+
   // Limit to 10 digits
   const limitedNumber = phoneNumber.slice(0, 10)
-  
+
   // Format as (xxx) xxx-xxxx
   if (limitedNumber.length === 0) return ''
   if (limitedNumber.length <= 3) return `(${limitedNumber}`
@@ -49,7 +49,7 @@ function PersonalDetailsPageContent() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
-  
+
   // Form fields
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [firstName, setFirstName] = useState('')
@@ -71,7 +71,7 @@ function PersonalDetailsPageContent() {
     } else {
       setTimezone('America/New_York') // Default to ET
     }
-    
+
     // Restore form data from sessionStorage if user abandoned and came back
     const savedFormData = sessionStorage.getItem('signupProfileData')
     if (savedFormData) {
@@ -95,34 +95,34 @@ function PersonalDetailsPageContent() {
   const checkAuth = async () => {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    
+
     if (!user) {
       router.push('/signup/login')
       return
     }
-    
+
     setUser(user)
-    
+
     // Restore invitation token to sessionStorage if it exists in user metadata
     // This ensures the stepper shows correctly for warm prospects
     if (user.user_metadata?.invitation_token && !sessionStorage.getItem('invitationToken')) {
       sessionStorage.setItem('invitationToken', user.user_metadata.invitation_token)
     }
-    
+
     // Safety net: Check if warm prospect needs to be linked to account
     if (user.user_metadata?.invitation_token) {
       const invitationToken = user.user_metadata.invitation_token
-      
+
       // Check if user is already linked to an account
       const { data: accountUser } = await supabase
         .from('account_users')
         .select('account_id')
         .eq('user_id', user.id)
         .single()
-      
+
       if (!accountUser) {
         console.log('[Profile] Warm prospect not linked to account, attempting to link...')
-        
+
         // Try to accept the invitation
         try {
           const response = await fetch(`/api/invitations/by-token/${invitationToken}/accept-after-signup`, {
@@ -134,7 +134,7 @@ function PersonalDetailsPageContent() {
               email: user.email,
             }),
           })
-          
+
           if (response.ok) {
             const result = await response.json()
             if (result.account_id) {
@@ -157,7 +157,7 @@ function PersonalDetailsPageContent() {
         }
       }
     }
-    
+
     // Pre-fill name from email or metadata
     const emailUsername = user.email?.split('@')[0] || ''
     if (user.user_metadata?.full_name) {
@@ -167,14 +167,14 @@ function PersonalDetailsPageContent() {
     } else {
       setFirstName(emailUsername.charAt(0).toUpperCase() + emailUsername.slice(1))
     }
-    
+
     // Check for existing profile data
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('user_id', user.id)
       .single()
-    
+
     if (profile) {
       setAvatarUrl(profile.avatar_url)
       setFirstName(profile.first_name || firstName)
@@ -196,13 +196,13 @@ function PersonalDetailsPageContent() {
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       setUploading(true)
-      
+
       if (!event.target.files || event.target.files.length === 0) {
         return
       }
 
       const file = event.target.files[0]
-      
+
       // Validate file type
       if (!file.type.startsWith('image/')) {
         toast.error('Please upload an image file')
@@ -216,7 +216,7 @@ function PersonalDetailsPageContent() {
       }
 
       const supabase = createClient()
-      
+
       // Use folder structure: {user_id}/avatar.{ext}
       const fileExt = file.name.split('.').pop()
       const filePath = `${user?.id}/avatar.${fileExt}`
@@ -238,7 +238,7 @@ function PersonalDetailsPageContent() {
       // Add timestamp to force refresh
       const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`
       setAvatarUrl(urlWithTimestamp)
-      
+
       toast.success('Avatar uploaded successfully!')
     } catch (error) {
       console.error('Avatar upload error:', error)
@@ -278,13 +278,13 @@ function PersonalDetailsPageContent() {
           notes: notes || null,
         }),
       })
-      
+
       const data = await response.json()
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to update profile')
       }
-      
+
       // Move to Step 5: Payment (Step 4 for warm prospects)
       const flow = searchParams.get('flow')
       const pricingUrl = flow ? `/signup/pricing?flow=${flow}` : '/signup/pricing'
@@ -334,7 +334,7 @@ function PersonalDetailsPageContent() {
           <div className="h-[52px]"></div>
           <Card className="p-8">
             <h2 className="text-2xl font-semibold mb-6">Personal Details Form</h2>
-            
+
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
                 <Alert variant="destructive">
@@ -535,7 +535,7 @@ function PersonalDetailsPageContent() {
                     'Continue'
                   )}
                 </Button>
-                
+
                 <Button
                   type="button"
                   variant="outline"
