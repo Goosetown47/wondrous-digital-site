@@ -10,18 +10,19 @@ import { Loader2 } from 'lucide-react';
 export default function BuilderRedirectPage() {
   const params = useParams();
   const router = useRouter();
-  const { setCurrentProject } = useAuth();
+  const { currentProject, setCurrentProject } = useAuth();
   const projectId = params.projectId as string;
   
   const { data: project } = useProject(projectId);
   const { data: homepage, error } = useHomepage(projectId);
 
   // Sync current project when project data loads
+  // Only update if it's different to avoid circular updates
   useEffect(() => {
-    if (project) {
+    if (project && project.id !== currentProject?.id) {
       setCurrentProject(project);
     }
-  }, [project, setCurrentProject]);
+  }, [project, setCurrentProject, currentProject]);
 
   useEffect(() => {
     if (homepage?.id) {

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, Search, Check } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,13 +20,28 @@ interface AccountProjectSelectorProps {
 }
 
 export function AccountProjectSelector({ isCollapsed = false }: AccountProjectSelectorProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const { currentAccount, currentProject, accounts, setCurrentAccount, setCurrentProject } = useAuth();
   const [accountSearch, setAccountSearch] = useState('');
   const [projectSearch, setProjectSearch] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-  
+
   // Fetch projects for current account - must be called before any conditional returns
   const { data: projects = [] } = useAccountProjects(currentAccount?.id, false);
+
+  // Auto-select first project when account changes
+  useEffect(() => {
+    // Only run when we have an account and projects loaded
+    if (currentAccount && projects.length > 0) {
+      // If no project selected or project doesn't belong to account, select first
+      if (!currentProject || currentProject.account_id !== currentAccount.id) {
+        setCurrentProject(projects[0]);
+      }
+    }
+    // Only depend on account ID and projects changing to avoid infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentAccount?.id, projects]);
 
   if (isCollapsed) {
     return null;
@@ -100,8 +116,9 @@ export function AccountProjectSelector({ isCollapsed = false }: AccountProjectSe
                       )}
                       onClick={() => {
                         setCurrentAccount(account);
-                        setCurrentProject(null); // Reset project when switching accounts
-                        setIsOpen(false);
+                        setCurrentProject(null); // Reset project when switching accounts - will auto-select first via useEffect
+                        // Keep dropdown open so user can select a project
+                        // setIsOpen(false); // REMOVED - don't auto-close
                       }}
                     >
                       <div className="flex items-center gap-2">
@@ -156,6 +173,11 @@ export function AccountProjectSelector({ isCollapsed = false }: AccountProjectSe
                       onClick={() => {
                         setCurrentProject(project);
                         setIsOpen(false);
+
+                        // Navigate to new project if we're in Builder
+                        if (pathname.includes('/builder/')) {
+                          router.push(`/builder/${project.id}`);
+                        }
                       }}
                     >
                       <div className="flex items-center gap-2">
