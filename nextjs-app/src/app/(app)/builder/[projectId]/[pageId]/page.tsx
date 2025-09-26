@@ -16,7 +16,7 @@ import { useEffect, useState } from 'react';
 export default function BuilderPage() {
   const params = useParams();
   const router = useRouter();
-  const { setCurrentProject } = useAuth();
+  const { currentProject, setCurrentProject } = useAuth();
   const projectId = params.projectId as string;
   const pageId = params.pageId as string;
   const {
@@ -40,11 +40,12 @@ export default function BuilderPage() {
   const { data: theme } = useTheme(project?.theme_id);
 
   // Sync current project when project data loads
+  // Only update if it's different to avoid circular updates
   useEffect(() => {
-    if (project) {
+    if (project && (!currentProject || project.id !== currentProject.id)) {
       setCurrentProject(project);
     }
-  }, [project, setCurrentProject]);
+  }, [project, currentProject, setCurrentProject]);
 
   // Reset hasLoadedInitialData when pageId changes
   useEffect(() => {

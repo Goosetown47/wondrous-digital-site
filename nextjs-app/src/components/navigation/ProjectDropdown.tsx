@@ -102,10 +102,20 @@ export function ProjectDropdown() {
             projects.map((project) => (
               <DropdownMenuItem
                 key={project.id}
-                onSelect={() => {
+                onSelect={async () => {
                   setCurrentProject(project);
+
+                  // Check if we're in the builder with a specific page
+                  const builderMatch = pathname.match(/\/builder\/[^/]+\/([^/]+)/);
+                  const isInBuilderCanvas = builderMatch !== null;
+
                   // Navigate based on current context
-                  if (pathname.includes('/builder/')) {
+                  if (isInBuilderCanvas) {
+                    // When in builder canvas, we need to navigate to the new project's homepage
+                    // The redirect page will handle finding the homepage
+                    router.push(`/builder/${project.id}`);
+                  } else if (pathname.includes('/builder/')) {
+                    // On builder redirect page or other builder pages
                     router.push(`/builder/${project.id}`);
                   } else if (pathname.includes('/project/')) {
                     router.push(`/project/${project.id}/settings`);
