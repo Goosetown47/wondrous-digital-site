@@ -114,9 +114,11 @@ export default function ComponentDetailPage() {
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/core/${componentId}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Link>
             </Button>
             <Button 
               variant="outline" 

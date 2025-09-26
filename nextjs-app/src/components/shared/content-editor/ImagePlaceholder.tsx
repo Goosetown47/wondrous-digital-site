@@ -10,6 +10,7 @@ interface ImagePlaceholderProps {
   aspectRatio?: string;
   onClick?: () => void;
   className?: string;
+  editable?: boolean;
 }
 
 export function ImagePlaceholder({
@@ -18,6 +19,7 @@ export function ImagePlaceholder({
   aspectRatio,
   onClick,
   className,
+  editable = true,
 }: ImagePlaceholderProps) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -39,17 +41,18 @@ export function ImagePlaceholder({
   return (
     <div
       className={cn(
-        'relative flex items-center justify-center cursor-pointer transition-all duration-200',
+        'relative flex items-center justify-center transition-all duration-200',
         'bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900',
         'border-2 border-dashed',
         isHovered ? 'border-gray-400 dark:border-gray-500' : 'border-gray-300 dark:border-gray-700',
         'rounded-lg overflow-hidden',
+        editable ? 'cursor-pointer' : 'cursor-default',
         className
       )}
       style={getStyle()}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
+      onMouseEnter={() => editable && setIsHovered(true)}
+      onMouseLeave={() => editable && setIsHovered(false)}
+      onClick={editable ? onClick : undefined}
     >
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5">

@@ -110,6 +110,7 @@ export default function BuilderPage() {
       {/* Full-width Canvas Navbar */}
       <CanvasNavbar
         projectId={projectId}
+        projectName={project?.name}
         currentPageId={pageId}
         currentPage={page}
         themeId={project?.theme_id || undefined}

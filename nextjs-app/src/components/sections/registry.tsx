@@ -4,6 +4,8 @@
 import React from 'react';
 import { HeroSection } from './HeroSection';
 import { HeroTwoColumn } from './hero-two-column';
+import { Services1, Services4 } from '../core/sections/services1';
+import { Services4 as ServicesComponent4 } from '../core/sections/services4';
 import type { ComponentType } from 'react';
 
 // Define the content type for sections
@@ -22,7 +24,7 @@ export interface BaseSectionProps {
 // Adapter components to match BaseSectionProps interface
 const HeroSectionAdapter: ComponentType<BaseSectionProps> = (props) => {
 
-  return <HeroSection content={props.content as any} isEditing={props.isEditing} onContentChange={props.onContentChange as any} />;
+  return <HeroSection content={props.content as SectionContent} isEditing={props.isEditing} onContentChange={props.onContentChange as ((updates: Partial<SectionContent>) => void) | undefined} />;
 };
 
 const HeroTwoColumnAdapter: ComponentType<BaseSectionProps> = (props) => {
@@ -32,6 +34,7 @@ const HeroTwoColumnAdapter: ComponentType<BaseSectionProps> = (props) => {
     heading?: string;
     subtext?: string;
     buttonText?: string;
+    secondaryButtonText?: string;
     imageUrl?: string;
     imageAlt?: string;
   };
@@ -43,6 +46,7 @@ const HeroTwoColumnAdapter: ComponentType<BaseSectionProps> = (props) => {
         heading={heroContent.heading as string}
         subtext={heroContent.subtext as string}
         buttonText={heroContent.buttonText as string}
+        secondaryButtonText={heroContent.secondaryButtonText as string}
         imageUrl={heroContent.imageUrl as string}
         imageAlt={heroContent.imageAlt as string}
         editable={true}
@@ -67,6 +71,13 @@ const HeroTwoColumnAdapter: ComponentType<BaseSectionProps> = (props) => {
             props.onContentChange?.({ buttonText: value });
           }
         }}
+        onSecondaryButtonTextChange={(value) => {
+          if (content.heroContent) {
+            props.onContentChange?.({ heroContent: { ...content.heroContent, secondaryButtonText: value } });
+          } else {
+            props.onContentChange?.({ secondaryButtonText: value });
+          }
+        }}
         onImageChange={() => {
           // Handle file upload and update imageUrl
           // This would need actual file upload logic
@@ -81,6 +92,7 @@ const HeroTwoColumnAdapter: ComponentType<BaseSectionProps> = (props) => {
       heading={heroContent.heading as string}
       subtext={heroContent.subtext as string}
       buttonText={heroContent.buttonText as string}
+      secondaryButtonText={heroContent.secondaryButtonText as string}
       imageUrl={heroContent.imageUrl as string}
       imageAlt={heroContent.imageAlt as string}
       editable={false}
@@ -88,20 +100,39 @@ const HeroTwoColumnAdapter: ComponentType<BaseSectionProps> = (props) => {
   );
 };
 
-// Registry of section components
+// Adapter for Services components (they don't need props adaptation as they're static)
+const ServicesAdapter: ComponentType<BaseSectionProps> = () => {
+  return <Services4 />;
+};
 
-export const SECTION_COMPONENTS: Record<string, ComponentType<BaseSectionProps>> = {
+const Services1Adapter: ComponentType<BaseSectionProps> = () => {
+  return <Services1 />;
+};
+
+const Services4Adapter: ComponentType<BaseSectionProps> = () => {
+  return <ServicesComponent4 />;
+};
+
+// Registry of section components
+// NOTE: This registry is deprecated - use ComponentRegistry from /lib/register-components.ts instead
+
+const SECTION_COMPONENTS: Record<string, ComponentType<BaseSectionProps>> = {
   'HeroSection': HeroSectionAdapter,
   'HeroTwoColumn': HeroTwoColumnAdapter,
   'Hero-Two-Col-Image': HeroTwoColumnAdapter, // Alias for the component name used in the lab
+  'Services': ServicesAdapter,
+  'Services1': Services1Adapter,
+  'Services4': Services4Adapter,
+  'ServicesComponent4': Services4Adapter, // Alias in case it's stored with this name
   // Add more section components here as they are created
   // e.g., 'NavbarSection': NavbarSection,
   //       'FooterSection': FooterSection,
 };
 
 // Helper function to get a section component by name
-
-export function getSectionComponent(componentName?: string | null): ComponentType<BaseSectionProps> {
+// NOTE: This function is deprecated - use ComponentRegistry from /lib/register-components.ts instead
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getSectionComponent(componentName?: string | null): ComponentType<BaseSectionProps> {
   if (!componentName) return GenericSection;
 
   // Validate component exists to prevent object injection
