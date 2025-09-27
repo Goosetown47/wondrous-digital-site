@@ -87,7 +87,6 @@ export async function POST(request: NextRequest) {
       message: 'Invitation email has been resent',
       token: invitation.token 
     });
-    
   } catch (error) {
     console.error('Error resending invitation:', error);
     return NextResponse.json(

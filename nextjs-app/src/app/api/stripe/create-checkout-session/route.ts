@@ -205,7 +205,6 @@ export async function POST(request: NextRequest) {
       url: session.url,
       sessionId: session.id 
     });
-    
   } catch (error) {
     console.error('Error creating checkout session:', error);
     return NextResponse.json(

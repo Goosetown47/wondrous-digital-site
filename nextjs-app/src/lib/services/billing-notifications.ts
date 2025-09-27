@@ -68,18 +68,18 @@ export async function checkPendingChanges(
   currentDate: Date = new Date()
 ): Promise<AccountWithPendingChange[]> {
   const supabase = createSupabaseServiceClient();
-  
+
   // Calculate the target date for notifications
   const targetDate = new Date(currentDate);
   targetDate.setDate(targetDate.getDate() + daysBeforeChange);
-  
+
   // Set to start and end of day for proper date range matching
   const startOfDay = new Date(targetDate);
   startOfDay.setHours(0, 0, 0, 0);
-  
+
   const endOfDay = new Date(targetDate);
   endOfDay.setHours(23, 59, 59, 999);
-  
+
   const { data, error } = await supabase
     .from('accounts')
     .select('*')
@@ -88,12 +88,12 @@ export async function checkPendingChanges(
     .gte('pending_tier_change_date', startOfDay.toISOString())
     .lte('pending_tier_change_date', endOfDay.toISOString())
     .eq('subscription_status', 'active');
-  
+
   if (error) {
     console.error('Error fetching accounts with pending changes:', error);
     return [];
   }
-  
+
   return data || [];
 }
 
@@ -107,12 +107,12 @@ export function calculateNotificationDates(changeDate: Date): NotificationDates 
     '7_days': new Date(changeDate),
     '1_day': new Date(changeDate),
   };
-  
+
   dates['30_days'].setDate(changeDate.getDate() - 30);
   dates['14_days'].setDate(changeDate.getDate() - 14);
   dates['7_days'].setDate(changeDate.getDate() - 7);
   dates['1_day'].setDate(changeDate.getDate() - 1);
-  
+
   return dates;
 }
 
@@ -125,7 +125,7 @@ export async function hasAlreadySentNotification(
   changeDate: Date
 ): Promise<boolean> {
   const supabase = createSupabaseServiceClient();
-  
+
   const { data, error } = await supabase
     .from('billing_notification_log')
     .select('id')
@@ -134,12 +134,12 @@ export async function hasAlreadySentNotification(
     .eq('change_date', changeDate.toISOString())
     .eq('success', true)
     .single();
-  
+
   if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
     console.error('Error checking notification status:', error);
     return false;
   }
-  
+
   return !!data;
 }
 
@@ -155,7 +155,7 @@ export async function recordNotificationSent(
   errorMessage?: string
 ): Promise<void> {
   const supabase = createSupabaseServiceClient();
-  
+
   const { error } = await supabase
     .from('billing_notification_log')
     .insert({
@@ -170,7 +170,7 @@ export async function recordNotificationSent(
         environment: process.env.NODE_ENV,
       },
     });
-  
+
   if (error) {
     console.error('Error recording notification:', error);
   }
@@ -188,7 +188,7 @@ function getBillingDetails(tier: TierName, isYearly: boolean = false) {
     SCALE: 697,
     MAX: 997,
   };
-  
+
   const yearlyPrices: Record<TierName, number> = {
     FREE: 0,
     BASIC: 1047, // Placeholder
@@ -196,10 +196,10 @@ function getBillingDetails(tier: TierName, isYearly: boolean = false) {
     SCALE: 7527,
     MAX: 10767,
   };
-  
+
   return {
     billingPeriod: isYearly ? 'yearly' : 'monthly',
-    // eslint-disable-next-line security/detect-object-injection
+
     amount: isYearly ? yearlyPrices[tier] : monthlyPrices[tier],
   };
 }
@@ -216,21 +216,21 @@ export function formatBillingChangeData(
   if (!account.pending_tier_change_date || !account.pending_tier_change) {
     throw new Error('Account does not have pending tier change');
   }
-  
+
   const changeDate = new Date(account.pending_tier_change_date);
   const currentDate = new Date();
   const daysUntilChange = Math.ceil((changeDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
-  
+
   // Determine if yearly based on subscription (simplified for now)
   const isYearly = false; // Would need to fetch from Stripe in production
-  
+
   const currentBilling = getBillingDetails(account.tier, isYearly);
   const targetBilling = getBillingDetails(account.pending_tier_change, isYearly);
-  
+
   // Handle unknown tiers gracefully
   const currentLimits = TIER_LIMITS[account.tier] || TIER_LIMITS.FREE;
   const targetLimits = TIER_LIMITS[account.pending_tier_change] || TIER_LIMITS.FREE;
-  
+
   return {
     accountName: account.name,
     contactEmail: account.email,
@@ -281,10 +281,10 @@ export async function sendBillingChangeReminder(
 }> {
   try {
     const changeDate = new Date(account.pending_tier_change_date!);
-    
+
     // Check if this is a test email
     const isTestEmail = account.email === 'tyler.lahaie@hey.com';
-    
+
     // Skip duplicate check for test emails
     if (!isTestEmail) {
       // Check if already sent
@@ -293,7 +293,7 @@ export async function sendBillingChangeReminder(
         reminderType,
         changeDate
       );
-      
+
       if (alreadySent) {
         return {
           success: false,
@@ -302,10 +302,10 @@ export async function sendBillingChangeReminder(
         };
       }
     }
-    
+
     // Format data for email template
     const emailData = formatBillingChangeData(account, reminderType);
-    
+
     // Determine subject line
     const subjectLines = {
       '30_days': `Your billing change is scheduled in 30 days`,
@@ -313,16 +313,16 @@ export async function sendBillingChangeReminder(
       '7_days': `Your billing change is scheduled in 1 week`,
       '1_day': `Your billing change is tomorrow`,
     };
-    
+
     // Send the email
     const emailResult = await sendEmail({
       to: account.email,
       from: 'Wondrous Digital <billing@wondrousdigital.com>',
-      // eslint-disable-next-line security/detect-object-injection
+
       subject: subjectLines[reminderType],
       react: BillingChangeReminderEmail(emailData),
     });
-    
+
     // Only record notification if it's not a test email (to avoid foreign key constraints)
     if (!isTestEmail) {
       await recordNotificationSent(
@@ -334,7 +334,7 @@ export async function sendBillingChangeReminder(
         emailResult.error
       );
     }
-    
+
     return {
       success: emailResult.success,
       reminderType,
@@ -344,7 +344,7 @@ export async function sendBillingChangeReminder(
     };
   } catch (error) {
     console.error('Error sending billing change reminder:', error);
-    
+
     return {
       success: false,
       reminderType,
@@ -371,7 +371,7 @@ export async function processPendingNotifications(
     '7_days': 7,
     '1_day': 1,
   };
-  
+
   const results = {
     processed: 0,
     sent: 0,
@@ -379,17 +379,17 @@ export async function processPendingNotifications(
     failed: 0,
     errors: [] as string[],
   };
-  
+
   try {
     // Get accounts that need this notification
-    // eslint-disable-next-line security/detect-object-injection
+
     const accounts = await checkPendingChanges(daysMap[notificationType]);
     results.processed = accounts.length;
-    
+
     // Process each account
     for (const account of accounts) {
       const result = await sendBillingChangeReminder(account, notificationType);
-      
+
       if (result.success) {
         results.sent++;
       } else if (result.reason?.includes('already sent')) {
@@ -405,6 +405,6 @@ export async function processPendingNotifications(
     console.error('Error processing notifications:', error);
     results.errors.push(error instanceof Error ? error.message : 'Unknown error');
   }
-  
+
   return results;
 }

@@ -30,14 +30,14 @@ interface PasswordStrength {
 
 function getPasswordStrength(password: string): PasswordStrength {
   let score = 0;
-  
+
   if (password.length >= 8) score++;
   if (password.length >= 12) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[a-z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
-  
+
   if (score <= 2) return { score: 1, label: 'Weak', color: 'bg-red-500' };
   if (score <= 4) return { score: 2, label: 'Fair', color: 'bg-yellow-500' };
   if (score <= 5) return { score: 3, label: 'Good', color: 'bg-blue-500' };
@@ -118,6 +118,7 @@ export default function UpdatePasswordPage() {
     setError(null);
 
     // Validate passwords match
+    // eslint-disable-next-line-- Client-side validation only
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -137,7 +138,7 @@ export default function UpdatePasswordPage() {
 
     try {
       await authService.updatePassword(password);
-      
+
       // Log password change for security
       await fetch('/api/auth/log-password-change', {
         method: 'POST',
@@ -147,7 +148,7 @@ export default function UpdatePasswordPage() {
       });
 
       toast.success('Password updated successfully!');
-      
+
       // Redirect to login after short delay
       setTimeout(() => {
         router.push('/login');
@@ -173,7 +174,7 @@ export default function UpdatePasswordPage() {
           <div className="flex justify-center">
             <LogoFull size="xl" />
           </div>
-          
+
           <Card>
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl font-bold text-center">
@@ -213,7 +214,7 @@ export default function UpdatePasswordPage() {
         <div className="flex justify-center">
           <LogoFull size="xl" />
         </div>
-        
+
         <Card>
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
@@ -223,7 +224,7 @@ export default function UpdatePasswordPage() {
               Enter your new password below
             </CardDescription>
           </CardHeader>
-          
+
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               {error && (
@@ -232,7 +233,7 @@ export default function UpdatePasswordPage() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">New Password</Label>
                 <div className="relative">
@@ -254,7 +255,7 @@ export default function UpdatePasswordPage() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                
+
                 {password && (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
@@ -266,7 +267,7 @@ export default function UpdatePasswordPage() {
                       </div>
                       <span className="text-xs font-medium">{passwordStrength.label}</span>
                     </div>
-                    
+
                     {validationErrors.length > 0 && (
                       <ul className="text-xs text-muted-foreground space-y-1">
                         <li className="font-medium">Password must contain:</li>
@@ -278,7 +279,7 @@ export default function UpdatePasswordPage() {
                   </div>
                 )}
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm New Password</Label>
                 <div className="relative">
@@ -300,13 +301,13 @@ export default function UpdatePasswordPage() {
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                
+
                 {confirmPassword && password !== confirmPassword && (
                   <p className="text-xs text-red-500">Passwords do not match</p>
                 )}
               </div>
             </CardContent>
-            
+
             <CardFooter className="flex flex-col space-y-4">
               <Button 
                 type="submit" 
@@ -325,7 +326,7 @@ export default function UpdatePasswordPage() {
                   </>
                 )}
               </Button>
-              
+
               <p className="text-xs text-center text-muted-foreground">
                 After updating your password, you'll be redirected to the login page
               </p>

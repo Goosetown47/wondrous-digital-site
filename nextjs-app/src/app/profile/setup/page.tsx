@@ -29,13 +29,13 @@ function ProfileSetupContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const sessionId = searchParams.get('session_id'); // Stripe session ID for cold signups
-  
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [invitation, setInvitation] = useState<InvitationData | null>(null);
   const [stripeEmail, setStripeEmail] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Form fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -48,7 +48,7 @@ function ProfileSetupContent() {
     // Check if user is already logged in
     const checkExistingUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       // If user is logged in and doesn't have an invitation token
       // they shouldn't be on this page
       if (user && !token) {
@@ -60,27 +60,27 @@ function ProfileSetupContent() {
         }
         return;
       }
-      
+
       // Continue with normal flow
       if (!token && !sessionId) {
         setError('No invitation token or payment session provided');
         setLoading(false);
         return;
       }
-      
+
       if (token) {
         loadInvitation();
       } else if (sessionId) {
         loadStripeSession();
       }
     };
-    
+
     checkExistingUser();
   }, [token, sessionId, router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadInvitation = async () => {
     if (!token) return;
-    
+
     try {
       // Fetch invitation details
       const { data, error: fetchError } = await supabase
@@ -116,22 +116,22 @@ function ProfileSetupContent() {
 
   const loadStripeSession = async () => {
     if (!sessionId) return;
-    
+
     try {
       // Fetch session details from our API
       const response = await fetch(`/api/stripe/session/${sessionId}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to load payment session');
       }
-      
+
       const data = await response.json();
-      
+
       if (data.email) {
         setStripeEmail(data.email);
         setEmail(data.email);
       }
-      
+
       setLoading(false);
     } catch {
       setError('Failed to load payment session');
@@ -141,39 +141,40 @@ function ProfileSetupContent() {
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
-    
+
     if (!fullName.trim()) {
       errors.fullName = 'Full name is required';
     }
-    
+
     // Account name is required for cold signups (not invitations)
     if (!invitation && stripeEmail && !accountName.trim()) {
       errors.accountName = 'Company/Account name is required';
     }
-    
+
     if (password.length < 8) {
       errors.password = 'Password must be at least 8 characters';
     }
-    
+
+    // eslint-disable-next-line-- Client-side validation only
     if (password !== confirmPassword) {
       errors.confirmPassword = 'Passwords do not match';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     // Either invitation flow or cold signup flow must be present
     if (!invitation && !stripeEmail) return;
-    
+
     setSubmitting(true);
     setFormErrors({});
-    
+
     try {
       // Step 1: Sign up the user
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -205,7 +206,7 @@ function ProfileSetupContent() {
       if (needsEmailConfirmation) {
         // Supabase will automatically send verification email via Resend SMTP
         toast.success('Account created! Please check your email to verify your account.');
-        
+
         const verifyUrl = new URL('/auth/verify-email-pending', window.location.origin);
         verifyUrl.searchParams.set('email', email);
         if (invitation && token) {
@@ -217,7 +218,7 @@ function ProfileSetupContent() {
             verifyUrl.searchParams.set('session_id', sessionId);
           }
         }
-        
+
         router.push(verifyUrl.toString());
       } else {
         // Email already confirmed (rare case)
@@ -239,7 +240,7 @@ function ProfileSetupContent() {
           }
 
           toast.success('Account created and invitation accepted!');
-          
+
           // Redirect to the account page
           router.push(`/tools/accounts/${invitation.accounts.slug}`);
         } else {
@@ -251,14 +252,14 @@ function ProfileSetupContent() {
     } catch (error) {
       console.error('Setup error:', error);
       const message = error instanceof Error ? error.message : 'Failed to complete setup';
-      
+
       // Check for specific error cases
       if (message.includes('User already registered')) {
         setFormErrors({ email: 'An account with this email already exists. Please log in instead.' });
       } else {
         setFormErrors({ submit: message });
       }
-      
+
       setSubmitting(false);
     }
   };
@@ -325,7 +326,7 @@ function ProfileSetupContent() {
             }
           </CardDescription>
         </CardHeader>
-        
+
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {/* Invitation Info */}
@@ -337,7 +338,7 @@ function ProfileSetupContent() {
                 </div>
               </div>
             )}
-            
+
             {/* Payment Success Info for cold signups */}
             {stripeEmail && (
               <div className="p-3 bg-green-50 rounded-lg border border-green-200">
@@ -457,7 +458,7 @@ function ProfileSetupContent() {
               </Alert>
             )}
           </CardContent>
-          
+
           <CardFooter>
             <Button
               type="submit"

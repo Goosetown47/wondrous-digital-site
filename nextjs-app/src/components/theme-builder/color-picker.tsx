@@ -54,11 +54,11 @@ const hslToHex = (h: number, s: number, l: number): string => {
 const hexToHsl = (hex: string): HslColor => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) return { h: 0, s: 0, l: 0 };
-  
+
   const r = parseInt(result[1], 16) / 255;
   const g = parseInt(result[2], 16) / 255;
   const b = parseInt(result[3], 16) / 255;
-  
+
   const max = Math.max(r, g, b), min = Math.min(r, g, b);
   let h = 0, s = 0;
   const l = (max + min) / 2;
@@ -91,7 +91,7 @@ export function ColorPicker({
   const [color, setColor] = useState<HslColor>(parseHSLString(value));
   const [hexValue, setHexValue] = useState('');
   const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  
+
   // Debounced onChange to prevent rapid updates
   const debouncedOnChange = useCallback((newValue: string) => {
     if (timeoutRef.current) {
@@ -111,7 +111,7 @@ export function ColorPicker({
       setHexValue(hslToHex(newColor.h, newColor.s, newColor.l));
     }
   }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
-  
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -132,7 +132,7 @@ export function ColorPicker({
   const handleHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const hex = e.target.value;
     setHexValue(hex);
-    
+
     if (/^#[0-9A-F]{6}$/i.test(hex)) {
       const hslColor = hexToHsl(hex);
       setColor(hslColor);

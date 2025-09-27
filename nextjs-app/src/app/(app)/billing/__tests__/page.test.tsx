@@ -268,7 +268,9 @@ describe.skip('BillingPage', () => {
         );
 
         await waitFor(() => {
-          expect(screen.getByText(new RegExp(`${expected} of each month`))).toBeInTheDocument();
+          // Using includes instead of RegExp to avoid security warning in tests
+          const elements = screen.getAllByText((content) => content.includes(`${expected} of each month`));
+          expect(elements.length).toBeGreaterThan(0);
         });
 
         unmount(); // Clean up for next iteration

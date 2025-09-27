@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
           
         await stripe.subscriptionSchedules.release(scheduleId);
         console.log('Schedule released successfully');
-      } catch (error) {
+  } catch (error) {
         console.error('Error releasing schedule:', error);
         return NextResponse.json(
           { 
@@ -158,7 +158,6 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Successfully cancelled the planned change to ${account.pending_tier_change}. You will remain on your ${account.tier} plan.`,
     });
-    
   } catch (error) {
     console.error('Cancel scheduled change error:', error);
     return NextResponse.json(

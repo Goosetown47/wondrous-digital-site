@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { cookies } from 'next/headers';
+import { getBuildSafeCookieStore } from '@/lib/cookies/build-safe';
 import { env } from '@/env.mjs';
 import { isAdminServer, isStaffServer } from '@/lib/permissions/server-checks';
+import { ensureComponentName } from '@/lib/services/naming-service';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -14,23 +15,17 @@ export async function GET(request: NextRequest) {
 
   try {
     // Verify authentication
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const authClient = createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Ignore cookie setting errors
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -89,7 +84,6 @@ export async function GET(request: NextRequest) {
     console.log('📊 [API/Lab] Found drafts:', drafts?.length || 0);
 
     return NextResponse.json(drafts || []);
-
   } catch (error) {
     console.error('❌ [API/Lab] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -101,23 +95,17 @@ export async function POST(request: NextRequest) {
 
   try {
     // Verify authentication
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const authClient = createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Ignore cookie setting errors
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -147,7 +135,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { name, type, content, version = 1, status = 'draft', metadata = {} } = body;
+    const { name, type, content, version = 1, status = 'draft', metadata = {}, changelog } = body;
 
     if (!name || !type || !content) {
       return NextResponse.json({ 
@@ -160,6 +148,9 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 [API/Lab] Creating lab draft with service role...');
 
+    // Ensure component_name is properly set in metadata
+    const finalMetadata = ensureComponentName(content, metadata, type);
+
     // Create the lab draft using service role
     const { data: newDraft, error: createError } = await serviceClient
       .from('lab_drafts')
@@ -169,7 +160,8 @@ export async function POST(request: NextRequest) {
         content,
         version,
         status,
-        metadata,
+        metadata: finalMetadata,
+        changelog,
         created_by: user.id
       })
       .select()
@@ -199,7 +191,6 @@ export async function POST(request: NextRequest) {
       });
 
     return NextResponse.json(newDraft);
-
   } catch (error) {
     console.error('❌ [API/Lab] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

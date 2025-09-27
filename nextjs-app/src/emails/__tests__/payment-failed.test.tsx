@@ -246,7 +246,8 @@ describe('Payment Failed Email Templates', () => {
   describe('Email Template Consistency', () => {
     it('should use consistent branding across all templates', () => {
       const templates = [
-        <PaymentFailedDay0 
+        <PaymentFailedDay0
+          key="day0"
           userName="Test"
           accountName="Test Co"
           currentTier="PRO"
@@ -254,7 +255,8 @@ describe('Payment Failed Email Templates', () => {
           daysRemaining={14}
           updatePaymentUrl="https://test.com"
         />,
-        <PaymentFailedDay7 
+        <PaymentFailedDay7
+          key="day7"
           userName="Test"
           accountName="Test Co"
           currentTier="PRO"
@@ -262,7 +264,8 @@ describe('Payment Failed Email Templates', () => {
           daysRemaining={7}
           updatePaymentUrl="https://test.com"
         />,
-        <PaymentFailedDay13 
+        <PaymentFailedDay13
+          key="day13"
           userName="Test"
           accountName="Test Co"
           currentTier="PRO"
@@ -270,7 +273,8 @@ describe('Payment Failed Email Templates', () => {
           daysRemaining={1}
           updatePaymentUrl="https://test.com"
         />,
-        <AccountDowngraded 
+        <AccountDowngraded
+          key="downgraded"
           userName="Test"
           accountName="Test Co"
           oldTier="PRO"

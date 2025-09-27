@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { cookies } from 'next/headers';
+import { getBuildSafeCookieStore } from '@/lib/cookies/build-safe';
 import { env } from '@/env.mjs';
+import { ensureComponentName } from '@/lib/services/naming-service';
 
 export async function GET(
   request: NextRequest,
@@ -13,23 +14,17 @@ export async function GET(
 
   try {
     // Verify authentication
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const authClient = createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Ignore cookie setting errors
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -74,7 +69,6 @@ export async function GET(
     };
 
     return NextResponse.json(formattedDraft);
-
   } catch (error) {
     console.error('❌ [API/Lab/Id] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -90,23 +84,17 @@ export async function PUT(
 
   try {
     // Verify authentication
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const authClient = createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Ignore cookie setting errors
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -121,7 +109,7 @@ export async function PUT(
 
     // Parse request body
     const body = await request.json();
-    const { name, type, content, version, status, metadata } = body;
+    const { name, type, type_id, content, version, status, metadata, changelog, library_version, content_hash } = body;
 
     console.log('🔍 [API/Lab/Id] Updating lab draft with service role...');
 
@@ -135,10 +123,26 @@ export async function PUT(
 
     if (name !== undefined) updates.name = name;
     if (type !== undefined) updates.type = type;
+    if (type_id !== undefined) updates.type_id = type_id;
     if (content !== undefined) updates.content = content;
     if (version !== undefined) updates.version = version;
     if (status !== undefined) updates.status = status;
-    if (metadata !== undefined) updates.metadata = metadata;
+    if (changelog !== undefined) updates.changelog = changelog;
+    if (library_version !== undefined) updates.library_version = library_version;
+    if (content_hash !== undefined) updates.content_hash = content_hash;
+
+    // Ensure component_name is properly set in metadata if content or metadata is being updated
+    if (content !== undefined || metadata !== undefined) {
+      // Get the type from the existing draft if not provided
+      const { data: existingDraft } = await serviceClient
+        .from('lab_drafts')
+        .select('type')
+        .eq('id', id)
+        .single();
+
+      const draftType = type || existingDraft?.type;
+      updates.metadata = ensureComponentName(content || {}, metadata || {}, draftType);
+    }
 
     // Update the lab draft using service role
     const { data: updatedDraft, error: updateError } = await serviceClient
@@ -183,7 +187,6 @@ export async function PUT(
     };
 
     return NextResponse.json(formattedDraft);
-
   } catch (error) {
     console.error('❌ [API/Lab/Id] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -199,23 +202,17 @@ export async function DELETE(
 
   try {
     // Verify authentication
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const authClient = createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Ignore cookie setting errors
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -236,21 +233,29 @@ export async function DELETE(
     // Get draft info for logging before deletion
     const { data: draftInfo } = await serviceClient
       .from('lab_drafts')
-      .select('name, type')
+      .select('name, type, status')
       .eq('id', id)
       .single();
 
-    // Check if draft has been promoted to library (prevent deletion if so)
+    // Check if draft has been promoted to library AND library item still exists
     const { data: libraryItems } = await serviceClient
       .from('library_items')
-      .select('id')
+      .select('id, name')
       .eq('source_draft_id', id)
       .limit(1);
 
     if (libraryItems && libraryItems.length > 0) {
-      return NextResponse.json({ 
-        error: 'Cannot delete draft that has been promoted to library' 
-      }, { status: 400 });
+      // Library item exists - check if it's in use
+      // TODO: In the future, check if library item is used in projects
+      // For now, we'll allow deletion with a warning that library item will be orphaned
+
+      console.log(`⚠️ [API/Lab/Id] Draft has library item: ${libraryItems[0].name}`);
+
+      // Only prevent deletion if we're in strict mode (which we're not for now)
+      // This allows users to clean up drafts even if library items exist
+      // return NextResponse.json({
+      //   error: 'Cannot delete draft that has been promoted to library'
+      // }, { status: 400 });
     }
 
     // Delete the lab draft using service role
@@ -286,7 +291,6 @@ export async function DELETE(
       });
 
     return NextResponse.json({ success: true });
-
   } catch (error) {
     console.error('❌ [API/Lab/Id] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

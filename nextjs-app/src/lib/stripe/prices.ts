@@ -118,7 +118,17 @@ export function getPricesByTier(tier: TierName): TierPricing | null {
   }
   
   const priceIds = getPriceIds();
-  return priceIds[tier];
+  // Use switch to avoid bracket notation
+  switch (tier) {
+    case 'PRO':
+      return priceIds.PRO;
+    case 'SCALE':
+      return priceIds.SCALE;
+    case 'MAX':
+      return priceIds.MAX;
+    default:
+      return null;
+  }
 }
 
 /**

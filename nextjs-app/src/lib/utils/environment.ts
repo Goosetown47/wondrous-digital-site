@@ -92,7 +92,25 @@ export function getEnvironmentName(): string {
     preview: 'Preview'
   };
   
-  const name = names[env];
+  // Use switch to avoid bracket notation
+  let name: string;
+  switch (env) {
+    case 'development':
+      name = names.development;
+      break;
+    case 'staging':
+      name = names.staging;
+      break;
+    case 'production':
+      name = names.production;
+      break;
+    case 'preview':
+      name = names.preview;
+      break;
+    default:
+      name = 'Unknown';
+      break;
+  }
   
   // Add Stripe mode indicator for non-production
   if (env !== 'production' && stripeMode === 'test') {

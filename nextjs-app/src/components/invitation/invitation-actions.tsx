@@ -50,7 +50,7 @@ export function InvitationActions({
       }
 
       toast.success('Invitation accepted successfully!');
-      
+
       // Redirect to the account's dashboard or projects
       router.push('/dashboard');
     } catch (error) {
@@ -80,7 +80,7 @@ export function InvitationActions({
       }
 
       toast.success('Invitation declined');
-      
+
       // Redirect to login or home page
       router.push('/login');
     } catch (error) {

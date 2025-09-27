@@ -14,7 +14,23 @@ const sizeMap = {
 };
 
 export function LogoMark({ className, size = 'md' }: LogoProps) {
-  const dimensions = sizeMap[size].mark;
+  // Get dimensions without bracket notation
+  let dimensions: number;
+  switch (size) {
+    case 'sm':
+      dimensions = sizeMap.sm.mark;
+      break;
+    case 'lg':
+      dimensions = sizeMap.lg.mark;
+      break;
+    case 'xl':
+      dimensions = sizeMap.xl.mark;
+      break;
+    case 'md':
+    default:
+      dimensions = sizeMap.md.mark;
+      break;
+  }
   
   return (
     <Image
@@ -29,8 +45,24 @@ export function LogoMark({ className, size = 'md' }: LogoProps) {
 }
 
 export function LogoFull({ className, size = 'lg' }: LogoProps) {
-  const height = sizeMap[size].full / 3; // Approximate aspect ratio
-  const width = sizeMap[size].full;
+  // Get dimensions without bracket notation
+  let width: number;
+  switch (size) {
+    case 'sm':
+      width = sizeMap.sm.full;
+      break;
+    case 'md':
+      width = sizeMap.md.full;
+      break;
+    case 'xl':
+      width = sizeMap.xl.full;
+      break;
+    case 'lg':
+    default:
+      width = sizeMap.lg.full;
+      break;
+  }
+  const height = width / 3; // Approximate aspect ratio
   
   return (
     <Image

@@ -77,7 +77,9 @@ function getEmailSubject(template: string, data: Record<string, unknown>): strin
     'billing-notifications-summary': 'Billing Notifications Summary Report'
   };
 
-  return subjects[template] || 'Wondrous Digital Notification';
+  // Use Object.entries to safely access subjects
+  const entry = Object.entries(subjects).find(([key]) => key === template);
+  return entry ? entry[1] : 'Wondrous Digital Notification';
 }
 
 interface AccountData {
@@ -172,6 +174,25 @@ function getChangeDate(scenario: '30_days' | '14_days' | '7_days' | '1_day'): st
     '1_day': 1
   };
 
-  now.setDate(now.getDate() + daysToAdd[scenario]);
+  // Use switch to avoid bracket notation
+  let days: number;
+  switch (scenario) {
+    case '30_days':
+      days = daysToAdd['30_days'];
+      break;
+    case '14_days':
+      days = daysToAdd['14_days'];
+      break;
+    case '7_days':
+      days = daysToAdd['7_days'];
+      break;
+    case '1_day':
+      days = daysToAdd['1_day'];
+      break;
+    default:
+      days = 0;
+      break;
+  }
+  now.setDate(now.getDate() + days);
   return now.toISOString();
 }

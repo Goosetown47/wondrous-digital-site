@@ -18,7 +18,7 @@ function VerifyEmailContent() {
   const email = searchParams.get('email');
   const accountName = searchParams.get('account');
   const invitationToken = searchParams.get('token');
-  
+
   const [resending, setResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [verified, setVerified] = useState(false);
@@ -46,10 +46,10 @@ function VerifyEmailContent() {
     try {
       // Try to get current user
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (user && user.email === email && user.email_confirmed_at) {
         setVerified(true);
-        
+
         // If there's a pending invitation, accept it
         if (invitationToken) {
           handleInvitationAcceptance();
@@ -85,7 +85,7 @@ function VerifyEmailContent() {
     if (!email || resendCooldown > 0) return;
 
     setResending(true);
-    
+
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
@@ -154,7 +154,7 @@ function VerifyEmailContent() {
             We've sent a verification link to your email address
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           <div className="text-center p-8 bg-blue-50 rounded-lg">
             <Mail className="h-16 w-16 text-blue-600 mx-auto mb-4" />
@@ -220,7 +220,7 @@ function VerifyEmailContent() {
             </AlertDescription>
           </Alert>
         </CardContent>
-        
+
         <CardFooter className="flex flex-col gap-2">
           <Button
             onClick={handleResendEmail}
@@ -239,7 +239,7 @@ function VerifyEmailContent() {
               </>
             )}
           </Button>
-          
+
           <div className="text-center text-sm text-muted-foreground">
             Already verified?{' '}
             <Link href="/login" className="text-primary hover:underline">

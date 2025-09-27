@@ -43,7 +43,7 @@ export async function POST(
       await logDomainOperation(domainId, 'ADD_TO_VERCEL_SUCCESS', 'success', {
         domain: domain.domain
       });
-    } catch (vercelError) {
+  } catch (vercelError) {
       // If domain already exists in Vercel, that's okay
       const errorMessage = vercelError instanceof Error ? vercelError.message : String(vercelError);
       if (!errorMessage.includes('already exists')) {

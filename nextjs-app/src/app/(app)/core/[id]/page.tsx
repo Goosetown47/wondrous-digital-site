@@ -21,13 +21,24 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function ComponentDetailPage() {
   const params = useParams();
   const router = useRouter();
   const componentId = params.id as string;
   const [copySuccess, setCopySuccess] = useState(false);
-  
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   const { data: component, isLoading, error } = useCoreComponent(componentId);
   const deleteComponent = useDeleteComponent();
 
@@ -39,14 +50,12 @@ export default function ComponentDetailPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (confirm('Are you sure you want to delete this component? This action cannot be undone.')) {
-      try {
-        await deleteComponent.mutateAsync(componentId);
-        router.push('/core');
-      } catch (error) {
-        console.error('Failed to delete component:', error);
-      }
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteComponent.mutateAsync(componentId);
+      router.push('/core');
+    } catch (error) {
+      console.error('Failed to delete component:', error);
     }
   };
 
@@ -105,14 +114,16 @@ export default function ComponentDetailPage() {
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/core/${componentId}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Link>
             </Button>
             <Button 
               variant="outline" 
               size="sm"
-              onClick={handleDelete}
+              onClick={() => setDeleteDialogOpen(true)}
               disabled={deleteComponent.isPending}
             >
               {deleteComponent.isPending ? (
@@ -255,6 +266,28 @@ export default function ComponentDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Component</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{component.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleteComponent.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteComponent.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

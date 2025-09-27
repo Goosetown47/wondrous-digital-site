@@ -142,7 +142,21 @@ export async function POST(request: NextRequest) {
     } else if (action === 'switch-billing') {
       // Same tier, different billing period
       const currentTier = account.tier as Exclude<TierName, 'FREE' | 'BASIC'>;
-      const tierPricing = TIER_PRICING[currentTier];
+      // Validate tier is in TIER_PRICING to prevent object injection
+      let tierPricing;
+      switch (currentTier) {
+        case 'PRO':
+          tierPricing = TIER_PRICING.PRO;
+          break;
+        case 'SCALE':
+          tierPricing = TIER_PRICING.SCALE;
+          break;
+        case 'MAX':
+          tierPricing = TIER_PRICING.MAX;
+          break;
+        default:
+          return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
+      }
       newPriceId = billingPeriod === 'yearly' 
         ? tierPricing.yearlyPriceId 
         : tierPricing.monthlyPriceId;
@@ -446,7 +460,6 @@ export async function POST(request: NextRequest) {
       stripeLineItems: lineItems,
       stripeInvoiceTotal: upcomingInvoice.amount_due / 100,
     });
-    
   } catch (error) {
     console.error('Subscription preview error:', error);
     return NextResponse.json(

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { getBuildSafeCookieStore } from '@/lib/cookies/build-safe';
 import { env } from '@/env.mjs';
 import { isAdmin, isStaff } from '@/lib/permissions';
 
@@ -20,23 +20,17 @@ export async function PUT(
     }
 
     // Create server-side Supabase client
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const supabase = createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Ignore cookie setting errors in server components
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -44,7 +38,7 @@ export async function PUT(
 
     // Get authenticated user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
+
     if (userError || !user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
@@ -128,7 +122,7 @@ export async function PUT(
             project_name: currentProject.name,
             previous_account: {
               id: currentProject.account_id,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
               name: Array.isArray(currentProject.accounts) ? currentProject.accounts[0]?.name : (currentProject.accounts as any)?.name || 'Unknown'
             },
             new_account: {
@@ -139,12 +133,11 @@ export async function PUT(
             reassigned_by: user.email
           }
         });
-    } catch (logError) {
+  } catch (logError) {
       console.error('Failed to log account reassignment:', logError);
       // Continue despite logging failure
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const previousAccountName = Array.isArray(currentProject.accounts) ? currentProject.accounts[0]?.name : (currentProject.accounts as any)?.name || 'Unknown';
     console.log(`✅ Project "${currentProject.name}" reassigned from account "${previousAccountName}" to "${targetAccount.name}"`);
 
@@ -152,7 +145,6 @@ export async function PUT(
       message: 'Project account updated successfully',
       project: updatedProject
     });
-
   } catch (error) {
     console.error('Account reassignment error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

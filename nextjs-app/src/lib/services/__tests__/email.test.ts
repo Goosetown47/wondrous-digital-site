@@ -30,9 +30,9 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 describe('Email Service', () => {
   // Using any for test mocks is acceptable
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   let mockSupabase: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   let mockQueryBuilder: any;
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
   let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
@@ -47,14 +47,14 @@ describe('Email Service', () => {
   beforeEach(async () => {
     // Reset all mocks
     vi.clearAllMocks();
-    
+
     // Set required env var
     process.env.RESEND_API_KEY = 'test-api-key';
-    
+
     // Setup console spies
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
+
     // Setup query builder mock
     mockQueryBuilder = {
       select: vi.fn(() => mockQueryBuilder),
@@ -71,17 +71,17 @@ describe('Email Service', () => {
       single: vi.fn(() => Promise.resolve({ data: null, error: null })),
       maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
     };
-    
+
     // Setup Supabase mock
     mockSupabase = {
       from: vi.fn(() => mockQueryBuilder),
       sql: vi.fn((template) => template),
     };
     (createAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(mockSupabase);
-    
+
     // Reset mock Resend instance
     mockResendInstance.emails.send.mockClear();
-    
+
     // Import the module with current NODE_ENV
     const emailModule = await import('../email');
     sendEmail = emailModule.sendEmail;
@@ -106,7 +106,7 @@ describe('Email Service', () => {
   describe('sendEmail', () => {
     it('should send email successfully in production', async () => {
       vi.stubEnv('NODE_ENV', 'production');
-      
+
       const emailOptions: EmailOptions = {
         to: 'test@example.com',
         subject: 'Test Email',
@@ -141,10 +141,10 @@ describe('Email Service', () => {
       vi.stubEnv('NODE_ENV', 'development');
       // Remove API key to trigger development mode behavior
       delete process.env.RESEND_API_KEY;
-      
+
       // Re-import the module with development flag
       const { sendEmail: sendEmailDev } = await import('../email');
-      
+
       const emailOptions: EmailOptions = {
         to: ['user1@example.com', 'user2@example.com'],
         subject: 'Test Email',
@@ -160,7 +160,7 @@ describe('Email Service', () => {
       expect(result.data?.id).toMatch(/^dev-\d+$/);
       expect(mockResendInstance.emails.send).not.toHaveBeenCalled();
       expect(consoleLogSpy).toHaveBeenCalled();
-      
+
       // Environment will be restored in afterEach
     });
 
@@ -700,7 +700,8 @@ describe('Email Service', () => {
 
       // Mock the from calls for each status count
       mockSupabase.from.mockImplementation(() => {
-        const currentCount = counts[callCount] || 0;
+        // Use .at() to avoid bracket notation
+        const currentCount = counts.at(callCount) || 0;
         callCount++;
         return {
           select: vi.fn().mockReturnThis(),
@@ -784,7 +785,7 @@ describe('Email Service', () => {
 
       const template = 'Hello {{name}} from {{company}}';
       const rendered = template.replace(/\{\{(\w+)\}\}/g, (match: string, key: string) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, security/detect-object-injection
+
         return (maliciousData as any)[key] !== undefined ? String((maliciousData as any)[key]) : match;
       });
 
@@ -815,7 +816,7 @@ describe('Email Service', () => {
       ];
 
       // The query should filter by scheduled_at <= now
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       mockQueryBuilder.lte.mockImplementation((field: string, value: any) => {
         if (field === 'scheduled_at') {
           const now = new Date(value);

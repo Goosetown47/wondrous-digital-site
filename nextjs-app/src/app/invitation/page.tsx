@@ -30,7 +30,7 @@ function InvitationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  
+
   const [loading, setLoading] = useState(true);
   const [invitation, setInvitation] = useState<InvitationData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -94,15 +94,15 @@ function InvitationContent() {
 
   const handleAcceptExistingUser = async () => {
     if (!invitation || !token) return;
-    
+
     // For account_owner invitations, redirect to signup flow
     if (invitation.role === 'account_owner') {
       router.push(`/signup?token=${token}&email=${invitation.email}&flow=invitation`);
       return;
     }
-    
+
     setProcessing(true);
-    
+
     try {
       const response = await fetch('/api/invitations/accept', {
         method: 'POST',
@@ -126,9 +126,9 @@ function InvitationContent() {
 
   const handleDecline = async () => {
     if (!invitation || !token) return;
-    
+
     setProcessing(true);
-    
+
     try {
       const response = await fetch('/api/invitations/decline', {
         method: 'POST',
@@ -149,7 +149,6 @@ function InvitationContent() {
       setProcessing(false);
     }
   };
-
 
   if (loading || checkingUser) {
     return (

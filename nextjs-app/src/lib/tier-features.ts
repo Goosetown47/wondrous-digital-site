@@ -92,14 +92,34 @@ export function canUseFeature(
   const tier = account.tier || 'FREE';
   const hasPerformAddon = account.has_perform_addon || false;
   
-  const limits = TIER_LIMITS[tier];
+  // Use switch to avoid bracket notation
+  let limits: TierLimits;
+  switch (tier) {
+    case 'FREE':
+      limits = TIER_LIMITS.FREE;
+      break;
+    case 'PRO':
+      limits = TIER_LIMITS.PRO;
+      break;
+    case 'SCALE':
+      limits = TIER_LIMITS.SCALE;
+      break;
+    case 'MAX':
+      limits = TIER_LIMITS.MAX;
+      break;
+    default:
+      limits = TIER_LIMITS.FREE;
+      break;
+  }
   
   // Special case for SEO tools - requires PERFORM addon
   if (feature === 'seoTools') {
     return hasPerformAddon;
   }
   
-  const value = limits[feature];
+  // Use Object.entries to safely access feature value
+  const featureEntry = Object.entries(limits).find(([key]) => key === feature);
+  const value = featureEntry ? featureEntry[1] : 0;
   return typeof value === 'boolean' ? value : value !== 0;
 }
 
@@ -113,7 +133,45 @@ export function meetsMinimumTier(
   if (!account) return false;
   
   const tier = account.tier || 'FREE';
-  return TIER_HIERARCHY[tier] >= TIER_HIERARCHY[minimumTier];
+  // Use switch to get hierarchy values
+  let currentHier: number;
+  switch (tier) {
+    case 'FREE':
+      currentHier = TIER_HIERARCHY.FREE;
+      break;
+    case 'PRO':
+      currentHier = TIER_HIERARCHY.PRO;
+      break;
+    case 'SCALE':
+      currentHier = TIER_HIERARCHY.SCALE;
+      break;
+    case 'MAX':
+      currentHier = TIER_HIERARCHY.MAX;
+      break;
+    default:
+      currentHier = 0;
+      break;
+  }
+  
+  let minHier: number;
+  switch (minimumTier) {
+    case 'FREE':
+      minHier = TIER_HIERARCHY.FREE;
+      break;
+    case 'PRO':
+      minHier = TIER_HIERARCHY.PRO;
+      break;
+    case 'SCALE':
+      minHier = TIER_HIERARCHY.SCALE;
+      break;
+    case 'MAX':
+      minHier = TIER_HIERARCHY.MAX;
+      break;
+    default:
+      minHier = 0;
+      break;
+  }
+  return currentHier >= minHier;
 }
 
 /**
@@ -127,7 +185,35 @@ export function canCreateMore(
   if (!account) return false;
   
   const tier = account.tier || 'FREE';
-  const limit = TIER_LIMITS[tier][resource];
+  // Use switch to avoid bracket notation
+  let tierLimits: TierLimits;
+  switch (tier) {
+    case 'FREE':
+      tierLimits = TIER_LIMITS.FREE;
+      break;
+    case 'PRO':
+      tierLimits = TIER_LIMITS.PRO;
+      break;
+    case 'SCALE':
+      tierLimits = TIER_LIMITS.SCALE;
+      break;
+    case 'MAX':
+      tierLimits = TIER_LIMITS.MAX;
+      break;
+    default:
+      tierLimits = TIER_LIMITS.FREE;
+      break;
+  }
+  
+  // Get limit for specific resource
+  let limit: number;
+  if (resource === 'projects') {
+    limit = tierLimits.projects;
+  } else if (resource === 'users') {
+    limit = tierLimits.users;
+  } else {
+    limit = 0;
+  }
   
   // Check if current count is below the limit
   return currentCount < limit;
@@ -144,7 +230,35 @@ export function getRemainingCount(
   if (!account) return 0;
   
   const tier = account.tier || 'FREE';
-  const limit = TIER_LIMITS[tier][resource];
+  // Use switch to avoid bracket notation
+  let tierLimits: TierLimits;
+  switch (tier) {
+    case 'FREE':
+      tierLimits = TIER_LIMITS.FREE;
+      break;
+    case 'PRO':
+      tierLimits = TIER_LIMITS.PRO;
+      break;
+    case 'SCALE':
+      tierLimits = TIER_LIMITS.SCALE;
+      break;
+    case 'MAX':
+      tierLimits = TIER_LIMITS.MAX;
+      break;
+    default:
+      tierLimits = TIER_LIMITS.FREE;
+      break;
+  }
+  
+  // Get limit for specific resource
+  let limit: number;
+  if (resource === 'projects') {
+    limit = tierLimits.projects;
+  } else if (resource === 'users') {
+    limit = tierLimits.users;
+  } else {
+    limit = 0;
+  }
   
   return Math.max(0, limit - currentCount);
 }
@@ -167,22 +281,121 @@ export function getUpgradeMessage(
   // Find the minimum tier that has this feature
   const availableTiers = Object.entries(TIER_LIMITS)
     .filter(([, limits]) => {
-      const value = limits[feature];
+      // Use Object.entries to safely access feature value
+  const featureEntry = Object.entries(limits).find(([key]) => key === feature);
+  const value = featureEntry ? featureEntry[1] : 0;
       return typeof value === 'boolean' ? value : value > 0;
     })
     .map(([tierName]) => tierName as TierName)
-    .filter(tierName => TIER_HIERARCHY[tierName] > TIER_HIERARCHY[currentTier]);
+    .filter(tierName => {
+      // Use switch to get hierarchy values
+      let tierHierarchy: number;
+      switch (tierName) {
+        case 'FREE':
+          tierHierarchy = TIER_HIERARCHY.FREE;
+          break;
+        case 'PRO':
+          tierHierarchy = TIER_HIERARCHY.PRO;
+          break;
+        case 'SCALE':
+          tierHierarchy = TIER_HIERARCHY.SCALE;
+          break;
+        case 'MAX':
+          tierHierarchy = TIER_HIERARCHY.MAX;
+          break;
+        default:
+          tierHierarchy = 0;
+          break;
+      }
+      
+      let currentHierarchy: number;
+      switch (currentTier) {
+        case 'FREE':
+          currentHierarchy = TIER_HIERARCHY.FREE;
+          break;
+        case 'PRO':
+          currentHierarchy = TIER_HIERARCHY.PRO;
+          break;
+        case 'SCALE':
+          currentHierarchy = TIER_HIERARCHY.SCALE;
+          break;
+        case 'MAX':
+          currentHierarchy = TIER_HIERARCHY.MAX;
+          break;
+        default:
+          currentHierarchy = 0;
+          break;
+      }
+      return tierHierarchy > currentHierarchy;
+    });
   
   if (availableTiers.length === 0) {
-    if (TIER_HIERARCHY[currentTier] === TIER_HIERARCHY.MAX) {
+    // Use switch to get hierarchy value
+    let currentHierarchy: number;
+    switch (currentTier) {
+      case 'FREE':
+        currentHierarchy = TIER_HIERARCHY.FREE;
+        break;
+      case 'PRO':
+        currentHierarchy = TIER_HIERARCHY.PRO;
+        break;
+      case 'SCALE':
+        currentHierarchy = TIER_HIERARCHY.SCALE;
+        break;
+      case 'MAX':
+        currentHierarchy = TIER_HIERARCHY.MAX;
+        break;
+      default:
+        currentHierarchy = 0;
+        break;
+    }
+    if (currentHierarchy === TIER_HIERARCHY.MAX) {
       return 'You already have the highest tier available.';
     }
     return 'This feature is not available in your current tier.';
   }
   
-  const minimumTier = availableTiers.reduce((min, current) => 
-    TIER_HIERARCHY[current] < TIER_HIERARCHY[min] ? current : min
-  );
+  const minimumTier = availableTiers.reduce((min, current) => {
+    // Use switch to get hierarchy values
+    let currentHierarchy: number;
+    switch (current) {
+      case 'FREE':
+        currentHierarchy = TIER_HIERARCHY.FREE;
+        break;
+      case 'PRO':
+        currentHierarchy = TIER_HIERARCHY.PRO;
+        break;
+      case 'SCALE':
+        currentHierarchy = TIER_HIERARCHY.SCALE;
+        break;
+      case 'MAX':
+        currentHierarchy = TIER_HIERARCHY.MAX;
+        break;
+      default:
+        currentHierarchy = 0;
+        break;
+    }
+    
+    let minHierarchy: number;
+    switch (min) {
+      case 'FREE':
+        minHierarchy = TIER_HIERARCHY.FREE;
+        break;
+      case 'PRO':
+        minHierarchy = TIER_HIERARCHY.PRO;
+        break;
+      case 'SCALE':
+        minHierarchy = TIER_HIERARCHY.SCALE;
+        break;
+      case 'MAX':
+        minHierarchy = TIER_HIERARCHY.MAX;
+        break;
+      default:
+        minHierarchy = 0;
+        break;
+    }
+    return currentHierarchy < minHierarchy ? current : min;
+  });
   
   return `Upgrade to ${minimumTier} or higher to access this feature.`;
 }
@@ -211,7 +424,25 @@ export function canAccessContent(
  * Get list of features available for a tier
  */
 export function getTierFeatures(tier: TierName, hasPerformAddon = false): string[] {
-  const limits = TIER_LIMITS[tier];
+  // Use switch to avoid bracket notation
+  let limits: TierLimits;
+  switch (tier) {
+    case 'FREE':
+      limits = TIER_LIMITS.FREE;
+      break;
+    case 'PRO':
+      limits = TIER_LIMITS.PRO;
+      break;
+    case 'SCALE':
+      limits = TIER_LIMITS.SCALE;
+      break;
+    case 'MAX':
+      limits = TIER_LIMITS.MAX;
+      break;
+    default:
+      limits = TIER_LIMITS.FREE;
+      break;
+  }
   const features: string[] = [];
   
   if (limits.projects > 0) {
@@ -237,8 +468,44 @@ export function getTierFeatures(tier: TierName, hasPerformAddon = false): string
  * Compare two tiers
  */
 export function compareTiers(tier1: TierName, tier2: TierName): -1 | 0 | 1 {
-  const hierarchy1 = TIER_HIERARCHY[tier1];
-  const hierarchy2 = TIER_HIERARCHY[tier2];
+  // Use switch to get hierarchy values
+  let hierarchy1: number;
+  switch (tier1) {
+    case 'FREE':
+      hierarchy1 = TIER_HIERARCHY.FREE;
+      break;
+    case 'PRO':
+      hierarchy1 = TIER_HIERARCHY.PRO;
+      break;
+    case 'SCALE':
+      hierarchy1 = TIER_HIERARCHY.SCALE;
+      break;
+    case 'MAX':
+      hierarchy1 = TIER_HIERARCHY.MAX;
+      break;
+    default:
+      hierarchy1 = 0;
+      break;
+  }
+  
+  let hierarchy2: number;
+  switch (tier2) {
+    case 'FREE':
+      hierarchy2 = TIER_HIERARCHY.FREE;
+      break;
+    case 'PRO':
+      hierarchy2 = TIER_HIERARCHY.PRO;
+      break;
+    case 'SCALE':
+      hierarchy2 = TIER_HIERARCHY.SCALE;
+      break;
+    case 'MAX':
+      hierarchy2 = TIER_HIERARCHY.MAX;
+      break;
+    default:
+      hierarchy2 = 0;
+      break;
+  }
   
   if (hierarchy1 < hierarchy2) return -1;
   if (hierarchy1 > hierarchy2) return 1;

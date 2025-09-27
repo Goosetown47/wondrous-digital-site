@@ -112,7 +112,6 @@ export async function GET(request: NextRequest) {
         tokenFirst10: VERCEL_API_TOKEN.substring(0, 10) + '...'
       }
     });
-
   } catch (error) {
     console.error('[DEBUG] Error:', error);
     return NextResponse.json({

@@ -35,7 +35,7 @@ import { useAuth } from '@/providers/auth-provider';
 import { supabase } from '@/lib/supabase/client';
 
 // Get reference to mocked supabase
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mockSupabaseClient = supabase as any;
 
 describe('Email Preferences Hooks', () => {
@@ -52,7 +52,7 @@ describe('Email Preferences Hooks', () => {
     });
     wrapper = ({ children }: { children: React.ReactNode }) => 
       React.createElement(QueryClientProvider, { client: queryClient }, children);
-    
+
     // Default auth state
     (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ user: mockUser });
   });
@@ -103,7 +103,7 @@ describe('Email Preferences Hooks', () => {
 
       // Track the insert mock
       const insertMock = vi.fn().mockReturnThis();
-      
+
       // First query returns not found
       mockSupabaseClient.from.mockReturnValueOnce({
         select: vi.fn().mockReturnThis(),
@@ -205,12 +205,11 @@ describe('Email Preferences Hooks', () => {
         await result.current.mutateAsync(updates);
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(((supabase as any).from as ReturnType<typeof vi.fn>)().update).toHaveBeenCalledWith({
         ...updates,
         updated_at: expect.any(String),
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       expect(((supabase as any).from as ReturnType<typeof vi.fn>)().eq).toHaveBeenCalledWith('user_id', mockUser.id);
     });
 
@@ -410,7 +409,7 @@ describe('Email Preferences Hooks', () => {
       });
 
       // Verify only optional preferences were updated
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       expect(((supabase as any).from as ReturnType<typeof vi.fn>)().update).toHaveBeenCalledWith({
         ...unsubscribeUpdates,
         updated_at: expect.any(String),
@@ -494,7 +493,7 @@ describe('Email Preferences Hooks', () => {
       // Mock checking preferences before sending an email
       const canSendEmail = (type: keyof typeof mockPreferences): boolean => {
         if (type === 'user_id') return false;
-        // eslint-disable-next-line security/detect-object-injection
+
         return mockPreferences[type] === true;
       };
 

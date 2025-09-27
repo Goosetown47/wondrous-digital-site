@@ -11,18 +11,23 @@ import { PanelLeftClose, PanelRightClose } from 'lucide-react';
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const { data: isAdmin } = useIsAdmin();
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('secondary-sidebar-collapsed') === 'true';
-    }
-    return false;
-  });
+  // Start with false on both server and client to avoid hydration mismatch
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
+  // Load the saved preference after hydration
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    const savedState = localStorage.getItem('secondary-sidebar-collapsed') === 'true';
+    setIsCollapsed(savedState);
+    setIsHydrated(true);
+  }, []);
+
+  // Save the preference when it changes (but only after hydration)
+  useEffect(() => {
+    if (isHydrated) {
       localStorage.setItem('secondary-sidebar-collapsed', String(isCollapsed));
     }
-  }, [isCollapsed]);
+  }, [isCollapsed, isHydrated]);
 
   const toggleCollapsed = () => {
     setIsCollapsed(!isCollapsed);

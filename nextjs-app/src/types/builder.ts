@@ -22,9 +22,32 @@ export interface CoreComponent {
   code: string;
   dependencies: string[];
   imports: string[];
+  description?: string;
   metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  is_registered?: boolean;
+  registered_at?: string;
+  registered_by?: string;
+  default_content?: Record<string, unknown>;
+  type_id?: string;
+  code_name?: string;
+  editable_fields?: Array<{
+    path: string;
+    type: string;
+    label: string;
+    description?: string;
+    required?: boolean;
+    maxLength?: number;
+    [key: string]: unknown;
+  }>;
+  usage?: {
+    componentName: string;
+    totalUsage: number;
+    draftCount: number;
+    libraryCount: number;
+    isInUse: boolean;
+  };
 }
 
 // Lab draft types
@@ -37,7 +60,8 @@ export interface LabDraft {
   version: number;
   status: 'draft' | 'testing' | 'ready' | 'promoted';
   content_hash: string | null; // SHA-256 hash of content for change detection
-  library_version: number | null; // Version of linked library item
+  library_version: number | null; // REPURPOSED: Actually stores parent library item ID for lineage tracking (conceptually parent_library_id)
+  changelog?: string | null; // Changelog/release notes for this draft version
   tier_restrictions?: string[] | null; // Array of tier names that can access this draft
   metadata: Record<string, unknown>;
   created_by: string | null;

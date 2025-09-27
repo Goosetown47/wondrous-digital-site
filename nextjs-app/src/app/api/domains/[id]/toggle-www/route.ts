@@ -111,7 +111,7 @@ export async function POST(
       try {
         await addDomainToVercel(wwwDomain);
         console.log(`[WWW Toggle] Successfully added ${wwwDomain} to Vercel`);
-      } catch (vercelError) {
+  } catch (vercelError) {
         const errorMessage = vercelError instanceof Error ? vercelError.message : String(vercelError);
         if (!errorMessage.includes('already exists')) {
           // If we added to database but failed Vercel, remove from database
@@ -148,7 +148,7 @@ export async function POST(
         try {
           await removeDomainFromVercel(wwwDomain);
           console.log(`[WWW Toggle] Removed ${wwwDomain} from Vercel`);
-        } catch (vercelError) {
+  } catch (vercelError) {
           console.warn(`[WWW Toggle] Error removing ${wwwDomain} from Vercel:`, vercelError);
           // Continue anyway - domain might not exist in Vercel
         }

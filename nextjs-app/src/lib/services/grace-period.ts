@@ -235,7 +235,6 @@ export async function processExpiredGracePeriods(): Promise<ProcessResult> {
       
       results.processed++;
       results.downgradedAccounts?.push(account.id);
-      
     } catch (error) {
       const errorMessage = `Failed to downgrade account ${account.id}: ${error}`;
       console.error(errorMessage);

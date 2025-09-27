@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { 
+import { useState, useEffect } from 'react';
+import {
   Eye, MoreVertical, Edit, Trash2, Upload, Download,
-  FileText, Layout, Palette, Globe
+  FileText, Layout, Palette, Globe, GitBranch
 } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,10 +46,36 @@ export function LibraryCard({ item }: LibraryCardProps) {
   const publishMutation = usePublishLibraryItem();
   const deleteMutation = useDeleteLibraryItem();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [actualUsageCount, setActualUsageCount] = useState<number>(0);
+  const [isCheckingUsage, setIsCheckingUsage] = useState(false);
 
-  const Icon = typeIcons[item.type];
+  // Check actual usage when component mounts or item changes
+  useEffect(() => {
+    const checkUsage = async () => {
+      try {
+        const response = await fetch(`/api/library/${item.id}/check-usage`);
+        if (response.ok) {
+          const usage = await response.json();
+          setActualUsageCount(usage.usageCount || 0);
+        }
+      } catch (error) {
+        console.error('Failed to check usage:', error);
+      }
+    };
+    checkUsage();
+  }, [item.id]);
 
-  const handlePublishToggle = () => {
+  // Validate type exists to prevent object injection
+  const Icon = Object.prototype.hasOwnProperty.call(typeIcons, item.type) 
+    ? typeIcons[item.type as keyof typeof typeIcons]
+    : Layout; // fallback icon
+
+  const handlePublishToggle = async () => {
+    // If trying to unpublish, check if item is in use first
+    if (item.published && actualUsageCount > 0) {
+      alert(`Cannot unpublish this ${item.type} - it is currently being used in ${actualUsageCount} location${actualUsageCount > 1 ? 's' : ''}. Remove it from all projects before unpublishing.`);
+      return;
+    }
     publishMutation.mutate({ id: item.id, published: !item.published });
   };
 
@@ -58,9 +84,63 @@ export function LibraryCard({ item }: LibraryCardProps) {
     router.push(`/lab/${item.source_draft_id || item.id}`);
   };
 
-  const handleDelete = () => {
-    deleteMutation.mutate(item.id);
-    setShowDeleteDialog(false);
+  const handleCreateNewVersion = async () => {
+    // Create a new draft from this library item
+    // This will track the parent library item and auto-increment the version
+    try {
+      const response = await fetch('/api/lab', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: item.name,
+          type: item.type,
+          type_id: item.type_id,
+          content: item.content,
+          version: (item.version || 1) + 1, // Auto-increment version
+          status: 'draft',
+          library_version: null, // Will be set properly when we migrate to UUID field
+          changelog: `New version created from library v${item.version || 1}`,
+          metadata: {
+            ...item.metadata,
+            parent_library_id: item.id, // Store parent library ID in metadata for now
+            library_item_id: item.id,
+            created_from_library: true,
+            parent_version: item.version || 1,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const newDraft = await response.json();
+        // Navigate to the new draft in LAB
+        router.push(`/lab/${newDraft.id}`);
+      }
+    } catch (error) {
+      console.error('Failed to create new version:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    // Check if item is currently in use
+    try {
+      const response = await fetch(`/api/library/${item.id}/check-usage`);
+      const usage = await response.json();
+
+      if (usage.isInUse) {
+        alert(`Cannot delete this ${item.type} - it is currently being used in ${usage.usageCount} location${usage.usageCount > 1 ? 's' : ''}`);
+        setShowDeleteDialog(false);
+        return;
+      }
+
+      deleteMutation.mutate(item.id);
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error('Failed to check usage:', error);
+      alert('Failed to check if item is in use. Please try again.');
+      setShowDeleteDialog(false);
+    }
   };
 
   return (
@@ -79,20 +159,27 @@ export function LibraryCard({ item }: LibraryCardProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleCreateNewVersion}>
+                  <GitBranch className="mr-2 h-4 w-4" />
+                  Create New Version
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleEdit}>
                   <Edit className="mr-2 h-4 w-4" />
-                  Edit in Lab
+                  Edit Draft
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push(`/library/preview/${item.id}`)}>
                   <Eye className="mr-2 h-4 w-4" />
                   Preview
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handlePublishToggle}>
+                <DropdownMenuItem
+                  onClick={handlePublishToggle}
+                  disabled={item.published && actualUsageCount > 0}
+                >
                   {item.published ? (
                     <>
                       <Download className="mr-2 h-4 w-4" />
-                      Unpublish
+                      Unpublish{actualUsageCount > 0 && ` (${actualUsageCount} in use)`}
                     </>
                   ) : (
                     <>
@@ -102,9 +189,24 @@ export function LibraryCard({ item }: LibraryCardProps) {
                   )}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={() => setShowDeleteDialog(true)}
+                <DropdownMenuItem
+                  onClick={async () => {
+                    setIsCheckingUsage(true);
+                    try {
+                      const response = await fetch(`/api/library/${item.id}/check-usage`);
+                      if (response.ok) {
+                        const usage = await response.json();
+                        setActualUsageCount(usage.usageCount || 0);
+                      }
+                    } catch (error) {
+                      console.error('Failed to check usage:', error);
+                    } finally {
+                      setIsCheckingUsage(false);
+                      setShowDeleteDialog(true);
+                    }
+                  }}
                   className="text-destructive"
+                  disabled={isCheckingUsage}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
@@ -137,7 +239,7 @@ export function LibraryCard({ item }: LibraryCardProps) {
             <Badge variant="outline">v{item.version || 1}</Badge>
           </div>
           <div className="text-xs text-muted-foreground">
-            {item.usage_count || 0} uses
+            {actualUsageCount} uses
           </div>
         </CardFooter>
 
@@ -153,10 +255,24 @@ export function LibraryCard({ item }: LibraryCardProps) {
             <AlertDialogDescription>
               Are you sure you want to delete "{item.name}"? This action cannot be undone.
             </AlertDialogDescription>
+            {actualUsageCount > 0 && (
+              <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded text-sm">
+                <strong>Warning:</strong> This item is currently being used in {actualUsageCount} location{actualUsageCount > 1 ? 's' : ''} and cannot be deleted.
+              </div>
+            )}
+            {item.source_draft_id && (
+              <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs">
+                Note: The draft version will remain in the Lab.
+              </div>
+            )}
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground"
+              disabled={actualUsageCount > 0}
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

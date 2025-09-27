@@ -106,7 +106,7 @@ export const CancellationNotificationEmail: React.FC<CancellationNotificationPro
         </Heading>
         <Container style={{ ...styles.box, marginBottom: 20 }}>
           <Text style={styles.paragraph}>
-            <strong>Reason Selected:</strong> {cancellationReason ? reasonLabels[cancellationReason] || cancellationReason : 'Not specified'}<br />
+            <strong>Reason Selected:</strong> {cancellationReason ? (Object.entries(reasonLabels).find(([key]) => key === cancellationReason)?.[1] || cancellationReason) : 'Not specified'}<br />
             <strong>Cancelled At:</strong> {cancelledAt}<br />
             <strong>Access Ends:</strong> {subscriptionEndsAt}
           </Text>

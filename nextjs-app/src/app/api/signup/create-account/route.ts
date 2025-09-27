@@ -127,7 +127,7 @@ export async function POST(request: Request) {
       account: newAccount,
       message: 'Account created successfully'
     });
-    
+
   } catch (error) {
     console.error('Unexpected error creating account:', error);
     return NextResponse.json(

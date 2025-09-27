@@ -112,14 +112,26 @@ class LibraryService {
 
   /**
    * Delete a library item
+   * Now uses the API endpoint to ensure proper cleanup of associated drafts
    */
   async delete(id: string) {
-    const { error } = await supabase
-      .from('library_items')
-      .delete()
-      .eq('id', id);
+    try {
+      const response = await fetch(`/api/library/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
 
-    if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete library item');
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Error deleting library item:', error);
+      throw error;
+    }
   }
 
   /**

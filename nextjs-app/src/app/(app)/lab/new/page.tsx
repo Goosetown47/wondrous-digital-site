@@ -68,12 +68,11 @@ export default function NewDraftPage() {
   const getInitialContent = (type: string): SectionContent | PageContent | SiteContent | ThemeVariables => {
     switch (type) {
       case 'section': {
-        const sectionContent: SectionContent = {
-          components: [],
-          layout: {
-            container: true,
-            spacing: 'default',
-          },
+        // Return multi-section format with empty sections array
+        // This ensures the lab editor starts with no pre-populated components
+        const sectionContent: PageContent = {
+          sections: [],
+          metadata: {}
         };
         return sectionContent;
       }
@@ -193,13 +192,15 @@ export default function NewDraftPage() {
                     value={formData.type_id}
                     onValueChange={(value) => setFormData({ ...formData, type_id: value })}
                   >
-                    <SelectTrigger id="type_id">
-                      <SelectValue placeholder={`Select a ${formData.type} type`} />
+                    <SelectTrigger id="type_id" className="text-left">
+                      <SelectValue placeholder={`Select a ${formData.type} type`}>
+                        {formData.type_id && types.find(t => t.id === formData.type_id)?.display_name}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {types.map((type) => (
                         <SelectItem key={type.id} value={type.id}>
-                          <div>
+                          <div className="text-left">
                             <div className="font-medium">{type.display_name}</div>
                             {type.description && (
                               <div className="text-xs text-muted-foreground">{type.description}</div>

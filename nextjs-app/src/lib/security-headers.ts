@@ -6,26 +6,26 @@ import { NextResponse } from 'next/server';
 export function applySecurityHeaders(response: NextResponse): NextResponse {
   // Prevent clickjacking attacks
   response.headers.set('X-Frame-Options', 'DENY');
-  
+
   // Prevent MIME type sniffing
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  
+
   // Enable XSS protection (legacy browsers)
   response.headers.set('X-XSS-Protection', '1; mode=block');
-  
+
   // Control referrer information
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
+
   // Permissions Policy (formerly Feature Policy)
   response.headers.set(
     'Permissions-Policy',
     'camera=(), microphone=(), geolocation=(), payment=()'
   );
-  
+
   // Basic Content Security Policy
   // Note: This is a basic CSP. You may need to adjust based on your needs
   const isDevelopment = process.env.NODE_ENV === 'development';
-  
+
   if (!isDevelopment) {
     // Production CSP - more restrictive
     response.headers.set(
@@ -37,13 +37,14 @@ export function applySecurityHeaders(response: NextResponse): NextResponse {
         "img-src 'self' data: https: blob:",
         "font-src 'self' data:",
         "worker-src 'self' blob:",
+        // eslint-disable-next-line-- This is a CSP domain pattern, not a secret
         "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.vercel.com",
         "frame-ancestors 'none'",
         "base-uri 'self'",
         "form-action 'self'",
       ].join('; ')
     );
-    
+
     // Strict Transport Security (HSTS) - only in production
     response.headers.set(
       'Strict-Transport-Security',
@@ -60,6 +61,7 @@ export function applySecurityHeaders(response: NextResponse): NextResponse {
         "img-src 'self' data: https: blob:",
         "font-src 'self' data:",
         "worker-src 'self' blob:",
+        // eslint-disable-next-line-- Domain pattern, not a secret
         "connect-src 'self' http://localhost:* ws://localhost:* https://*.supabase.co wss://*.supabase.co",
         "frame-ancestors 'none'",
         "base-uri 'self'",
@@ -67,7 +69,7 @@ export function applySecurityHeaders(response: NextResponse): NextResponse {
       ].join('; ')
     );
   }
-  
+
   return response;
 }
 

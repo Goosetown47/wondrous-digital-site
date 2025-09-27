@@ -127,9 +127,9 @@ const moduleThemeStore: StateCreator<ModuleThemeState> = (set, get) => ({
 
       autoDetectModule: () => {
         if (typeof window === 'undefined') return;
-        
-        const module = get().getModuleFromPath(window.location.pathname);
-        set({ currentModule: module });
+
+        const detectedModule = get().getModuleFromPath(window.location.pathname);
+        set({ currentModule: detectedModule });
         get().applyThemeToDOM();
       },
 

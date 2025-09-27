@@ -140,7 +140,6 @@ export async function POST() {
       userId: user.id,
       email: user.email
     });
-
   } catch (error) {
     console.error('Unexpected error in post-login:', error);
     // Default to dashboard on error

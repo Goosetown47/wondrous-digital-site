@@ -10,7 +10,7 @@
 
 /**
  * Get the application URL for the current environment
- * @param includeProtocol - Whether to include https:// prefix (default: true)
+ * @param includeProtocol - Whether to include protocol prefix (default: true)
  * @returns The application URL
  */
 export function getAppUrl(includeProtocol = true): string {

@@ -50,17 +50,17 @@ describe('SecondarySidebar', () => {
         settings: {},
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      } as any,
     });
-    vi.mocked(useIsAdmin).mockReturnValue({ data: false, isLoading: false, error: null } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-    vi.mocked(useIsAccountOwner).mockReturnValue({ data: false, isLoading: false, error: null } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-    vi.mocked(useAccountProjects).mockReturnValue({ data: [], isLoading: false, error: null } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+    vi.mocked(useIsAdmin).mockReturnValue({ data: false, isLoading: false, error: null } as any);
+    vi.mocked(useIsAccountOwner).mockReturnValue({ data: false, isLoading: false, error: null } as any);
+    vi.mocked(useAccountProjects).mockReturnValue({ data: [], isLoading: false, error: null } as any);
   });
 
   describe('Navigation State Persistence', () => {
     it('should hide completely when collapsed', () => {
       const { container } = render(<SecondarySidebar isCollapsed={true} />);
-      
+
       // When collapsed, the sidebar should have width 0
       const sidebar = container.firstChild as HTMLElement;
       expect(sidebar).toHaveClass('w-0');
@@ -68,14 +68,14 @@ describe('SecondarySidebar', () => {
 
     it('should show full width when not collapsed', () => {
       const { container } = render(<SecondarySidebar isCollapsed={false} />);
-      
+
       const sidebar = container.querySelector('.w-\\[300px\\]');
       expect(sidebar).toBeInTheDocument();
     });
 
     it('should display module heading when not collapsed', () => {
       render(<SecondarySidebar isCollapsed={false} />);
-      
+
       const heading = screen.getByRole('heading', { level: 1 });
       expect(heading).toHaveTextContent('Dashboard');
     });
@@ -100,8 +100,8 @@ describe('SecondarySidebar', () => {
         customer_id: '1',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-        currentAccount: { 
+      } as any,
+      currentAccount: { 
         id: '1', 
         name: 'Test Account',
         slug: 'test-account',
@@ -109,11 +109,11 @@ describe('SecondarySidebar', () => {
         settings: {},
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-      });
-      
+      } as any,
+    });
+
       render(<SecondarySidebar isCollapsed={false} />);
-      
+
       const heading = screen.getByRole('heading', { level: 1 });
       expect(heading).toHaveTextContent('Builder');
     });
@@ -122,10 +122,9 @@ describe('SecondarySidebar', () => {
       vi.mocked(useModuleThemeStore).mockReturnValue({
         currentModule: 'admin',
       });
-      vi.mocked(useIsAdmin).mockReturnValue({ data: true, isLoading: false, error: null } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-      
+      vi.mocked(useIsAdmin).mockReturnValue({ data: true, isLoading: false, error: null } as any);
       render(<SecondarySidebar isCollapsed={false} />);
-      
+
       expect(screen.getByText('Admin')).toBeInTheDocument();
     });
   });
@@ -139,7 +138,7 @@ describe('SecondarySidebar', () => {
 
     it('should show navigation items when expanded', () => {
       render(<SecondarySidebar isCollapsed={false} />);
-      
+
       // Dashboard navigation items should be visible
       // Use getAllByText since "Dashboard" appears in both heading and navigation
       const dashboardElements = screen.getAllByText('Dashboard');
@@ -149,20 +148,18 @@ describe('SecondarySidebar', () => {
     });
 
     it('should show account management section for account owners', () => {
-      vi.mocked(useIsAccountOwner).mockReturnValue({ data: true, isLoading: false, error: null } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-      
+      vi.mocked(useIsAccountOwner).mockReturnValue({ data: true, isLoading: false, error: null } as any);
       render(<SecondarySidebar isCollapsed={false} />);
-      
+
       expect(screen.getByText('Account Management')).toBeInTheDocument();
       expect(screen.getByText('Billing')).toBeInTheDocument();
       expect(screen.getByText('Team Members')).toBeInTheDocument();
     });
 
     it('should not show account management section for non-owners', () => {
-      vi.mocked(useIsAccountOwner).mockReturnValue({ data: false, isLoading: false, error: null } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-      
+      vi.mocked(useIsAccountOwner).mockReturnValue({ data: false, isLoading: false, error: null } as any);
       render(<SecondarySidebar isCollapsed={false} />);
-      
+
       expect(screen.queryByText('Account Management')).not.toBeInTheDocument();
       expect(screen.queryByText('Billing')).not.toBeInTheDocument();
     });
@@ -172,14 +169,14 @@ describe('SecondarySidebar', () => {
     it('should allow collapsing and expanding categories', async () => {
       const user = userEvent.setup();
       render(<SecondarySidebar isCollapsed={false} />);
-      
+
       // Find the Application category button
       const applicationCategory = screen.getByText('Application');
       const categoryButton = applicationCategory.closest('button');
-      
+
       // Category should be expanded by default
       expect(screen.getByText('Updates')).toBeVisible();
-      
+
       // Click to collapse
       if (categoryButton) {
         await user.click(categoryButton);
@@ -194,9 +191,9 @@ describe('SecondarySidebar', () => {
       vi.mocked(useModuleThemeStore).mockReturnValue({
         currentModule: 'dashboard',
       });
-      
+
       render(<SecondarySidebar isCollapsed={false} />);
-      
+
       expect(screen.getByText('Application')).toBeInTheDocument();
       expect(screen.getByText('Project Management')).toBeInTheDocument();
     });
@@ -221,8 +218,8 @@ describe('SecondarySidebar', () => {
         customer_id: '1',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-        currentAccount: { 
+      } as any,
+      currentAccount: { 
         id: '1', 
         name: 'Test Account',
         slug: 'test-account',
@@ -230,11 +227,11 @@ describe('SecondarySidebar', () => {
         settings: {},
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-      });
-      
+      } as any,
+    });
+
       render(<SecondarySidebar isCollapsed={false} />);
-      
+
       expect(screen.getByText('Canvas')).toBeInTheDocument();
       expect(screen.getByText('Pages')).toBeInTheDocument();
       expect(screen.getByText('Themes')).toBeInTheDocument();
@@ -244,10 +241,9 @@ describe('SecondarySidebar', () => {
       vi.mocked(useModuleThemeStore).mockReturnValue({
         currentModule: 'admin',
       });
-      vi.mocked(useIsAdmin).mockReturnValue({ data: true, isLoading: false, error: null } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-      
+      vi.mocked(useIsAdmin).mockReturnValue({ data: true, isLoading: false, error: null } as any);
       render(<SecondarySidebar isCollapsed={false} />);
-      
+
       expect(screen.getByText('Lab')).toBeInTheDocument();
       expect(screen.getByText('Library')).toBeInTheDocument();
       expect(screen.getByText('Core')).toBeInTheDocument();
@@ -275,11 +271,11 @@ describe('SecondarySidebar', () => {
         settings: {},
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-      });
-      
+      } as any,
+    });
+
       render(<SecondarySidebar isCollapsed={false} />);
-      
+
       expect(screen.queryByText('Canvas')).not.toBeInTheDocument();
       expect(screen.queryByText('Pages')).not.toBeInTheDocument();
     });

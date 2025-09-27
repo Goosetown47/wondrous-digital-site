@@ -13,7 +13,6 @@ interface AccountActivityProps {
   accountId: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function AccountActivity(_props: AccountActivityProps) {
   return (
     <div className="space-y-6">

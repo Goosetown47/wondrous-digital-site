@@ -10,7 +10,7 @@ describe.skip('RLS Cross-Tenant Data Isolation', () => {
   let serviceClient: ReturnType<typeof createClient>;
   let user1Client: ReturnType<typeof createClient>;
   let user2Client: ReturnType<typeof createClient>;
-  
+
   // Test data
   let account1Id: string = '';
   let account2Id: string = '';
@@ -21,6 +21,7 @@ describe.skip('RLS Cross-Tenant Data Isolation', () => {
 
   beforeAll(async () => {
     // Skip in CI or if no database connection
+    // eslint-disable-next-line-- This is checking for test URL pattern, not a secret
     if (!supabaseUrl || !supabaseServiceKey || supabaseUrl.includes('test.supabase.co')) {
       console.log('Skipping RLS tests - no real database configuration available');
       return;
@@ -160,7 +161,7 @@ describe.skip('RLS Cross-Tenant Data Isolation', () => {
       const { data: user1Accounts } = await user1Client
         .from('account_users')
         .select('account_id');
-      
+
       expect(user1Accounts).toHaveLength(1);
       expect(user1Accounts?.[0]?.account_id).toBe(account1Id);
 
@@ -168,7 +169,7 @@ describe.skip('RLS Cross-Tenant Data Isolation', () => {
       const { data: user2Accounts } = await user2Client
         .from('account_users')
         .select('account_id');
-      
+
       expect(user2Accounts).toHaveLength(1);
       expect(user2Accounts?.[0]?.account_id).toBe(account2Id);
     });
@@ -184,7 +185,7 @@ describe.skip('RLS Cross-Tenant Data Isolation', () => {
         .from('accounts')
         .select()
         .eq('id', account2Id);
-      
+
       expect(data).toEqual([]);
     });
   });
@@ -200,7 +201,7 @@ describe.skip('RLS Cross-Tenant Data Isolation', () => {
       const { data: user1Projects } = await user1Client
         .from('projects')
         .select('id, name');
-      
+
       expect(user1Projects).toHaveLength(1);
       expect(user1Projects?.[0]?.id).toBe(project1Id);
 
@@ -208,7 +209,7 @@ describe.skip('RLS Cross-Tenant Data Isolation', () => {
       const { data: user2Projects } = await user2Client
         .from('projects')
         .select('id, name');
-      
+
       expect(user2Projects).toHaveLength(1);
       expect(user2Projects?.[0]?.id).toBe(project2Id);
     });
@@ -224,7 +225,7 @@ describe.skip('RLS Cross-Tenant Data Isolation', () => {
         .from('projects')
         .select()
         .eq('id', project2Id);
-      
+
       expect(data).toEqual([]);
     });
 
@@ -239,7 +240,7 @@ describe.skip('RLS Cross-Tenant Data Isolation', () => {
         .from('projects')
         .update({ name: 'Hacked Project' })
         .eq('id', project2Id);
-      
+
       expect(data).toEqual([]);
       // RLS should prevent the update
     });
@@ -255,7 +256,7 @@ describe.skip('RLS Cross-Tenant Data Isolation', () => {
         .from('projects')
         .delete()
         .eq('id', project2Id);
-      
+
       expect(data).toEqual([]);
       // RLS should prevent the deletion
     });
@@ -272,7 +273,7 @@ describe.skip('RLS Cross-Tenant Data Isolation', () => {
       const { data } = await user1Client
         .from('account_users')
         .select('user_id, account_id');
-      
+
       expect(data).toHaveLength(1);
       expect(data?.[0]?.user_id).toBe(user1Id);
       expect(data?.[0]?.account_id).toBe(account1Id);

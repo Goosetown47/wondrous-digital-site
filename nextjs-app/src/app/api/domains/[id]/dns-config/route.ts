@@ -58,7 +58,7 @@ export async function GET(
         error: vercelStatus?.error,
         ssl: vercelStatus?.ssl
       });
-    } catch (error) {
+  } catch (error) {
       console.error('[DNS-CONFIG] Error fetching domain status from Vercel:', error);
       // Continue with basic config if Vercel check fails
     }

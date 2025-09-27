@@ -33,7 +33,6 @@ export async function GET(
       tier: session.metadata?.tier,
       accountId: session.metadata?.account_id,
     });
-    
   } catch (error) {
     console.error('Error fetching Stripe session:', error);
     return NextResponse.json(

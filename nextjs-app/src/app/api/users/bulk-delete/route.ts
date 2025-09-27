@@ -75,7 +75,6 @@ export async function DELETE(request: NextRequest) {
       failedCount: failedCount,
       message: `Successfully deleted ${successCount} user${successCount !== 1 ? 's' : ''}${failedCount > 0 ? `, ${failedCount} failed` : ''}`
     });
-
   } catch (error) {
     console.error('Bulk delete users error:', error);
     return NextResponse.json(

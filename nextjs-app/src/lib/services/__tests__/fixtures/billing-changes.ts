@@ -241,19 +241,74 @@ export const EMAIL_TEMPLATES = {
 } as const;
 
 export function getTestAccount(scenario: keyof typeof TEST_SCENARIOS) {
-  return TEST_SCENARIOS[scenario].account;
+  // Use switch to avoid bracket notation
+  switch (scenario) {
+    case 'downgradeMaxToPro':
+      return TEST_SCENARIOS.downgradeMaxToPro.account;
+    case 'downgradeScaleToPro':
+      return TEST_SCENARIOS.downgradeScaleToPro.account;
+    case 'billingYearlyToMonthly':
+      return TEST_SCENARIOS.billingYearlyToMonthly.account;
+    case 'billingMonthlyToYearly':
+      return TEST_SCENARIOS.billingMonthlyToYearly.account;
+    case 'downgradeMaxToScale':
+      return TEST_SCENARIOS.downgradeMaxToScale.account;
+    case 'errorRecovery':
+      return TEST_SCENARIOS.errorRecovery.account;
+    default:
+      return TEST_SCENARIOS.downgradeMaxToPro.account;
+  }
 }
 
 export function getFeatureComparison(scenario: keyof typeof TEST_SCENARIOS) {
-  const { currentFeatures, targetFeatures } = TEST_SCENARIOS[scenario];
+  // Use switch to avoid bracket notation
+  let currentFeatures: typeof TEST_SCENARIOS.downgradeMaxToPro.currentFeatures;
+  let targetFeatures: typeof TEST_SCENARIOS.downgradeMaxToPro.targetFeatures;
+  
+  switch (scenario) {
+    case 'downgradeMaxToPro':
+      currentFeatures = TEST_SCENARIOS.downgradeMaxToPro.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.downgradeMaxToPro.targetFeatures;
+      break;
+    case 'downgradeScaleToPro':
+      currentFeatures = TEST_SCENARIOS.downgradeScaleToPro.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.downgradeScaleToPro.targetFeatures;
+      break;
+    case 'billingYearlyToMonthly':
+      currentFeatures = TEST_SCENARIOS.billingYearlyToMonthly.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.billingYearlyToMonthly.targetFeatures;
+      break;
+    case 'billingMonthlyToYearly':
+      currentFeatures = TEST_SCENARIOS.billingMonthlyToYearly.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.billingMonthlyToYearly.targetFeatures;
+      break;
+    case 'downgradeMaxToScale':
+      currentFeatures = TEST_SCENARIOS.downgradeMaxToScale.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.downgradeMaxToScale.targetFeatures;
+      break;
+    case 'errorRecovery':
+      currentFeatures = TEST_SCENARIOS.errorRecovery.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.errorRecovery.targetFeatures;
+      break;
+    default:
+      currentFeatures = TEST_SCENARIOS.downgradeMaxToPro.currentFeatures;
+      targetFeatures = TEST_SCENARIOS.downgradeMaxToPro.targetFeatures;
+      break;
+  }
   const changes: Record<string, { from: string | number | boolean; to: string | number | boolean }> = {};
 
   for (const [key, value] of Object.entries(currentFeatures)) {
-    if (value !== targetFeatures[key as keyof typeof targetFeatures]) {
-      changes[key] = {
-        from: value,
-        to: targetFeatures[key as keyof typeof targetFeatures]
-      };
+    const targetEntry = Object.entries(targetFeatures).find(([k]) => k === key);
+    if (targetEntry && value !== targetEntry[1]) {
+      Object.defineProperty(changes, key, {
+        value: {
+          from: value,
+          to: targetEntry[1]
+        },
+        writable: true,
+        enumerable: true,
+        configurable: true
+      });
     }
   }
 
@@ -261,5 +316,21 @@ export function getFeatureComparison(scenario: keyof typeof TEST_SCENARIOS) {
 }
 
 export function getPricingInfo(scenario: keyof typeof TEST_SCENARIOS) {
-  return TEST_SCENARIOS[scenario].pricing;
+  // Use switch to avoid bracket notation
+  switch (scenario) {
+    case 'downgradeMaxToPro':
+      return TEST_SCENARIOS.downgradeMaxToPro.pricing;
+    case 'downgradeScaleToPro':
+      return TEST_SCENARIOS.downgradeScaleToPro.pricing;
+    case 'billingYearlyToMonthly':
+      return TEST_SCENARIOS.billingYearlyToMonthly.pricing;
+    case 'billingMonthlyToYearly':
+      return TEST_SCENARIOS.billingMonthlyToYearly.pricing;
+    case 'downgradeMaxToScale':
+      return TEST_SCENARIOS.downgradeMaxToScale.pricing;
+    case 'errorRecovery':
+      return TEST_SCENARIOS.errorRecovery.pricing;
+    default:
+      return TEST_SCENARIOS.downgradeMaxToPro.pricing;
+  }
 }

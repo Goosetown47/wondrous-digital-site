@@ -1,3 +1,13 @@
+/**
+ * ESLint configuration for the legacy React/Vite app (deprecated)
+ *
+ * IMPORTANT: This configuration is for the old Vite app that is no longer in use.
+ * The active Next.js application in /nextjs-app/ uses its own .eslintrc.json configuration.
+ *
+ * This file is kept for reference but should not be modified for the active project.
+ * All development is now in /nextjs-app/
+ */
+
 import js from '@eslint/js';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';

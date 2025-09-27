@@ -153,7 +153,6 @@ export async function POST(request: NextRequest) {
       url: session.url,
       sessionId: session.id,
     });
-
   } catch (error) {
     console.error('Upgrade checkout error:', error);
     return NextResponse.json(

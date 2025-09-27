@@ -259,11 +259,11 @@ export function createMockQueryBuilder(
 
   // Make the whole mock also thenable so it acts as a Promise when awaited
   // This allows patterns like: const { data, error } = await supabase.from().select().eq()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   (mock as any).then = (onFulfilled: any) => Promise.resolve(returnValue).then(onFulfilled);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   (mock as any).catch = (onRejected: any) => Promise.resolve(returnValue).catch(onRejected);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   (mock as any).finally = (onFinally: any) => Promise.resolve(returnValue).finally(onFinally);
 
   return mock;
@@ -285,15 +285,15 @@ export function createMockSupabaseClient(
       // Otherwise return a resolved promise
       const result = originalSelect.apply(builder, args);
       // Add then/catch to make it thenable when needed
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       result.then = (onFulfilled: any) => Promise.resolve({ data: null, error: null }).then(onFulfilled);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       result.catch = (onRejected: any) => Promise.resolve({ data: null, error: null }).catch(onRejected);
       return result;
     });
     return builder;
   };
-  
+
   const defaultMock: MockSupabaseClient = {
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
@@ -435,16 +435,16 @@ function mergeDeep<T>(target: T, source: DeepPartial<T>): T {
   const output = Object.assign({}, target);
   if (isObject(target) && isObject(source)) {
     Object.keys(source).forEach(key => {
-      // eslint-disable-next-line security/detect-object-injection
+
       if (isObject(source[key])) {
         if (!(key in target))
-          // eslint-disable-next-line security/detect-object-injection
+
           Object.assign(output, { [key]: source[key] });
         else
-          // eslint-disable-next-line security/detect-object-injection
+
           (output as Record<string, unknown>)[key] = mergeDeep(target[key as keyof T], source[key] as DeepPartial<T[keyof T]>);
       } else {
-        // eslint-disable-next-line security/detect-object-injection
+
         Object.assign(output, { [key]: source[key] });
       }
     });

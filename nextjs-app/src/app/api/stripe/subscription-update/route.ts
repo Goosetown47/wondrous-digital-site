@@ -199,7 +199,7 @@ export async function POST(request: NextRequest) {
           typeof subscription.schedule === 'string' ? subscription.schedule : subscription.schedule.id
         );
         console.log('Schedule released successfully');
-      } catch (error) {
+  } catch (error) {
         console.error('Error releasing schedule:', error);
         // Continue anyway - the schedule might already be released
       }

@@ -44,7 +44,7 @@ export function SecondarySidebar({ isCollapsed = false }: SecondarySidebarProps)
   const { currentModule } = useModuleThemeStore();
   const { currentProject } = useAuth();
   useIsAdmin(); // Check admin status
-  const { data: isAccountOwner } = useIsAccountOwner();
+  const { data: isAccountOwner, isLoading: isAccountOwnerLoading } = useIsAccountOwner();
 
   // Dashboard navigation items
   const dashboardNavigation = (
@@ -79,7 +79,7 @@ export function SecondarySidebar({ isCollapsed = false }: SecondarySidebarProps)
         />
       </NavigationSection>
 
-      {isAccountOwner && (
+      {!isAccountOwnerLoading && isAccountOwner && (
         <NavigationSection title="Account Management" isCollapsed={isCollapsed}>
           <NavigationMenuItem
             href="/dashboard/billing"

@@ -134,10 +134,32 @@ const STATE_DISPLAY: Record<SubscriptionState, StateDisplayInfo> = {
 };
 
 /**
+ * Helper function to get allowed transitions for a state
+ */
+function getStateTransitions(state: SubscriptionState): SubscriptionState[] {
+  switch (state) {
+    case SubscriptionState.ACTIVE:
+      return STATE_TRANSITIONS[SubscriptionState.ACTIVE];
+    case SubscriptionState.PENDING_CHANGE:
+      return STATE_TRANSITIONS[SubscriptionState.PENDING_CHANGE];
+    case SubscriptionState.CANCELING:
+      return STATE_TRANSITIONS[SubscriptionState.CANCELING];
+    case SubscriptionState.PAST_DUE:
+      return STATE_TRANSITIONS[SubscriptionState.PAST_DUE];
+    case SubscriptionState.INCOMPLETE:
+      return STATE_TRANSITIONS[SubscriptionState.INCOMPLETE];
+    case SubscriptionState.INCOMPLETE_EXPIRED:
+      return STATE_TRANSITIONS[SubscriptionState.INCOMPLETE_EXPIRED];
+    default:
+      return [];
+  }
+}
+
+/**
  * Check if a state transition is allowed
  */
 export function canTransition(from: SubscriptionState, to: SubscriptionState): boolean {
-  const allowedTransitions = STATE_TRANSITIONS[from] || [];
+  const allowedTransitions = getStateTransitions(from);
   return allowedTransitions.includes(to);
 }
 
@@ -152,9 +174,10 @@ export function validateStateTransition(from: SubscriptionState, to: Subscriptio
     return { valid: true };
   }
   
+  const allowedTransitions = getStateTransitions(from);
   return {
     valid: false,
-    error: `Cannot transition from ${from} to ${to}. Allowed transitions: ${STATE_TRANSITIONS[from]?.join(', ') || 'none'}`
+    error: `Cannot transition from ${from} to ${to}. Allowed transitions: ${allowedTransitions.join(', ') || 'none'}`
   };
 }
 
@@ -162,7 +185,22 @@ export function validateStateTransition(from: SubscriptionState, to: Subscriptio
  * Get available actions for a given state
  */
 export function getAvailableActions(state: SubscriptionState): SubscriptionAction[] {
-  return STATE_ACTIONS[state] || [];
+  switch (state) {
+    case SubscriptionState.ACTIVE:
+      return STATE_ACTIONS[SubscriptionState.ACTIVE];
+    case SubscriptionState.PENDING_CHANGE:
+      return STATE_ACTIONS[SubscriptionState.PENDING_CHANGE];
+    case SubscriptionState.CANCELING:
+      return STATE_ACTIONS[SubscriptionState.CANCELING];
+    case SubscriptionState.PAST_DUE:
+      return STATE_ACTIONS[SubscriptionState.PAST_DUE];
+    case SubscriptionState.INCOMPLETE:
+      return STATE_ACTIONS[SubscriptionState.INCOMPLETE];
+    case SubscriptionState.INCOMPLETE_EXPIRED:
+      return STATE_ACTIONS[SubscriptionState.INCOMPLETE_EXPIRED];
+    default:
+      return [];
+  }
 }
 
 /**
@@ -198,7 +236,32 @@ export function getStateDisplayInfo(
     }
   }
   
-  return STATE_DISPLAY[state] || {
+  // Use switch to access STATE_DISPLAY
+  let displayInfo: StateDisplayInfo | undefined;
+  switch (state) {
+    case SubscriptionState.ACTIVE:
+      displayInfo = STATE_DISPLAY[SubscriptionState.ACTIVE];
+      break;
+    case SubscriptionState.PENDING_CHANGE:
+      displayInfo = STATE_DISPLAY[SubscriptionState.PENDING_CHANGE];
+      break;
+    case SubscriptionState.CANCELING:
+      displayInfo = STATE_DISPLAY[SubscriptionState.CANCELING];
+      break;
+    case SubscriptionState.PAST_DUE:
+      displayInfo = STATE_DISPLAY[SubscriptionState.PAST_DUE];
+      break;
+    case SubscriptionState.INCOMPLETE:
+      displayInfo = STATE_DISPLAY[SubscriptionState.INCOMPLETE];
+      break;
+    case SubscriptionState.INCOMPLETE_EXPIRED:
+      displayInfo = STATE_DISPLAY[SubscriptionState.INCOMPLETE_EXPIRED];
+      break;
+    default:
+      displayInfo = undefined;
+  }
+  
+  return displayInfo || {
     label: 'Unknown',
     color: 'gray',
     description: 'Unknown subscription state'
@@ -332,7 +395,9 @@ export function mapStripeStatusToState(stripeStatus: string): SubscriptionState 
     // Note: We don't map 'trialing' since we don't support trials
   };
   
-  return statusMap[stripeStatus] || SubscriptionState.ACTIVE;
+  // Use Object.entries to safely access statusMap
+  const entry = Object.entries(statusMap).find(([key]) => key === stripeStatus);
+  return entry ? entry[1] : SubscriptionState.ACTIVE;
 }
 
 // ============================================================================
@@ -377,8 +442,50 @@ interface PendingChangeDetails {
  * Check if a tier change represents an upgrade
  */
 export function isPendingChangeAnUpgrade(currentTier: string, pendingTier: string): boolean {
-  const currentLevel = TIER_HIERARCHY[currentTier] || 0;
-  const pendingLevel = TIER_HIERARCHY[pendingTier] || 0;
+  // Use switch to get hierarchy levels
+  let currentLevel: number;
+  switch (currentTier) {
+    case 'FREE':
+      currentLevel = TIER_HIERARCHY.FREE;
+      break;
+    case 'BASIC':
+      currentLevel = TIER_HIERARCHY.BASIC;
+      break;
+    case 'PRO':
+      currentLevel = TIER_HIERARCHY.PRO;
+      break;
+    case 'SCALE':
+      currentLevel = TIER_HIERARCHY.SCALE;
+      break;
+    case 'MAX':
+      currentLevel = TIER_HIERARCHY.MAX;
+      break;
+    default:
+      currentLevel = 0;
+      break;
+  }
+  
+  let pendingLevel: number;
+  switch (pendingTier) {
+    case 'FREE':
+      pendingLevel = TIER_HIERARCHY.FREE;
+      break;
+    case 'BASIC':
+      pendingLevel = TIER_HIERARCHY.BASIC;
+      break;
+    case 'PRO':
+      pendingLevel = TIER_HIERARCHY.PRO;
+      break;
+    case 'SCALE':
+      pendingLevel = TIER_HIERARCHY.SCALE;
+      break;
+    case 'MAX':
+      pendingLevel = TIER_HIERARCHY.MAX;
+      break;
+    default:
+      pendingLevel = 0;
+      break;
+  }
   return pendingLevel > currentLevel;
 }
 

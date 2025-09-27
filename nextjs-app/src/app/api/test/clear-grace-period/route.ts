@@ -70,7 +70,6 @@ export async function POST(request: NextRequest) {
       notificationsDeleted: beforeAccount?.grace_period_ends_at ? 'Yes' : 'No grace period was active',
       remainingPendingNotifications: remainingNotifications?.length || 0
     });
-
   } catch (error) {
     console.error('Clear grace period failed:', error);
     return NextResponse.json(

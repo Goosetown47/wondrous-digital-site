@@ -79,7 +79,7 @@ describe('Stripe Utils', () => {
       mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent);
 
       const result = verifyWebhookSignature('body', 'sig_123', 'secret_123');
-      
+
       expect(mockStripe.webhooks.constructEvent).toHaveBeenCalledWith(
         'body',
         'sig_123',
@@ -118,7 +118,7 @@ describe('Stripe Utils', () => {
           eq: vi.fn(() => Promise.resolve({ error: null })),
         })),
         insert: vi.fn(() => Promise.resolve({ error: null })),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       } as any);
 
       mockStripe.checkout.sessions.create.mockResolvedValue({
@@ -175,7 +175,7 @@ describe('Stripe Utils', () => {
           eq: vi.fn(() => Promise.resolve({ error: null })),
         })),
         insert: vi.fn(() => Promise.resolve({ error: null })),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       } as any);
 
       mockStripe.customers.create.mockResolvedValue({
@@ -199,7 +199,7 @@ describe('Stripe Utils', () => {
 
     it('should include correct line items with setup fee', async () => {
       const maxTier = 'MAX' as TierName;  // Use MAX tier which has setup fee
-      
+
       mockSupabase.from.mockReturnValue({
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
@@ -213,7 +213,7 @@ describe('Stripe Utils', () => {
           eq: vi.fn(() => Promise.resolve({ error: null })),
         })),
         insert: vi.fn(() => Promise.resolve({ error: null })),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       } as any);
 
       mockStripe.checkout.sessions.create.mockResolvedValue({
@@ -245,7 +245,7 @@ describe('Stripe Utils', () => {
       const updateMock = vi.fn(() => ({
         eq: vi.fn(() => Promise.resolve({ error: null })),
       }));
-      
+
       const insertMock = vi.fn(() => Promise.resolve({ error: null }));
 
       mockSupabase.from.mockImplementation(() => {
@@ -282,7 +282,7 @@ describe('Stripe Utils', () => {
       const updateMock = vi.fn(() => ({
         eq: vi.fn(() => Promise.resolve({ error: { message: 'Update failed' } })),
       }));
-      
+
       mockSupabase.from.mockReturnValue({
         update: updateMock,
         insert: vi.fn(() => Promise.resolve({ error: null })),
@@ -306,7 +306,7 @@ describe('Stripe Utils', () => {
       const updateMock = vi.fn(() => ({
         eq: vi.fn(() => Promise.resolve({ error: null })),
       }));
-      
+
       const insertMock = vi.fn(() => Promise.resolve({ error: null }));
 
       mockSupabase.from.mockImplementation(() => {
@@ -333,7 +333,7 @@ describe('Stripe Utils', () => {
       const gracePeriodDate = new Date(firstArg.grace_period_ends_at);
       const expectedDate = new Date();
       expectedDate.setDate(expectedDate.getDate() + 10);
-      
+
       const diffInDays = Math.abs(gracePeriodDate.getTime() - expectedDate.getTime()) / (1000 * 60 * 60 * 24);
       expect(diffInDays).toBeLessThan(0.1); // Less than 0.1 day difference
     });
@@ -362,7 +362,7 @@ describe('Stripe Utils', () => {
       const gracePeriodDate = new Date(firstArg.grace_period_ends_at);
       const expectedDate = new Date();
       expectedDate.setDate(expectedDate.getDate() + 5);
-      
+
       const diffInDays = Math.abs(gracePeriodDate.getTime() - expectedDate.getTime()) / (1000 * 60 * 60 * 24);
       expect(diffInDays).toBeLessThan(0.1);
     });
@@ -371,7 +371,7 @@ describe('Stripe Utils', () => {
       const updateMock = vi.fn(() => ({
         eq: vi.fn(() => Promise.resolve({ error: { message: 'Grace period failed' } })),
       }));
-      
+
       mockSupabase.from.mockReturnValue({
         update: updateMock,
         insert: vi.fn(() => Promise.resolve({ error: null })),

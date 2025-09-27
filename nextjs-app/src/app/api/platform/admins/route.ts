@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { cookies } from 'next/headers';
+import { getBuildSafeCookieStore } from '@/lib/cookies/build-safe';
 import { env } from '@/env.mjs';
 
 const PLATFORM_ACCOUNT_ID = '00000000-0000-0000-0000-000000000000';
@@ -11,23 +11,17 @@ export async function GET() {
 
   try {
     // Verify authentication
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const authClient = createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Ignore cookie setting errors
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -89,7 +83,6 @@ export async function GET() {
     console.log('✅ [API/Platform/Admins] Admins with user data:', adminsWithUserData.length);
 
     return NextResponse.json({ admins: adminsWithUserData });
-
   } catch (error) {
     console.error('❌ [API/Platform/Admins] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -101,23 +94,17 @@ export async function POST(request: NextRequest) {
 
   try {
     // Verify authentication
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const authClient = createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Ignore cookie setting errors
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -186,7 +173,6 @@ export async function POST(request: NextRequest) {
       });
 
     return NextResponse.json({ success: true, data: adminData });
-
   } catch (error) {
     console.error('❌ [API/Platform/Admins] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -198,23 +184,17 @@ export async function DELETE(request: NextRequest) {
 
   try {
     // Verify authentication
-    const cookieStore = await cookies();
+    const cookieStore = await getBuildSafeCookieStore();
     const authClient = createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // Ignore cookie setting errors
-            }
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet) => {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           },
         },
       }
@@ -301,7 +281,6 @@ export async function DELETE(request: NextRequest) {
       });
 
     return NextResponse.json({ success: true, data: demotedData });
-
   } catch (error) {
     console.error('❌ [API/Platform/Admins] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

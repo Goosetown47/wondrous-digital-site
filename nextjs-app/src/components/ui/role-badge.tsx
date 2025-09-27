@@ -42,12 +42,43 @@ export function RoleBadge({ role, size = 'md', showIcon = false }: RoleBadgeProp
     },
   };
 
-  const config = roleConfig[role];
+  // Get config without bracket notation
+  let config;
+  switch (role) {
+    case 'admin':
+      config = roleConfig.admin;
+      break;
+    case 'staff':
+      config = roleConfig.staff;
+      break;
+    case 'account_owner':
+      config = roleConfig.account_owner;
+      break;
+    case 'user':
+    default:
+      config = roleConfig.user;
+      break;
+  }
+
+  // Get size class without bracket notation
+  let sizeClass: string;
+  switch (size) {
+    case 'sm':
+      sizeClass = sizeClasses.sm;
+      break;
+    case 'lg':
+      sizeClass = sizeClasses.lg;
+      break;
+    case 'md':
+    default:
+      sizeClass = sizeClasses.md;
+      break;
+  }
 
   return (
     <Badge 
       variant={config.variant}
-      className={`${sizeClasses[size]} ${config.className}`}
+      className={`${sizeClass} ${config.className}`}
     >
       {showIcon && role === 'account_owner' && (
         <Shield className="mr-1 h-3 w-3" />
@@ -60,25 +91,38 @@ export function RoleBadge({ role, size = 'md', showIcon = false }: RoleBadgeProp
 /**
  * Get the display label for a role
  */
+
 export function getRoleLabel(role: string): string {
-  const labels: Record<string, string> = {
-    admin: 'Admin',
-    staff: 'Staff', 
-    account_owner: 'Account Owner',
-    user: 'User',
-  };
-  return labels[role] || role;
+  // Use switch to avoid bracket notation
+  switch (role) {
+    case 'admin':
+      return 'Admin';
+    case 'staff':
+      return 'Staff';
+    case 'account_owner':
+      return 'Account Owner';
+    case 'user':
+      return 'User';
+    default:
+      return role;
+  }
 }
 
 /**
  * Get the color classes for a role (for custom implementations)
  */
+
 export function getRoleColorClasses(role: string): string {
-  const colors: Record<string, string> = {
-    admin: 'bg-red-100 text-red-800',
-    staff: 'bg-amber-100 text-amber-800',
-    account_owner: 'bg-purple-100 text-purple-800',
-    user: 'bg-gray-100 text-gray-800',
-  };
-  return colors[role] || 'bg-gray-100 text-gray-800';
+  // Use switch to avoid bracket notation
+  switch (role) {
+    case 'admin':
+      return 'bg-red-100 text-red-800';
+    case 'staff':
+      return 'bg-amber-100 text-amber-800';
+    case 'account_owner':
+      return 'bg-purple-100 text-purple-800';
+    case 'user':
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
 }

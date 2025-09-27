@@ -2,9 +2,6 @@
 // This file maps section type component names to their React components
 
 import React from 'react';
-import { HeroSection } from './HeroSection';
-import { HeroTwoColumn } from './hero-two-column';
-import type { ComponentType } from 'react';
 
 // Define the content type for sections
 export interface SectionContent {
@@ -19,91 +16,9 @@ export interface BaseSectionProps {
   onContentChange?: (updates: Partial<SectionContent>) => void;
 }
 
-// Adapter components to match BaseSectionProps interface
-const HeroSectionAdapter: ComponentType<BaseSectionProps> = (props) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return <HeroSection content={props.content as any} isEditing={props.isEditing} onContentChange={props.onContentChange as any} />;
-};
-
-const HeroTwoColumnAdapter: ComponentType<BaseSectionProps> = (props) => {
-  const content = props.content || {};
-  // Check if content is nested in heroContent (from lab) or at root level
-  const heroContent = (content.heroContent || content) as {
-    heading?: string;
-    subtext?: string;
-    buttonText?: string;
-    imageUrl?: string;
-    imageAlt?: string;
-  };
-  
-  // Only pass event handlers when in editing mode
-  if (props.isEditing) {
-    return (
-      <HeroTwoColumn
-        heading={heroContent.heading as string}
-        subtext={heroContent.subtext as string}
-        buttonText={heroContent.buttonText as string}
-        imageUrl={heroContent.imageUrl as string}
-        imageAlt={heroContent.imageAlt as string}
-        editable={true}
-        onHeadingChange={(value) => {
-          if (content.heroContent) {
-            props.onContentChange?.({ heroContent: { ...content.heroContent, heading: value } });
-          } else {
-            props.onContentChange?.({ heading: value });
-          }
-        }}
-        onSubtextChange={(value) => {
-          if (content.heroContent) {
-            props.onContentChange?.({ heroContent: { ...content.heroContent, subtext: value } });
-          } else {
-            props.onContentChange?.({ subtext: value });
-          }
-        }}
-        onButtonTextChange={(value) => {
-          if (content.heroContent) {
-            props.onContentChange?.({ heroContent: { ...content.heroContent, buttonText: value } });
-          } else {
-            props.onContentChange?.({ buttonText: value });
-          }
-        }}
-        onImageChange={() => {
-          // Handle file upload and update imageUrl
-          // This would need actual file upload logic
-        }}
-      />
-    );
-  }
-  
-  // For non-editing mode (public site), don't pass event handlers
-  return (
-    <HeroTwoColumn
-      heading={heroContent.heading as string}
-      subtext={heroContent.subtext as string}
-      buttonText={heroContent.buttonText as string}
-      imageUrl={heroContent.imageUrl as string}
-      imageAlt={heroContent.imageAlt as string}
-      editable={false}
-    />
-  );
-};
-
-// Registry of section components
-export const SECTION_COMPONENTS: Record<string, ComponentType<BaseSectionProps>> = {
-  'HeroSection': HeroSectionAdapter,
-  'HeroTwoColumn': HeroTwoColumnAdapter,
-  'Hero-Two-Col-Image': HeroTwoColumnAdapter, // Alias for the component name used in the lab
-  // Add more section components here as they are created
-  // e.g., 'NavbarSection': NavbarSection,
-  //       'FooterSection': FooterSection,
-};
-
-// Helper function to get a section component by name
-export function getSectionComponent(componentName?: string | null): ComponentType<BaseSectionProps> {
-  if (!componentName) return GenericSection;
-  // eslint-disable-next-line security/detect-object-injection
-  return SECTION_COMPONENTS[componentName] || GenericSection;
-}
+// NOTE: The SECTION_COMPONENTS registry and getSectionComponent function have been removed
+// All components are now registered in ComponentRegistry from /lib/register-components.ts
+// This file now only contains adapter components for backwards compatibility
 
 // Generic section component for sections without specific components
 export function GenericSection({ content, isEditing }: BaseSectionProps) {

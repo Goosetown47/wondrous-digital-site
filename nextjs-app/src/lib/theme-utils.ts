@@ -21,33 +21,42 @@ export const generateDarkModeColors = (lightColors: Record<string, string>): Rec
   
   Object.entries(lightColors).forEach(([key, value]) => {
     const hsl = parseHSL(value);
+    let transformedColor: string;
     
     // Different transformation strategies based on the color type
     if (key === 'background' || key === 'card' || key === 'popover') {
       // Dark backgrounds
-      darkColors[key] = formatHSL(hsl.h, hsl.s * 0.8, 5);
+      transformedColor = formatHSL(hsl.h, hsl.s * 0.8, 5);
     } else if (key === 'foreground' || key.includes('-foreground')) {
       // Light text on dark background
-      darkColors[key] = formatHSL(hsl.h, hsl.s * 0.1, 98);
+      transformedColor = formatHSL(hsl.h, hsl.s * 0.1, 98);
     } else if (key === 'primary') {
       // Primary color stays similar but slightly lighter for dark mode
-      darkColors[key] = formatHSL(hsl.h, hsl.s * 0.9, Math.min(hsl.l * 1.2, 70));
+      transformedColor = formatHSL(hsl.h, hsl.s * 0.9, Math.min(hsl.l * 1.2, 70));
     } else if (key === 'muted' || key === 'secondary' || key === 'accent') {
       // Muted colors become darker
-      darkColors[key] = formatHSL(hsl.h, hsl.s * 0.5, 15);
+      transformedColor = formatHSL(hsl.h, hsl.s * 0.5, 15);
     } else if (key === 'destructive') {
       // Destructive color slightly darker
-      darkColors[key] = formatHSL(hsl.h, hsl.s * 0.8, hsl.l * 0.7);
+      transformedColor = formatHSL(hsl.h, hsl.s * 0.8, hsl.l * 0.7);
     } else if (key === 'border' || key === 'input') {
       // Borders darker in dark mode
-      darkColors[key] = formatHSL(hsl.h, hsl.s * 0.5, 15);
+      transformedColor = formatHSL(hsl.h, hsl.s * 0.5, 15);
     } else if (key === 'ring') {
       // Focus ring lighter in dark mode
-      darkColors[key] = formatHSL(hsl.h, hsl.s * 0.5, 70);
+      transformedColor = formatHSL(hsl.h, hsl.s * 0.5, 70);
     } else {
       // Default transformation
-      darkColors[key] = value;
+      transformedColor = value;
     }
+    
+    // Use Object.defineProperty for safer assignment
+    Object.defineProperty(darkColors, key, {
+      value: transformedColor,
+      writable: true,
+      enumerable: true,
+      configurable: true
+    });
   });
   
   return darkColors;
