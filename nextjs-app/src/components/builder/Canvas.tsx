@@ -78,6 +78,8 @@ export function Canvas({ theme }: CanvasProps) {
           component_name: libraryItem.component_name,
           content: sectionContent,
           order: insertPosition,
+          library_item_id: template.id, // Track which library item this came from
+          library_version: libraryItem.version || 1, // Track the version used
         };
 
         // Update order of existing sections if needed

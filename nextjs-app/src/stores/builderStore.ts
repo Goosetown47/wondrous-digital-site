@@ -10,6 +10,8 @@ export interface Section {
   content: Record<string, unknown>;
   order: number;
   templateId?: string;
+  library_item_id?: string; // Reference to the source library item
+  library_version?: number; // Version of the library item when added
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';

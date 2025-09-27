@@ -3,15 +3,26 @@
  * This file maps component names to their implementations
  */
 
+import React from 'react';
 import { ComponentRegistry } from './component-registry';
 import { generateEditableFields } from './editable-field-detector';
-import { HeroTwoColumnAdapter, StaticComponentAdapter } from './component-adapter';
+import { HeroTwoColumnAdapter } from './component-adapter';
 import { Navbar2 } from '@/components/core/navigation/navbar2';
 import { Footer2 } from '@/components/core/navigation/footer2';
 import { Navbar6 as NavBar3 } from '@/components/core/sections/nav-bar-3';
 import { Services1, Services4 } from '@/components/core/sections/services1';
 import { Services4 as ServicesComponent4 } from '@/components/core/sections/services4';
 import { SignUpForm1 } from '@/components/core/sections/sign-up-form-1';
+import { Bento1 } from '@/components/core/sections/bento1';
+
+// Server-safe static component adapter
+// These components don't need content or change handlers
+function StaticComponentAdapter(Component: React.ComponentType) {
+  return function Adapter() {
+    // Static components don't use props, just render them
+    return <Component />;
+  };
+}
 
 // Default content structures for each component type
 const defaultNavigationContent = {
@@ -221,6 +232,15 @@ export function registerAllComponents() {
   
 
   
+
+  ComponentRegistry.register('Bento1', {
+    component: Bento1,
+    type: 'section',
+    category: undefined,
+    defaultContent: defaultHeroContent,
+    description: 'Bento1',
+    source: 'expansions'
+  });
 }
 
 // Initialize components on module load

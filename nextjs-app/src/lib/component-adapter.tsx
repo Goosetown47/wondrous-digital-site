@@ -18,7 +18,7 @@ interface AdapterProps {
  * Creates an adapter component that translates between the two prop interfaces
  * Note: This function is not currently used but kept for future reference
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line
 function createComponentAdapter(Component: ComponentType<Record<string, unknown>>): ComponentType<AdapterProps> {
   return function ComponentAdapter({ content, isEditing = false, onContentChange }: AdapterProps) {
     // Build props object from content
@@ -48,7 +48,7 @@ function createComponentAdapter(Component: ComponentType<Record<string, unknown>
  */
 export function HeroTwoColumnAdapter({ content, isEditing = false, onContentChange }: AdapterProps) {
   // Dynamic import to avoid circular dependencies
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  // eslint-disable-next-line
   const Component = require('@/components/sections/hero-two-column').HeroTwoColumn;
 
   const props: Record<string, unknown> = {
@@ -81,7 +81,7 @@ export function HeroTwoColumnAdapter({ content, isEditing = false, onContentChan
  * These components don't need content or change handlers
  */
 export function StaticComponentAdapter(Component: ComponentType<Record<string, unknown>>) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line
   return function Adapter({ content, isEditing, onContentChange }: AdapterProps) {
     // Static components don't use props, just render them
     return <Component />;

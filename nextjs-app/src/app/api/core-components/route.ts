@@ -325,7 +325,7 @@ async function updateComponentNameMapping(
 }
 
 /**
- * Update register-components.ts to include the new component
+ * Update register-components.tsx to include the new component
  */
 async function updateComponentRegistry(
   className: string,
@@ -334,7 +334,7 @@ async function updateComponentRegistry(
   source: string,
   description?: string
 ): Promise<void> {
-  const registryPath = path.join(process.cwd(), 'src', 'lib', 'register-components.ts');
+  const registryPath = path.join(process.cwd(), 'src', 'lib', 'register-components.tsx');
 
   // Read the current file
   const currentContent = await fs.readFile(registryPath, 'utf-8');

@@ -153,13 +153,23 @@ export const labDraftService = {
     }
     
     // Create library item from draft
+    // Ensure we store the code_name for component lookups
+    const componentName = draft.metadata?.component_name as string || null;
+    const codeNameToStore = componentName ? componentName.replace(/\s+/g, '') : null; // Remove spaces for code name
+
     const insertData = {
       name: draft.name,
       type: draft.type,
       type_id: draft.type_id,
-      component_name: draft.metadata?.component_name || null,
-      content: draft.content,
-      metadata: draft.metadata,
+      component_name: componentName, // Keep original display name
+      content: {
+        ...draft.content,
+        code_name: codeNameToStore, // Add code name for registry lookup
+      },
+      metadata: {
+        ...draft.metadata,
+        code_name: codeNameToStore, // Also store in metadata for redundancy
+      },
       published: publishStatus === 'published',
       version: 1,
       category: draft.metadata?.category || null,

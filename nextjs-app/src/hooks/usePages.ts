@@ -228,13 +228,15 @@ export function useSaveDraft() {
       pageId: string;
       sections: Section[];
     }) => {
-      // Clean sections data before saving
+      // Clean sections data before saving (preserve library tracking)
       const cleanedSections = sections.map(section => ({
         id: section.id,
         type: section.type,
         component_name: section.component_name,
         content: section.content,
-        order: section.order
+        order: section.order,
+        library_item_id: section.library_item_id, // Preserve library reference
+        library_version: section.library_version, // Preserve version tracking
       }));
       
       return saveDraftPage(pageId, cleanedSections);
@@ -301,13 +303,15 @@ export function useSavePage() {
       sections: Section[];
       title?: string;
     }) => {
-      // Clean sections data before saving - remove fields that might not exist in DB
+      // Clean sections data before saving - preserve library tracking
       const cleanedSections = sections.map(section => ({
         id: section.id,
         type: section.type,
         component_name: section.component_name,
         content: section.content,
-        order: section.order
+        order: section.order,
+        library_item_id: section.library_item_id, // Preserve library reference
+        library_version: section.library_version, // Preserve version tracking
       }));
       
       // If we have a pageId, update the existing page (both draft and published for backward compatibility)

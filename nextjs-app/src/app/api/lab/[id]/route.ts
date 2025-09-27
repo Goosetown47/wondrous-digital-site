@@ -109,7 +109,7 @@ export async function PUT(
 
     // Parse request body
     const body = await request.json();
-    const { name, type, content, version, status, metadata, changelog, library_version, content_hash } = body;
+    const { name, type, type_id, content, version, status, metadata, changelog, library_version, content_hash } = body;
 
     console.log('🔍 [API/Lab/Id] Updating lab draft with service role...');
 
@@ -123,6 +123,7 @@ export async function PUT(
 
     if (name !== undefined) updates.name = name;
     if (type !== undefined) updates.type = type;
+    if (type_id !== undefined) updates.type_id = type_id;
     if (content !== undefined) updates.content = content;
     if (version !== undefined) updates.version = version;
     if (status !== undefined) updates.status = status;

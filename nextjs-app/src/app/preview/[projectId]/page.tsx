@@ -1,6 +1,7 @@
 'use client';
 
-import { getSectionComponent } from '@/components/sections/index';
+import { getComponent } from '@/lib/component-registry';
+import { GenericSection } from '@/components/sections/index';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ExternalLink, Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -76,7 +77,8 @@ export default function PreviewPage() {
       ) : (
         sections.map((section) => {
           // Get the appropriate component based on component_name
-          const SectionComponent = getSectionComponent(section.component_name);
+          const componentEntry = getComponent(section.component_name || '');
+          const SectionComponent = componentEntry?.component || GenericSection;
           return (
             <SectionComponent
               key={section.id}
