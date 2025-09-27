@@ -24,9 +24,7 @@ export function SectionWrapper({
   id,
   index,
   totalSections,
-  isSelected: _isSelected = false,
   children,
-  onSelect: _onSelect,
   onMoveUp,
   onMoveDown,
   onDelete,
@@ -82,8 +80,8 @@ export function SectionWrapper({
         />
       )}
 
-      {/* Section Content */}
-      <div className="relative">
+      {/* Section Content - Wrapped to ensure centering */}
+      <div className="relative w-full">
         {children}
       </div>
     </motion.div>

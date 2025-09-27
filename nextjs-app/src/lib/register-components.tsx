@@ -3,13 +3,26 @@
  * This file maps component names to their implementations
  */
 
+import React from 'react';
 import { ComponentRegistry } from './component-registry';
 import { generateEditableFields } from './editable-field-detector';
+import { HeroTwoColumnAdapter } from './component-adapter';
 import { Navbar2 } from '@/components/core/navigation/navbar2';
 import { Footer2 } from '@/components/core/navigation/footer2';
-import { HeroTwoColumn } from '@/components/sections/hero-two-column';
 import { Navbar6 as NavBar3 } from '@/components/core/sections/nav-bar-3';
-import { Services1 } from '@/components/core/sections/services1';
+import { Services1, Services4 } from '@/components/core/sections/services1';
+import { Services4 as ServicesComponent4 } from '@/components/core/sections/services4';
+import { SignUpForm1 } from '@/components/core/sections/sign-up-form-1';
+import { Bento1 } from '@/components/core/sections/bento1';
+
+// Server-safe static component adapter
+// These components don't need content or change handlers
+function StaticComponentAdapter(Component: React.ComponentType) {
+  return function Adapter() {
+    // Static components don't use props, just render them
+    return <Component />;
+  };
+}
 
 // Default content structures for each component type
 const defaultNavigationContent = {
@@ -109,7 +122,7 @@ export function registerAllComponents() {
 
   // Section Components
   ComponentRegistry.register('HeroTwoColumn', {
-    component: HeroTwoColumn,
+    component: HeroTwoColumnAdapter, // Use adapter for prop translation
     type: 'section',
     category: undefined, // Will be set from database type_id when selected
     defaultContent: defaultHeroContent,
@@ -173,11 +186,40 @@ export function registerAllComponents() {
   });
 
   ComponentRegistry.register('Services1', {
-    component: Services1,
+    component: StaticComponentAdapter(Services1),
     type: 'section',
     category: undefined,
-    defaultContent: defaultHeroContent,
-    description: 'Services1',
+    defaultContent: {}, // Static component doesn't need content
+    description: 'Services showcase with 4 columns',
+    source: 'expansions'
+  });
+
+  ComponentRegistry.register('Services4', {
+    component: StaticComponentAdapter(Services4),
+    type: 'section',
+    category: undefined,
+    defaultContent: {}, // Static component doesn't need content
+    description: 'Services section variant 4',
+    source: 'expansions'
+  });
+
+  // Also register the actual Services4 from services4.tsx
+  ComponentRegistry.register('ServicesComponent4', {
+    component: StaticComponentAdapter(ServicesComponent4),
+    type: 'section',
+    category: undefined,
+    defaultContent: {},
+    description: 'Services component 4',
+    source: 'expansions'
+  });
+
+  // Register SignUpForm1 (Waitlist component)
+  ComponentRegistry.register('SignUpForm1', {
+    component: StaticComponentAdapter(SignUpForm1),
+    type: 'section',
+    category: undefined,
+    defaultContent: {},
+    description: 'Sign up form with waitlist',
     source: 'expansions'
   });
 
@@ -190,6 +232,15 @@ export function registerAllComponents() {
   
 
   
+
+  ComponentRegistry.register('Bento1', {
+    component: Bento1,
+    type: 'section',
+    category: undefined,
+    defaultContent: defaultHeroContent,
+    description: 'Bento1',
+    source: 'expansions'
+  });
 }
 
 // Initialize components on module load

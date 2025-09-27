@@ -60,6 +60,7 @@ export function EditableImage({
           aspectRatio={aspectRatio}
           onClick={() => editable && setShowModal(true)}
           className={className}
+          editable={editable}
         />
         {showModal && (
           <ImageManagerModal
@@ -78,8 +79,8 @@ export function EditableImage({
     <>
       <div
         className={cn('relative group inline-block', className)}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={() => editable && setIsHovered(true)}
+        onMouseLeave={() => editable && setIsHovered(false)}
         onClick={() => editable && setShowModal(true)}
         style={{ cursor: editable ? 'pointer' : 'default' }}
       >

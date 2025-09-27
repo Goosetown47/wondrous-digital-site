@@ -99,11 +99,11 @@ async function deleteComponentFile(componentName: string): Promise<boolean> {
 }
 
 /**
- * Remove component from register-components.ts
+ * Remove component from register-components.tsx
  */
 async function removeFromRegistry(componentName: string): Promise<boolean> {
   try {
-    const filePath = path.join(process.cwd(), 'src/lib/register-components.ts');
+    const filePath = path.join(process.cwd(), 'src/lib/register-components.tsx');
     let content = await fs.readFile(filePath, 'utf-8');
     const originalContent = content;
 
@@ -130,14 +130,14 @@ async function removeFromRegistry(componentName: string): Promise<boolean> {
 
     if (content !== originalContent) {
       await fs.writeFile(filePath, content, 'utf-8');
-      console.log(`✅ Removed ${componentName} from register-components.ts`);
+      console.log(`✅ Removed ${componentName} from register-components.tsx`);
       return true;
     } else {
-      console.log(`⚠️ ${componentName} not found in register-components.ts`);
+      console.log(`⚠️ ${componentName} not found in register-components.tsx`);
       return false;
     }
   } catch (error) {
-    console.error(`❌ Error updating register-components.ts:`, error);
+    console.error(`❌ Error updating register-components.tsx:`, error);
     return false;
   }
 }

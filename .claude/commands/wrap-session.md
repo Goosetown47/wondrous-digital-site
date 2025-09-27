@@ -38,6 +38,10 @@ Cleanly conclude the current work session and prepare for the next one.
 
 ### Code State
 
+**Quality Checks**
+- [ ] Run Typescript check (not via build command) - must have 0 errors/warnings.
+- [ ] Run ESLint check - must have 0 errors/warnings.
+
 **Clean Working Directory:**
 - [ ] Commit all changes with message: "session-end: [summary of work]"
 - [ ] Push to remote branch

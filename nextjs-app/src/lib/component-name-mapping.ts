@@ -19,6 +19,7 @@ const COMPONENT_NAME_MAP: Record<string, string> = {
   'Hero Section': 'HeroTwoColumn',
   'Nav Bar 3': 'NavBar3',
   'Services1': 'Services1',
+  'Bento1': 'Bento1',
 
   // Add more mappings as components are imported
 };

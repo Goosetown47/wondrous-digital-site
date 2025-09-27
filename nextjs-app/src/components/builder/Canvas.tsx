@@ -1,6 +1,6 @@
 'use client';
 
-import { getSectionComponent } from '@/components/sections/index';
+import { ComponentRegistry } from '@/lib/register-components';
 import { useBuilderStore, type Section } from '@/stores/builderStore';
 import { MultiSectionCanvas, type CanvasSection } from '@/components/shared/canvas/MultiSectionCanvas';
 import { IframePreview } from '@/components/shared/preview/IframePreview';
@@ -78,6 +78,8 @@ export function Canvas({ theme }: CanvasProps) {
           component_name: libraryItem.component_name,
           content: sectionContent,
           order: insertPosition,
+          library_item_id: template.id, // Track which library item this came from
+          library_version: libraryItem.version || 1, // Track the version used
         };
 
         // Update order of existing sections if needed
@@ -110,17 +112,37 @@ export function Canvas({ theme }: CanvasProps) {
     component_name?: string;
     content: Record<string, unknown>
   }) => {
-    // Get the appropriate component using component_name from the section
-    const SectionComponent = getSectionComponent(section.component_name);
+    // Get the component from the unified ComponentRegistry
+    const componentName = section.component_name || 'HeroTwoColumn';
+    const registryEntry = ComponentRegistry.get(componentName);
 
-    // Prepare the content, handling both old and new formats
+    if (!registryEntry) {
+      // Fallback to generic section if component not found
+      return (
+        <div className="py-12 px-4 bg-gray-100 border-2 border-dashed border-gray-300">
+          <div className="max-w-4xl mx-auto text-center">
+            <h3 className="text-lg font-semibold text-gray-700">Component Not Found</h3>
+            <p className="text-gray-500 mt-2">
+              Component "{componentName}" is not registered in the system.
+            </p>
+            <p className="text-sm text-gray-400 mt-4">
+              Please ensure the component is properly registered in ComponentRegistry.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    const Component = registryEntry.component;
     const content = section.content || {};
 
+    // Create adapter to match the expected props interface
+    // ComponentRegistry components expect different props than the old system
     return (
-      <SectionComponent
+      <Component
         content={content}
         isEditing={true} // Always allow editing on hover in Builder mode
-        onContentChange={(updates) => handleSectionContentChange(section.id, updates)}
+        onContentChange={(updates: Record<string, unknown>) => handleSectionContentChange(section.id, updates)}
       />
     );
   }, [handleSectionContentChange]);

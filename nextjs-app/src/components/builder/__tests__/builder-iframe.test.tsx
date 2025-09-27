@@ -20,14 +20,15 @@ vi.mock('@/components/shared/canvas/MultiSectionCanvas', () => ({
   ),
 }));
 
-// Mock the section components
-vi.mock('@/components/sections/index', () => ({
-  getSectionComponent: vi.fn(() => {
-    const MockComponent = ({ content }: { content: Record<string, unknown> }) => (
+// Mock the component registry
+vi.mock('@/lib/component-registry', () => ({
+  getComponent: vi.fn(() => ({
+    component: ({ content }: { content: Record<string, unknown> }) => (
       <div data-testid="mock-section">{JSON.stringify(content)}</div>
-    );
-    return MockComponent;
-  }),
+    ),
+    type: 'section',
+    defaultContent: {}
+  })),
 }));
 
 // Mock the builder store

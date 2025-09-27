@@ -1,6 +1,6 @@
 'use client';
 
-import { getSectionComponent } from '@/components/sections/index';
+import { ComponentRegistry } from '@/lib/register-components';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ExternalLink, Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -127,10 +127,26 @@ export default function PreviewPage() {
             </div>
           ) : (
             previewSections.map((section: Section) => {
-              // Get the appropriate component based on component_name
-              const SectionComponent = getSectionComponent(section.component_name);
+              // Get the component from the unified ComponentRegistry
+              const componentName = section.component_name || 'HeroTwoColumn';
+              const registryEntry = ComponentRegistry.get(componentName);
+
+              if (!registryEntry) {
+                // Show error message for missing components
+                return (
+                  <div key={section.id} className="py-12 px-4 bg-gray-100 border-2 border-dashed border-gray-300">
+                    <div className="max-w-4xl mx-auto text-center">
+                      <p className="text-gray-500">
+                        Component "{componentName}" not found
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
+
+              const Component = registryEntry.component;
               return (
-                <SectionComponent
+                <Component
                   key={section.id}
                   content={section.content || {}}
                   isEditing={false}

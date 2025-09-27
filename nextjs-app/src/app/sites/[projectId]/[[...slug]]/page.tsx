@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-import { getSectionComponent } from '@/components/sections/index';
+import { getComponent } from '@/lib/component-registry';
+import { GenericSection } from '@/components/sections/index';
 import { ThemeProvider } from '@/components/builder/ThemeProvider';
 import type { Page, Project } from '@/types/database';
 import type { Theme } from '@/types/builder';
@@ -110,7 +111,8 @@ export default async function SitePage({ params }: PageProps) {
         >
           {sectionsToRender.map((section: Section) => {
             // Get the appropriate component based on component_name
-            const SectionComponent = getSectionComponent(section.component_name);
+            const componentEntry = getComponent(section.component_name || '');
+            const SectionComponent = componentEntry?.component || GenericSection;
             return (
               <SectionComponent
                 key={section.id}

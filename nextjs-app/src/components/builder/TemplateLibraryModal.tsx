@@ -30,7 +30,7 @@ export function TemplateLibraryModal({
   // Debounce search query
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  // Fetch library items with filters
+  // Fetch library items with filters - only show published items
   const {
     data: items,
     isLoading,
@@ -38,6 +38,7 @@ export function TemplateLibraryModal({
     type: activeTab === 'all' ? undefined : activeTab === 'sections' ? 'section' : 'page',
     category: selectedCategory === 'all' ? undefined : selectedCategory,
     search: debouncedSearch || undefined,
+    published: true, // Only show published items to users
   });
 
   // Get unique categories from items

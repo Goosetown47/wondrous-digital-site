@@ -19,6 +19,7 @@ import { useBuilderStore } from '@/stores/builderStore';
 
 interface CanvasNavbarProps {
   projectId: string;
+  projectName?: string;
   currentPageId: string;
   currentPage?: {
     id: string;
@@ -39,7 +40,7 @@ interface CanvasNavbarProps {
 
 export function CanvasNavbar({
   projectId,
-  // projectName,
+  projectName,
   currentPageId,
   currentPage,
   themeId,
@@ -73,8 +74,16 @@ export function CanvasNavbar({
       {/* First Row - Page Context & Primary Actions */}
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">
-          {/* Left side - Page selector */}
-          <div className="flex items-center gap-2">
+          {/* Left side - Project name & Page selector */}
+          <div className="flex items-center gap-4">
+            {/* Project Name */}
+            {projectName && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-foreground">{projectName}</span>
+                <span className="text-muted-foreground">/</span>
+              </div>
+            )}
+            {/* Page selector */}
             <Select value={currentPageId} onValueChange={handlePageChange}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Select a page">
