@@ -4,8 +4,9 @@
 
 // Component registry types imported when needed
 
-// Import the only component currently in the system
+// Import all components currently in the system
 import { Hero1, hero1Config } from '@/components/core/sections/hero1';
+import { Hero2, hero2Config } from '@/components/core/sections/hero2';
 
 /**
  * Auto-generated registry of all core components
@@ -15,6 +16,10 @@ export const generatedComponents = {
   'hero1': {
     component: Hero1,
     config: hero1Config
+  },
+  'hero2': {
+    component: Hero2,
+    config: hero2Config
   }
 };
 
