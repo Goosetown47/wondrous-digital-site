@@ -1,6 +1,6 @@
 // THIS FILE IS AUTO-GENERATED. DO NOT EDIT.
-// Generated at: 2025-09-28T20:34:36.805Z
-// Components: 4
+// Generated at: 2025-09-28T22:40:21.438Z
+// Components: 5
 
 import { ComponentRegistry } from '@/lib/component-registry';
 
@@ -8,6 +8,7 @@ import { Hero1, hero1Config } from '@/components/core/sections/hero1';
 import { Hero2, hero2Config } from '@/components/core/sections/hero2';
 import { Hero3, hero3Config } from '@/components/core/sections/hero3';
 import { Hero4, hero4Config } from '@/components/core/sections/hero4';
+import { Hero5, hero5Config } from '@/components/core/sections/hero5';
 
 export function registerGeneratedComponents() {
   ComponentRegistry.register('Hero1', {
@@ -40,5 +41,13 @@ export function registerGeneratedComponents() {
     defaultContent: hero4Config.defaultContent,
     editableFields: hero4Config.editableFields,
     source: 'shadcn'
+  });
+
+  ComponentRegistry.register('Hero5', {
+    component: Hero5,
+    type: 'section',
+    defaultContent: hero5Config.defaultContent,
+    editableFields: hero5Config.editableFields,
+    source: 'expansions'
   });
 }
