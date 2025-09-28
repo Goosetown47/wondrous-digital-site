@@ -3,22 +3,24 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useCreateComponent } from '@/hooks/useCoreComponents';
-import { importComponent } from '@/lib/component-import-pipeline';
-import type { EditableFieldConfig } from '@/lib/component-registry';
+import { ComponentCreationProgress } from '@/components/core/component-creation-progress';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Save, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import type { CreateComponentInput } from '@/lib/supabase/core-components';
+
+interface ProgressStep {
+  step: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'error';
+  message?: string;
+}
 
 export default function AddComponentPage() {
   const router = useRouter();
-  const createComponent = useCreateComponent();
 
   const [formData, setFormData] = useState<CreateComponentInput>({
     name: '',
@@ -32,44 +34,76 @@ export default function AddComponentPage() {
 
   const [dependencyInput, setDependencyInput] = useState('');
   const [importInput, setImportInput] = useState('');
+  const [showProgress, setShowProgress] = useState(false);
+  const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([]);
+  const [createdComponentName, setCreatedComponentName] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    let editableFields: EditableFieldConfig[] = [];
-    let defaultContent: Record<string, unknown> = {};
+    // Show progress modal
+    setShowProgress(true);
+    setCreatedComponentName(formData.name);
+    setProgressSteps([
+      { step: 'generating_name', status: 'pending' },
+      { step: 'saving_to_database', status: 'pending' },
+      { step: 'creating_github_files', status: 'pending' },
+      { step: 'updating_registry', status: 'pending' },
+      { step: 'finalizing', status: 'pending' }
+    ]);
 
-    // Try to parse the component (but don't fail if it doesn't work)
     try {
-      const result = await importComponent({
-        code: formData.code,
-        path: formData.type === 'section' ? '/sections/' : '/components/',
+      // Use the new API endpoint for component creation
+      const response = await fetch('/api/core-components/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          type: formData.type,
+          source: formData.source,
+          code: formData.code,
+          dependencies: formData.dependencies,
+          imports: formData.imports,
+          metadata: formData.metadata,
+        }),
       });
 
-      if (result.success && result.component) {
-        editableFields = result.component.editableFields || [];
-        defaultContent = result.component.defaultContent || {};
+      const result = await response.json();
+
+      // Always update progress steps
+      setProgressSteps(result.progress || []);
+
+      if (result.success && result.progress) {
+        // Check if ALL steps completed successfully
+        const allStepsCompleted = result.progress.every(
+          (step: ProgressStep) => step.status === 'completed'
+        );
+
+        if (!allStepsCompleted) {
+          // Log partial success/errors
+          console.warn('Component created with some failures:', result.progress);
+        }
+        // Never auto-redirect - user must close modal manually
+      } else {
+        console.error('Failed to create component:', result.error);
       }
-    } catch {
-      // Parsing failed, but that's OK - continue anyway
-      console.log('Could not auto-parse component, proceeding without editable fields');
-    }
-
-    try {
-      // Submit with whatever we have
-      const dataToSubmit = {
-        ...formData,
-        metadata: {
-          ...formData.metadata,
-          editable_fields: editableFields,
-          default_content: defaultContent,
-        },
-      };
-
-      await createComponent.mutateAsync(dataToSubmit);
-      router.push('/core');
     } catch (error) {
       console.error('Failed to create component:', error);
+      // Mark all steps as error
+      setProgressSteps(prev => prev.map(step => ({
+        ...step,
+        status: step.status === 'completed' ? 'completed' : 'error'
+      })));
+    }
+  };
+
+  const handleCloseProgress = () => {
+    setShowProgress(false);
+    // If all successful, navigate to core
+    if (progressSteps.every(s => s.status === 'completed')) {
+      router.push('/core');
     }
   };
 
@@ -125,14 +159,6 @@ export default function AddComponentPage() {
         </div>
       </div>
 
-      {createComponent.isError && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to create component. Please try again.
-          </AlertDescription>
-        </Alert>
-      )}
 
       <form onSubmit={handleSubmit}>
         <div className="space-y-6">
@@ -297,21 +323,12 @@ export default function AddComponentPage() {
 
           {/* Actions */}
           <div className="flex gap-4">
-            <Button 
-              type="submit" 
-              disabled={createComponent.isPending || !formData.name || !formData.code}
+            <Button
+              type="submit"
+              disabled={!formData.name || !formData.code}
             >
-              {createComponent.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Create Component
-                </>
-              )}
+              <Save className="mr-2 h-4 w-4" />
+              Create Component
             </Button>
             <Button type="button" variant="outline" asChild>
               <Link href="/core">Cancel</Link>
@@ -319,6 +336,14 @@ export default function AddComponentPage() {
           </div>
         </div>
       </form>
+
+      {/* Progress Modal */}
+      <ComponentCreationProgress
+        isOpen={showProgress}
+        onClose={handleCloseProgress}
+        componentName={createdComponentName}
+        steps={progressSteps}
+      />
     </div>
   );
 }

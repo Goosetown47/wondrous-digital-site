@@ -15,6 +15,7 @@ Perform a comprehensive code review of what we just built. Check for:
 - [ ] SOLID principle violations
 - [ ] Unnecessary complexity or abstractions
 - [ ] Dead code or unused imports
+- [ ] Hallucinations - code that will cause bugs or is a mistake
 
 **Production Readiness:**
 - [ ] Missing edge case handling
