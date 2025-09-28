@@ -68,7 +68,7 @@ export { Hero15 };
 
 
 // Base component (renamed for wrapping)
-const Hero4Base = Hero4;
+const Hero4Base = Hero15;
 
 // Editable wrapper for LAB/BUILDER
 export function Hero4(props: Record<string, unknown>) {

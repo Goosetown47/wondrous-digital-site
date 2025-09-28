@@ -176,6 +176,27 @@ export class GitHubComponentService {
     // Escape special characters in component name for comments
     const safeName = component.name.replace(/&/g, 'and').replace(/</g, '').replace(/>/g, '');
 
+    // Detect the actual component name from the submitted code
+    let actualComponentName = componentName; // default fallback
+
+    // Try multiple patterns to find component definitions
+    const patterns = [
+      /(?:const|let|var)\s+(\w+)\s*=\s*\(\)/,  // const ComponentName = ()
+      /(?:const|let|var)\s+(\w+)\s*=\s*function/,  // const ComponentName = function
+      /function\s+(\w+)\s*\(/,  // function ComponentName(
+      /export\s+(?:default\s+)?function\s+(\w+)/,  // export function ComponentName
+      /export\s+\{\s*(\w+)\s*\}/,  // export { ComponentName }
+      /class\s+(\w+)\s+extends/,  // class ComponentName extends
+    ];
+
+    for (const pattern of patterns) {
+      const match = component.code.match(pattern);
+      if (match && match[1]) {
+        actualComponentName = match[1];
+        break;
+      }
+    }
+
     return `// Auto-generated component: ${safeName}
 // Generated at: ${new Date().toISOString()}
 // Do not edit directly - edit in Core UI instead
@@ -189,7 +210,7 @@ import type { EditableFieldConfig } from '@/lib/component-registry';
 ${component.code}
 
 // Base component (renamed for wrapping)
-const ${componentName}Base = ${componentName};
+const ${componentName}Base = ${actualComponentName};
 
 // Editable wrapper for LAB/BUILDER
 export function ${componentName}(props: Record<string, unknown>) {
