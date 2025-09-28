@@ -192,8 +192,12 @@ ${component.code}
 const ${componentName}Base = ${componentName};
 
 // Editable wrapper for LAB/BUILDER
-export function ${componentName}(props: any) {
-  const { editable = false, onContentUpdate, ...content } = props;
+export function ${componentName}(props: Record<string, unknown>) {
+  const { editable = false, onContentUpdate, ...content } = props as {
+    editable?: boolean;
+    onContentUpdate?: (updates: Record<string, unknown>) => void;
+    [key: string]: unknown;
+  };
 
   // Production mode - return static component
   if (!editable) {
@@ -206,7 +210,7 @@ export function ${componentName}(props: any) {
       componentName="${componentName}"
       content={content}
       editable={true}
-      onContentUpdate={onContentUpdate}
+      onContentUpdate={onContentUpdate || (() => {})}
     >
       <${componentName}Base {...content} />
     </EditableSectionWrapper>

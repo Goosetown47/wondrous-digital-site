@@ -1,13 +1,17 @@
+// Auto-generated component: Logo Hero
+// Generated at: 2025-09-28T19:34:57.554Z
+// Do not edit directly - edit in Core UI instead
+
+'use client';
+
+import { EditableSectionWrapper } from '@/components/shared/content-editor';
+import type { EditableFieldConfig } from '@/lib/component-registry';
+
+// Original component code
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-/**
- * Hero2 - Logo Hero
- * Auto-generated component from Core Pipeline
- * Source: expansions
- */
-
-const Hero2 = () => {
+const Hero2Original = () => {
   return (
     <section className="relative p-0">
       <div className="absolute h-full w-full bg-[url('https://deifkwefumgah.cloudfront.net/shadcnblocks/block/patterns/grid1.svg')] bg-contain bg-repeat opacity-100 [mask-image:linear-gradient(to_right,theme(colors.border),transparent,transparent,theme(colors.border))] lg:block"></div>
@@ -80,13 +84,39 @@ const Hero2 = () => {
   );
 };
 
-// Export configuration for the component registry
-export const hero2Config = {
-  name: 'Hero2',
-  type: 'section',
-  category: 'hero',
-  description: 'Logo Hero with badges and partner logos',
-  source: 'expansions'
-};
+export { Hero2Original };
 
-export { Hero2 };
+// Base component (renamed for wrapping)
+const Hero2Base = Hero2Original;
+
+// Editable wrapper for LAB/BUILDER
+export function Hero2(props: Record<string, unknown>) {
+  const { editable = false, onContentUpdate, ...content } = props as {
+    editable?: boolean;
+    onContentUpdate?: (updates: Record<string, unknown>) => void;
+    [key: string]: unknown;
+  };
+
+  // Production mode - return static component
+  if (!editable) {
+    return <Hero2Base {...content} />;
+  }
+
+  // Edit mode - wrap with editing capabilities
+  return (
+    <EditableSectionWrapper
+      componentName="Hero2"
+      content={content}
+      editable={true}
+      onContentUpdate={onContentUpdate || (() => {})}
+    >
+      <Hero2Base {...content} />
+    </EditableSectionWrapper>
+  );
+}
+
+// Export configuration for registry
+export const hero2Config = {
+  editableFields: [] as EditableFieldConfig[],
+  defaultContent: {}
+};
