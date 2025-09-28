@@ -10,8 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import type { CreateComponentInput } from '@/lib/supabase/core-components';
 
 interface ProgressStep {
@@ -22,7 +21,6 @@ interface ProgressStep {
 
 export default function AddComponentPage() {
   const router = useRouter();
-  const createComponent = useCreateComponent();
 
   const [formData, setFormData] = useState<CreateComponentInput>({
     name: '',
@@ -80,7 +78,7 @@ export default function AddComponentPage() {
       if (result.success && result.progress) {
         // Check if ALL steps completed successfully
         const allStepsCompleted = result.progress.every(
-          step => step.status === 'completed'
+          (step: ProgressStep) => step.status === 'completed'
         );
 
         if (!allStepsCompleted) {
@@ -161,14 +159,6 @@ export default function AddComponentPage() {
         </div>
       </div>
 
-      {createComponent.isError && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to create component. Please try again.
-          </AlertDescription>
-        </Alert>
-      )}
 
       <form onSubmit={handleSubmit}>
         <div className="space-y-6">

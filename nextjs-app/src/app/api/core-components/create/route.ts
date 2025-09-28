@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
     const newComponent: Partial<CoreComponent> = {
       name: body.name,
       code_name: codeName,
-      type: body.type,
-      source: body.source,
+      type: body.type as 'section' | 'component',
+      source: body.source as 'shadcn' | 'aceternity' | 'expansions' | 'custom',
       code: body.code,
       dependencies: body.dependencies || [],
       imports: body.imports || [],
