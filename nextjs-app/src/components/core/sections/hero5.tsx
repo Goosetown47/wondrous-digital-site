@@ -11,7 +11,7 @@ import type { EditableFieldConfig } from '@/lib/component-registry';
 import { TrendingUp, Users, Zap } from "lucide-react";
 import React from "react";
 
-import { ContainerTextFlip } from "@/components/aceternity/container-text-flip";
+import { ContainerTextFlip } from "@/components/ui/container-text-flip";
 import { Button } from "@/components/ui/button";
 
 const Hero243 = () => {
