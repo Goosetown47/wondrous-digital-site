@@ -54,11 +54,15 @@ export { Hero13 };
 
 
 // Base component (renamed for wrapping)
-const Hero3Base = Hero3;
+const Hero3Base = Hero13;
 
 // Editable wrapper for LAB/BUILDER
 export function Hero3(props: Record<string, unknown>) {
-  const { editable = false, onContentUpdate, ...content } = props;
+  const { editable = false, onContentUpdate, ...content } = props as {
+    editable?: boolean;
+    onContentUpdate?: (updates: Record<string, unknown>) => void;
+    [key: string]: unknown;
+  };
 
   // Production mode - return static component
   if (!editable) {
@@ -71,7 +75,7 @@ export function Hero3(props: Record<string, unknown>) {
       componentName="Hero3"
       content={content}
       editable={true}
-      onContentUpdate={onContentUpdate}
+      onContentUpdate={onContentUpdate || (() => {})}
     >
       <Hero3Base {...content} />
     </EditableSectionWrapper>
