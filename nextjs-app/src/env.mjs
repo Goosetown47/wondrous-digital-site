@@ -10,6 +10,12 @@ export const env = createEnv({
     VERCEL_API_TOKEN: z.string().optional(),
     VERCEL_PROJECT_ID: z.string().optional(),
     VERCEL_TEAM_ID: z.string().optional(),
+    // GitHub (for component pipeline)
+    GITHUB_TOKEN: z.string().optional(),
+    GITHUB_OWNER: z.string().optional(),
+    GITHUB_REPO: z.string().optional(),
+    GITHUB_DEFAULT_BRANCH: z.string().optional(),
+    GITHUB_ENABLED: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
@@ -27,5 +33,11 @@ export const env = createEnv({
     VERCEL_API_TOKEN: process.env.VERCEL_API_TOKEN,
     VERCEL_PROJECT_ID: process.env.VERCEL_PROJECT_ID,
     VERCEL_TEAM_ID: process.env.VERCEL_TEAM_ID,
+    // GitHub
+    GITHUB_TOKEN: process.env.GITHUB_TOKEN,
+    GITHUB_OWNER: process.env.GITHUB_OWNER,
+    GITHUB_REPO: process.env.GITHUB_REPO,
+    GITHUB_DEFAULT_BRANCH: process.env.GITHUB_DEFAULT_BRANCH,
+    GITHUB_ENABLED: process.env.GITHUB_ENABLED,
   },
 });

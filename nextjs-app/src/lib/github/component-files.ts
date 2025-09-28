@@ -1,4 +1,5 @@
 import { Octokit } from '@octokit/rest';
+import { env } from '@/env.mjs';
 import type { CoreComponent } from '@/types/builder';
 
 /**
@@ -31,10 +32,10 @@ export class GitHubComponentService {
 
   constructor() {
     // Validate environment variables
-    const token = process.env.GITHUB_TOKEN;
-    const owner = process.env.GITHUB_OWNER;
-    const repo = process.env.GITHUB_REPO;
-    const defaultBranch = process.env.GITHUB_DEFAULT_BRANCH || 'staging';
+    const token = env.GITHUB_TOKEN;
+    const owner = env.GITHUB_OWNER;
+    const repo = env.GITHUB_REPO;
+    const defaultBranch = env.GITHUB_DEFAULT_BRANCH || 'staging';
 
     if (!token) throw new Error('GITHUB_TOKEN is required');
     if (!owner) throw new Error('GITHUB_OWNER is required');
@@ -53,7 +54,7 @@ export class GitHubComponentService {
 
     const componentType = this.getComponentType(component);
     const fileName = component.code_name.toLowerCase();
-    const path = `src/components/core/${componentType}/${fileName}.tsx`;
+    const path = `nextjs-app/src/components/core/${componentType}/${fileName}.tsx`;
     const content = this.generateComponentFile(component);
 
     // Check for rate limiting
@@ -77,7 +78,7 @@ export class GitHubComponentService {
   }
 
   async updateRegistryFile(components: CoreComponent[]): Promise<FileChange> {
-    const path = 'src/lib/register-components-generated.tsx';
+    const path = 'nextjs-app/src/lib/register-components-generated.tsx';
     const content = this.generateRegistryFile(components);
 
     try {
