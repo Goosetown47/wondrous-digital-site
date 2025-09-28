@@ -4,6 +4,7 @@
  */
 
 import { ComponentRegistry } from './component-registry';
+import { registerGeneratedComponents } from './register-components-generated';
 
 // Component imports will be added here as components are created
 
@@ -20,13 +21,16 @@ export function registerAllComponents() {
   // Clear any existing registrations
   ComponentRegistry.clear();
 
+  // Register all auto-generated components from the pipeline
+  registerGeneratedComponents();
+
   // Navigation Components
   // (Will be populated as components are created)
 
-  
+
 
   // Section Components
-  // (Will be populated as components are created through the pipeline)
+  // (Additional manual components can be registered here)
 
   // Add more components as you import them from shadcn
   // Example:
@@ -37,11 +41,6 @@ export function registerAllComponents() {
   //   description: 'Three column testimonials grid',
   //   source: 'shadcn'
   // });
-
-  
-
-  // Components created through the pipeline will be automatically registered
-  // via the core-components-registry.ts file
 
   
 
