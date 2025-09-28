@@ -97,7 +97,7 @@ export { Hero6 };
 const Hero1Base = Hero1;
 
 // Editable wrapper for LAB/BUILDER
-export function Hero1(props: any) {
+export function Hero1(props: Record<string, unknown>) {
   const { editable = false, onContentUpdate, ...content } = props;
 
   // Production mode - return static component
@@ -123,3 +123,6 @@ export const hero1Config = {
   editableFields: [] as EditableFieldConfig[],
   defaultContent: {}
 };
+
+// Named export for registry
+export { Hero1 };
