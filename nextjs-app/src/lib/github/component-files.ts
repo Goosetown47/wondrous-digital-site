@@ -218,9 +218,6 @@ export const ${configName} = {
   editableFields: ${JSON.stringify(component.editable_fields || [], null, 2)} as EditableFieldConfig[],
   defaultContent: ${JSON.stringify(component.default_content || {}, null, 2)}
 };
-
-// Named export for registry
-export { ${componentName} };
 `;
   }
 

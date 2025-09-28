@@ -123,6 +123,3 @@ export const hero1Config = {
   editableFields: [] as EditableFieldConfig[],
   defaultContent: {}
 };
-
-// Named export for registry
-export { Hero1 };
