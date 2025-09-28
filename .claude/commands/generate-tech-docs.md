@@ -3,7 +3,7 @@
 Generate comprehensive technical documentation for the current feature/bug/system.
 
 **Do First** 
-1. Identify the correct file for this documentation in `@docs/Tech_Docs/` or `@docs/In_Progress/`
+1. Identify the correct file for this documentation in `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/Tech_Docs/` or `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/In_Progress/`
 2. Locate the # TECH DOCS section in that file.
 3. Craft the documentation there.
 

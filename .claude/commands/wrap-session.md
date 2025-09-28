@@ -10,17 +10,20 @@ Cleanly conclude the current work session and prepare for the next one.
 - [ ] Document any decisions or discoveries made
 
 **Handoff Notes:**
-- [ ] Create SESSION_[DATE].md in `@docs/Handoff_Notes/` with:
-  - Current status of work
-  - Next immediate tasks
-  - Any blockers or questions
-  - Context needed for continuation
-  - Branch name and state
-  - Note any technical debt identified
-  - Record any deferred decisions
-  - Any tricky parts, Known issues, Dependencies to check
+- [ ] Create SESSION_[DATE]_[Descriptive_Name].md in `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/Handoff_Notes/` with:
+  - What did we do this session 
+    - Current status of work
+    - Next immediate tasks
+    - Any blockers or questions
+  - What do you need to know to get started in the next session
+    - Context needed for continuation
+    - Branch name and state
+    - Note any technical debt identified
+    - Record any deferred decisions
+    - Any tricky parts, Known issues, Dependencies to check
 
 ## Questions to Resolve:
+If none, skip. Don't create just to create.
 - [Any open decisions]
 - [Clarifications needed]
 
@@ -28,7 +31,7 @@ Cleanly conclude the current work session and prepare for the next one.
 ### Final Documentation
 
 **Update Status Files:**
-- [ ] Find current file we're working on in `@docs/In_Progress/` 
+- [ ] Find current file we're working on in `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/In_Progress/` 
 - [ ] Mark today's work in LOG with session end time
 - [ ] Update log
 	- [ ] Update with final status
@@ -45,7 +48,6 @@ Cleanly conclude the current work session and prepare for the next one.
 **Clean Working Directory:**
 - [ ] Commit all changes with message: "session-end: [summary of work]"
 - [ ] Push to remote branch
-- [ ] Note any uncommitted experiments in NEXT_SESSION.md
 - [ ] Stash any exploratory code for later
 
 **Quality Final Check:**
