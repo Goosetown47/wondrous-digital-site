@@ -90,8 +90,6 @@ export function parseRegistryCommand(command: string): {
   componentName: string;
 } {
   // Extract URL from command
-  let url: string;
-
   // Check if it's a full npx command or just a URL
   const urlMatch = command.match(/https?:\/\/[^\s]+\.json/);
 
@@ -99,13 +97,13 @@ export function parseRegistryCommand(command: string): {
     throw new Error('Invalid registry URL');
   }
 
-  url = urlMatch[0];
+  const url = urlMatch[0];
 
   // Detect source from URL
   const source = detectComponentSource(url);
 
   // Extract component name from URL
-  const componentNameMatch = url.match(/\/([^\/]+)\.json$/);
+  const componentNameMatch = url.match(/\/([^/]+)\.json$/);
   if (!componentNameMatch) {
     throw new Error('Could not extract component name from URL');
   }
@@ -255,7 +253,7 @@ export async function processComponentImport(options: ImportOptions): Promise<Pr
   const { url, autoFix = false, installDeps = false, targetDir = '/components/ui/' } = options;
 
   // Parse URL to get metadata
-  const { componentName, source } = parseRegistryCommand(url);
+  const { source } = parseRegistryCommand(url);
 
   // Fetch component from registry
   const registryData = await fetchComponentFromRegistry(url);

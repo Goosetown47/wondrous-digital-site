@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DependenciesPage from '../page';
@@ -32,7 +32,7 @@ describe('Dependencies Management Page', () => {
         mutations: { retry: false }
       }
     });
-    (useRouter as any).mockReturnValue({ push: mockPush });
+    (useRouter as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ push: mockPush });
   });
 
   const renderComponent = () => {
@@ -44,7 +44,7 @@ describe('Dependencies Management Page', () => {
   };
 
   it('should render the page header and main sections', () => {
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: async () => ({
         components: [],
@@ -68,7 +68,7 @@ describe('Dependencies Management Page', () => {
   });
 
   it('should display loading state while fetching dependencies', async () => {
-    (global.fetch as any).mockImplementation(() =>
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementation(() =>
       new Promise(resolve => setTimeout(() => resolve({
         ok: true,
         json: async () => ({ components: [], uiComponents: [], installedDependencies: [], stats: {} })
@@ -81,7 +81,7 @@ describe('Dependencies Management Page', () => {
   });
 
   it('should display list of imported components', async () => {
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: async () => ({
         components: [
@@ -126,7 +126,7 @@ describe('Dependencies Management Page', () => {
   });
 
   it('should validate import URL format', async () => {
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: async () => ({
         components: [],
@@ -154,7 +154,7 @@ describe('Dependencies Management Page', () => {
 
   it('should handle successful component import', async () => {
     // Mock initial load
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         components: [],
@@ -170,7 +170,7 @@ describe('Dependencies Management Page', () => {
     const importButton = screen.getByRole('button', { name: /import component/i });
 
     // Mock import API call
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         success: true,
@@ -185,7 +185,7 @@ describe('Dependencies Management Page', () => {
     });
 
     // Mock refetch after import
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         components: [{
@@ -214,7 +214,7 @@ describe('Dependencies Management Page', () => {
   });
 
   it('should handle import errors', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         components: [],
@@ -230,7 +230,7 @@ describe('Dependencies Management Page', () => {
     const importButton = screen.getByRole('button', { name: /import component/i });
 
     // Mock failed import
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
       status: 500,
       json: async () => ({
@@ -252,7 +252,7 @@ describe('Dependencies Management Page', () => {
   });
 
   it('should show import options (autoFix, installDeps)', async () => {
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: async () => ({
         components: [],
@@ -277,7 +277,7 @@ describe('Dependencies Management Page', () => {
   });
 
   it('should filter components by source', async () => {
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: async () => ({
         components: [
@@ -311,7 +311,7 @@ describe('Dependencies Management Page', () => {
   });
 
   it('should display statistics', async () => {
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: async () => ({
         components: [],
@@ -339,7 +339,7 @@ describe('Dependencies Management Page', () => {
   });
 
   it('should handle batch import mode', async () => {
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: async () => ({
         components: [],
@@ -371,7 +371,7 @@ describe('Dependencies Management Page', () => {
   });
 
   it('should show component details on click', async () => {
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       json: async () => ({
         components: [{

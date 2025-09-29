@@ -33,7 +33,7 @@ const mockSupabase = {
 describe('POST /api/admin/components/import', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (createSupabaseServerClient as any).mockReturnValue(mockSupabase);
+    (createSupabaseServerClient as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mockSupabase);
   });
 
   afterEach(() => {
@@ -51,7 +51,7 @@ describe('POST /api/admin/components/import', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(false);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(false);
 
     const request = new NextRequest('http://localhost:3000/api/admin/components/import', {
       method: 'POST',
@@ -98,7 +98,7 @@ describe('POST /api/admin/components/import', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(true);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
     const request = new NextRequest('http://localhost:3000/api/admin/components/import', {
       method: 'POST',
@@ -125,7 +125,7 @@ describe('POST /api/admin/components/import', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(true);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
     const request = new NextRequest('http://localhost:3000/api/admin/components/import', {
       method: 'POST',
@@ -153,7 +153,7 @@ describe('POST /api/admin/components/import', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(true);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
     // Mock smart import processing
     const mockProcessResult = {
@@ -172,9 +172,9 @@ describe('POST /api/admin/components/import', () => {
       sourceUrl: 'https://ui.shadcn.com/registry/button.json'
     };
 
-    (smartImport.processComponentImport as any).mockResolvedValue(mockProcessResult);
-    (fs.writeFile as any).mockResolvedValue(undefined);
-    (fs.access as any).mockRejectedValue(new Error('File not found')); // Simulate file doesn't exist
+    (smartImport.processComponentImport as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockProcessResult);
+    (fs.writeFile as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    (fs.access as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('File not found')); // Simulate file doesn't exist
 
     // Mock database insert
     mockSupabase.from().insert().select().single.mockResolvedValue({
@@ -231,7 +231,7 @@ describe('POST /api/admin/components/import', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(true);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
     const mockProcessResult = {
       name: 'complex-component',
@@ -255,9 +255,9 @@ describe('POST /api/admin/components/import', () => {
       sourceUrl: 'https://ui.aceternity.com/registry/complex-component.json'
     };
 
-    (smartImport.processComponentImport as any).mockResolvedValue(mockProcessResult);
-    (fs.writeFile as any).mockResolvedValue(undefined);
-    (fs.access as any).mockRejectedValue(new Error('File not found'));
+    (smartImport.processComponentImport as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockProcessResult);
+    (fs.writeFile as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    (fs.access as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('File not found'));
 
     mockSupabase.from().insert().select().single.mockResolvedValue({
       data: { id: 'import-123' },
@@ -292,7 +292,7 @@ describe('POST /api/admin/components/import', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(true);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
     const mockProcessResult = {
       name: 'animated-component',
@@ -311,9 +311,9 @@ describe('POST /api/admin/components/import', () => {
       sourceUrl: 'https://ui.aceternity.com/registry/animated-component.json'
     };
 
-    (smartImport.processComponentImport as any).mockResolvedValue(mockProcessResult);
-    (fs.writeFile as any).mockResolvedValue(undefined);
-    (fs.access as any).mockRejectedValue(new Error('File not found'));
+    (smartImport.processComponentImport as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockProcessResult);
+    (fs.writeFile as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    (fs.access as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('File not found'));
 
     mockSupabase.from().insert().select().single.mockResolvedValue({
       data: { id: 'import-123' },
@@ -350,9 +350,9 @@ describe('POST /api/admin/components/import', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(true);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
-    (smartImport.processComponentImport as any).mockRejectedValue(
+    (smartImport.processComponentImport as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
       new Error('Failed to fetch component from registry')
     );
 
@@ -382,7 +382,7 @@ describe('POST /api/admin/components/import', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(true);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
     const mockProcessResult = {
       name: 'button',
@@ -400,8 +400,8 @@ describe('POST /api/admin/components/import', () => {
       sourceUrl: 'https://ui.shadcn.com/registry/button.json'
     };
 
-    (smartImport.processComponentImport as any).mockResolvedValue(mockProcessResult);
-    (fs.access as any).mockResolvedValue(undefined); // File exists
+    (smartImport.processComponentImport as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockProcessResult);
+    (fs.access as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined); // File exists
 
     const request = new NextRequest('http://localhost:3000/api/admin/components/import', {
       method: 'POST',

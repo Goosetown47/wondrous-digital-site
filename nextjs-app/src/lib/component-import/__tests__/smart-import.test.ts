@@ -6,10 +6,7 @@ import {
   extractDependencies,
   fetchComponentFromRegistry,
   processComponentImport,
-  type ComponentSource,
-  type ImportOptions,
-  type ComponentMetadata,
-  type TransformRule
+  type ImportOptions
 } from '../smart-import';
 
 // Mock fetch for registry requests
@@ -262,7 +259,7 @@ describe('Smart Import', () => {
         dependencies: ['clsx']
       };
 
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse
       });
@@ -274,7 +271,7 @@ describe('Smart Import', () => {
     });
 
     it('should throw error for failed fetch', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: false,
         status: 404,
         statusText: 'Not Found'
@@ -286,7 +283,7 @@ describe('Smart Import', () => {
     });
 
     it('should handle network errors', async () => {
-      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Network error'));
 
       await expect(
         fetchComponentFromRegistry('https://ui.shadcn.com/registry/button.json')
@@ -313,7 +310,7 @@ describe('Smart Import', () => {
         dependencies: ['framer-motion']
       };
 
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         json: async () => mockRegistryData
       });
@@ -347,7 +344,7 @@ describe('Smart Import', () => {
         }]
       };
 
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         json: async () => mockRegistryData
       });
@@ -384,7 +381,7 @@ describe('Smart Import', () => {
         ]
       };
 
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         json: async () => mockRegistryData
       });

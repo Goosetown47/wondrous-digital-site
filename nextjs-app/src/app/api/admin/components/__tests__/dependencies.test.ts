@@ -25,7 +25,7 @@ const mockSupabase = {
 describe('GET /api/admin/components/dependencies', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (createSupabaseServerClient as any).mockReturnValue(mockSupabase);
+    (createSupabaseServerClient as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mockSupabase);
   });
 
   it('should reject requests from non-admin users', async () => {
@@ -39,7 +39,7 @@ describe('GET /api/admin/components/dependencies', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(false);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(false);
 
     const request = new NextRequest('http://localhost:3000/api/admin/components/dependencies');
     const response = await GET(request);
@@ -75,7 +75,7 @@ describe('GET /api/admin/components/dependencies', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(true);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
     // Mock database query for component imports
     mockQueryBuilder.order.mockResolvedValue({
@@ -105,7 +105,7 @@ describe('GET /api/admin/components/dependencies', () => {
     });
 
     // Mock file system for UI components
-    (fs.readdir as any).mockResolvedValue([
+    (fs.readdir as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
       'button.tsx',
       'container-text-flip.tsx',
       'card.tsx',
@@ -113,7 +113,7 @@ describe('GET /api/admin/components/dependencies', () => {
     ]);
 
     // Mock package.json read
-    (fs.readFile as any).mockResolvedValue(JSON.stringify({
+    (fs.readFile as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(JSON.stringify({
       dependencies: {
         'react': '^18.0.0',
         'framer-motion': '^11.0.0',
@@ -172,15 +172,15 @@ describe('GET /api/admin/components/dependencies', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(true);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
     mockQueryBuilder.order.mockResolvedValue({
       data: [],
       error: null
     });
 
-    (fs.readdir as any).mockResolvedValue([]);
-    (fs.readFile as any).mockResolvedValue(JSON.stringify({
+    (fs.readdir as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (fs.readFile as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(JSON.stringify({
       dependencies: {}
     }));
 
@@ -206,7 +206,7 @@ describe('GET /api/admin/components/dependencies', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(true);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
     mockQueryBuilder.order.mockResolvedValue({
       data: null,
@@ -233,7 +233,7 @@ describe('GET /api/admin/components/dependencies', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(true);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
     mockQueryBuilder.order.mockResolvedValue({
       data: [
@@ -257,8 +257,8 @@ describe('GET /api/admin/components/dependencies', () => {
       error: null
     });
 
-    (fs.readdir as any).mockResolvedValue([]);
-    (fs.readFile as any).mockResolvedValue(JSON.stringify({ dependencies: {} }));
+    (fs.readdir as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (fs.readFile as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(JSON.stringify({ dependencies: {} }));
 
     const request = new NextRequest('http://localhost:3000/api/admin/components/dependencies?source=aceternity');
     const response = await GET(request);
@@ -281,7 +281,7 @@ describe('GET /api/admin/components/dependencies', () => {
       error: null
     });
 
-    (isAdminServer as any).mockResolvedValue(true);
+    (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
     // Mock query with user information for includeHistory=true
     mockQueryBuilder.order.mockResolvedValue({
@@ -300,8 +300,8 @@ describe('GET /api/admin/components/dependencies', () => {
       error: null
     });
 
-    (fs.readdir as any).mockResolvedValue([]);
-    (fs.readFile as any).mockResolvedValue(JSON.stringify({ dependencies: {} }));
+    (fs.readdir as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (fs.readFile as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(JSON.stringify({ dependencies: {} }));
 
     const request = new NextRequest('http://localhost:3000/api/admin/components/dependencies?includeHistory=true');
     const response = await GET(request);
