@@ -33,6 +33,7 @@ import {
   Brush,
   Layers,
   UserRound,
+  FileStack,
 } from 'lucide-react';
 
 interface SecondarySidebarProps {
@@ -231,6 +232,12 @@ export function SecondarySidebar({ isCollapsed = false }: SecondarySidebarProps)
           href="/admin/core"
           icon={Sparkles}
           label="Core"
+          isCollapsed={isCollapsed}
+        />
+        <NavigationMenuItem
+          href="/admin/components"
+          icon={FileStack}
+          label="Dependencies"
           isCollapsed={isCollapsed}
         />
       </NavigationSection>
