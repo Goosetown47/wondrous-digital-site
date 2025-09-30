@@ -104,11 +104,30 @@ interface ExecutionResult {
   duration?: number;
 }
 
+interface PreviewResponse {
+  parsed: {
+    commands: ParsedCommand[];
+    hasWarnings: boolean;
+    totalCommands: number;
+  };
+  preview: {
+    npmPackages: Array<{
+      name: string;
+      alreadyInstalled: boolean;
+      version?: string;
+    }>;
+    shadcnComponents: Array<{
+      name: string;
+      type: string;
+    }>;
+  };
+}
+
 export default function DependenciesPage() {
   // Universal Command Input state
   const [showCommandInput, setShowCommandInput] = useState(false);
   const [commandInput, setCommandInput] = useState('');
-  const [commandPreview, setCommandPreview] = useState<ParsedCommand[] | null>(null);
+  const [commandPreview, setCommandPreview] = useState<PreviewResponse | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
   // Execution progress state
@@ -411,28 +430,6 @@ export default function DependenciesPage() {
     setDetailsModalOpen(true);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-          <p className="text-muted-foreground">Loading dependencies...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <XCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
-          <p className="text-destructive">Failed to load dependencies</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       {/* Header */}
@@ -549,7 +546,7 @@ npx shadcn add https://ui.aceternity.com/registry/container-text-flip.json`}
                     NPM Packages ({commandPreview.preview.npmPackages.length})
                   </div>
                   <div className="space-y-1">
-                    {commandPreview.preview.npmPackages.map((pkg: { name: string; alreadyInstalled: boolean; version?: string }, idx: number) => (
+                    {commandPreview.preview.npmPackages.map((pkg, idx: number) => (
                       <div key={idx} className="flex items-center justify-between text-sm py-1">
                         <span className="font-mono">{pkg.name}</span>
                         {pkg.alreadyInstalled ? (
@@ -574,7 +571,7 @@ npx shadcn add https://ui.aceternity.com/registry/container-text-flip.json`}
                     Shadcn Components ({commandPreview.preview.shadcnComponents.length})
                   </div>
                   <div className="space-y-1">
-                    {commandPreview.preview.shadcnComponents.map((comp: { name: string; type: string }, idx: number) => (
+                    {commandPreview.preview.shadcnComponents.map((comp, idx: number) => (
                       <div key={idx} className="flex items-center justify-between text-sm py-1">
                         <span className="font-mono truncate">{comp.name}</span>
                         <Badge variant="default" className="text-xs">
