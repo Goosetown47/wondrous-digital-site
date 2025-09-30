@@ -357,7 +357,6 @@ export default function DependenciesPage() {
     setCommandInput('');
     setCommandPreview(null);
     setExecutionResults([]);
-    setCurrentCommandIndex(0);
   };
 
   const handleOpenDialog = () => {
