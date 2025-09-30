@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Edit2, Type } from 'lucide-react';
 import { TextEditorModal } from './TextEditorModal';
+import { SmartText } from '@/components/shared/SmartText';
 
 export type TextType = 'heading' | 'paragraph' | 'button' | 'link' | 'plain' | 'rich';
 
@@ -59,7 +60,7 @@ export function EditableText({
     <>
       <div
         className={cn(
-          'relative inline-block cursor-pointer transition-all',
+          'relative cursor-pointer transition-all',
           'hover:outline hover:outline-2 hover:outline-offset-2 hover:outline-primary/50',
           className
         )}
@@ -67,8 +68,14 @@ export function EditableText({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Render children if provided, otherwise render the text */}
-        {children || <span>{value || placeholder}</span>}
+        {/* Render children if provided, otherwise render the text with SmartText for rich content */}
+        {children || (
+          richText ? (
+            <SmartText content={value || placeholder} forceRichText={true} />
+          ) : (
+            <span>{value || placeholder}</span>
+          )
+        )}
 
         {/* Hover overlay indicator */}
         {isHovered && (

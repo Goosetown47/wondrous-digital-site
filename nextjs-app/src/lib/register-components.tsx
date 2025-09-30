@@ -27,8 +27,6 @@ export function registerAllComponents() {
   // Navigation Components
   // (Will be populated as components are created)
 
-
-
   // Section Components
   // (Additional manual components can be registered here)
 

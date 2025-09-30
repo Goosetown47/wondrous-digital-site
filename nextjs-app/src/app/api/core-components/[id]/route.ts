@@ -4,8 +4,10 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getBuildSafeCookieStore } from '@/lib/cookies/build-safe';
 import { env } from '@/env.mjs';
 import { isAdminServer, isStaffServer } from '@/lib/permissions/server-checks';
-import { deleteComponentCompletely } from '@/lib/services/component-delete-service';
 import { getDetailedComponentUsage } from '@/lib/services/component-usage-service';
+import { LocalComponentWriter } from '@/lib/local-files/component-writer';
+import fs from 'fs/promises';
+import path from 'path';
 
 export async function GET(
   request: NextRequest,
@@ -282,7 +284,7 @@ export async function DELETE(
       }, { status: 409 }); // 409 Conflict
     }
 
-    // Delete the core component using service role
+    // Delete the core component from database using service role
     const { error: deleteError } = await serviceClient
       .from('core_components')
       .delete()
@@ -298,11 +300,49 @@ export async function DELETE(
 
     console.log('✅ [API/CoreComponents/Id] Component deleted from database:', id);
 
-    // Comprehensive deletion from codebase (files, registry, mappings)
-    // codeName was already defined above when checking usage
-    const deleteResults = await deleteComponentCompletely(codeName);
+    // Delete the component file from local filesystem
+    const deleteResults = {
+      database: true,
+      file: false,
+      registry: false,
+      errors: [] as string[]
+    };
 
-    console.log('🗑️ [API/CoreComponents/Id] Comprehensive deletion results:', {
+    try {
+      const fileName = codeName.toLowerCase() + '.tsx';
+      const filePath = path.join(process.cwd(), 'src/components/core/sections', fileName);
+
+      try {
+        await fs.access(filePath);
+        await fs.unlink(filePath);
+        deleteResults.file = true;
+        console.log(`✅ Deleted component file: ${filePath}`);
+      } catch {
+        console.log(`⚠️ Component file not found: ${filePath}`);
+        deleteResults.errors.push(`File not found: ${fileName}`);
+      }
+
+      // Regenerate registry with remaining components
+      console.log('📝 Regenerating registry...');
+      const { data: remainingComponents } = await serviceClient
+        .from('core_components')
+        .select('*')
+        .order('code_name');
+
+      if (remainingComponents) {
+        const writer = new LocalComponentWriter();
+        await writer.updateRegistryFile(remainingComponents);
+        deleteResults.registry = true;
+        console.log('✅ Registry regenerated successfully');
+      } else {
+        deleteResults.errors.push('Failed to fetch remaining components for registry update');
+      }
+    } catch (fsError) {
+      console.error('❌ Error during file/registry operations:', fsError);
+      deleteResults.errors.push(fsError instanceof Error ? fsError.message : String(fsError));
+    }
+
+    console.log('🗑️ [API/CoreComponents/Id] Deletion results:', {
       componentName: codeName,
       source: componentInfo.source,
       results: deleteResults
@@ -323,14 +363,21 @@ export async function DELETE(
           component_type: componentInfo.type,
           source: componentInfo.source,
           deleted_via_api: true,
-          comprehensive_deletion: deleteResults,
+          file_deleted: deleteResults.file,
+          registry_updated: deleteResults.registry,
           deletion_errors: deleteResults.errors
         }
       });
 
     return NextResponse.json({
       success: true,
-      deletionResults: deleteResults
+      message: `Section "${componentInfo.name}" deleted successfully`,
+      deletionResults: {
+        database: deleteResults.database,
+        file: deleteResults.file,
+        registry: deleteResults.registry,
+        errors: deleteResults.errors
+      }
     });
   } catch (error) {
     console.error('❌ [API/CoreComponents/Id] Unexpected error:', error);

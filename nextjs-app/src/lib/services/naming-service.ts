@@ -476,24 +476,37 @@ export function extractExistingNumbers(
  * - "Epic Hero" -> "Hero12" (if Hero1-11 exist)
  * - "Dark Footer" -> "Footer1" (if no footers exist)
  * - "Awesome Bento Box" -> "Bentobox1" (using types table)
+ *
+ * @param displayName - The display name of the component
+ * @param supabase - Supabase client for database queries
+ * @param explicitTypeName - Optional: The exact type name from the types table (if user selected a type)
  */
 export async function getCodeNameWithAutoNumber(
   displayName: string,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  explicitTypeName?: string
 ): Promise<string> {
-  // First, query the types table to get all available component types
-  const { data: types, error: typesError } = await supabase
-    .from('types')
-    .select('name, display_name')
-    .eq('category', 'section'); // Focus on section types for components
+  let baseType: string;
 
-  if (typesError) {
-    console.error('Failed to query types table:', typesError);
-    // Continue with fallback behavior
+  // If explicit type name is provided (from type_id selection), use it directly
+  if (explicitTypeName) {
+    baseType = formatTypeName(explicitTypeName);
+  } else {
+    // Otherwise, fall back to keyword matching in display name
+    // First, query the types table to get all available component types
+    const { data: types, error: typesError } = await supabase
+      .from('types')
+      .select('name, display_name')
+      .eq('category', 'section'); // Focus on section types for components
+
+    if (typesError) {
+      console.error('Failed to query types table:', typesError);
+      // Continue with fallback behavior
+    }
+
+    // Extract the base component type using database types
+    baseType = extractComponentType(displayName, types || undefined);
   }
-
-  // Extract the base component type using database types
-  const baseType = extractComponentType(displayName, types || undefined);
 
   // Query existing components of this type
   // We need to check for variations: Hero, hero, HERO

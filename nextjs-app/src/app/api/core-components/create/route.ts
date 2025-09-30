@@ -5,13 +5,17 @@ import { getBuildSafeCookieStore } from '@/lib/cookies/build-safe';
 import { env } from '@/env.mjs';
 import { isAdminServer, isStaffServer } from '@/lib/permissions/server-checks';
 import { getCodeNameWithAutoNumber } from '@/lib/services/naming-service';
-import { GitHubComponentService } from '@/lib/github/component-files';
+import { LocalComponentWriter } from '@/lib/local-files/component-writer';
+import { analyzeJSXContent } from '@/lib/local-files/jsx-content-analyzer';
 import type { CoreComponent } from '@/types/builder';
+
+import type { CoreComponentSource } from '@/types/builder';
 
 interface ComponentCreationRequest {
   name: string;
   type: string;
-  source: string;
+  type_id?: string;
+  source: CoreComponentSource;
   code: string;
   dependencies?: string[];
   imports?: string[];
@@ -28,7 +32,8 @@ export async function POST(request: NextRequest) {
   const steps: ProgressUpdate[] = [
     { step: 'generating_name', status: 'pending' },
     { step: 'saving_to_database', status: 'pending' },
-    { step: 'creating_github_files', status: 'pending' },
+    { step: 'detecting_fields', status: 'pending' },
+    { step: 'creating_files', status: 'pending' },
     { step: 'updating_registry', status: 'pending' },
     { step: 'finalizing', status: 'pending' }
   ];
@@ -80,7 +85,23 @@ export async function POST(request: NextRequest) {
 
     // Step 1: Generate auto-numbered code name
     steps[0].status = 'in_progress';
-    const codeName = await getCodeNameWithAutoNumber(body.name, supabase);
+
+    // If type_id is provided, get the type name from database
+    let typeName: string | undefined;
+    if (body.type_id) {
+      const { data: typeData } = await supabase
+        .from('types')
+        .select('name')
+        .eq('id', body.type_id)
+        .single();
+
+      if (typeData) {
+        typeName = typeData.name;
+      }
+    }
+
+    // Generate code name, passing the explicit type name if available
+    const codeName = await getCodeNameWithAutoNumber(body.name, supabase, typeName);
     steps[0].status = 'completed';
     steps[0].message = `Generated code name: ${codeName}`;
 
@@ -90,7 +111,8 @@ export async function POST(request: NextRequest) {
       name: body.name,
       code_name: codeName,
       type: body.type as 'section' | 'component',
-      source: body.source as 'shadcn' | 'aceternity' | 'expansions' | 'custom',
+      type_id: body.type_id || undefined,
+      source: body.source,
       code: body.code,
       dependencies: body.dependencies || [],
       imports: body.imports || [],
@@ -124,28 +146,101 @@ export async function POST(request: NextRequest) {
     steps[1].status = 'completed';
     steps[1].message = 'Saved to database successfully';
 
-    // Step 3: Create GitHub files (if enabled)
-    const githubEnabled = env.GITHUB_TOKEN && env.GITHUB_ENABLED !== 'false';
+    // Step 2.5: Detect editable fields from JSX
+    steps[2].status = 'in_progress';
+    let transformedCode = savedComponent.code;
 
-    console.log('🔍 GitHub Integration Check:', {
-      hasToken: !!env.GITHUB_TOKEN,
-      tokenStart: env.GITHUB_TOKEN?.substring(0, 10) + '...',
-      owner: env.GITHUB_OWNER,
-      repo: env.GITHUB_REPO,
-      branch: env.GITHUB_DEFAULT_BRANCH,
-      enabled: env.GITHUB_ENABLED !== 'false'
-    });
+    try {
+      console.log('🔍 Analyzing JSX content for editable fields...');
+      const analysis = analyzeJSXContent(savedComponent.code);
+      console.log('✅ Field detection complete:', {
+        fieldsDetected: analysis.editableFields.length,
+        contentKeys: Object.keys(analysis.defaultContent).length
+      });
 
-    if (githubEnabled) {
-      steps[2].status = 'in_progress';
-      try {
-        console.log('📁 Initializing GitHub Component Service...');
-        const github = new GitHubComponentService();
+      // Step 2.6: Transform source code to inject EditableText/EditableImage wrappers
+      if (analysis.editableFields.length > 0) {
+        console.log('🔄 Transforming component code to inject editing wrappers...');
+        const { transformComponentCode } = await import('@/lib/local-files/jsx-code-transformer');
+        const transformResult = transformComponentCode(savedComponent.code, analysis.editableFields);
 
-        // Create component file
-        console.log('📝 Creating component file for:', savedComponent.code_name);
-        const fileResult = await github.createComponentFile(savedComponent);
-        console.log('✅ Component file created:', fileResult);
+        if (transformResult.success) {
+          transformedCode = transformResult.transformedCode;
+          console.log('✅ Code transformation successful');
+        } else {
+          console.warn('⚠️  Code transformation had errors:', transformResult.errors);
+          // Continue with untransformed code
+        }
+      }
+
+      // Update component with detected fields and transformed code
+      const { error: updateError } = await supabase
+        .from('core_components')
+        .update({
+          code: transformedCode, // Save transformed code
+          editable_fields: analysis.editableFields,
+          default_content: analysis.defaultContent,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', savedComponent.id);
+
+      if (updateError) {
+        console.warn('⚠️  Failed to save detected fields:', updateError);
+        steps[2].status = 'completed';
+        steps[2].message = 'Field detection skipped (will use empty config)';
+      } else {
+        // Update local component object for file generation
+        savedComponent.code = transformedCode; // Use transformed code
+        savedComponent.editable_fields = analysis.editableFields;
+        savedComponent.default_content = analysis.defaultContent;
+
+        steps[2].status = 'completed';
+        steps[2].message = `Detected ${analysis.editableFields.length} editable fields and transformed code`;
+      }
+    } catch (analysisError) {
+      console.warn('⚠️  Field detection failed:', analysisError);
+      steps[2].status = 'completed';
+      steps[2].message = 'Field detection failed (will use empty config)';
+      // Don't throw - component can still be created without editable fields
+    }
+
+    // Step 3: Create local component files
+    steps[3].status = 'in_progress';
+    try {
+      console.log('📁 Initializing Local Component Writer...');
+      const writer = new LocalComponentWriter();
+
+      // Create component file
+      console.log('📝 Creating component file for:', savedComponent.code_name);
+      const fileResult = await writer.createComponentFile(savedComponent);
+      console.log('✅ Component file created:', fileResult);
+
+      // Update deployment status
+      await supabase
+        .from('core_components')
+        .update({
+          'deployment_status': {
+            ...savedComponent.deployment_status,
+            files_created: true
+          },
+          'pipeline_status': 'files_created'
+        })
+        .eq('id', savedComponent.id);
+
+      steps[3].status = 'completed';
+      steps[3].message = `Created file: ${fileResult.path}`;
+
+      // Step 4: Update registry
+      steps[4].status = 'in_progress';
+
+      // Get all components for registry update
+      const { data: allComponents } = await supabase
+        .from('core_components')
+        .select('*')
+        .order('code_name');
+
+      if (allComponents) {
+        await writer.updateRegistryFile(allComponents);
 
         // Update deployment status
         await supabase
@@ -153,58 +248,25 @@ export async function POST(request: NextRequest) {
           .update({
             'deployment_status': {
               ...savedComponent.deployment_status,
-              files_created: true
+              files_created: true,
+              registry_updated: true
             },
-            'pipeline_status': 'files_created'
+            'pipeline_status': 'registry_updated'
           })
           .eq('id', savedComponent.id);
 
-        steps[2].status = 'completed';
-        steps[2].message = `Created file: ${fileResult.path}`;
-
-        // Step 4: Update registry
-        steps[3].status = 'in_progress';
-
-        // Get all components for registry update
-        const { data: allComponents } = await supabase
-          .from('core_components')
-          .select('*')
-          .order('code_name');
-
-        if (allComponents) {
-          await github.updateRegistryFile(allComponents);
-
-          // Update deployment status
-          await supabase
-            .from('core_components')
-            .update({
-              'deployment_status': {
-                ...savedComponent.deployment_status,
-                files_created: true,
-                registry_updated: true
-              },
-              'pipeline_status': 'registry_updated'
-            })
-            .eq('id', savedComponent.id);
-
-          steps[3].status = 'completed';
-          steps[3].message = 'Registry updated successfully';
-        }
-      } catch (githubError) {
-        console.error('❌ GitHub operation failed:', githubError);
-        console.error('Error details:', {
-          message: githubError instanceof Error ? githubError.message : 'Unknown error',
-          stack: githubError instanceof Error ? githubError.stack : undefined
-        });
-        steps[2].status = 'error';
-        steps[2].message = githubError instanceof Error ? githubError.message : 'GitHub file creation failed';
-        steps[3].status = 'error';
+        steps[4].status = 'completed';
+        steps[4].message = registryResult.message || 'Registry updated successfully';
       }
-    } else {
-      steps[2].status = 'completed';
-      steps[2].message = 'GitHub integration disabled';
-      steps[3].status = 'completed';
-      steps[3].message = 'Registry update skipped';
+    } catch (fileError) {
+      console.error('❌ File operation failed:', fileError);
+      console.error('Error details:', {
+        message: fileError instanceof Error ? fileError.message : 'Unknown error',
+        stack: fileError instanceof Error ? fileError.stack : undefined
+      });
+      steps[3].status = 'error';
+      steps[3].message = fileError instanceof Error ? fileError.message : 'File creation failed';
+      steps[4].status = 'error';
     }
 
     // Step 5: Finalize
@@ -212,14 +274,14 @@ export async function POST(request: NextRequest) {
     const allCompleted = steps.every(step => step.status === 'completed');
 
     if (allCompleted) {
-      steps[4].status = 'completed';
-      steps[4].message = 'Component creation completed successfully';
+      steps[5].status = 'completed';
+      steps[5].message = 'Component creation completed successfully';
     } else if (hasErrors) {
-      steps[4].status = 'completed';
-      steps[4].message = 'Component saved to database (with some failures)';
+      steps[5].status = 'completed';
+      steps[5].message = 'Component saved to database (with some failures)';
     } else {
-      steps[4].status = 'completed';
-      steps[4].message = 'Component creation completed';
+      steps[5].status = 'completed';
+      steps[5].message = 'Component creation completed';
     }
 
     // Determine overall success (component was saved, even if GitHub failed)

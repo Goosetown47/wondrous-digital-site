@@ -1,8 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback, ReactElement } from 'react';
-import type { EditableFieldConfig } from '@/lib/component-registry';
-import { useEditableContent } from '@/lib/with-editable-content-utils';
+import React, { useMemo, useCallback, ReactElement } from 'react';
 import { useComponentConfig } from '@/hooks/useComponentConfig';
 import { setValueAtPath } from '@/lib/editable-field-detector';
 
@@ -17,13 +15,15 @@ interface EditableSectionWrapperProps {
   onContentUpdate: (updates: Record<string, unknown>) => void;
   /** The component to render */
   children: ReactElement;
-  /** Use interceptor mode for automatic field detection (experimental) */
-  useInterceptor?: boolean;
 }
 
 /**
- * Smart wrapper that automatically enables editing for registered components
- * based on their editable field configurations
+ * Smart wrapper that passes editing handlers to components with EditableText/EditableImage.
+ *
+ * This wrapper creates `on{Field}Change` handler props for each editable field
+ * and passes them to the component along with `editable: true`.
+ *
+ * The component must already have EditableText/EditableImage wrappers in its source code.
  */
 export function EditableSectionWrapper({
   componentName,
@@ -31,11 +31,14 @@ export function EditableSectionWrapper({
   editable,
   onContentUpdate,
   children,
-  useInterceptor = false,
 }: EditableSectionWrapperProps) {
-  const [localContent, setLocalContent] = useState(content);
+  console.log('🎬 [EditableSectionWrapper] Component mounted/updated:', {
+    componentName,
+    hasOnContentUpdate: !!onContentUpdate,
+    onContentUpdateType: typeof onContentUpdate,
+  });
 
-  // Get component configuration from registry AND database
+  // Get component configuration from registry/database
   const componentConfig = useComponentConfig(componentName);
 
   // Get editable fields configuration
@@ -43,31 +46,42 @@ export function EditableSectionWrapper({
     return componentConfig?.editableFields || [];
   }, [componentConfig]);
 
-  // Sync local content with props
-  useEffect(() => {
-    setLocalContent(content);
-  }, [content]);
-
-  // Create update handler factory
-  const createUpdateHandler = useCallback(
+  // Create update handler for a specific field
+  const createFieldHandler = useCallback(
     (fieldPath: string) => {
       return (value: unknown) => {
-        const updatedContent = setValueAtPath({ ...localContent }, fieldPath, value);
-        setLocalContent(updatedContent);
-        onContentUpdate(updatedContent);
+        console.log('🔄 [EditableSectionWrapper] Field handler called:', {
+          fieldPath,
+          newValue: value,
+          currentContent: content,
+          hasOnContentUpdate: !!onContentUpdate,
+        });
+
+        const updatedContent = setValueAtPath({ ...content }, fieldPath, value);
+
+        // Filter out functions - only pass actual content, not handlers
+        const cleanContent = Object.entries(updatedContent).reduce((acc, [key, val]) => {
+          if (typeof val !== 'function') {
+            acc[key] = val;
+          }
+          return acc;
+        }, {} as Record<string, unknown>);
+
+        console.log('💾 [EditableSectionWrapper] About to call onContentUpdate:', {
+          cleanContent,
+          onContentUpdateExists: !!onContentUpdate,
+          onContentUpdateType: typeof onContentUpdate,
+        });
+
+        try {
+          onContentUpdate(cleanContent);
+          console.log('✅ [EditableSectionWrapper] onContentUpdate called successfully');
+        } catch (error) {
+          console.error('❌ [EditableSectionWrapper] onContentUpdate threw error:', error);
+        }
       };
     },
-    [localContent, onContentUpdate]
-  );
-
-  // If using interceptor mode, use the HOC approach
-  const interceptedContent = useEditableContent(
-    componentName,
-    localContent,
-    {
-      editable: editable && useInterceptor,
-      onContentUpdate
-    }
+    [content, onContentUpdate]
   );
 
   // If not editable or no field configs, render as-is
@@ -75,73 +89,43 @@ export function EditableSectionWrapper({
     return React.cloneElement(children, content);
   }
 
-  // If using interceptor mode, return the component with intercepted props
-  if (useInterceptor) {
-    return (
-      <div className="editable-section-wrapper relative">
-        {React.cloneElement(children, interceptedContent)}
-      </div>
-    );
-  }
+  // Build handler props object
+  // For field "heading", create "onHeadingChange" handler
+  // For nested field "button.text", create "onButtonTextChange" handler
+  const handlers: Record<string, (value: unknown) => void> = {};
 
-  // Process the component to inject editable wrappers
-  const enhanceComponent = (
-    element: ReactElement,
-    fields: EditableFieldConfig[]
-  ): ReactElement => {
-    // Clone the element with enhanced props
-    const enhancedProps: Record<string, unknown> = { ...(element.props || {}) };
+  editableFields.forEach(field => {
+    const fieldPath = field.path;
 
-    // For each editable field, create appropriate handlers
-    fields.forEach(field => {
-      const updateHandler = createUpdateHandler(field.path);
+    // Convert path to camelCase handler name
+    // "heading" -> "onHeadingChange"
+    // "button.text" -> "onButtonTextChange"
+    const handlerName = 'on' + fieldPath
+      .split('.')
+      .map((part) => {
+        // Capitalize first letter of each part
+        return part.charAt(0).toUpperCase() + part.slice(1);
+      })
+      .join('') + 'Change';
 
-      // Add handler props based on field type
-      switch (field.type) {
-        case 'text':
-        case 'richText': {
-          // For text fields, add onChange handlers
-          const pathParts = field.path.split('.');
-          const propName = pathParts[pathParts.length - 1];
-          enhancedProps[`on${propName.charAt(0).toUpperCase() + propName.slice(1)}Change`] = updateHandler;
-          break;
-        }
+    handlers[handlerName] = createFieldHandler(fieldPath);
+  });
 
-        case 'image': {
-          // For image fields, add onImageChange handlers
-          if (field.path.includes('.')) {
-            const basePath = field.path.split('.')[0];
-            enhancedProps[`on${basePath.charAt(0).toUpperCase() + basePath.slice(1)}Change`] = updateHandler;
-          } else {
-            enhancedProps[`on${field.path.charAt(0).toUpperCase() + field.path.slice(1)}Change`] = updateHandler;
-          }
-          break;
-        }
+  console.log('🎯 [EditableSectionWrapper] Created handlers:', {
+    handlerNames: Object.keys(handlers),
+    contentKeys: Object.keys(content),
+  });
 
-        case 'button': {
-          // For button fields, typically handle text changes
-          enhancedProps[`on${field.path.charAt(0).toUpperCase() + field.path.slice(1)}Change`] = updateHandler;
-          break;
-        }
-      }
-    });
-
-    // Mark component as editable
-    enhancedProps.editable = true;
-
-    // Pass through the current content
-    enhancedProps.content = localContent;
-
-    // Clone with enhanced props
-    return React.cloneElement(element, enhancedProps);
+  // Pass content + handlers + editable flag to component
+  const propsWithHandlers = {
+    ...content,
+    ...handlers,
+    editable: true,
   };
 
-  // Render the enhanced component
-  const enhancedChild = enhanceComponent(children, editableFields);
+  console.log('📦 [EditableSectionWrapper] Passing props to component:', {
+    propKeys: Object.keys(propsWithHandlers),
+  });
 
-  return (
-    <div className="editable-section-wrapper relative">
-      {enhancedChild}
-    </div>
-  );
+  return React.cloneElement(children, propsWithHandlers);
 }

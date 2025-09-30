@@ -13,12 +13,35 @@ export interface Type {
   updated_at: string;
 }
 
+// Core component source types - includes both generic categories and specific URLs
+export type CoreComponentSource =
+  // Generic categories (legacy)
+  | 'shadcn'
+  | 'aceternity'
+  | 'expansions'
+  | 'custom'
+  // Specific shadcn sources
+  | 'ui.shadcn.com'
+  | 'shadcnblocks.com'
+  // Specific aceternity sources
+  | 'ui.aceternity.com'
+  | 'pro.aceternity.com'
+  // Expansion sources
+  | 'shadcnui-expansions.typeart.cc'
+  | 'reactbits.dev'
+  | 'tweakcn.com'
+  // Other UI libraries
+  | 'skiper-ui.com'
+  | '21st.dev'
+  | 'ai-sdk.dev'
+  | 'motion-primitives.com';
+
 // Core component types
 export interface CoreComponent {
   id: string;
   name: string;
   type: 'component' | 'section';
-  source: 'shadcn' | 'aceternity' | 'expansions' | 'custom';
+  source: CoreComponentSource;
   code: string;
   dependencies: string[];
   imports: string[];

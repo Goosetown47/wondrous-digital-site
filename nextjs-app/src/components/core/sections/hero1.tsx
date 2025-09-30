@@ -1,88 +1,94 @@
-// Auto-generated component: Wondrous Hero
-// Generated at: 2025-09-28T17:18:16.556Z
-// Do not edit directly - edit in Core UI instead
+// Component: Stacked Hero
+// Created: 2025-09-30T22:10:47.291Z
+// Edit in Core UI: /core
 
 'use client';
 
-import { EditableSectionWrapper } from '@/components/shared/content-editor';
 import type { EditableFieldConfig } from '@/lib/component-registry';
 
 // Original component code
-import { ChevronRight } from "lucide-react";
+import { EditableText } from '@/components/shared/content-editor';
+
+import { Wifi, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-const Hero6 = () => {
+interface Hero115Props {
+  icon?: React.ReactNode;
+  heading: string;
+  description: string;
+  button: {
+    text: string;
+    icon?: React.ReactNode;
+    url: string;
+  };
+  trustText?: string;
+  imageSrc?: string;
+  imageAlt?: string;
+  onHeadingChange?: (value: unknown) => void;
+  onDescriptionChange?: (value: unknown) => void;
+  onTextChange?: (value: unknown) => void;
+  editable?: boolean;
+}
+
+const Hero115 = ({
+
+  icon = <Wifi className="size-6" />,
+  heading = "Blocks built with Shadcn & Tailwind",
+  description = "Finely crafted components built with React, Tailwind and Shadcn UI. Developers can copy and paste these blocks directly into their project.",
+  button = {
+    text: "Discover Features",
+    icon: <Zap className="ml-2 size-4" />,
+    url: "https://www.shadcnblocks.com",
+  },
+  trustText = "Trusted by 25.000+ Businesses Worldwide",
+  imageSrc = "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-1.svg",
+  imageAlt = "placeholder",
+
+  onHeadingChange,
+  onDescriptionChange,
+  onTextChange,
+  editable = false
+}: Hero115Props) => {
   return (
-    <section className="py-32">
+    <section className="overflow-hidden py-32">
       <div className="container">
-        <div className="mx-auto flex max-w-5xl flex-col items-center">
-          <div className="z-10 flex flex-col items-center gap-8 text-center">
-            <div className="max-w-3xl">
-              <h1 className="mb-4 text-pretty text-4xl font-semibold lg:text-6xl">
-                Build your next project with Blocks
-              </h1>
-              <p className="text-muted-foreground lg:text-xl">
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Elig
-                doloremque mollitia fugiat omnis! Porro facilis quo animi
-                consequatur. Explicabo.
-              </p>
+        <div className="flex flex-col gap-5">
+          <div className="relative flex flex-col gap-5">
+            <div
+              style={{
+                transform: "translate(-50%, -50%)",
+              }}
+              className="absolute top-1/2 left-1/2 -z-10 mx-auto size-[800px] rounded-full border [mask-image:linear-gradient(to_top,transparent,transparent,white,white,white,transparent,transparent)] p-16 md:size-[1300px] md:p-32"
+            >
+              <div className="size-full rounded-full border p-16 md:p-32">
+                <div className="size-full rounded-full border"></div>
+              </div>
             </div>
-            <div className="flex w-full flex-col justify-center gap-2 sm:flex-row">
-              <Button>
-                Get started now
-                <ChevronRight className="h-4" />
+            <span className="mx-auto flex size-16 items-center justify-center rounded-full border md:size-20">
+              {icon}
+            </span>
+            <EditableText value={heading} onUpdate={onHeadingChange} editable={editable} type="heading"><h2 className="mx-auto max-w-5xl text-center text-3xl font-medium text-balance md:text-6xl">
+              {heading}
+            </h2></EditableText>
+            <EditableText value={description} onUpdate={onDescriptionChange} editable={editable} type="paragraph" richText={true}><p className="mx-auto max-w-3xl text-center text-muted-foreground md:text-lg">
+              {description}
+            </p></EditableText>
+            <div className="flex flex-col items-center justify-center gap-3 pt-3 pb-12">
+              <Button size="lg" asChild>
+                <EditableText value={button.url} onUpdate={onTextChange} editable={editable} type="heading"><a href={button.url}>
+                  {button.text} {button.icon}
+                </a></EditableText>
               </Button>
-              <Button variant="ghost">
-                Learn more
-                <ChevronRight className="h-4" />
-              </Button>
+              {trustText && (
+                <div className="text-xs text-muted-foreground">{trustText}</div>
+              )}
             </div>
           </div>
-        </div>
-        <div className="bg-border mx-auto mt-20 grid max-w-7xl gap-px p-px md:grid-cols-5">
           <img
-            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-1.svg"
-            alt="placeholder"
-            className="h-full max-h-[500px] w-full object-cover md:col-span-3 dark:invert"
-          />
-          <div className="relative md:col-span-2">
-            <img
-              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-2.svg"
-              alt="placeholder"
-              className="h-full max-h-[500px] w-full object-cover dark:invert"
-            />
-            <Button variant="outline" className="absolute bottom-5 right-5">
-              Learn more
-              <ChevronRight className="h-4" />
-            </Button>
-          </div>
-        </div>
-        <div className="mx-auto mt-12 grid max-w-7xl grid-cols-2 place-items-center gap-6 md:grid-cols-4">
-          <img
-            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcn-ui-wordmark.svg"
-            alt="logo"
-            className="h-5 sm:h-7 dark:invert"
-          />
-          <img
-            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/nextjs-wordmark.svg"
-            alt="logo"
-            className="h-9 sm:h-11 dark:invert"
-          />
-          <img
-            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/tailwind-wordmark-light.svg"
-            alt="logo"
-            className="h-4 sm:h-6 dark:hidden"
-          />
-          <img
-            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/tailwind-wordmark-dark.svg"
-            alt="logo"
-            className="hidden h-4 sm:h-6 dark:block"
-          />
-          <img
-            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/vercel-wordmark.svg"
-            alt="logo"
-            className="h-6 sm:h-7 dark:invert"
+            src={imageSrc}
+            alt={imageAlt}
+            className="mx-auto h-full max-h-[524px] w-full max-w-5xl rounded-2xl object-cover"
           />
         </div>
       </div>
@@ -90,40 +96,63 @@ const Hero6 = () => {
   );
 };
 
-export { Hero6 };
+export { Hero115 };
 
 
 // Base component (renamed for wrapping)
-const Hero1Base = Hero6;
+const Hero1Base = Hero115;
 
-// Editable wrapper for LAB/BUILDER
+// Export for use in LAB/BUILDER
+// LabCanvas will wrap this with EditableSectionWrapper based on editableFields config
 export function Hero1(props: Record<string, unknown>) {
-  const { editable = false, onContentUpdate, ...content } = props as {
-    editable?: boolean;
-    onContentUpdate?: (updates: Record<string, unknown>) => void;
-    [key: string]: unknown;
-  };
-
-  // Production mode - return static component
-  if (!editable) {
-    return <Hero1Base {...content} />;
-  }
-
-  // Edit mode - wrap with editing capabilities
-  return (
-    <EditableSectionWrapper
-      componentName="Hero1"
-      content={content}
-      editable={true}
-      onContentUpdate={onContentUpdate || (() => {})}
-    >
-      <Hero1Base {...content} />
-    </EditableSectionWrapper>
-  );
+  return <Hero1Base {...props} />;
 }
 
 // Export configuration for registry
 export const hero1Config = {
-  editableFields: [] as EditableFieldConfig[],
+  editableFields: [
+  {
+    "path": "icon",
+    "type": "text",
+    "label": "Icon",
+    "required": false
+  },
+  {
+    "path": "heading",
+    "type": "text",
+    "label": "Heading",
+    "required": true
+  },
+  {
+    "path": "description",
+    "type": "richText",
+    "label": "Description",
+    "required": true
+  },
+  {
+    "path": "button",
+    "type": "text",
+    "label": "Button",
+    "required": true
+  },
+  {
+    "path": "text",
+    "type": "text",
+    "label": "Text",
+    "required": true
+  },
+  {
+    "path": "icon",
+    "type": "text",
+    "label": "Icon",
+    "required": false
+  },
+  {
+    "path": "url",
+    "type": "image",
+    "label": "Url",
+    "required": true
+  }
+] as EditableFieldConfig[],
   defaultContent: {}
 };

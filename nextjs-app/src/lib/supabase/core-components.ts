@@ -1,9 +1,9 @@
-import type { CoreComponent } from '@/types/builder';
+import type { CoreComponent, CoreComponentSource } from '@/types/builder';
 
 export interface CreateComponentInput {
   name: string;
   type: 'component' | 'section';
-  source: 'shadcn' | 'aceternity' | 'expansions' | 'custom';
+  source: CoreComponentSource;
   code: string;
   dependencies?: string[];
   imports?: string[];
@@ -17,7 +17,7 @@ export interface UpdateComponentInput extends Partial<CreateComponentInput> {
 
 export interface ComponentFilters {
   type?: 'component' | 'section';
-  source?: 'shadcn' | 'aceternity' | 'expansions' | 'custom';
+  source?: CoreComponentSource;
   search?: string;
 }
 

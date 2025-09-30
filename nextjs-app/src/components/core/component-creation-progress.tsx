@@ -29,7 +29,7 @@ interface ComponentCreationProgressProps {
 const stepLabels: Record<string, string> = {
   generating_name: 'Generating Component Name',
   saving_to_database: 'Saving to Database',
-  creating_github_files: 'Creating GitHub Files',
+  creating_files: 'Creating Component Files',
   updating_registry: 'Updating Component Registry',
   finalizing: 'Finalizing'
 };
