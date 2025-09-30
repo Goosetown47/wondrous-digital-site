@@ -4,9 +4,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,7 +34,6 @@ import {
 import { toast } from '@/hooks/use-toast';
 import {
   Loader2,
-  Download,
   XCircle,
   FileCode2,
   Package2,
@@ -89,14 +86,33 @@ interface DependenciesData {
   };
 }
 
+type DialogMode = 'input' | 'preview' | 'executing' | 'complete';
+
+interface ExecutionResult {
+  success: boolean;
+  originalCommand: string;
+  commandType: string;
+  output: string;
+  errors: string[];
+  warnings: string[];
+  packagesInstalled?: string[];
+  alreadyInstalled?: string[];
+  filesCreated?: string[];
+  dependenciesInstalled?: string[];
+  component?: string;
+  duration?: number;
+}
+
 export default function DependenciesPage() {
-  // Import-related state
-  const [importUrl, setImportUrl] = useState('');
-  const [autoFix, setAutoFix] = useState(true);
-  const [installDeps, setInstallDeps] = useState(true);
-  const [batchMode, setBatchMode] = useState(false);
-  const [batchUrls, setBatchUrls] = useState('');
-  const [showImportForm, setShowImportForm] = useState(false);
+  // Universal Command Input state
+  const [showCommandInput, setShowCommandInput] = useState(false);
+  const [commandInput, setCommandInput] = useState('');
+  const [commandPreview, setCommandPreview] = useState<ParsedCommand[] | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
+  // Execution progress state
+  const [dialogMode, setDialogMode] = useState<DialogMode>('input');
+  const [executionResults, setExecutionResults] = useState<ExecutionResult[]>([]);
 
   // Filtering and sorting state
   const [searchQuery, setSearchQuery] = useState('');
@@ -164,37 +180,46 @@ export default function DependenciesPage() {
     }
   });
 
-  // Import component mutation
-  const importMutation = useMutation({
-    mutationFn: async (url: string) => {
-      const response = await fetch('/api/admin/components/import', {
+  // Command execution mutation - now updates UI in real-time
+  const executeCommandMutation = useMutation({
+    mutationFn: async (commands: string) => {
+      // Reset state for new execution
+      setExecutionResults([]);
+      setDialogMode('executing');
+
+      const response = await fetch('/api/admin/commands/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, autoFix, installDeps })
+        body: JSON.stringify({ commands })
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to import component');
+        throw new Error(error.error || 'Failed to execute commands');
       }
 
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: 'Component imported successfully',
-        description: `${data.component.name} has been added to your project`
-      });
-      setImportUrl('');
-      setBatchUrls('');
+      // Store results and switch to complete mode
+      setExecutionResults(data.results);
+      setDialogMode('complete');
+
+      // Refresh dependencies table
       queryClient.invalidateQueries({ queryKey: ['dependencies'] });
+
+      // Don't close dialog or show toast - results are in modal
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Import failed',
-        description: error.message,
-        variant: 'destructive'
-      });
+      setDialogMode('complete');
+      setExecutionResults([{
+        success: false,
+        originalCommand: 'Execution failed',
+        commandType: 'error',
+        output: '',
+        errors: [error.message],
+        warnings: [],
+      }]);
     }
   });
 
@@ -221,17 +246,17 @@ export default function DependenciesPage() {
     });
 
     // Add npm dependencies as separate items
-    const allDependencies = new Set<string>();
+    // Track which dependencies are used by components
     const dependencyUsage = new Map<string, number>();
 
     data.components.forEach(component => {
       component.dependencies.forEach(dep => {
-        allDependencies.add(dep);
         dependencyUsage.set(dep, (dependencyUsage.get(dep) || 0) + 1);
       });
     });
 
-    Array.from(allDependencies).forEach(dep => {
+    // Show ALL installed dependencies from package.json
+    data.installedDependencies.forEach(dep => {
       items.push({
         id: `dep-${dep}`,
         name: dep,
@@ -290,34 +315,53 @@ export default function DependenciesPage() {
     return filtered;
   }, [processedItems, searchQuery, typeFilter, sourceFilter, sortField, sortDirection]);
 
-  const handleImport = () => {
-    if (batchMode) {
-      const urls = batchUrls.split('\n').filter(url => url.trim());
-      urls.forEach(url => {
-        if (validateUrl(url.trim())) {
-          importMutation.mutate(url.trim());
-        }
+  const handlePreviewCommands = async () => {
+    if (!commandInput.trim()) return;
+
+    setIsPreviewLoading(true);
+    try {
+      const response = await fetch('/api/admin/commands/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commands: commandInput })
       });
-    } else {
-      if (!validateUrl(importUrl)) {
-        toast({
-          title: 'Invalid URL',
-          description: 'Please enter a valid registry URL',
-          variant: 'destructive'
-        });
-        return;
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to preview commands');
       }
-      importMutation.mutate(importUrl);
+
+      const data = await response.json();
+      setCommandPreview(data);
+      setDialogMode('preview'); // Switch to preview mode
+    } catch (error) {
+      toast({
+        title: 'Preview failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsPreviewLoading(false);
     }
   };
 
-  const validateUrl = (url: string): boolean => {
-    try {
-      const urlObj = new URL(url);
-      return urlObj.protocol === 'https:' && url.endsWith('.json');
-    } catch {
-      return false;
-    }
+  const handleExecuteCommands = () => {
+    if (!commandInput.trim()) return;
+    executeCommandMutation.mutate(commandInput);
+  };
+
+  const handleCloseDialog = () => {
+    setShowCommandInput(false);
+    setDialogMode('input');
+    setCommandInput('');
+    setCommandPreview(null);
+    setExecutionResults([]);
+    setCurrentCommandIndex(0);
+  };
+
+  const handleOpenDialog = () => {
+    setShowCommandInput(true);
+    setDialogMode('input');
   };
 
   if (isLoading) {
@@ -366,8 +410,6 @@ export default function DependenciesPage() {
     setSelectedItem(item);
     setDetailsModalOpen(true);
   };
-
-  const urlCount = batchMode ? batchUrls.split('\n').filter(url => url.trim()).length : 0;
 
   if (isLoading) {
     return (
@@ -419,91 +461,289 @@ export default function DependenciesPage() {
               </>
             )}
           </Button>
-          <Button onClick={() => setShowImportForm(!showImportForm)}>
-            <Download className="mr-2 h-4 w-4" />
-            Import Component
+          <Button onClick={handleOpenDialog}>
+            <Package2 className="mr-2 h-4 w-4" />
+            Batch Install
           </Button>
         </div>
       </div>
 
-      {/* Import Section (Collapsible) */}
-      {showImportForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Import Component</CardTitle>
-            <CardDescription>
-              Paste a registry URL to import a new component
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Batch Mode Toggle */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="batch-mode"
-                checked={batchMode}
-                onCheckedChange={(checked) => setBatchMode(checked as boolean)}
-              />
-              <Label htmlFor="batch-mode">Batch import mode</Label>
-            </div>
+      {/* Universal Command Input Dialog */}
+      <Dialog open={showCommandInput} onOpenChange={(open) => !open && handleCloseDialog()}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {dialogMode === 'input' && 'Batch Install'}
+              {dialogMode === 'preview' && 'Preview Installation'}
+              {dialogMode === 'executing' && 'Installing...'}
+              {dialogMode === 'complete' && 'Installation Complete'}
+            </DialogTitle>
+            <DialogDescription>
+              {dialogMode === 'input' && 'Paste npm install or shadcn add commands to install multiple packages at once'}
+              {dialogMode === 'preview' && 'Review what will be installed before executing'}
+              {dialogMode === 'executing' && 'Commands are being executed sequentially...'}
+              {dialogMode === 'complete' && 'Review the installation results below'}
+            </DialogDescription>
+          </DialogHeader>
 
-            {/* Import Input */}
-            {batchMode ? (
+          {/* INPUT MODE */}
+          {dialogMode === 'input' && (
+            <div className="space-y-4">
               <Textarea
-                placeholder="Enter multiple registry URLs, one per line..."
-                value={batchUrls}
-                onChange={(e) => setBatchUrls(e.target.value)}
-                className="min-h-[100px]"
+                placeholder={`npm install framer-motion clsx
+npx shadcn add button
+npx shadcn add https://ui.aceternity.com/registry/container-text-flip.json`}
+                value={commandInput}
+                onChange={(e) => {
+                  setCommandInput(e.target.value);
+                  setCommandPreview(null);
+                }}
+                className="min-h-[200px] font-mono text-sm"
               />
-            ) : (
-              <Input
-                placeholder="Paste registry URL (e.g., https://ui.shadcn.com/registry/button.json)"
-                value={importUrl}
-                onChange={(e) => setImportUrl(e.target.value)}
-              />
-            )}
-
-            {/* Import Options */}
-            <div className="flex space-x-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="auto-fix"
-                  checked={autoFix}
-                  onCheckedChange={(checked) => setAutoFix(checked as boolean)}
-                />
-                <Label htmlFor="auto-fix">Auto-fix import paths</Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="install-deps"
-                  checked={installDeps}
-                  onCheckedChange={(checked) => setInstallDeps(checked as boolean)}
-                />
-                <Label htmlFor="install-deps">Install missing dependencies</Label>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={handleCloseDialog}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handlePreviewCommands}
+                  disabled={!commandInput.trim() || isPreviewLoading}
+                >
+                  {isPreviewLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Previewing...
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Preview
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
+          )}
 
-            {/* Import Button */}
-            <Button
-              onClick={handleImport}
-              disabled={importMutation.isPending || (batchMode ? !batchUrls.trim() : !importUrl)}
-              className="w-full"
-            >
-              {importMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Importing...
-                </>
-              ) : (
-                <>
-                  <Download className="mr-2 h-4 w-4" />
-                  {batchMode ? `Import ${urlCount} component${urlCount !== 1 ? 's' : ''}` : 'Import Component'}
-                </>
+          {/* PREVIEW MODE */}
+          {dialogMode === 'preview' && commandPreview && (
+            <div className="space-y-4">
+              {/* Read-only command display */}
+              <div className="border rounded-lg p-3 bg-muted/30">
+                <div className="text-xs font-medium mb-2 text-muted-foreground">Commands</div>
+                <pre className="text-xs font-mono whitespace-pre-wrap">{commandInput}</pre>
+              </div>
+
+              {/* Warnings */}
+              {commandPreview.parsed.hasWarnings && (
+                <div className="border border-amber-500/50 rounded-lg p-3 bg-amber-500/10">
+                  <div className="text-sm font-medium text-amber-600 dark:text-amber-500">
+                    ⚠️ Some commands have warnings
+                  </div>
+                </div>
               )}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+
+              {/* NPM Packages Preview */}
+              {commandPreview.preview.npmPackages.length > 0 && (
+                <div className="border rounded-lg p-4 space-y-2">
+                  <div className="text-sm font-medium">
+                    NPM Packages ({commandPreview.preview.npmPackages.length})
+                  </div>
+                  <div className="space-y-1">
+                    {commandPreview.preview.npmPackages.map((pkg: { name: string; alreadyInstalled: boolean; version?: string }, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between text-sm py-1">
+                        <span className="font-mono">{pkg.name}</span>
+                        {pkg.alreadyInstalled ? (
+                          <Badge variant="outline" className="text-xs">
+                            ✓ Installed {pkg.version}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">
+                            → Will install
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Shadcn Components Preview */}
+              {commandPreview.preview.shadcnComponents.length > 0 && (
+                <div className="border rounded-lg p-4 space-y-2">
+                  <div className="text-sm font-medium">
+                    Shadcn Components ({commandPreview.preview.shadcnComponents.length})
+                  </div>
+                  <div className="space-y-1">
+                    {commandPreview.preview.shadcnComponents.map((comp: { name: string; type: string }, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between text-sm py-1">
+                        <span className="font-mono truncate">{comp.name}</span>
+                        <Badge variant="default" className="text-xs">
+                          {comp.type}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 justify-end pt-2">
+                <Button variant="outline" onClick={() => setDialogMode('input')}>
+                  Back
+                </Button>
+                <Button
+                  onClick={handleExecuteCommands}
+                  disabled={executeCommandMutation.isPending}
+                >
+                  {executeCommandMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Installing...
+                    </>
+                  ) : (
+                    <>
+                      <Package2 className="mr-2 h-4 w-4" />
+                      Install
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* EXECUTING MODE */}
+          {dialogMode === 'executing' && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 p-4 border rounded-lg bg-muted/30">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <div className="flex-1">
+                  <div className="text-sm font-medium">Executing commands...</div>
+                  <div className="text-xs text-muted-foreground">
+                    Please wait while packages are being installed
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* COMPLETE MODE */}
+          {dialogMode === 'complete' && executionResults.length > 0 && (
+            <div className="space-y-4">
+              {/* Summary */}
+              <div className="border rounded-lg p-4 bg-muted/30">
+                <div className="text-sm font-medium mb-2">Summary</div>
+                <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <div className="text-xs text-muted-foreground">Total</div>
+                    <div className="font-medium">{executionResults.length}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Succeeded</div>
+                    <div className="font-medium text-green-600">
+                      {executionResults.filter(r => r.success).length}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Failed</div>
+                    <div className="font-medium text-red-600">
+                      {executionResults.filter(r => !r.success).length}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Results */}
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                {executionResults.map((result, idx) => (
+                  <div
+                    key={idx}
+                    className={`border rounded-lg p-4 ${
+                      result.success
+                        ? 'border-green-500/50 bg-green-500/5'
+                        : 'border-red-500/50 bg-red-500/5'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 mt-1">
+                        {result.success ? (
+                          <div className="h-5 w-5 rounded-full bg-green-500/20 flex items-center justify-center">
+                            <span className="text-green-600 text-sm">✓</span>
+                          </div>
+                        ) : (
+                          <div className="h-5 w-5 rounded-full bg-red-500/20 flex items-center justify-center">
+                            <span className="text-red-600 text-sm">✕</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-mono mb-1">{result.originalCommand}</div>
+
+                        {result.duration && (
+                          <div className="text-xs text-muted-foreground mb-2">
+                            Completed in {(result.duration / 1000).toFixed(1)}s
+                          </div>
+                        )}
+
+                        {/* Success details */}
+                        {result.success && (
+                          <div className="space-y-1">
+                            {result.packagesInstalled && result.packagesInstalled.length > 0 && (
+                              <div className="text-xs">
+                                <span className="text-muted-foreground">Installed:</span>{' '}
+                                <span className="font-mono">{result.packagesInstalled.join(', ')}</span>
+                              </div>
+                            )}
+                            {result.alreadyInstalled && result.alreadyInstalled.length > 0 && (
+                              <div className="text-xs">
+                                <span className="text-muted-foreground">Already installed:</span>{' '}
+                                <span className="font-mono">{result.alreadyInstalled.join(', ')}</span>
+                              </div>
+                            )}
+                            {result.filesCreated && result.filesCreated.length > 0 && (
+                              <div className="text-xs">
+                                <span className="text-muted-foreground">Files created:</span>{' '}
+                                <span className="font-mono">{result.filesCreated.join(', ')}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Error details */}
+                        {!result.success && result.errors.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {result.errors.map((error, errIdx) => (
+                              <div key={errIdx} className="text-xs text-red-600 dark:text-red-400">
+                                {error}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Output (expandable) */}
+                        {result.output && (
+                          <details className="mt-2">
+                            <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                              View full output
+                            </summary>
+                            <pre className="mt-2 text-xs font-mono whitespace-pre-wrap bg-muted/50 p-2 rounded border max-h-[200px] overflow-y-auto">
+                              {result.output}
+                            </pre>
+                          </details>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <Button onClick={handleCloseDialog}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Search and Filters */}
       <div className="flex items-center gap-4">
@@ -656,7 +896,7 @@ export default function DependenciesPage() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
                           <span className="sr-only">Open menu</span>
@@ -665,7 +905,12 @@ export default function DependenciesPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleViewDetails(item)}>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            handleViewDetails(item);
+                          }}
+                        >
                           <Eye className="mr-2 h-4 w-4" />
                           View Details
                         </DropdownMenuItem>
@@ -685,7 +930,15 @@ export default function DependenciesPage() {
       </div>
 
       {/* Details Modal */}
-      <Dialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
+      <Dialog
+        open={detailsModalOpen}
+        onOpenChange={(open) => {
+          setDetailsModalOpen(open);
+          if (!open) {
+            setSelectedItem(null); // Clear selected item when closing
+          }
+        }}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{selectedItem?.name}</DialogTitle>

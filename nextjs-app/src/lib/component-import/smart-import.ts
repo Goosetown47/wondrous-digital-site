@@ -6,7 +6,7 @@
 import { builtinModules } from 'module';
 
 // Type definitions
-export type ComponentSource = 'shadcn' | 'aceternity' | 'skiper' | 'tweakcn' | 'custom';
+export type ComponentSource = 'shadcn' | 'aceternity' | 'skiper' | 'tweakcn' | 'shadcnblocks' | 'reactbits' | 'shadcnui-expansions' | 'custom';
 
 export interface ImportOptions {
   url: string;
@@ -62,14 +62,31 @@ const TRANSFORM_RULES: Record<string, TransformRule[]> = {
   aceternity: [
     { from: '@/components/aceternity', to: '@/components/ui' },
     { from: 'motion/react', to: 'framer-motion' },
-    { from: '@/utils/cn', to: '@/lib/utils' }
+    { from: '@/utils/cn', to: '@/lib/utils' },
+    { from: '@/lib/cn', to: '@/lib/utils' }
   ],
   skiper: [
     { from: '@/components/skiper', to: '@/components/ui' },
     { from: '@/lib/cn', to: '@/lib/utils' }
   ],
   tweakcn: [
-    { from: '@/components/tweakcn', to: '@/components/ui' }
+    { from: '@/components/tweakcn', to: '@/components/ui' },
+    { from: '@/lib/cn', to: '@/lib/utils' }
+  ],
+  shadcnblocks: [
+    { from: '@/components/shadcnblocks', to: '@/components/ui' },
+    { from: '@/components/blocks', to: '@/components/ui' },
+    { from: '@/lib/cn', to: '@/lib/utils' }
+  ],
+  reactbits: [
+    { from: '@/components/reactbits', to: '@/components/ui' },
+    { from: '@/registry', to: '@/components/ui' },
+    { from: '@/lib/cn', to: '@/lib/utils' }
+  ],
+  'shadcnui-expansions': [
+    { from: '@/registry', to: '@/components/ui' },
+    { from: '@/components/expansions', to: '@/components/ui' },
+    { from: '@/lib/cn', to: '@/lib/utils' }
   ]
 };
 
@@ -77,8 +94,15 @@ const TRANSFORM_RULES: Record<string, TransformRule[]> = {
 const WHITELISTED_DOMAINS = [
   'ui.shadcn.com',
   'ui.aceternity.com',
+  'pro.aceternity.com',
   'skiper-ui.com',
-  'tweakcn.com'
+  'tweakcn.com',
+  'www.shadcnblocks.com',
+  'shadcnblocks.com',
+  'reactbits.dev',
+  'www.reactbits.dev',
+  'shadcnui-expansions.typeart.cc',
+  'www.shadcnui-expansions.typeart.cc'
 ];
 
 /**
@@ -122,9 +146,12 @@ export function parseRegistryCommand(command: string): {
  */
 export function detectComponentSource(url: string): ComponentSource {
   if (url.includes('ui.shadcn.com')) return 'shadcn';
-  if (url.includes('ui.aceternity.com')) return 'aceternity';
+  if (url.includes('ui.aceternity.com') || url.includes('pro.aceternity.com')) return 'aceternity';
   if (url.includes('skiper-ui.com')) return 'skiper';
   if (url.includes('tweakcn.com')) return 'tweakcn';
+  if (url.includes('shadcnblocks.com')) return 'shadcnblocks';
+  if (url.includes('reactbits.dev')) return 'reactbits';
+  if (url.includes('shadcnui-expansions')) return 'shadcnui-expansions';
   return 'custom';
 }
 
@@ -250,7 +277,7 @@ export async function fetchComponentFromRegistry(url: string): Promise<RegistryC
  * Process component import with all transformations
  */
 export async function processComponentImport(options: ImportOptions): Promise<ProcessedComponent> {
-  const { url, autoFix = false, installDeps = false, targetDir = '/components/ui/' } = options;
+  const { url, autoFix = true, installDeps = false, targetDir = '/components/ui/' } = options;
 
   // Parse URL to get metadata
   const { source } = parseRegistryCommand(url);

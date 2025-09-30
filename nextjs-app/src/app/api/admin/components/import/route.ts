@@ -35,7 +35,16 @@ export async function POST(request: NextRequest) {
     if (!smartImport.validateRegistryUrl(url)) {
       return NextResponse.json({
         error: 'Registry domain not whitelisted',
-        allowedDomains: ['ui.shadcn.com', 'ui.aceternity.com', 'skiper-ui.com', 'tweakcn.com']
+        allowedDomains: [
+          'ui.shadcn.com',
+          'ui.aceternity.com',
+          'pro.aceternity.com',
+          'skiper-ui.com',
+          'tweakcn.com',
+          'shadcnblocks.com',
+          'reactbits.dev',
+          'shadcnui-expansions.typeart.cc'
+        ]
       }, { status: 400 });
     }
 
@@ -78,31 +87,41 @@ export async function POST(request: NextRequest) {
       await fs.writeFile(filePath, file.transformedContent, 'utf-8');
     }
 
+    // Check package.json for existing dependencies BEFORE installing
+    const packageJsonPath = path.join(process.cwd(), 'package.json');
+    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
+    const existingDeps = {
+      ...packageJson.dependencies,
+      ...packageJson.devDependencies
+    };
+
+    // Filter out dependencies that are already installed
+    const actuallyMissingDeps = result.dependencies.filter(dep => !existingDeps[dep]);
+
     // Install missing dependencies if requested
     let dependenciesInstalled: string[] = [];
-    if (installDeps && result.missingDependencies && result.missingDependencies.length > 0) {
+    if (installDeps && actuallyMissingDeps.length > 0) {
       try {
-        // Check which dependencies are actually missing
-        const packageJsonPath = path.join(process.cwd(), 'package.json');
-        const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
-        const existingDeps = {
-          ...packageJson.dependencies,
-          ...packageJson.devDependencies
-        };
+        const installCommand = `npm install ${actuallyMissingDeps.join(' ')}`;
+        console.log(`Installing missing dependencies: ${actuallyMissingDeps.join(', ')}`);
 
-        const toInstall = result.missingDependencies.filter(dep => !existingDeps[dep]);
+        execSync(installCommand, {
+          encoding: 'utf8',
+          cwd: process.cwd(),
+          stdio: 'pipe' // Capture output
+        });
 
-        if (toInstall.length > 0) {
-          const installCommand = `npm install ${toInstall.join(' ')}`;
-          execSync(installCommand, {
-            encoding: 'utf8',
-            cwd: process.cwd()
-          });
-          dependenciesInstalled = toInstall;
-        }
+        dependenciesInstalled = actuallyMissingDeps;
+        console.log(`Successfully installed: ${dependenciesInstalled.join(', ')}`);
       } catch (error) {
         console.error('Failed to install dependencies:', error);
-        // Continue even if dependency installation fails
+        // Return error to user instead of continuing silently
+        return NextResponse.json({
+          error: 'Component imported but dependency installation failed',
+          details: error instanceof Error ? error.message : 'Unknown error',
+          component: result.name,
+          missingDependencies: actuallyMissingDeps
+        }, { status: 207 }); // 207 Multi-Status: partial success
       }
     }
 
@@ -139,7 +158,9 @@ export async function POST(request: NextRequest) {
         dependencies: result.dependencies,
         transformations: result.transformations,
         filesWritten: result.files.length,
-        dependenciesInstalled
+        dependenciesInstalled,
+        dependenciesAlreadyInstalled: result.dependencies.filter(dep => existingDeps[dep]),
+        totalDependencies: result.dependencies.length
       }
     });
 
