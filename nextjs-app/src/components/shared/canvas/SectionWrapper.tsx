@@ -24,7 +24,9 @@ export function SectionWrapper({
   id,
   index,
   totalSections,
+  isSelected,
   children,
+  onSelect,
   onMoveUp,
   onMoveDown,
   onDelete,
@@ -47,6 +49,15 @@ export function SectionWrapper({
     }
   }, []);
 
+  // Handle click on the section
+  const handleClick = (e: React.MouseEvent) => {
+    // Don't trigger selection when clicking on controls
+    if ((e.target as HTMLElement).closest('.section-controls')) {
+      return;
+    }
+    onSelect?.();
+  };
+
   return (
     <motion.div
       layout
@@ -56,9 +67,11 @@ export function SectionWrapper({
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "relative group min-h-[100px]", // Add min-height for absolutely positioned content
+        "relative group min-h-[100px] cursor-pointer", // Add cursor-pointer
+        isSelected && "ring-2 ring-primary ring-offset-2", // Visual feedback when selected
         className
       )}
+      onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       {...dragHandleProps}
@@ -68,16 +81,18 @@ export function SectionWrapper({
 
       {/* Section Controls - higher z-index to be above everything */}
       {(onMoveUp || onMoveDown || onDelete || onSettings) && (
-        <SectionControls
-          sectionId={id}
-          canMoveUp={canMoveUp}
-          canMoveDown={canMoveDown}
-          onMoveUp={onMoveUp || (() => {})}
-          onMoveDown={onMoveDown || (() => {})}
-          onDelete={onDelete || (() => {})}
-          onSettings={onSettings}
-          isVisible={isHovered} // Only show on hover, not on selected
-        />
+        <div className="section-controls">
+          <SectionControls
+            sectionId={id}
+            canMoveUp={canMoveUp}
+            canMoveDown={canMoveDown}
+            onMoveUp={onMoveUp || (() => {})}
+            onMoveDown={onMoveDown || (() => {})}
+            onDelete={onDelete || (() => {})}
+            onSettings={onSettings}
+            isVisible={isHovered} // Only show on hover, not on selected
+          />
+        </div>
       )}
 
       {/* Section Content - Wrapped to ensure centering */}

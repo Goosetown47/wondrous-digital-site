@@ -1,7 +1,7 @@
 'use client';
 
 import React, { ComponentType, useMemo } from 'react';
-import { interceptContent, createInterceptor } from './content-interceptor';
+// import { interceptContent, createInterceptor } from './content-interceptor'; // TODO: Implement content-interceptor module
 import { ComponentRegistry } from './component-registry';
 
 /**
@@ -31,48 +31,50 @@ export function withEditableContent<P extends Record<string, unknown>>(
     }, []);
 
     // Memoize the interceptor for this component
-    const interceptor = useMemo(() => {
-      if (!editable || fieldConfigs.length === 0) {
-        return null;
-      }
-      return createInterceptor(fieldConfigs);
-    }, [editable, fieldConfigs]);
+    // const interceptor = useMemo(() => {
+    //   if (!editable || fieldConfigs.length === 0) {
+    //     return null;
+    //   }
+    //   return createInterceptor(fieldConfigs);
+    // }, [editable, fieldConfigs]);
 
     // Render the original component
     const element = React.createElement(Component, componentProps as P);
 
     // If not editable or no field configs, return as-is
-    if (!interceptor || !onContentUpdate) {
+    // TODO: Implement interceptor logic when content-interceptor module is ready
+    if (!editable || fieldConfigs.length === 0 || !onContentUpdate) {
       return element;
     }
 
-    // Apply the interceptor to make content editable
-    const handleUpdate = (path: string, value: unknown) => {
-      // Convert path to object update
-      const pathParts = path.split('.');
-      const updates: Record<string, unknown> = {};
+    // TODO: Apply the interceptor to make content editable
+    // const handleUpdate = (path: string, value: unknown) => {
+    //   // Convert path to object update
+    //   const pathParts = path.split('.');
+    //   const updates: Record<string, unknown> = {};
 
-      // Build nested object from path
-      let current: Record<string, unknown> = updates;
-      for (let i = 0; i < pathParts.length - 1; i++) {
+    //   // Build nested object from path
+    //   let current: Record<string, unknown> = updates;
+    //   for (let i = 0; i < pathParts.length - 1; i++) {
+    //     current[pathParts[i]] = {};
+    //     current = current[pathParts[i]] as Record<string, unknown>;
+    //   }
+    //   current[pathParts[pathParts.length - 1]] = value;
 
-        current[pathParts[i]] = {};
+    //   // Merge with existing props and notify
+    //   const mergedUpdates = {
+    //     ...componentProps,
+    //     ...updates
+    //   };
 
-        current = current[pathParts[i]] as Record<string, unknown>;
-      }
-      current[pathParts[pathParts.length - 1]] = value;
-
-      // Merge with existing props and notify
-      const mergedUpdates = {
-        ...componentProps,
-        ...updates
-      };
-
-      onContentUpdate(mergedUpdates);
-    };
+    //   onContentUpdate(mergedUpdates);
+    // };
 
     // Intercept the component tree to make fields editable
-    return interceptContent(element, fieldConfigs, handleUpdate);
+    // return interceptContent(element, fieldConfigs, handleUpdate);
+
+    // For now, return element as-is until interceptor is implemented
+    return element;
   };
 
   // Set display name for debugging

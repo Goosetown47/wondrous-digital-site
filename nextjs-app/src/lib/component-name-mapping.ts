@@ -7,19 +7,8 @@
 // Mapping of display names (from database) to code names (in ComponentRegistry)
 const COMPONENT_NAME_MAP: Record<string, string> = {
   // Navigation components
-  'Nav Bar 1': 'Navbar2',
-  'Navigation Bar 1': 'Navbar2',
-  'Navbar 1': 'Navbar2',
-  'Footer 1': 'Footer2',
-  'Footer Two': 'Footer2',
 
   // Hero sections
-  'Hero Two Column': 'HeroTwoColumn',
-  'Hero 2 Column': 'HeroTwoColumn',
-  'Hero Section': 'HeroTwoColumn',
-  'Nav Bar 3': 'NavBar3',
-  'Services1': 'Services1',
-  'Bento1': 'Bento1',
 
   // Add more mappings as components are imported
 };

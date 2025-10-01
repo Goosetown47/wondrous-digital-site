@@ -69,6 +69,9 @@ export function NavigationMenuItem({
   } else if (href === '/admin/lab') {
     // Special case for Drafts - should not match /lab/themes
     isActive = pathname === '/lab' || (pathname?.startsWith('/lab/') && !pathname.startsWith('/lab/themes'));
+  } else if (href === '/admin/components') {
+    // Special case for Dependencies - exact match only (has sub-routes like /export)
+    isActive = pathname === '/admin/components';
   } else {
     // Check both the nav href and the actual path it maps to
     isActive = pathname === href || pathname?.startsWith(`${href}/`) ||

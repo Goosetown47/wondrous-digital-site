@@ -51,13 +51,7 @@ export default function CoreClient() {
     }
   };
 
-  const handleTypeFilter = (type: string) => {
-    if (type === 'all') {
-      setFilters(prev => ({ ...prev, type: undefined }));
-    } else {
-      setFilters(prev => ({ ...prev, type: type as 'component' | 'section' }));
-    }
-  };
+  // Removed unused handleTypeFilter function
 
   const handleSourceFilter = (source: string) => {
     if (source === 'all') {
@@ -73,15 +67,15 @@ export default function CoreClient() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Core Components</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Core Sections</h1>
           <p className="text-muted-foreground">
-            Raw component library from shadcn/ui and other sources
+            Raw section library from shadcn/ui and other sources
           </p>
         </div>
         <Button asChild>
           <Link href="/core/add">
             <Plus className="mr-2 h-4 w-4" />
-            Add Component
+            Add Section
           </Link>
         </Button>
       </div>
@@ -91,36 +85,30 @@ export default function CoreClient() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search components..."
+            placeholder="Search sections..."
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
             className="pl-10"
           />
         </div>
 
-        <Tabs defaultValue="all" onValueChange={handleTypeFilter}>
-          <TabsList>
-            <TabsTrigger value="all">All Types</TabsTrigger>
-            <TabsTrigger value="component">Components</TabsTrigger>
-            <TabsTrigger value="section">Sections</TabsTrigger>
-          </TabsList>
-        </Tabs>
-
         <Tabs defaultValue="all" onValueChange={handleSourceFilter}>
           <TabsList>
             <TabsTrigger value="all">All Sources</TabsTrigger>
-            <TabsTrigger value="shadcn">shadcn/ui</TabsTrigger>
-            <TabsTrigger value="aceternity">Aceternity</TabsTrigger>
-            <TabsTrigger value="expansions">Expansions</TabsTrigger>
+            <TabsTrigger value="ui.shadcn.com">ui.shadcn.com</TabsTrigger>
+            <TabsTrigger value="ui.aceternity.com">ui.aceternity.com</TabsTrigger>
+            <TabsTrigger value="pro.aceternity.com">pro.aceternity.com</TabsTrigger>
+            <TabsTrigger value="shadcnblocks.com">shadcnblocks.com</TabsTrigger>
+            <TabsTrigger value="reactbits.dev">reactbits.dev</TabsTrigger>
             <TabsTrigger value="custom">Custom</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
-      {/* Component Count */}
+      {/* Section Count */}
       <div className="mb-4">
         <p className="text-sm text-muted-foreground">
-          {componentCount} component{componentCount !== 1 ? 's' : ''} found
+          {componentCount} section{componentCount !== 1 ? 's' : ''} found
         </p>
       </div>
 
@@ -204,12 +192,12 @@ export default function CoreClient() {
       ) : (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <p className="text-muted-foreground mb-4">
-            No components found. Start by adding your first component.
+            No sections found. Start by adding your first section.
           </p>
           <Button asChild>
             <Link href="/core/add">
               <Plus className="mr-2 h-4 w-4" />
-              Add First Component
+              Add First Section
             </Link>
           </Button>
         </div>
@@ -219,7 +207,7 @@ export default function CoreClient() {
       <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog(prev => ({ ...prev, open }))}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Component</AlertDialogTitle>
+            <AlertDialogTitle>Delete Section</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete "{deleteDialog.name}"? This action cannot be undone.
             </AlertDialogDescription>

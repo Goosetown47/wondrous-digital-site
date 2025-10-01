@@ -5,6 +5,8 @@ export { ImagePlaceholder } from './ImagePlaceholder';
 export { EditableLogoImage } from './EditableLogoImage';
 export { EditableText, type TextType } from './EditableText';
 export { TextEditorModal } from './TextEditorModal';
+export { EditableButton } from './EditableButton';
+export { ButtonEditorModal, type ButtonData } from './ButtonEditorModal';
 export { RichTextDisplay } from './RichTextDisplay';
 export { EditableSectionWrapper } from './EditableSectionWrapper';
 export { useEditableFields } from '@/hooks/useEditableFields';

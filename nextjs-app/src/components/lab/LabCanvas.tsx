@@ -96,19 +96,41 @@ export function LabCanvas({ className = '', theme }: LabCanvasProps) {
 
     // Handle content update
     const handleContentUpdate = (updatedContent: Record<string, unknown>) => {
+      console.log('💾 [LabCanvas] handleContentUpdate CALLED!:', {
+        sectionId: section.id,
+        oldContent: section.content,
+        newContent: updatedContent,
+      });
+
       updateSection(section.id, { content: updatedContent });
+
+      console.log('✅ [LabCanvas] updateSection called');
     };
+
+    console.log('🏗️  [LabCanvas] Created handleContentUpdate for section:', {
+      sectionId: section.id,
+      handlerExists: !!handleContentUpdate,
+    });
 
     // If component has editable fields, use the wrapper
     if (hasEditableFields) {
+      // Filter out empty/null/undefined values to let component defaults work
+      const filteredContent = Object.entries(section.content).reduce((acc, [key, value]) => {
+        // Only pass non-empty values
+        if (value !== '' && value !== null && value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, unknown>);
+
       return (
         <EditableSectionWrapper
           componentName={componentName}
-          content={section.content}
+          content={filteredContent}
           editable={true}
           onContentUpdate={handleContentUpdate}
         >
-          <Component {...section.content} />
+          <Component {...filteredContent} />
         </EditableSectionWrapper>
       );
     }

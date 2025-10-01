@@ -175,8 +175,19 @@ export function analyzeContentStructure(
     if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
       // Check if it's a specific object pattern (like logo with src, alt)
       const valueObj = value as Record<string, unknown>;
-      if ('src' in valueObj || 'url' in valueObj) {
-        // Likely an image or link object
+
+      // Check if it's a button object (has text and url/href properties)
+      if (('text' in valueObj && 'url' in valueObj) ||
+          ('text' in valueObj && 'href' in valueObj) ||
+          (key.toLowerCase().includes('button') && 'text' in valueObj)) {
+        // This is a button object - treat as single button field
+        fields.push({
+          path,
+          type: 'button',
+          label: generateLabel(key),
+        });
+      } else if ('src' in valueObj || ('url' in valueObj && !('text' in valueObj))) {
+        // Likely an image or link object (but not a button)
         const nestedFields = analyzeContentStructure(valueObj, path);
         nestedFields.forEach(field => fields.push(field));
       } else {

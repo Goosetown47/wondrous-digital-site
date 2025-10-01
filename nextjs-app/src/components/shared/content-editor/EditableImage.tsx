@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageManagerModal } from './ImageManagerModal';
@@ -75,25 +74,41 @@ export function EditableImage({
     );
   }
 
+  // If not editable, just render the image with original attributes
+  if (!editable) {
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className={className}
+      />
+    );
+  }
+
   return (
     <>
       <div
-        className={cn('relative group inline-block', className)}
-        onMouseEnter={() => editable && setIsHovered(true)}
-        onMouseLeave={() => editable && setIsHovered(false)}
-        onClick={() => editable && setShowModal(true)}
-        style={{ cursor: editable ? 'pointer' : 'default' }}
+        className={cn(
+          'relative group',
+          // Preserve width from img className if it exists
+          className?.includes('w-full') && 'w-full',
+          // Ensure block display to avoid inline-block default
+          'block'
+        )}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onClick={() => setShowModal(true)}
+        style={{ cursor: 'pointer' }}
       >
-        <Image
+        {/* Use regular img tag to preserve all responsive classes */}
+        <img
           src={src}
           alt={alt}
-          width={width}
-          height={height}
-          className="object-cover"
+          className={className}
         />
 
         {/* Hover overlay with upload icon */}
-        {editable && isHovered && (
+        {isHovered && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center pointer-events-none animate-in fade-in duration-200">
             <div className="bg-white/90 backdrop-blur-sm rounded-full p-3">
               <Upload className="h-6 w-6 text-gray-700" />

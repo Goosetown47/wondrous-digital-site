@@ -6,13 +6,10 @@ Comprehensive checkpoint to save progress, update documentation, and ensure code
 
 **Feature/Bug/System File:**
 - [ ] Review and check off completed tasks
-- [ ] Move completed tasks to `## Complete` section
-- [ ] Add any discovered work to `## Planned` section
-- [ ] Move active tasks to `## In Progress` section
 - [ ] Update Overview section with current status
 
 **Technical Documentation:**
-- [ ] Update relevant sections in @docs/Tech_Docs
+- [ ] Update relevant sections in `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/Tech_Docs`
 - [ ] Document any new patterns or architectural decisions
 - [ ] Update API documentation if endpoints changed
 
@@ -25,7 +22,7 @@ Comprehensive checkpoint to save progress, update documentation, and ensure code
 
 ### Release Management
 
-**Update @docs/Release_Notes/v#.#.#.md:**
+**Update `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/Release_Notes/v#.#.#.md:`**
 - [ ] Move completed items from "In Progress" → "Complete"
 - [ ] Move next items from "Upcoming" → "In Progress"
 - [ ] Update customer-facing Release Notes section

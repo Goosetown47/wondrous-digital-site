@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -327,6 +328,9 @@ export function TextEditorModal({
             {type === 'heading' ? <Type className="h-5 w-5" /> : <AlignLeft className="h-5 w-5" />}
             Edit {type === 'heading' ? 'Heading' : type === 'button' ? 'Button Text' : 'Text'}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Edit the text content for this section. Choose between plain text or rich text formatting.
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'plain' | 'rich')} className="mt-4">
@@ -404,6 +408,9 @@ export function TextEditorModal({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add Link</DialogTitle>
+          <DialogDescription className="sr-only">
+            Add a hyperlink to the selected text. Choose between external URLs or internal pages.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           {/* Link Type Selection */}

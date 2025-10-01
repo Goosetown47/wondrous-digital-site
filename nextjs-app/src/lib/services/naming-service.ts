@@ -11,6 +11,7 @@
 
 // Import the existing mappings (we'll migrate these into the service)
 import { getComponentCodeName } from '@/lib/component-name-mapping';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Normalize a component name to a consistent format for comparison
@@ -349,4 +350,194 @@ export function inferComponentType(name: string): 'navigation' | 'section' | nul
   }
 
   return null;
+}
+
+/**
+ * Extract the base component type from a display name using database types
+ * This is used for auto-numbering components
+ * Examples:
+ * - "Epic Hero" with types table -> "Hero"
+ * - "Dark Footer" with types table -> "Footer"
+ * - "Bento Box Layout" with types table -> "Bentobox"
+ *
+ * @param displayName - The display name of the component
+ * @param types - Array of types from the database
+ */
+export function extractComponentType(
+  displayName: string,
+  types?: Array<{ name: string; display_name: string }>
+): string {
+  const lowerDisplayName = displayName.toLowerCase();
+
+  // If we have types from the database, use them
+  if (types && types.length > 0) {
+    // First, try exact match on display_name
+    const exactMatch = types.find(
+      type => type.display_name.toLowerCase() === lowerDisplayName
+    );
+    if (exactMatch) {
+      return formatTypeName(exactMatch.name);
+    }
+
+    // Then, try to find if display name contains any type name or display_name
+    // Sort by length descending to match longer names first (e.g., "call to action" before "action")
+    const sortedTypes = [...types].sort((a, b) => {
+      const aLength = Math.max(a.name.length, a.display_name.length);
+      const bLength = Math.max(b.name.length, b.display_name.length);
+      return bLength - aLength;
+    });
+
+    for (const type of sortedTypes) {
+      const typeNameLower = type.name.toLowerCase();
+      const typeDisplayLower = type.display_name.toLowerCase();
+
+      // Check if display name contains the type's display_name first (more specific)
+      if (lowerDisplayName.includes(typeDisplayLower)) {
+        return formatTypeName(type.name);
+      }
+
+      // Then check if it contains the type's name
+      if (lowerDisplayName.includes(typeNameLower)) {
+        return formatTypeName(type.name);
+      }
+
+      // Special handling for common variations
+      // If type name has hyphen/underscore, also check without it
+      const cleanTypeName = typeNameLower.replace(/[-_\s]/g, '');
+      if (cleanTypeName !== typeNameLower && lowerDisplayName.replace(/[-_\s]/g, '').includes(cleanTypeName)) {
+        return formatTypeName(type.name);
+      }
+    }
+  }
+
+  // Fallback to some common hardcoded types if no database types provided
+  // This ensures backward compatibility
+  if (lowerDisplayName.includes('hero')) return 'Hero';
+  if (lowerDisplayName.includes('footer')) return 'Footer';
+  if (lowerDisplayName.includes('nav')) return 'Navigation';
+  if (lowerDisplayName.includes('header')) return 'Header';
+  if (lowerDisplayName.includes('service')) return 'Services';
+
+  // Default to generic Section
+  return 'Section';
+}
+
+/**
+ * Format a type name from database to PascalCase for code names
+ * Examples:
+ * - "hero" -> "Hero"
+ * - "bentobox" -> "Bentobox"
+ * - "signup_form" -> "SignupForm"
+ * - "nav-bar" -> "NavBar"
+ */
+function formatTypeName(typeName: string): string {
+  return typeName
+    .split(/[-_\s]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('');
+}
+
+/**
+ * Extract existing numbers from component names for a given base type
+ * Examples:
+ * - Components: ["Hero1", "Hero2", "Hero10"], BaseType: "Hero" -> [1, 2, 10]
+ * - Components: ["Footer1", "Hero1"], BaseType: "Hero" -> [1]
+ */
+export function extractExistingNumbers(
+  components: Array<{ code_name: string }>,
+  baseType: string
+): number[] {
+  const numbers: number[] = [];
+  const baseTypeLower = baseType.toLowerCase();
+
+  for (const component of components) {
+    const codeNameLower = component.code_name.toLowerCase();
+
+    // Check if this component matches our base type
+    if (codeNameLower.startsWith(baseTypeLower)) {
+      // Extract the number part
+      const remaining = component.code_name.slice(baseType.length);
+      const numberMatch = remaining.match(/^(\d+)$/);
+
+      if (numberMatch) {
+        numbers.push(parseInt(numberMatch[1], 10));
+      }
+    }
+  }
+
+  return numbers;
+}
+
+/**
+ * Generate a unique code name with auto-numbering
+ * Queries the database to find existing components and assigns the next available number
+ * Uses the types table to properly categorize components
+ * Examples:
+ * - "Epic Hero" -> "Hero12" (if Hero1-11 exist)
+ * - "Dark Footer" -> "Footer1" (if no footers exist)
+ * - "Awesome Bento Box" -> "Bentobox1" (using types table)
+ *
+ * @param displayName - The display name of the component
+ * @param supabase - Supabase client for database queries
+ * @param explicitTypeName - Optional: The exact type name from the types table (if user selected a type)
+ */
+export async function getCodeNameWithAutoNumber(
+  displayName: string,
+  supabase: SupabaseClient,
+  explicitTypeName?: string
+): Promise<string> {
+  let baseType: string;
+
+  // If explicit type name is provided (from type_id selection), use it directly
+  if (explicitTypeName) {
+    baseType = formatTypeName(explicitTypeName);
+  } else {
+    // Otherwise, fall back to keyword matching in display name
+    // First, query the types table to get all available component types
+    const { data: types, error: typesError } = await supabase
+      .from('types')
+      .select('name, display_name')
+      .eq('category', 'section'); // Focus on section types for components
+
+    if (typesError) {
+      console.error('Failed to query types table:', typesError);
+      // Continue with fallback behavior
+    }
+
+    // Extract the base component type using database types
+    baseType = extractComponentType(displayName, types || undefined);
+  }
+
+  // Query existing components of this type
+  // We need to check for variations: Hero, hero, HERO
+  const { data, error } = await supabase
+    .from('core_components')
+    .select('code_name')
+    .or(`code_name.ilike.${baseType}%,code_name.ilike.${baseType.toLowerCase()}%,code_name.ilike.${baseType.toUpperCase()}%`);
+
+  if (error) {
+    throw new Error(`Failed to query existing components: ${error.message}`);
+  }
+
+  const existingComponents = data || [];
+
+  // Extract all existing numbers for this base type
+  const existingNumbers = extractExistingNumbers(existingComponents, baseType);
+
+  // Find the next available number
+  let nextNumber = 1;
+  if (existingNumbers.length > 0) {
+    // Get the highest number and add 1
+    nextNumber = Math.max(...existingNumbers) + 1;
+  }
+
+  // Store the base type in the database for future reference
+  // This helps maintain consistency between the display name and generated code name
+  const result = {
+    code_name: `${baseType}${nextNumber}`,
+    base_type: baseType,
+    auto_number: nextNumber
+  };
+
+  return result.code_name;
 }

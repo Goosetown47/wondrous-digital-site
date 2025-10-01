@@ -259,8 +259,17 @@ export function generateEditableConfig(parsedInterface: ParsedInterface): Editab
     const lowerName = prop.name.toLowerCase();
     const lowerType = prop.type.toLowerCase();
 
+    // Check if it's a button object (has text and url/href properties)
+    const isButtonObject = (
+      (lowerName.includes('button') || lowerName.includes('btn')) &&
+      lowerType.includes('text') &&
+      (lowerType.includes('url') || lowerType.includes('href'))
+    );
+
     // Check for specific field types based on naming patterns
-    if (lowerName.includes('description') || lowerName.includes('content') || lowerName.includes('body')) {
+    if (isButtonObject) {
+      config.type = 'button';
+    } else if (lowerName.includes('description') || lowerName.includes('content') || lowerName.includes('body')) {
       config.type = 'richText';
     } else if (lowerName.includes('image') || lowerName.includes('img') || lowerName.includes('src') || lowerName.includes('url')) {
       config.type = 'image';
