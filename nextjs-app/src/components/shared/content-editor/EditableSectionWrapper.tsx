@@ -1,8 +1,12 @@
 'use client';
 
-import React, { useMemo, useCallback, ReactElement } from 'react';
+import React, { useMemo, useCallback, ReactElement, isValidElement } from 'react';
 import { useComponentConfig } from '@/hooks/useComponentConfig';
 import { setValueAtPath } from '@/lib/editable-field-detector';
+import { EditableText } from './EditableText';
+import { EditableImage } from './EditableImage';
+import { EditableButton } from './EditableButton';
+import type { EditableFieldConfig } from '@/lib/component-registry';
 
 interface EditableSectionWrapperProps {
   /** Name of the component in the registry */
@@ -18,12 +22,20 @@ interface EditableSectionWrapperProps {
 }
 
 /**
- * Smart wrapper that passes editing handlers to components with EditableText/EditableImage.
+ * Runtime wrapper that injects editing capabilities into components.
  *
- * This wrapper creates `on{Field}Change` handler props for each editable field
- * and passes them to the component along with `editable: true`.
+ * NEW APPROACH (2025-09-30):
+ * - Walks React component tree at runtime
+ * - Identifies elements that match editable fields in schema
+ * - Wraps matched elements with EditableText/Image/Button
+ * - No code transformation needed - components stay clean
  *
- * The component must already have EditableText/EditableImage wrappers in its source code.
+ * How it works:
+ * 1. Receives clean component + schema + content
+ * 2. Recursively walks React element tree
+ * 3. For each element, checks if it matches a field in schema
+ * 4. If match found, wraps with appropriate Editable* component
+ * 5. Editable* components handle hover, click, modal display
  */
 export function EditableSectionWrapper({
   componentName,
@@ -32,10 +44,10 @@ export function EditableSectionWrapper({
   onContentUpdate,
   children,
 }: EditableSectionWrapperProps) {
-  console.log('🎬 [EditableSectionWrapper] Component mounted/updated:', {
+  console.log('🎬 [EditableSectionWrapper] Component mounted:', {
     componentName,
-    hasOnContentUpdate: !!onContentUpdate,
-    onContentUpdateType: typeof onContentUpdate,
+    editable,
+    hasContent: !!content,
   });
 
   // Get component configuration from registry/database
@@ -50,11 +62,9 @@ export function EditableSectionWrapper({
   const createFieldHandler = useCallback(
     (fieldPath: string) => {
       return (value: unknown) => {
-        console.log('🔄 [EditableSectionWrapper] Field handler called:', {
+        console.log('🔄 [EditableSectionWrapper] Field update:', {
           fieldPath,
           newValue: value,
-          currentContent: content,
-          hasOnContentUpdate: !!onContentUpdate,
         });
 
         const updatedContent = setValueAtPath({ ...content }, fieldPath, value);
@@ -67,65 +77,255 @@ export function EditableSectionWrapper({
           return acc;
         }, {} as Record<string, unknown>);
 
-        console.log('💾 [EditableSectionWrapper] About to call onContentUpdate:', {
-          cleanContent,
-          onContentUpdateExists: !!onContentUpdate,
-          onContentUpdateType: typeof onContentUpdate,
-        });
-
-        try {
-          onContentUpdate(cleanContent);
-          console.log('✅ [EditableSectionWrapper] onContentUpdate called successfully');
-        } catch (error) {
-          console.error('❌ [EditableSectionWrapper] onContentUpdate threw error:', error);
-        }
+        onContentUpdate(cleanContent);
       };
     },
     [content, onContentUpdate]
   );
 
-  // If not editable or no field configs, render as-is
-  if (!editable || editableFields.length === 0) {
-    return React.cloneElement(children, content);
+  // Build field update handlers
+  const fieldHandlers = useMemo(() => {
+    const handlers: Record<string, (value: unknown) => void> = {};
+
+    editableFields.forEach(field => {
+      handlers[field.path] = createFieldHandler(field.path);
+    });
+
+    return handlers;
+  }, [editableFields, createFieldHandler]);
+
+  /**
+   * Recursively walk React tree and wrap editable elements
+   * Combined function to avoid circular dependencies
+   */
+  const wrapTree = useCallback(
+    (element: ReactElement): ReactElement => {
+      if (!isValidElement(element)) {
+        return element;
+      }
+
+      // IMPORTANT: Recurse into children FIRST to match leaf nodes before parents
+      let processedElement = element;
+      if (element.props && element.props.children) {
+        const wrappedChildren = React.Children.map(element.props.children, (child) => {
+          if (isValidElement(child)) {
+            return wrapTree(child);
+          }
+          return child;
+        });
+
+        // If children changed, clone element with new children
+        if (wrappedChildren !== element.props.children) {
+          processedElement = React.cloneElement(element, {}, wrappedChildren);
+        }
+      }
+
+      // Now check if THIS element (with wrapped children) matches a field
+      const elementType = typeof processedElement.type === 'string' ? processedElement.type : 'component';
+
+      for (const field of editableFields) {
+        const fieldValue = getNestedValue(content, field.path);
+
+        // Match based on field type and element type
+        switch (field.type) {
+          case 'text':
+          case 'richText': {
+            // Check if this is an alt text field (special case - attribute, not text content)
+            if (field.path.endsWith('Alt') && elementType === 'img') {
+              // Match alt attributes on img tags
+              if (processedElement.props.alt === fieldValue) {
+                console.log('✅ [Wrapper] Match found (alt attribute):', {
+                  fieldPath: field.path,
+                  fieldType: field.type,
+                  elementType,
+                });
+
+                // For alt text, wrap the img tag itself with editable text
+                return (
+                  <EditableText
+                    value={String(fieldValue)}
+                    onUpdate={fieldHandlers[field.path]}
+                    editable={editable}
+                    type="heading"
+                    richText={false}
+                  >
+                    {processedElement}
+                  </EditableText>
+                );
+              }
+            }
+
+            // Match text elements (h1-h6, p, span, Button, button)
+            const isTextElement = /^(h[1-6]|p|span|Button|button)$/.test(elementType);
+            if (isTextElement && elementContainsValue(processedElement, fieldValue)) {
+              console.log('✅ [Wrapper] Match found:', {
+                fieldPath: field.path,
+                fieldType: field.type,
+                elementType,
+              });
+
+              return (
+                <EditableText
+                  value={String(fieldValue)}
+                  onUpdate={fieldHandlers[field.path]}
+                  editable={editable}
+                  type={field.type === 'richText' ? 'paragraph' : 'heading'}
+                  richText={field.type === 'richText'}
+                >
+                  {processedElement}
+                </EditableText>
+              );
+            }
+            break;
+          }
+
+          case 'image': {
+            // Only match img tags
+            if (elementType === 'img' && processedElement.props.src === fieldValue) {
+              console.log('✅ [Wrapper] Match found:', {
+                fieldPath: field.path,
+                fieldType: field.type,
+                elementType,
+              });
+
+              return (
+                <EditableImage
+                  src={String(fieldValue)}
+                  alt={processedElement.props.alt || ''}
+                  onUpdate={fieldHandlers[field.path]}
+                  editable={editable}
+                />
+              );
+            }
+            break;
+          }
+
+          case 'button': {
+            // Only match Button component or button elements
+            const isButtonElement = elementType === 'button' || elementType === 'Button';
+            if (isButtonElement && typeof fieldValue === 'object' && fieldValue !== null) {
+              const buttonData = fieldValue as { text: string; url: string };
+              if (elementContainsValue(processedElement, buttonData.text)) {
+                console.log('✅ [Wrapper] Match found:', {
+                  fieldPath: field.path,
+                  fieldType: field.type,
+                  elementType,
+                });
+
+                return (
+                  <EditableButton
+                    buttonData={buttonData}
+                    onUpdate={fieldHandlers[field.path]}
+                    editable={editable}
+                  >
+                    {processedElement}
+                  </EditableButton>
+                );
+              }
+            }
+            break;
+          }
+        }
+      }
+
+      // No match found - return element with wrapped children (from above)
+      return processedElement;
+    },
+    [editableFields, content, fieldHandlers, editable]
+  );
+
+  // Memoize the wrapped tree to avoid unnecessary re-walks
+  const wrappedTree = useMemo(() => {
+    // Early exit if not editable
+    if (!editable || editableFields.length === 0) {
+      console.log('⏭️  [Wrapper] Skipping wrap (not editable or no fields)');
+      return React.cloneElement(children, content);
+    }
+
+    console.log('🌳 [Wrapper] Walking tree...', {
+      fieldsToMatch: editableFields.length,
+      contentKeys: Object.keys(content),
+    });
+
+    // CRITICAL: If children is a function component (normalized components),
+    // we need to render it first to get the actual JSX output
+    let elementToWrap = children;
+    if (typeof children.type === 'function') {
+      console.log('🔄 [Wrapper] Rendering function component to get JSX output...');
+      // Render the component by calling it with its props
+      // Type assertion needed as TypeScript doesn't know type is callable
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ComponentFn = children.type as (props: any) => ReactElement;
+      elementToWrap = ComponentFn(children.props || {});
+      console.log('✅ [Wrapper] Component rendered, now walking output');
+    }
+
+    // Walk the tree and wrap matching elements
+    const wrapped = wrapTree(elementToWrap);
+
+    console.log('✅ [Wrapper] Tree walk complete');
+
+    return wrapped;
+  }, [editable, editableFields, children, content, wrapTree]);
+
+  return wrappedTree;
+}
+
+/**
+ * Helper: Get nested value from object using dot notation
+ * e.g., getNestedValue({ button: { text: "Click" } }, "button.text") => "Click"
+ */
+function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+  const parts = path.split('.');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let current: any = obj;
+
+  for (const part of parts) {
+    if (current === null || current === undefined) {
+      return undefined;
+    }
+    current = current[part];
   }
 
-  // Build handler props object
-  // For field "heading", create "onHeadingChange" handler
-  // For nested field "button.text", create "onButtonTextChange" handler
-  const handlers: Record<string, (value: unknown) => void> = {};
+  return current;
+}
 
-  editableFields.forEach(field => {
-    const fieldPath = field.path;
+/**
+ * Helper: Check if element contains a specific value
+ * This is a simple heuristic - checks element's children for the value
+ */
+function elementContainsValue(element: ReactElement, value: unknown): boolean {
+  if (!value) return false;
 
-    // Convert path to camelCase handler name
-    // "heading" -> "onHeadingChange"
-    // "button.text" -> "onButtonTextChange"
-    const handlerName = 'on' + fieldPath
-      .split('.')
-      .map((part) => {
-        // Capitalize first letter of each part
-        return part.charAt(0).toUpperCase() + part.slice(1);
-      })
-      .join('') + 'Change';
+  // Convert value to string for comparison
+  const valueStr = String(value);
 
-    handlers[handlerName] = createFieldHandler(fieldPath);
-  });
+  // Check if element's children contain this value
+  const childrenText = getElementText(element);
 
-  console.log('🎯 [EditableSectionWrapper] Created handlers:', {
-    handlerNames: Object.keys(handlers),
-    contentKeys: Object.keys(content),
-  });
+  return childrenText.includes(valueStr);
+}
 
-  // Pass content + handlers + editable flag to component
-  const propsWithHandlers = {
-    ...content,
-    ...handlers,
-    editable: true,
+/**
+ * Helper: Extract all text content from element tree
+ */
+function getElementText(element: ReactElement): string {
+  let text = '';
+
+  const traverse = (node: React.ReactNode) => {
+    if (typeof node === 'string') {
+      text += node;
+    } else if (typeof node === 'number') {
+      text += String(node);
+    } else if (isValidElement(node)) {
+      if (node.props && node.props.children) {
+        React.Children.forEach(node.props.children, traverse);
+      }
+    } else if (Array.isArray(node)) {
+      node.forEach(traverse);
+    }
   };
 
-  console.log('📦 [EditableSectionWrapper] Passing props to component:', {
-    propKeys: Object.keys(propsWithHandlers),
-  });
-
-  return React.cloneElement(children, propsWithHandlers);
+  traverse(element);
+  return text;
 }

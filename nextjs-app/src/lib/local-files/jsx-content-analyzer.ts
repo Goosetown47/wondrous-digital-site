@@ -173,10 +173,11 @@ function analyzeJSXContentDirect(code: string): JSXAnalysisResult {
 
 /**
  * Detect heading elements (h1-h6)
+ * FIXED: Use [\s\S]*? to match content across newlines
  */
 function detectHeadings(code: string): DetectedField[] {
   const headings: DetectedField[] = [];
-  const headingPattern = /<(h[1-6])[^>]*>(.*?)<\/\1>/gi;
+  const headingPattern = /<(h[1-6])[^>]*>([\s\S]*?)<\/\1>/gi;
 
   let match;
   while ((match = headingPattern.exec(code)) !== null) {
@@ -191,12 +192,13 @@ function detectHeadings(code: string): DetectedField[] {
 
 /**
  * Detect paragraph and span elements with text content
+ * FIXED: Use [\s\S]*? to match content across newlines
  */
 function detectParagraphs(code: string): DetectedField[] {
   const paragraphs: DetectedField[] = [];
 
   // Detect <p> tags
-  const pPattern = /<p[^>]*>(.*?)<\/p>/gi;
+  const pPattern = /<p[^>]*>([\s\S]*?)<\/p>/gi;
   let match;
   while ((match = pPattern.exec(code)) !== null) {
     const content = extractTextContent(match[1]);
@@ -232,12 +234,13 @@ function detectImages(code: string): DetectedField[] {
 
 /**
  * Detect Button components
+ * FIXED: Use [\s\S]*? to match content across newlines
  */
 function detectButtons(code: string): DetectedField[] {
   const buttons: DetectedField[] = [];
 
   // Detect <Button> components
-  const buttonPattern = /<Button[^>]*>(.*?)<\/Button>/gi;
+  const buttonPattern = /<Button[^>]*>([\s\S]*?)<\/Button>/gi;
   let match;
   while ((match = buttonPattern.exec(code)) !== null) {
     const content = extractTextContent(match[1]);
@@ -247,7 +250,7 @@ function detectButtons(code: string): DetectedField[] {
   }
 
   // Also detect <button> HTML elements
-  const htmlButtonPattern = /<button[^>]*>(.*?)<\/button>/gi;
+  const htmlButtonPattern = /<button[^>]*>([\s\S]*?)<\/button>/gi;
   while ((match = htmlButtonPattern.exec(code)) !== null) {
     const content = extractTextContent(match[1]);
     if (content && content.length > 0) {
@@ -260,10 +263,11 @@ function detectButtons(code: string): DetectedField[] {
 
 /**
  * Detect link elements
+ * FIXED: Use [\s\S]*? to match content across newlines
  */
 function detectLinks(code: string): DetectedField[] {
   const links: DetectedField[] = [];
-  const linkPattern = /<a([^>]*)>(.*?)<\/a>/gi;
+  const linkPattern = /<a([^>]*)>([\s\S]*?)<\/a>/gi;
 
   let match;
   while ((match = linkPattern.exec(code)) !== null) {

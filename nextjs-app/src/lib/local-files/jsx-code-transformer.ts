@@ -1,11 +1,26 @@
 /**
  * JSX Code Transformer
  *
- * Transforms component source code to inject EditableText/EditableImage wrappers.
- * This allows components to be editable in LAB/BUILDER without runtime interception.
+ * ⚠️ DEPRECATED - This file is no longer used in the component pipeline.
  *
- * Strategy: String-based regex transformation (simple, no AST parsing needed)
+ * As of 2025-09-30, we've moved to a runtime wrapper approach instead of
+ * code transformation. Components are now stored as-is (clean, readable code)
+ * and editing capabilities are injected at runtime by EditableSectionWrapper.
  *
+ * This file is kept for reference but is not called during component creation.
+ * See /docs/In_Progress/SYSTEM_Editable_Sections.md for new architecture.
+ *
+ * OLD APPROACH (no longer used):
+ * - Transforms component source code to inject EditableText/EditableImage wrappers
+ * - Strategy: String-based regex transformation
+ *
+ * NEW APPROACH (current):
+ * - Components stored as original code
+ * - Schema detected from TypeScript interface
+ * - EditableSectionWrapper injects wrappers at runtime based on schema
+ * - Industry-standard pattern (Framer, Builder.io, Prismic)
+ *
+ * @deprecated Use runtime wrapper approach via EditableSectionWrapper instead
  * @module jsx-code-transformer
  */
 

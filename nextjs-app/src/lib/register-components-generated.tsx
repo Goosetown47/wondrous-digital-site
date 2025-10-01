@@ -1,5 +1,5 @@
 // THIS FILE IS AUTO-GENERATED. DO NOT EDIT.
-// Generated at: 2025-09-30T22:10:48.164Z
+// Generated at: 2025-10-01T02:02:33.653Z
 // Components: 1
 
 import { ComponentRegistry } from '@/lib/component-registry';

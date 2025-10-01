@@ -147,8 +147,9 @@ export async function POST(request: NextRequest) {
     steps[1].message = 'Saved to database successfully';
 
     // Step 2.5: Detect editable fields from JSX
+    // NEW APPROACH (2025-09-30): No transformation - save original code + schema
+    // Editing capabilities injected at runtime by EditableSectionWrapper
     steps[2].status = 'in_progress';
-    let transformedCode = savedComponent.code;
 
     try {
       console.log('🔍 Analyzing JSX content for editable fields...');
@@ -158,26 +159,47 @@ export async function POST(request: NextRequest) {
         contentKeys: Object.keys(analysis.defaultContent).length
       });
 
-      // Step 2.6: Transform source code to inject EditableText/EditableImage wrappers
-      if (analysis.editableFields.length > 0) {
-        console.log('🔄 Transforming component code to inject editing wrappers...');
-        const { transformComponentCode } = await import('@/lib/local-files/jsx-code-transformer');
-        const transformResult = transformComponentCode(savedComponent.code, analysis.editableFields);
+      // NEW (2025-09-30): Component Normalization
+      // Transform hardcoded components to prop-based at import
+      let finalCode = savedComponent.code;
+      let normalizedChanges = 0;
 
-        if (transformResult.success) {
-          transformedCode = transformResult.transformedCode;
-          console.log('✅ Code transformation successful');
+      if (analysis.editableFields.length > 0) {
+        const { shouldNormalize, normalizeComponent } = await import('@/lib/local-files/component-normalizer');
+
+        if (shouldNormalize(savedComponent.code)) {
+          console.log('🔄 Component is hardcoded - normalizing to use props...');
+
+          try {
+            const normalizeResult = normalizeComponent(
+              savedComponent.code,
+              analysis.editableFields,
+              analysis.defaultContent
+            );
+
+            finalCode = normalizeResult.normalizedCode;
+            normalizedChanges = normalizeResult.changes.length;
+
+            console.log('✅ Normalization complete:', {
+              interfaceAdded: normalizeResult.interfaceAdded,
+              propsAdded: normalizeResult.propsAdded,
+              replacements: normalizedChanges
+            });
+          } catch (normalizeError) {
+            console.warn('⚠️  Normalization failed, using original code:', normalizeError);
+            // Fall back to original code if normalization fails
+            finalCode = savedComponent.code;
+          }
         } else {
-          console.warn('⚠️  Code transformation had errors:', transformResult.errors);
-          // Continue with untransformed code
+          console.log('✓ Component already uses props - no normalization needed');
         }
       }
 
-      // Update component with detected fields and transformed code
+      // Update component with detected fields + normalized code
       const { error: updateError } = await supabase
         .from('core_components')
         .update({
-          code: transformedCode, // Save transformed code
+          code: finalCode, // CHANGED: Save normalized code (or original if no normalization needed)
           editable_fields: analysis.editableFields,
           default_content: analysis.defaultContent,
           updated_at: new Date().toISOString()
@@ -190,12 +212,13 @@ export async function POST(request: NextRequest) {
         steps[2].message = 'Field detection skipped (will use empty config)';
       } else {
         // Update local component object for file generation
-        savedComponent.code = transformedCode; // Use transformed code
+        savedComponent.code = finalCode; // Use normalized code (or original if no normalization)
         savedComponent.editable_fields = analysis.editableFields;
         savedComponent.default_content = analysis.defaultContent;
 
         steps[2].status = 'completed';
-        steps[2].message = `Detected ${analysis.editableFields.length} editable fields and transformed code`;
+        const normalizedNote = normalizedChanges > 0 ? ` (normalized: ${normalizedChanges} replacements)` : '';
+        steps[2].message = `Detected ${analysis.editableFields.length} editable fields${normalizedNote}`;
       }
     } catch (analysisError) {
       console.warn('⚠️  Field detection failed:', analysisError);
@@ -240,7 +263,7 @@ export async function POST(request: NextRequest) {
         .order('code_name');
 
       if (allComponents) {
-        await writer.updateRegistryFile(allComponents);
+        const registryResult = await writer.updateRegistryFile(allComponents);
 
         // Update deployment status
         await supabase

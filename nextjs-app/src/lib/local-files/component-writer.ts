@@ -98,6 +98,10 @@ export class LocalComponentWriter {
 
   /**
    * Generate component file content with wrapper
+   *
+   * NEW APPROACH (2025-09-30): Saves original component code as-is.
+   * No transformation applied. Editing capabilities are injected at runtime
+   * by EditableSectionWrapper based on the editableFields config.
    */
   private generateComponentFile(component: CoreComponent): string {
     const componentName = component.code_name;
@@ -129,22 +133,31 @@ export class LocalComponentWriter {
     return `// Component: ${safeName}
 // Created: ${new Date().toISOString()}
 // Edit in Core UI: /core
+//
+// NOTE: This component is stored AS-IS (no transformation).
+// Editing capabilities are injected at runtime by EditableSectionWrapper
+// based on the editableFields config exported below.
 
 'use client';
 
 import type { EditableFieldConfig } from '@/lib/component-registry';
 
-// Original component code
+// Original component code (untransformed)
 ${component.code}
 
-// Base component (renamed for wrapping)
+// Export for use in LAB/BUILDER
+// For normalized components (with Props interface), export directly for tree walking
+// For non-normalized, use wrapper pattern for compatibility
+${component.code.includes(`${actualComponentName}Props`) ?
+  `// Direct export (normalized component with props interface)
+export const ${componentName} = ${actualComponentName};` :
+  `// Base component (renamed for wrapping)
 const ${componentName}Base = ${actualComponentName};
 
-// Export for use in LAB/BUILDER
-// LabCanvas will wrap this with EditableSectionWrapper based on editableFields config
+// Wrapper export for LAB/BUILDER
 export function ${componentName}(props: Record<string, unknown>) {
   return <${componentName}Base {...props} />;
-}
+}`}
 
 // Export configuration for registry
 export const ${configName} = {
