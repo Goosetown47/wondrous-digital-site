@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { NextRequest } from 'next/server';
 import { POST } from '../execute/route';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { isAdminServer } from '@/lib/permissions/server-checks';
@@ -20,6 +21,7 @@ describe('/api/admin/commands/execute', () => {
 
   describe('authentication', () => {
     it('should return 401 if user is not authenticated', async () => {
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -29,7 +31,7 @@ describe('/api/admin/commands/execute', () => {
         },
       } as any);
 
-      const request = new Request('http://localhost:3000/api/admin/commands/execute', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/execute', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npm install framer-motion' }),
       });
@@ -39,6 +41,7 @@ describe('/api/admin/commands/execute', () => {
     });
 
     it('should return 403 if user is not admin', async () => {
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -50,7 +53,7 @@ describe('/api/admin/commands/execute', () => {
 
       vi.mocked(isAdminServer).mockResolvedValue(false);
 
-      const request = new Request('http://localhost:3000/api/admin/commands/execute', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/execute', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npm install framer-motion' }),
       });
@@ -62,6 +65,7 @@ describe('/api/admin/commands/execute', () => {
 
   describe('npm install execution', () => {
     beforeEach(() => {
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -98,7 +102,7 @@ describe('/api/admin/commands/execute', () => {
         output: 'added 1 package in 2s',
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/execute', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/execute', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npm install framer-motion' }),
       });
@@ -136,7 +140,7 @@ describe('/api/admin/commands/execute', () => {
         output: 'npm ERR! 404 Package not found',
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/execute', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/execute', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npm install nonexistent-package' }),
       });
@@ -153,6 +157,7 @@ describe('/api/admin/commands/execute', () => {
 
   describe('shadcn add execution', () => {
     beforeEach(() => {
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -190,7 +195,7 @@ describe('/api/admin/commands/execute', () => {
         output: 'Component button installed successfully',
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/execute', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/execute', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npx shadcn add button' }),
       });
@@ -228,7 +233,7 @@ describe('/api/admin/commands/execute', () => {
         output: 'Component container-text-flip installed successfully',
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/execute', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/execute', {
         method: 'POST',
         body: JSON.stringify({ commands: `npx shadcn add ${url}` }),
       });
@@ -244,6 +249,7 @@ describe('/api/admin/commands/execute', () => {
 
   describe('batch execution', () => {
     beforeEach(() => {
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -298,7 +304,7 @@ npx shadcn add button`;
         output: 'Component button installed',
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/execute', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/execute', {
         method: 'POST',
         body: JSON.stringify({ commands }),
       });
@@ -352,7 +358,7 @@ npx shadcn add button`;
         output: 'Component button installed',
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/execute', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/execute', {
         method: 'POST',
         body: JSON.stringify({ commands }),
       });
@@ -373,6 +379,7 @@ npx shadcn add button`;
       const mockInsert = vi.fn().mockReturnThis();
       const mockSelect = vi.fn().mockResolvedValue({ data: { id: 'log-123' }, error: null });
 
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -409,7 +416,7 @@ npx shadcn add button`;
         output: 'added 1 package',
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/execute', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/execute', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npm install framer-motion' }),
       });
@@ -427,6 +434,7 @@ npx shadcn add button`;
     });
 
     it('should continue even if database logging fails', async () => {
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -463,7 +471,7 @@ npx shadcn add button`;
         output: 'added 1 package',
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/execute', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/execute', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npm install framer-motion' }),
       });
@@ -478,6 +486,7 @@ npx shadcn add button`;
 
   describe('unknown command types', () => {
     beforeEach(() => {
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -505,7 +514,7 @@ npx shadcn add button`;
         totalCommands: 1,
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/execute', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/execute', {
         method: 'POST',
         body: JSON.stringify({ commands: 'yarn add framer-motion' }),
       });
@@ -514,7 +523,7 @@ npx shadcn add button`;
       const data = await response.json();
 
       expect(data.results[0].success).toBe(false);
-      expect(data.results[0].errors).toContain('Unknown command type');
+      expect(data.results[0].errors).toContain('Unknown command type or missing required parameters');
       expect(data.summary.failed).toBe(1);
     });
   });

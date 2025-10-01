@@ -6,7 +6,7 @@ import { env } from '@/env.mjs';
 import { isAdminServer, isStaffServer } from '@/lib/permissions/server-checks';
 import { getCodeNameWithAutoNumber } from '@/lib/services/naming-service';
 import { LocalComponentWriter } from '@/lib/local-files/component-writer';
-import { analyzeJSXContent } from '@/lib/local-files/jsx-content-analyzer';
+import { analyzeJSXContent } from '@/lib/local-files/analyzers';
 import type { CoreComponent } from '@/types/builder';
 
 import type { CoreComponentSource } from '@/types/builder';
@@ -166,29 +166,37 @@ export async function POST(request: NextRequest) {
 
       if (analysis.editableFields.length > 0) {
         const { shouldNormalize, normalizeComponent } = await import('@/lib/local-files/component-normalizer');
+        const { detectMainComponentName } = await import('@/lib/local-files/analyzers');
 
         if (shouldNormalize(savedComponent.code)) {
           console.log('🔄 Component is hardcoded - normalizing to use props...');
 
-          try {
-            const normalizeResult = normalizeComponent(
-              savedComponent.code,
-              analysis.editableFields,
-              analysis.defaultContent
-            );
+          // Detect main component name for normalization
+          const componentName = detectMainComponentName(savedComponent.code);
+          if (!componentName) {
+            console.warn('⚠️  Could not detect component name - skipping normalization');
+          } else {
+            try {
+              const normalizeResult = normalizeComponent(
+                savedComponent.code,
+                componentName, // Pass the detected component name
+                analysis.editableFields,
+                analysis.defaultContent
+              );
 
             finalCode = normalizeResult.normalizedCode;
             normalizedChanges = normalizeResult.changes.length;
 
-            console.log('✅ Normalization complete:', {
-              interfaceAdded: normalizeResult.interfaceAdded,
-              propsAdded: normalizeResult.propsAdded,
-              replacements: normalizedChanges
-            });
-          } catch (normalizeError) {
-            console.warn('⚠️  Normalization failed, using original code:', normalizeError);
-            // Fall back to original code if normalization fails
-            finalCode = savedComponent.code;
+              console.log('✅ Normalization complete:', {
+                interfaceAdded: normalizeResult.interfaceAdded,
+                propsAdded: normalizeResult.propsAdded,
+                replacements: normalizedChanges
+              });
+            } catch (normalizeError) {
+              console.warn('⚠️  Normalization failed, using original code:', normalizeError);
+              // Fall back to original code if normalization fails
+              finalCode = savedComponent.code;
+            }
           }
         } else {
           console.log('✓ Component already uses props - no normalization needed');

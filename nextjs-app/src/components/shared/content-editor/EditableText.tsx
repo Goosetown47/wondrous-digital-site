@@ -68,14 +68,28 @@ export function EditableText({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Render children if provided, otherwise render the text with SmartText for rich content */}
-        {children || (
-          richText ? (
+        {/* Render rich text content or children */}
+        {(() => {
+          // PRIORITY 1: If richText with HTML, use SmartText to render HTML
+          // This must come BEFORE children check to avoid showing raw HTML tags
+          if (richText && value && value.includes('<')) {
+            return <SmartText content={value} forceRichText={true} />;
+          }
+
+          // PRIORITY 2: Render children if provided - preserves original element styling
+          // This is critical for rich text fields that need to maintain CSS classes
+          // (e.g., text-muted-foreground, text-2xl, etc.)
+          if (children) {
+            return children;
+          }
+
+          // PRIORITY 3: Fallback to rendering value directly
+          return richText ? (
             <SmartText content={value || placeholder} forceRichText={true} />
           ) : (
             <span>{value || placeholder}</span>
-          )
-        )}
+          );
+        })()}
 
         {/* Hover overlay indicator */}
         {isHovered && (

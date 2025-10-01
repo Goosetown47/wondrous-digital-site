@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { NextRequest } from 'next/server';
 import { POST } from '../preview/route';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { isAdminServer } from '@/lib/permissions/server-checks';
@@ -18,6 +19,7 @@ describe('/api/admin/commands/preview', () => {
 
   describe('authentication', () => {
     it('should return 401 if user is not authenticated', async () => {
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -27,7 +29,7 @@ describe('/api/admin/commands/preview', () => {
         },
       } as any);
 
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npm install framer-motion' }),
       });
@@ -37,6 +39,7 @@ describe('/api/admin/commands/preview', () => {
     });
 
     it('should return 403 if user is not admin', async () => {
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -48,7 +51,7 @@ describe('/api/admin/commands/preview', () => {
 
       vi.mocked(isAdminServer).mockResolvedValue(false);
 
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npm install framer-motion' }),
       });
@@ -58,6 +61,7 @@ describe('/api/admin/commands/preview', () => {
     });
 
     it('should proceed if user is authenticated admin', async () => {
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -79,7 +83,7 @@ describe('/api/admin/commands/preview', () => {
         versions: {},
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({ commands: '' }),
       });
@@ -92,6 +96,7 @@ describe('/api/admin/commands/preview', () => {
   describe('request validation', () => {
     beforeEach(() => {
       // Setup authenticated admin for all these tests
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -104,7 +109,7 @@ describe('/api/admin/commands/preview', () => {
     });
 
     it('should return 400 if commands is missing', async () => {
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({}),
       });
@@ -117,7 +122,7 @@ describe('/api/admin/commands/preview', () => {
     });
 
     it('should return 400 if commands is not a string', async () => {
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({ commands: 123 }),
       });
@@ -133,7 +138,7 @@ describe('/api/admin/commands/preview', () => {
         totalCommands: 0,
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({ commands: '' }),
       });
@@ -145,6 +150,7 @@ describe('/api/admin/commands/preview', () => {
 
   describe('npm install preview', () => {
     beforeEach(() => {
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -176,7 +182,7 @@ describe('/api/admin/commands/preview', () => {
         versions: {},
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npm install framer-motion' }),
       });
@@ -215,7 +221,7 @@ describe('/api/admin/commands/preview', () => {
         versions: { 'framer-motion': '^12.23.6' },
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npm install framer-motion lucide-react' }),
       });
@@ -224,11 +230,13 @@ describe('/api/admin/commands/preview', () => {
       const data = await response.json();
 
       expect(data.preview.npmPackages).toHaveLength(2);
+      // eslint-disable-next-line
       expect(data.preview.npmPackages.find((p: any) => p.name === 'framer-motion')).toEqual({
         name: 'framer-motion',
         alreadyInstalled: true,
         version: '^12.23.6',
       });
+      // eslint-disable-next-line
       expect(data.preview.npmPackages.find((p: any) => p.name === 'lucide-react')).toEqual({
         name: 'lucide-react',
         alreadyInstalled: false,
@@ -239,6 +247,7 @@ describe('/api/admin/commands/preview', () => {
 
   describe('shadcn add preview', () => {
     beforeEach(() => {
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -269,7 +278,7 @@ describe('/api/admin/commands/preview', () => {
         totalCommands: 1,
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npx shadcn add button' }),
       });
@@ -299,7 +308,7 @@ describe('/api/admin/commands/preview', () => {
         totalCommands: 1,
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({ commands: `npx shadcn add ${url}` }),
       });
@@ -317,6 +326,7 @@ describe('/api/admin/commands/preview', () => {
 
   describe('batch commands preview', () => {
     beforeEach(() => {
+      // eslint-disable-next-line
       vi.mocked(createSupabaseServerClient).mockResolvedValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -364,7 +374,7 @@ npx shadcn add https://ui.aceternity.com/registry/container-text-flip.json`;
         versions: {},
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({ commands }),
       });
@@ -397,7 +407,7 @@ npx shadcn add https://ui.aceternity.com/registry/container-text-flip.json`;
         versions: {},
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npm install' }),
       });
@@ -428,7 +438,7 @@ npx shadcn add https://ui.aceternity.com/registry/container-text-flip.json`;
         throw new Error('Parser error');
       });
 
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npm install framer-motion' }),
       });
@@ -458,7 +468,7 @@ npx shadcn add https://ui.aceternity.com/registry/container-text-flip.json`;
         new Error('Failed to read package.json')
       );
 
-      const request = new Request('http://localhost:3000/api/admin/commands/preview', {
+      const request = new NextRequest('http://localhost:3000/api/admin/commands/preview', {
         method: 'POST',
         body: JSON.stringify({ commands: 'npm install framer-motion' }),
       });

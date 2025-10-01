@@ -1,5 +1,14 @@
 /**
- * JSX Content Analyzer
+ * DEPRECATED - Kept for reference only
+ *
+ * This file has been replaced by the new analyzer services in /lib/local-files/analyzers/
+ * See SYSTEM_Section_Analyzers.md for details on the refactor.
+ *
+ * DO NOT USE THIS FILE - will be deleted after new system verified in production
+ *
+ * ---
+ *
+ * JSX Content Analyzer (OLD MONOLITHIC VERSION)
  *
  * Automatically detects editable fields from component code using hybrid approach:
  * 1. Parse TypeScript interfaces (for prop-based components)

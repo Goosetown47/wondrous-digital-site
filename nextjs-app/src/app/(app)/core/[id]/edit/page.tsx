@@ -24,7 +24,7 @@ export default function EditComponentPage() {
   const [formData, setFormData] = useState({
     name: '',
     type: 'component' as 'component' | 'section',
-    source: 'shadcn' as 'shadcn' | 'aceternity' | 'expansions' | 'custom',
+    source: 'shadcn' as import('@/types/builder').CoreComponentSource,
     code: '',
     dependencies: [] as string[],
     imports: [] as string[],

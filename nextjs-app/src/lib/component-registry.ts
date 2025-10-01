@@ -11,16 +11,18 @@ export type ComponentSubCategory = string;
  * Types of editable fields
  */
 export type EditableFieldType =
-  | 'text'        // Plain text (headings, labels)
-  | 'richText'    // Rich text with formatting
-  | 'image'       // Image with upload
-  | 'url'         // URL/link
-  | 'button'      // Button with text and link
-  | 'array'       // Array of items
-  | 'object'      // Nested object
-  | 'select'      // Dropdown selection
-  | 'boolean'     // Checkbox/toggle
-  | 'number';     // Numeric input
+  | 'text'              // Plain text (headings, labels)
+  | 'richText'          // Rich text with formatting
+  | 'image'             // Image with upload
+  | 'url'               // URL/link
+  | 'button'            // Button with text and link
+  | 'array'             // Array of items
+  | 'array-item'        // Individual array item field
+  | 'array-relocation'  // Array relocation marker
+  | 'object'            // Nested object
+  | 'select'            // Dropdown selection
+  | 'boolean'           // Checkbox/toggle
+  | 'number';           // Numeric input
 
 /**
  * Configuration for an editable field
@@ -79,7 +81,7 @@ export interface ComponentRegistryEntry {
   contentSchema?: Record<string, any>;
   category?: ComponentSubCategory;
   description?: string;
-  source?: 'shadcn' | 'aceternity' | 'expansions' | 'custom';
+  source?: import('@/types/builder').CoreComponentSource;
   dependencies?: string[];
   imports?: string[];
 

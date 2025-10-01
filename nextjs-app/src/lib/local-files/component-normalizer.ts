@@ -31,7 +31,7 @@ import type { EditableFieldConfig } from '@/lib/component-registry';
 export interface NormalizeResult {
   normalizedCode: string;
   changes: Array<{
-    type: 'text' | 'image' | 'button';
+    type: 'text' | 'image' | 'button' | 'array-item' | 'array-relocation';
     field: string;
     originalValue: string;
   }>;
@@ -111,7 +111,7 @@ export function shouldNormalize(code: string): boolean {
  *
  * Transformation steps:
  * 1. Parse code to AST
- * 2. Find component function
+ * 2. Find component function (by componentName - the exported component)
  * 3. Generate TypeScript interface from schema
  * 4. Replace hardcoded JSX text with prop references
  * 5. Replace hardcoded image src with props
@@ -120,12 +120,14 @@ export function shouldNormalize(code: string): boolean {
  * 8. Generate and return normalized code
  *
  * @param code - Original component code
+ * @param componentName - Name of the main exported component to normalize
  * @param schema - Detected editable fields
  * @param defaultContent - Default values extracted from component
  * @returns Normalized code and metadata
  */
 export function normalizeComponent(
   code: string,
+  componentName: string,
   schema: EditableFieldConfig[],
   defaultContent: Record<string, unknown>
 ): NormalizeResult {
@@ -138,10 +140,9 @@ export function normalizeComponent(
       plugins: ['typescript', 'jsx'],
     });
 
-    let componentName = '';
     let componentNode: (t.ArrowFunctionExpression | t.FunctionDeclaration) | null = null;
 
-    // Step 1: Find the component function
+    // Step 1: Find the SPECIFIC component function (by name)
     traverse(ast, {
       VariableDeclaration(path) {
         const declaration = path.node.declarations[0];
@@ -150,16 +151,19 @@ export function normalizeComponent(
         if (
           t.isVariableDeclarator(declaration) &&
           t.isIdentifier(declaration.id) &&
+          declaration.id.name === componentName && // Match the specific component name
           t.isArrowFunctionExpression(declaration.init)
         ) {
-          componentName = declaration.id.name;
           componentNode = declaration.init as t.ArrowFunctionExpression;
         }
       },
 
       FunctionDeclaration(path) {
-        if (path.node.id && t.isIdentifier(path.node.id)) {
-          componentName = path.node.id.name;
+        if (
+          path.node.id &&
+          t.isIdentifier(path.node.id) &&
+          path.node.id.name === componentName // Match the specific component name
+        ) {
           componentNode = path.node as t.FunctionDeclaration;
         }
       },
@@ -177,11 +181,70 @@ export function normalizeComponent(
 
     // Update component params directly
     // Both ArrowFunctionExpression and FunctionDeclaration have params property
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (componentNode as any).params = [propsParam];
 
     // Step 4: Transform JSX - Replace hardcoded values with prop references
+    // Track arrays that need to be moved inside component
+    const arraysToMove: t.VariableDeclaration[] = [];
+
     traverse(ast, {
+      // Handle array declarations for mapped content
+      // Example: const features = [{title: "...", description: "..."}]
+      // → Move inside component and replace values with prop references
+      VariableDeclaration(path) {
+        const declaration = path.node.declarations[0];
+        if (!declaration || !t.isVariableDeclarator(declaration)) return;
+        if (!t.isIdentifier(declaration.id)) return;
+        if (!t.isArrayExpression(declaration.init)) return;
+
+        const arrayName = declaration.id.name;
+
+        // Check if this array has corresponding props in schema (e.g., features1Title, features2Title)
+        const arrayProps = schema.filter(f => f.path.startsWith(arrayName) && /\d/.test(f.path));
+        if (arrayProps.length === 0) return;
+
+        // Get array elements
+        const arrayElements = declaration.init.elements;
+
+        // Replace hardcoded values with prop references
+        arrayElements.forEach((element, index) => {
+          if (!t.isObjectExpression(element)) return;
+
+          const itemNum = index + 1;
+
+          element.properties.forEach((prop) => {
+            if (!t.isObjectProperty(prop)) return;
+            if (!t.isIdentifier(prop.key)) return;
+
+            const propKey = prop.key.name; // e.g., "title" or "description"
+            const propPath = `${arrayName}${itemNum}${propKey.charAt(0).toUpperCase()}${propKey.slice(1)}`;
+            // e.g., "features1Title", "features1Description"
+
+            // Check if this prop exists in schema
+            const field = schema.find(f => f.path === propPath);
+            if (field) {
+              // Save original value before replacing
+              const originalValue = t.isStringLiteral(prop.value) ? prop.value.value : 'unknown';
+
+              // Replace hardcoded value with prop reference
+              prop.value = t.identifier(propPath);
+
+              changes.push({
+                type: 'array-item',
+                field: propPath,
+                originalValue,
+              });
+            }
+          });
+        });
+
+        // Store the modified array declaration for later insertion
+        arraysToMove.push(path.node as t.VariableDeclaration);
+
+        // Remove from current location (module scope)
+        path.remove();
+      },
+
       // Handle JSX text nodes: <h1>text</h1> → <h1>{propName}</h1>
       JSXText(path) {
         const rawText = path.node.value.trim();
@@ -190,8 +253,8 @@ export function normalizeComponent(
         // Normalize whitespace for comparison (collapse multiple spaces/newlines to single space)
         const normalizedText = rawText.replace(/\s+/g, ' ');
 
-        // Find matching field in schema
-        const field = schema.find((f) => {
+        // Try to find matching text/richText field
+        let field = schema.find((f) => {
           if (f.type !== 'text' && f.type !== 'richText') return false;
 
           const fieldValue = String(defaultContent[f.path]);
@@ -199,6 +262,55 @@ export function normalizeComponent(
 
           return normalizedFieldValue === normalizedText;
         });
+
+        // If no text field match, try button fields
+        if (!field) {
+          field = schema.find((f) => {
+            if (f.type !== 'button') return false;
+
+            // Handle button object: button.text
+            const buttonData = defaultContent[f.path];
+            if (typeof buttonData === 'object' && buttonData !== null) {
+              const buttonText = String((buttonData as Record<string, unknown>).text || '');
+              const normalizedButtonText = buttonText.replace(/\s+/g, ' ');
+              return normalizedButtonText === normalizedText;
+            }
+
+            // Handle flat button text field: buttonText
+            const buttonText = String(defaultContent[f.path]);
+            const normalizedButtonText = buttonText.replace(/\s+/g, ' ');
+            return normalizedButtonText === normalizedText;
+          });
+
+          // If button field found, use button.text or buttonText as the prop path
+          if (field) {
+            // For button objects, use button.text
+            const buttonData = defaultContent[field.path];
+            const propPath = typeof buttonData === 'object' && buttonData !== null
+              ? `${field.path}.text`
+              : field.path;
+
+            // Replace text with {button.text} or {buttonText}
+            path.replaceWith(
+              t.jsxExpressionContainer(
+                propPath.includes('.')
+                  ? t.memberExpression(
+                      t.identifier(propPath.split('.')[0]),
+                      t.identifier(propPath.split('.')[1])
+                    )
+                  : t.identifier(propPath)
+              )
+            );
+
+            changes.push({
+              type: 'button',
+              field: propPath,
+              originalValue: normalizedText,
+            });
+
+            return; // Exit early for button fields
+          }
+        }
 
         if (field) {
           // Replace text with {propName}
@@ -264,6 +376,40 @@ export function normalizeComponent(
         }
       },
     });
+
+    // Step 4.5: Move arrays inside component function body
+    if (arraysToMove.length > 0 && componentNode) {
+      // Get the component's function body
+      let functionBody: t.BlockStatement | null = null;
+
+      if (t.isArrowFunctionExpression(componentNode)) {
+        const arrowFunc = componentNode as t.ArrowFunctionExpression;
+        // For arrow functions, body might be BlockStatement or JSXElement
+        if (t.isBlockStatement(arrowFunc.body)) {
+          functionBody = arrowFunc.body;
+        } else {
+          // Convert JSX return to BlockStatement: () => <jsx> → () => { return <jsx>; }
+          const returnStatement = t.returnStatement(arrowFunc.body);
+          functionBody = t.blockStatement([returnStatement]);
+          arrowFunc.body = functionBody;
+        }
+      } else if (t.isFunctionDeclaration(componentNode)) {
+        const funcDecl = componentNode as t.FunctionDeclaration;
+        functionBody = funcDecl.body;
+      }
+
+      // Insert arrays at the start of the function body
+      if (functionBody && t.isBlockStatement(functionBody)) {
+        // Insert all arrays at the beginning
+        functionBody.body.unshift(...arraysToMove);
+
+        changes.push({
+          type: 'array-relocation',
+          field: `${arraysToMove.length} array(s)`,
+          originalValue: 'Moved from module scope to component scope',
+        });
+      }
+    }
 
     // Step 5: Inject interface at the top (after imports)
     let lastImportIndex = -1;
@@ -402,17 +548,9 @@ function getTypeScriptType(fieldType: EditableFieldConfig['type']): t.TSType {
       return t.tsBooleanKeyword();
 
     case 'button':
-      // button: { text: string; url: string; variant?: string; size?: string }
-      return t.tsTypeLiteral([
-        t.tsPropertySignature(
-          t.identifier('text'),
-          t.tsTypeAnnotation(t.tsStringKeyword())
-        ),
-        t.tsPropertySignature(
-          t.identifier('url'),
-          t.tsTypeAnnotation(t.tsStringKeyword())
-        ),
-      ]);
+      // Buttons are stored as strings (just the button text)
+      // URL is stored separately as a 'url' type field (e.g., button1Url)
+      return t.tsStringKeyword();
 
     case 'array':
       // For now, return any[] - we'll improve this later

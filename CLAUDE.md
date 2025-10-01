@@ -15,10 +15,17 @@ This is a **Next.js 15 multi-tenant website builder platform**. All active devel
 ## 📋 Essential Reading
 
 **IMPORTANT**: Before making any code changes, read these documents:
-- @docs/PRINCIPLES.md - Learn about our most important principles
-- @docs/PROCESS.md - Learn about our process
-- @docs/CODE-CHECKLIST.md - Learn about our code standards
-- @docs/Release_Notes/v#.#.#.md - Find the latest release notes & log 
+- `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/PRINCIPLES.md` - Learn about our most important principles
+- `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/PROCESS.md` - Learn about our process
+- `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/CODE-CHECKLIST.md` - Learn about our code standards
+- `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/Release_Notes/v#.#.#.md` - Find the latest release notes & log 
+
+
+## CURRENT PROJECT
+READ THESE before moving forward:
+- `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/In_Progress/SYSTEM_Editable_Sections.md`
+- `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/In_Progress/SYSTEM_Section_Analyzers.md`
+`/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/In_Progress/TEST_REPORT_Editable_Fields_10-1-25_420pm.md`
 
 
 ## PROCESS OVERVIEW
@@ -42,23 +49,23 @@ We manage our architecture, systems, features, and bugs as individual markdown f
   - Feature: `Title_Case_Name.md`
   - Bug: `BUG_Title_Case_Name.md`
 
-### @docs/Backlog/
+### `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/Backlog/`
 - Things we haven't worked on yet go into this folder. 
 - We use the @docs/Templates/Feature_Doc.md template to structure each file.
 - We pull features from here and place them into our @docs/In_Progress/ folder to work on them for the sprint
 
-### @docs/In_Progress/
+### `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/In_Progress/`
 - These are the things we're currently working on in the sprint.
 - Can pull from @docs/Tech_Docs (which is completed features, that need more work) or @docs/Backlog/ to bring in new features.
 - Found Work: Create a new file for the system, feature, or bug and figure out what to do with it (put it in the Backlog folder to work on it later, or keep it in the In_Progress folder to get to it eventually)
 
-### @docs/Tech_Docs/ 
+### `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/Tech_Docs/` 
 - This is where all completed features, systems, and bugs go when we're done with them.
 - We can continue to work on them, by bringing them back into the In_Progress folder.
 - When we need to learn about how something works, this should be the first folder we look in.
 - Serves as technical documentation for the whole project.
 
-### @docs/Release_Notes/v#.#.#.md
+### `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/Release_Notes/v#.#.#.md`
 - We keep a record of the things we work on and the release notes.
 - This is how we identify what major epics we're working on.
 - Intended to be very succinct. Details go in each feature file.
@@ -68,7 +75,7 @@ We manage our architecture, systems, features, and bugs as individual markdown f
 
 ### SPRINT Planning
 1. User will create a list of things to work on in a Release file.
-2. User will move items from @docs/Backlog/ into @docs/In_Progress
+2. ONLY the User will move items from `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/Backlog/` into `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/In_Progress`
 3. User will create any missing documents for the sprint
 4. Everything should have its own file.
 
@@ -76,10 +83,10 @@ We manage our architecture, systems, features, and bugs as individual markdown f
 1. CLAUDE checks our Release file for an overview of what we're working on
 2. CLAUDE finds and reads files in @docs/In_Progress to ensure everything matches
 3. CLAUDE asks user to start server on port 3000 (waits for confirmation)
-4. CLAUDE follows @docs/PROCESS.md checklist
+4. CLAUDE follows `/home/goosetown/Claude/Projects/wondrous-digital-site/nextjs-app/docs/PROCESS.md` checklist
 
 ### SPRINT Complete Development
-1. We deploy to staging to test
+1. We deploy to staging to test it manually
 2. Once tested and working, we merge with PROD.
 3. Have user apply applicable migrations to PROD.
 4. Assist user by writing Release Notes in release file.

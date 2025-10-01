@@ -6,7 +6,6 @@ import { setValueAtPath } from '@/lib/editable-field-detector';
 import { EditableText } from './EditableText';
 import { EditableImage } from './EditableImage';
 import { EditableButton } from './EditableButton';
-import type { EditableFieldConfig } from '@/lib/component-registry';
 
 interface EditableSectionWrapperProps {
   /** Name of the component in the registry */
@@ -65,9 +64,15 @@ export function EditableSectionWrapper({
         console.log('🔄 [EditableSectionWrapper] Field update:', {
           fieldPath,
           newValue: value,
+          currentContent: content,
         });
 
         const updatedContent = setValueAtPath({ ...content }, fieldPath, value);
+
+        console.log('🔄 [EditableSectionWrapper] Content after setValueAtPath:', {
+          fieldPath,
+          updatedContent,
+        });
 
         // Filter out functions - only pass actual content, not handlers
         const cleanContent = Object.entries(updatedContent).reduce((acc, [key, val]) => {
@@ -77,6 +82,7 @@ export function EditableSectionWrapper({
           return acc;
         }, {} as Record<string, unknown>);
 
+        console.log('🔄 [EditableSectionWrapper] Calling onContentUpdate with:', cleanContent);
         onContentUpdate(cleanContent);
       };
     },
@@ -106,8 +112,9 @@ export function EditableSectionWrapper({
 
       // IMPORTANT: Recurse into children FIRST to match leaf nodes before parents
       let processedElement = element;
-      if (element.props && element.props.children) {
-        const wrappedChildren = React.Children.map(element.props.children, (child) => {
+      const elementProps = element.props as any;
+      if (elementProps && elementProps.children) {
+        const wrappedChildren = React.Children.map(elementProps.children, (child) => {
           if (isValidElement(child)) {
             return wrapTree(child);
           }
@@ -115,13 +122,25 @@ export function EditableSectionWrapper({
         });
 
         // If children changed, clone element with new children
-        if (wrappedChildren !== element.props.children) {
+        if (wrappedChildren !== elementProps.children) {
           processedElement = React.cloneElement(element, {}, wrappedChildren);
         }
       }
 
       // Now check if THIS element (with wrapped children) matches a field
-      const elementType = typeof processedElement.type === 'string' ? processedElement.type : 'component';
+      let elementType: string;
+      if (typeof processedElement.type === 'string') {
+        elementType = processedElement.type;
+      } else if (typeof processedElement.type === 'function') {
+        // Get the component name for function components
+        const funcComponent = processedElement.type as any;
+        elementType = funcComponent.name || funcComponent.displayName || 'component';
+      } else {
+        elementType = 'component';
+      }
+
+      // Get props for field matching
+      const processedPropsForMatching = processedElement.props as any;
 
       for (const field of editableFields) {
         const fieldValue = getNestedValue(content, field.path);
@@ -133,7 +152,7 @@ export function EditableSectionWrapper({
             // Check if this is an alt text field (special case - attribute, not text content)
             if (field.path.endsWith('Alt') && elementType === 'img') {
               // Match alt attributes on img tags
-              if (processedElement.props.alt === fieldValue) {
+              if (processedPropsForMatching.alt === fieldValue) {
                 console.log('✅ [Wrapper] Match found (alt attribute):', {
                   fieldPath: field.path,
                   fieldType: field.type,
@@ -181,7 +200,7 @@ export function EditableSectionWrapper({
 
           case 'image': {
             // Only match img tags
-            if (elementType === 'img' && processedElement.props.src === fieldValue) {
+            if (elementType === 'img' && processedPropsForMatching.src === fieldValue) {
               console.log('✅ [Wrapper] Match found:', {
                 fieldPath: field.path,
                 fieldType: field.type,
@@ -191,7 +210,8 @@ export function EditableSectionWrapper({
               return (
                 <EditableImage
                   src={String(fieldValue)}
-                  alt={processedElement.props.alt || ''}
+                  alt={processedPropsForMatching.alt || ''}
+                  className={processedPropsForMatching.className}
                   onUpdate={fieldHandlers[field.path]}
                   editable={editable}
                 />
@@ -201,11 +221,63 @@ export function EditableSectionWrapper({
           }
 
           case 'button': {
-            // Only match Button component or button elements
-            const isButtonElement = elementType === 'button' || elementType === 'Button';
-            if (isButtonElement && typeof fieldValue === 'object' && fieldValue !== null) {
-              const buttonData = fieldValue as { text: string; url: string };
-              if (elementContainsValue(processedElement, buttonData.text)) {
+            // Match Button component or button elements
+            // Note: shadcn/ui Button is a forwardRef, so it appears as 'component'
+            // We need to check for 'component' type when in button field context
+            const isButtonElement =
+              elementType === 'button' ||
+              elementType === 'Button' ||
+              elementType === 'component'; // forwardRef components show as 'component'
+
+            console.log('🔍 [Button Debug] Checking button field:', {
+              fieldPath: field.path,
+              fieldValue,
+              elementType,
+              isButtonElement,
+            });
+
+            if (isButtonElement) {
+              // Handle both object format (legacy) and string format (new)
+              let buttonText: string;
+              let buttonData: { text: string; url: string };
+
+              if (typeof fieldValue === 'object' && fieldValue !== null) {
+                // Legacy object format: { text: string, url: string }
+                buttonData = fieldValue as { text: string; url: string };
+                buttonText = buttonData.text;
+              } else {
+                // New string format: just the button text
+                buttonText = String(fieldValue);
+                buttonData = { text: buttonText, url: '' };
+              }
+
+              // Extract text from element for comparison
+              const elementText = getElementText(processedElement);
+              let containsValue = elementContainsValue(processedElement, buttonText);
+
+              // FALLBACK: For forwardRef Button components, extract text from children
+              // When elementText is empty, we need to recursively extract text from nested structure
+              if (!containsValue && elementType === 'component' && processedPropsForMatching?.children) {
+                // Create a temporary wrapper element to extract text from children
+                const wrapperElement = React.createElement('div', {}, processedPropsForMatching.children);
+                const childrenText = getElementText(wrapperElement as ReactElement);
+                containsValue = childrenText === buttonText || childrenText.includes(buttonText);
+                console.log('🔍 [Button Debug] Fallback check:', {
+                  fieldPath: field.path,
+                  childrenText,
+                  buttonText,
+                  matches: containsValue,
+                });
+              }
+
+              console.log('🔍 [Button Debug] Matching attempt:', {
+                fieldPath: field.path,
+                lookingFor: buttonText,
+                elementText,
+                containsValue,
+              });
+
+              if (containsValue) {
                 console.log('✅ [Wrapper] Match found:', {
                   fieldPath: field.path,
                   fieldType: field.type,
@@ -215,12 +287,30 @@ export function EditableSectionWrapper({
                 return (
                   <EditableButton
                     buttonData={buttonData}
-                    onUpdate={fieldHandlers[field.path]}
+                    onUpdate={(newButtonData) => {
+                      console.log('🔵 [Button Update] onUpdate called:', {
+                        fieldPath: field.path,
+                        oldValue: buttonData.text,
+                        newValue: newButtonData.text,
+                      });
+
+                      // Only save the button text as a string
+                      // This maintains compatibility with our analyzer/normalizer
+                      // which expect button fields to be strings in defaultContent
+                      console.log('🔵 [Button Update] Calling fieldHandler for:', field.path);
+                      fieldHandlers[field.path](newButtonData.text);
+                      console.log('🔵 [Button Update] fieldHandler called successfully');
+                    }}
                     editable={editable}
                   >
                     {processedElement}
                   </EditableButton>
                 );
+              } else {
+                console.log('❌ [Button Debug] No match:', {
+                  fieldPath: field.path,
+                  reason: 'elementContainsValue returned false',
+                });
               }
             }
             break;
@@ -252,12 +342,14 @@ export function EditableSectionWrapper({
     let elementToWrap = children;
     if (typeof children.type === 'function') {
       console.log('🔄 [Wrapper] Rendering function component to get JSX output...');
-      // Render the component by calling it with its props
+      console.log('🔄 [Wrapper] Using content:', content);
+
+      // Render the component with the CURRENT content, not children.props
+      // This ensures we always render with the latest state
       // Type assertion needed as TypeScript doesn't know type is callable
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const ComponentFn = children.type as (props: any) => ReactElement;
-      elementToWrap = ComponentFn(children.props || {});
-      console.log('✅ [Wrapper] Component rendered, now walking output');
+      elementToWrap = ComponentFn(content);
+      console.log('✅ [Wrapper] Component rendered with current content');
     }
 
     // Walk the tree and wrap matching elements
@@ -277,7 +369,6 @@ export function EditableSectionWrapper({
  */
 function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
   const parts = path.split('.');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let current: any = obj;
 
   for (const part of parts) {
@@ -318,8 +409,9 @@ function getElementText(element: ReactElement): string {
     } else if (typeof node === 'number') {
       text += String(node);
     } else if (isValidElement(node)) {
-      if (node.props && node.props.children) {
-        React.Children.forEach(node.props.children, traverse);
+      const nodeProps = node.props as any;
+      if (nodeProps && nodeProps.children) {
+        React.Children.forEach(nodeProps.children, traverse);
       }
     } else if (Array.isArray(node)) {
       node.forEach(traverse);
