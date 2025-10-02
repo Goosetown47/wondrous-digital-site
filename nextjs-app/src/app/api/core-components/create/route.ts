@@ -6,7 +6,7 @@ import { env } from '@/env.mjs';
 import { isAdminServer, isStaffServer } from '@/lib/permissions/server-checks';
 import { getCodeNameWithAutoNumber } from '@/lib/services/naming-service';
 import { LocalComponentWriter } from '@/lib/local-files/component-writer';
-import { analyzeJSXContent } from '@/lib/local-files/analyzers';
+import { extractConfigFromSource } from '@/lib/local-files/config-extractor';
 import type { CoreComponent } from '@/types/builder';
 
 import type { CoreComponentSource } from '@/types/builder';
@@ -146,93 +146,54 @@ export async function POST(request: NextRequest) {
     steps[1].status = 'completed';
     steps[1].message = 'Saved to database successfully';
 
-    // Step 2.5: Detect editable fields from JSX
-    // NEW APPROACH (2025-09-30): No transformation - save original code + schema
-    // Editing capabilities injected at runtime by EditableSectionWrapper
+    // Step 2.5: Extract config from source (REQUIRED for custom components)
+    // NEW APPROACH (2025-10-02): Manual configs only - no analyzer/normalizer
+    // Custom components must include config export with editableFields + defaultContent
     steps[2].status = 'in_progress';
 
     try {
-      console.log('🔍 Analyzing JSX content for editable fields...');
-      const analysis = analyzeJSXContent(savedComponent.code);
-      console.log('✅ Field detection complete:', {
-        fieldsDetected: analysis.editableFields.length,
-        contentKeys: Object.keys(analysis.defaultContent).length
+      console.log('🔍 Extracting config from source code...');
+      const config = extractConfigFromSource(savedComponent.code);
+      console.log('✅ Config extracted:', {
+        configName: config.configName,
+        fieldsCount: config.editableFields.length,
+        contentKeys: Object.keys(config.defaultContent).length
       });
 
-      // NEW (2025-09-30): Component Normalization
-      // Transform hardcoded components to prop-based at import
-      let finalCode = savedComponent.code;
-      let normalizedChanges = 0;
-
-      if (analysis.editableFields.length > 0) {
-        const { shouldNormalize, normalizeComponent } = await import('@/lib/local-files/component-normalizer');
-        const { detectMainComponentName } = await import('@/lib/local-files/analyzers');
-
-        if (shouldNormalize(savedComponent.code)) {
-          console.log('🔄 Component is hardcoded - normalizing to use props...');
-
-          // Detect main component name for normalization
-          const componentName = detectMainComponentName(savedComponent.code);
-          if (!componentName) {
-            console.warn('⚠️  Could not detect component name - skipping normalization');
-          } else {
-            try {
-              const normalizeResult = normalizeComponent(
-                savedComponent.code,
-                componentName, // Pass the detected component name
-                analysis.editableFields,
-                analysis.defaultContent
-              );
-
-            finalCode = normalizeResult.normalizedCode;
-            normalizedChanges = normalizeResult.changes.length;
-
-              console.log('✅ Normalization complete:', {
-                interfaceAdded: normalizeResult.interfaceAdded,
-                propsAdded: normalizeResult.propsAdded,
-                replacements: normalizedChanges
-              });
-            } catch (normalizeError) {
-              console.warn('⚠️  Normalization failed, using original code:', normalizeError);
-              // Fall back to original code if normalization fails
-              finalCode = savedComponent.code;
-            }
-          }
-        } else {
-          console.log('✓ Component already uses props - no normalization needed');
-        }
-      }
-
-      // Update component with detected fields + normalized code
+      // Update database with extracted config
       const { error: updateError } = await supabase
         .from('core_components')
         .update({
-          code: finalCode, // CHANGED: Save normalized code (or original if no normalization needed)
-          editable_fields: analysis.editableFields,
-          default_content: analysis.defaultContent,
+          editable_fields: config.editableFields,
+          default_content: config.defaultContent,
           updated_at: new Date().toISOString()
         })
         .eq('id', savedComponent.id);
 
       if (updateError) {
-        console.warn('⚠️  Failed to save detected fields:', updateError);
-        steps[2].status = 'completed';
-        steps[2].message = 'Field detection skipped (will use empty config)';
-      } else {
-        // Update local component object for file generation
-        savedComponent.code = finalCode; // Use normalized code (or original if no normalization)
-        savedComponent.editable_fields = analysis.editableFields;
-        savedComponent.default_content = analysis.defaultContent;
-
-        steps[2].status = 'completed';
-        const normalizedNote = normalizedChanges > 0 ? ` (normalized: ${normalizedChanges} replacements)` : '';
-        steps[2].message = `Detected ${analysis.editableFields.length} editable fields${normalizedNote}`;
+        throw new Error(`Failed to save config to database: ${updateError.message}`);
       }
-    } catch (analysisError) {
-      console.warn('⚠️  Field detection failed:', analysisError);
+
+      // Update local object for file generation
+      savedComponent.editable_fields = config.editableFields;
+      savedComponent.default_content = config.defaultContent;
+
       steps[2].status = 'completed';
-      steps[2].message = 'Field detection failed (will use empty config)';
-      // Don't throw - component can still be created without editable fields
+      steps[2].message = `Extracted ${config.editableFields.length} editable fields from ${config.configName}`;
+
+    } catch (extractError) {
+      console.error('❌ Config extraction failed:', extractError);
+      steps[2].status = 'error';
+      steps[2].message = extractError instanceof Error ? extractError.message : 'Config extraction failed';
+
+      // FAIL THE IMPORT - config is required for custom components
+      return NextResponse.json({
+        success: false,
+        error: 'Custom components must include a valid config export.',
+        details: extractError instanceof Error ? extractError.message : undefined,
+        documentation: 'See /docs/In_Progress/SYSTEM_UPDATE_Section_Intake_Process.md for required format',
+        progress: steps
+      }, { status: 400 });
     }
 
     // Step 3: Create local component files
