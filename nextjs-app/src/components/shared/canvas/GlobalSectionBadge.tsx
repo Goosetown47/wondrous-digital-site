@@ -40,13 +40,11 @@ export function GlobalSectionBadge({ placement, className }: GlobalSectionBadgeP
         'text-xs font-semibold tracking-wide',
         'shadow-sm',
         'pointer-events-none', // Don't interfere with clicks
-        // eslint-disable-next-line security/detect-object-injection
         PLACEMENT_COLORS[placement],
         className
       )}
     >
       <Globe className="h-3 w-3" />
-      {/* eslint-disable-next-line security/detect-object-injection */}
       <span>{PLACEMENT_LABELS[placement]}</span>
     </div>
   );

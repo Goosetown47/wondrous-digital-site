@@ -261,7 +261,6 @@ export function Canvas({ theme }: CanvasProps) {
     // Filter out empty/null/undefined values to let component defaults work
     const filteredContent = Object.entries(content).reduce((acc, [key, value]) => {
       if (value !== '' && value !== null && value !== undefined) {
-        // eslint-disable-next-line security/detect-object-injection
         acc[key] = value;
       }
       return acc;
@@ -321,7 +320,6 @@ export function Canvas({ theme }: CanvasProps) {
           placement: undefined,
           displayOrder: undefined,
         }}
-        sectionId={settingsSectionId || ''}
         sectionName={
           settingsSectionId
             ? sections.find((s) => s.id === settingsSectionId)?.component_name

@@ -136,7 +136,6 @@ export default async function SitePage({ params }: PageProps) {
             // Filter out empty/null/undefined values to let component defaults work
             const filteredContent = Object.entries(content).reduce((acc, [key, value]) => {
               if (value !== '' && value !== null && value !== undefined) {
-                // eslint-disable-next-line security/detect-object-injection
                 acc[key] = value;
               }
               return acc;

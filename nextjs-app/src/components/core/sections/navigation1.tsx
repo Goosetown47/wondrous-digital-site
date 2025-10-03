@@ -269,7 +269,6 @@ export default function Nav1({
 }
 
 // Export configuration for CORE registry
-// eslint-disable-next-line react-refresh/only-export-components
 export const nav1Config = {
   editableFields: [
     { path: 'logoSrc', type: 'image', label: 'Logo Image', required: false },

@@ -2,6 +2,7 @@
  * API Route: Convert Page Section to Global
  *
  * POST - Convert a page-specific section to a global project section
+ * NOTE: Sections are stored in pages.sections JSONB array, not in a separate table
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -9,6 +10,22 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 interface RouteContext {
   params: Promise<{ sectionId: string }>;
+}
+
+interface PageSection {
+  id: string;
+  component_name: string;
+  content?: Record<string, unknown>;
+  order?: number;
+  library_item_id?: string;
+  library_version?: number;
+  [key: string]: unknown;
+}
+
+interface Page {
+  id: string;
+  project_id: string;
+  sections: PageSection[];
 }
 
 /**
@@ -45,28 +62,50 @@ export async function POST(
       );
     }
 
-    // Fetch the page section
-    const { data: pageSection, error: fetchError } = await supabase
-      .from('page_sections')
-      .select('*, pages!inner(project_id)')
-      .eq('id', sectionId)
-      .single();
-
-    if (fetchError || !pageSection) {
-      return NextResponse.json(
-        { error: 'Page section not found' },
-        { status: 404 }
-      );
-    }
-
-    // Get project_id from the joined pages table
-    const projectId = (pageSection.pages as { project_id: string }).project_id;
-
     // Verify user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Find the page that contains this section in its sections JSONB array
+    // We need to search all pages for this section ID
+    const { data: pages, error: pagesError } = await supabase
+      .from('pages')
+      .select('id, project_id, sections')
+      .not('sections', 'is', null);
+
+    if (pagesError) {
+      console.error('Error fetching pages:', pagesError);
+      return NextResponse.json(
+        { error: 'Failed to fetch pages' },
+        { status: 500 }
+      );
+    }
+
+    // Find the page containing this section
+    let targetPage: Page | null = null;
+    let targetSection: PageSection | null = null;
+
+    for (const page of pages as Page[]) {
+      if (Array.isArray(page.sections)) {
+        const section = page.sections.find((s: PageSection) => s.id === sectionId);
+        if (section) {
+          targetPage = page;
+          targetSection = section;
+          break;
+        }
+      }
+    }
+
+    if (!targetPage || !targetSection) {
+      return NextResponse.json(
+        { error: 'Section not found in any page' },
+        { status: 404 }
+      );
+    }
+
+    const projectId = targetPage.project_id;
 
     // First check if user is a platform admin/staff
     const { data: platformAccess } = await supabase
@@ -119,13 +158,13 @@ export async function POST(
       .from('project_sections')
       .insert({
         project_id: projectId,
-        component_name: pageSection.component_name,
-        content: pageSection.content || {},
+        component_name: targetSection.component_name,
+        content: targetSection.content || {},
         section_placement: body.section_placement,
         display_order: body.display_order || 0,
-        is_published: pageSection.is_published || false,
-        library_item_id: pageSection.library_item_id || null,
-        library_version: pageSection.library_version || null,
+        is_published: false,
+        library_item_id: targetSection.library_item_id || null,
+        library_version: targetSection.library_version || null,
       })
       .select()
       .single();
@@ -138,14 +177,17 @@ export async function POST(
       );
     }
 
-    // Delete the page section
-    const { error: deleteError } = await supabase
-      .from('page_sections')
-      .delete()
-      .eq('id', sectionId);
+    // Remove the section from the page's sections array
+    const updatedSections = targetPage.sections.filter((s: PageSection) => s.id !== sectionId);
 
-    if (deleteError) {
-      console.error('Error deleting page section:', deleteError);
+    // Update the page with the new sections array
+    const { error: updateError } = await supabase
+      .from('pages')
+      .update({ sections: updatedSections })
+      .eq('id', targetPage.id);
+
+    if (updateError) {
+      console.error('Error updating page sections:', updateError);
       // Rollback: delete the global section we just created
       await supabase
         .from('project_sections')
@@ -153,7 +195,7 @@ export async function POST(
         .eq('id', globalSection.id);
 
       return NextResponse.json(
-        { error: 'Failed to delete page section' },
+        { error: 'Failed to remove section from page' },
         { status: 500 }
       );
     }
