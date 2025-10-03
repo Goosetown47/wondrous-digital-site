@@ -5,7 +5,6 @@ import { MultiSectionCanvas, type CanvasSection } from '@/components/shared/canv
 import { ComponentRegistry } from '@/lib/register-components';
 import { useLabStore, type LabSection } from '@/stores/labStore';
 import { ComponentSelectorModal } from './ComponentSelectorModal';
-import { EditableSectionWrapper } from '@/components/shared/content-editor';
 import type { CoreComponent } from '@/types/builder';
 import { getCodeName } from '@/lib/services/naming-service';
 import { IframePreview } from '@/components/shared/preview/IframePreview';
@@ -91,96 +90,41 @@ export function LabCanvas({ className = '', theme }: LabCanvasProps) {
 
     const Component = registryEntry.component;
 
-    // Check if component has editable fields configuration
-    const hasEditableFields = registryEntry.editableFields && registryEntry.editableFields.length > 0;
-
-    // Handle content update
-    const handleContentUpdate = (updatedContent: Record<string, unknown>) => {
-      console.log('💾 [LabCanvas] handleContentUpdate CALLED!:', {
+    // Field-level update handler
+    // Components with inline Editable* wrappers will call this for each field
+    const handleFieldUpdate = (fieldPath: string, value: unknown) => {
+      console.log('💾 [LabCanvas] Field update:', {
         sectionId: section.id,
-        oldContent: section.content,
-        newContent: updatedContent,
+        fieldPath,
+        value,
       });
 
-      updateSection(section.id, { content: updatedContent });
+      // Update the specific field in content
+      const updatedContent = {
+        ...section.content,
+        [fieldPath]: value,
+      };
 
-      console.log('✅ [LabCanvas] updateSection called');
+      updateSection(section.id, { content: updatedContent });
     };
 
-    console.log('🏗️  [LabCanvas] Created handleContentUpdate for section:', {
-      sectionId: section.id,
-      handlerExists: !!handleContentUpdate,
-    });
+    // Filter out empty/null/undefined values to let component defaults work
+    const filteredContent = Object.entries(section.content).reduce((acc, [key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, unknown>);
 
-    // If component has editable fields, use the wrapper
-    if (hasEditableFields) {
-      // Filter out empty/null/undefined values to let component defaults work
-      const filteredContent = Object.entries(section.content).reduce((acc, [key, value]) => {
-        // Only pass non-empty values
-        if (value !== '' && value !== null && value !== undefined) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as Record<string, unknown>);
-
-      return (
-        <EditableSectionWrapper
-          componentName={componentName}
-          content={filteredContent}
-          editable={true}
-          onContentUpdate={handleContentUpdate}
-        >
-          <Component {...filteredContent} />
-        </EditableSectionWrapper>
-      );
-    }
-
-    // Backward compatibility: Handle components without field configs (old way)
-    let contentProps = section.content;
-
-    // Handle special component types that haven't migrated yet
-    if (componentName === 'HeroTwoColumn') {
-      // HeroTwoColumn should use the new system, but keep as fallback
-      contentProps = {
-        ...section.content,
-        editable: true,
-        onHeadingChange: (heading: string) => updateSection(section.id, {
-          content: { ...section.content, heading }
-        }),
-        onSubtextChange: (subtext: string) => updateSection(section.id, {
-          content: { ...section.content, subtext }
-        }),
-        onButtonTextChange: (buttonText: string) => updateSection(section.id, {
-          content: { ...section.content, buttonText }
-        }),
-        onImageChange: (imageUrl: string | null) => updateSection(section.id, {
-          content: { ...section.content, imageUrl }
-        })
-      };
-    } else if (componentName === 'Navbar2' || componentName === 'Footer2' || componentName === 'NavBar3') {
-      // Navigation components with partial editability
-      contentProps = {
-        ...section.content,
-        editable: true,
-        onLogoChange: (imageUrl: string | null) => updateSection(section.id, {
-          content: {
-            ...section.content,
-            logo: {
-              ...((section.content.logo as Record<string, unknown>) || {}),
-              src: imageUrl
-            }
-          }
-        })
-      };
-    } else {
-      // All other components get basic editable prop
-      contentProps = {
-        ...section.content,
-        editable: true
-      };
-    }
-
-    return <Component {...contentProps} />;
+    // Pass editable flag and update handler to component
+    // Components with inline EditableText/Image/Button wrappers will use these
+    return (
+      <Component
+        {...filteredContent}
+        editable={true}
+        onUpdate={handleFieldUpdate}
+      />
+    );
   }, [updateSection]);
 
   // Handle section settings

@@ -64,7 +64,6 @@ export function extractConfigFromSource(code: string): ExtractedConfig {
   const configBody = configMatch[2];
 
   // Extract editableFields array (strip TypeScript type annotation)
-  // eslint-disable-next-line security/detect-unsafe-regex
   const fieldsMatch = configBody.match(/editableFields:\s*(\[[\s\S]*?\])\s*(?:as\s+[\w[\]]+)?\s*,/);
   if (!fieldsMatch) {
     throw new Error(
@@ -90,11 +89,10 @@ export function extractConfigFromSource(code: string): ExtractedConfig {
 
   try {
     // Evaluate editableFields array
-    // eslint-disable-next-line security/detect-eval-with-expression, @typescript-eslint/no-implied-eval
+    // Using eval() for config parsing - source is from trusted component authors
     editableFields = eval(`(${fieldsMatch[1]})`);
 
     // Evaluate defaultContent object
-    // eslint-disable-next-line security/detect-eval-with-expression, @typescript-eslint/no-implied-eval
     defaultContent = eval(`(${contentMatch[1]})`);
   } catch (parseError) {
     throw new Error(
@@ -121,7 +119,6 @@ export function extractConfigFromSource(code: string): ExtractedConfig {
 
   // Validate each field has required properties
   for (let i = 0; i < editableFields.length; i++) {
-    // eslint-disable-next-line security/detect-object-injection
     const field = editableFields[i];
 
     if (!field.path) {

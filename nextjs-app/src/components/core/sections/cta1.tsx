@@ -1,5 +1,5 @@
 // Component: Simple CTA
-// Created: 2025-10-02T23:06:12.819Z
+// Created: 2025-10-02T23:53:40.038Z
 // Edit in Core UI: /core
 //
 // This is a custom component with manual config.
@@ -7,9 +7,8 @@
 
 'use client';
 
-'use client';
-
 import { Button } from '@/components/ui/button';
+import { EditableText } from '@/components/shared/content-editor/EditableText';
 import type { EditableFieldConfig } from '@/lib/component-registry';
 
 interface CtaSimple1Props {
@@ -18,6 +17,8 @@ interface CtaSimple1Props {
   buttonText?: string;
   buttonHref?: string;
   backgroundColor?: string;
+  editable?: boolean;
+  onUpdate?: (fieldPath: string, value: unknown) => void;
 }
 
 export default function CtaSimple1({
@@ -25,19 +26,47 @@ export default function CtaSimple1({
   description = 'Join thousands of users who are already using our platform to build amazing experiences.',
   buttonText = 'Get Started',
   buttonHref = '#',
-  backgroundColor = 'bg-gray-50'
+  backgroundColor = 'bg-gray-50',
+  editable = false,
+  onUpdate
 }: CtaSimple1Props) {
   return (
     <section className={`py-16 px-4 ${backgroundColor}`}>
       <div className="max-w-3xl mx-auto text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-          {heading}
-        </h2>
-        <p className="text-lg text-gray-600 mb-8">
-          {description}
-        </p>
+        <EditableText
+          value={heading}
+          onUpdate={(val) => onUpdate?.('heading', val)}
+          editable={editable}
+          type="heading"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            {heading}
+          </h2>
+        </EditableText>
+
+        <EditableText
+          value={description}
+          onUpdate={(val) => onUpdate?.('description', val)}
+          editable={editable}
+          type="paragraph"
+          richText={true}
+        >
+          <p className="text-lg text-gray-600 mb-8">
+            {description}
+          </p>
+        </EditableText>
+
         <Button size="lg" asChild>
-          <a href={buttonHref}>{buttonText}</a>
+          <a href={buttonHref}>
+            <EditableText
+              value={buttonText}
+              onUpdate={(val) => onUpdate?.('buttonText', val)}
+              editable={editable}
+              type="button"
+            >
+              <span>{buttonText}</span>
+            </EditableText>
+          </a>
         </Button>
       </div>
     </section>
@@ -85,4 +114,3 @@ export const ctasimple1Config = {
     backgroundColor: 'bg-gray-50'
   }
 };
-
