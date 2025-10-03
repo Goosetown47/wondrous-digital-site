@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase/server';
 
 interface RouteContext {
   params: Promise<{ sectionId: string }>;
@@ -153,8 +153,13 @@ export async function POST(
       }
     }
 
+    // Authorization passed - use service role client for DB operations
+    // This bypasses RLS to avoid circular dependency issues
+    // (project_sections RLS checks account_users which has its own RLS)
+    const serviceClient = createSupabaseServiceClient();
+
     // Create the global section
-    const { data: globalSection, error: createError } = await supabase
+    const { data: globalSection, error: createError } = await serviceClient
       .from('project_sections')
       .insert({
         project_id: projectId,
@@ -181,7 +186,7 @@ export async function POST(
     const updatedSections = targetPage.sections.filter((s: PageSection) => s.id !== sectionId);
 
     // Update the page with the new sections array
-    const { error: updateError } = await supabase
+    const { error: updateError } = await serviceClient
       .from('pages')
       .update({ sections: updatedSections })
       .eq('id', targetPage.id);
@@ -189,7 +194,7 @@ export async function POST(
     if (updateError) {
       console.error('Error updating page sections:', updateError);
       // Rollback: delete the global section we just created
-      await supabase
+      await serviceClient
         .from('project_sections')
         .delete()
         .eq('id', globalSection.id);
