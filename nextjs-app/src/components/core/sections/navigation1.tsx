@@ -1,3 +1,12 @@
+// Component: Navbar 1
+// Created: 2025-10-03T01:52:53.285Z
+// Edit in Core UI: /core
+//
+// This is a custom component with manual config.
+// Config is defined in the source code below.
+
+'use client';
+
 /**
  * Nav1 Component
  *
@@ -295,3 +304,4 @@ export const nav1Config = {
     ctaButtonSize: 'sm',
   },
 };
+

@@ -26,20 +26,12 @@ export function Canvas({ theme }: CanvasProps) {
     setSelectedSection,
     removeSection,
     updateSection,
-    reorderSections
+    reorderSections,
+    projectId
   } = useBuilderStore();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [insertPosition, setInsertPosition] = useState(0);
-
-  const handleSectionContentChange = useCallback((sectionId: string, updates: Record<string, unknown>) => {
-    const section = sections.find(s => s.id === sectionId);
-    if (section) {
-      updateSection(sectionId, {
-        content: { ...section.content, ...updates }
-      });
-    }
-  }, [sections, updateSection]);
 
   const handleHoverZoneClick = useCallback((position: number) => {
     setInsertPosition(position);
@@ -136,16 +128,44 @@ export function Canvas({ theme }: CanvasProps) {
     const Component = registryEntry.component;
     const content = section.content || {};
 
-    // Create adapter to match the expected props interface
-    // ComponentRegistry components expect different props than the old system
+    // Field-level update handler (matches LabCanvas pattern)
+    // Components with inline Editable* wrappers will call this for each field
+    const handleFieldUpdate = (fieldPath: string, value: unknown) => {
+      console.log('💾 [BuilderCanvas] Field update:', {
+        sectionId: section.id,
+        fieldPath,
+        value,
+      });
+
+      // Update the specific field in content
+      const updatedContent = {
+        ...content,
+        [fieldPath]: value,
+      };
+
+      // Update section with new content
+      updateSection(section.id, { content: updatedContent });
+    };
+
+    // Filter out empty/null/undefined values to let component defaults work
+    const filteredContent = Object.entries(content).reduce((acc, [key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, unknown>);
+
+    // Pass editable flag and update handler to component (NEW PATTERN - matches LabCanvas)
+    // Components with inline EditableText/Image/Button wrappers will use these
     return (
       <Component
-        content={content}
-        isEditing={true} // Always allow editing on hover in Builder mode
-        onContentChange={(updates: Record<string, unknown>) => handleSectionContentChange(section.id, updates)}
+        {...filteredContent}
+        editable={true}
+        onUpdate={handleFieldUpdate}
+        projectId={projectId}
       />
     );
-  }, [handleSectionContentChange]);
+  }, [projectId, updateSection]);
 
   return (
     <>

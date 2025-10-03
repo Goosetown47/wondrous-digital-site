@@ -72,8 +72,8 @@ export function extractConfigFromSource(code: string): ExtractedConfig {
     );
   }
 
-  // Extract defaultContent object
-  const contentMatch = configBody.match(/defaultContent:\s*(\{[\s\S]*?\})\s*$/);
+  // Extract defaultContent object (allow optional trailing comma)
+  const contentMatch = configBody.match(/defaultContent:\s*(\{[\s\S]*?\})\s*,?\s*$/);
   if (!contentMatch) {
     throw new Error(
       `Config "${configName}" is missing defaultContent object.\n\n` +

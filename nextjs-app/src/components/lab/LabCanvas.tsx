@@ -118,11 +118,13 @@ export function LabCanvas({ className = '', theme }: LabCanvasProps) {
 
     // Pass editable flag and update handler to component
     // Components with inline EditableText/Image/Button wrappers will use these
+    // Note: projectId is null in LAB context (template building), will be set in actual projects
     return (
       <Component
         {...filteredContent}
         editable={true}
         onUpdate={handleFieldUpdate}
+        projectId={null}
       />
     );
   }, [updateSection]);

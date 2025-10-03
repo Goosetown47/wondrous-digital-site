@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -44,15 +44,21 @@ export function ButtonEditorModal({
   const [openInNewTab, setOpenInNewTab] = useState(buttonData.openInNewTab || false);
   const [errors, setErrors] = useState<{ text?: string; url?: string }>({});
 
-  // Update local state when buttonData changes
+  // Update local state ONLY when modal opens
+  // This prevents resetting while user is typing
+  const wasOpen = useRef(false);
   useEffect(() => {
-    setText(buttonData.text || '');
-    setUrl(buttonData.url || '');
-    setVariant(buttonData.variant || 'default');
-    setSize(buttonData.size || 'default');
-    setOpenInNewTab(buttonData.openInNewTab || false);
-    setErrors({});
-  }, [buttonData, open]);
+    // Only update when modal transitions from closed to open
+    if (open && !wasOpen.current) {
+      setText(buttonData.text || '');
+      setUrl(buttonData.url || '');
+      setVariant(buttonData.variant || 'default');
+      setSize(buttonData.size || 'default');
+      setOpenInNewTab(buttonData.openInNewTab || false);
+      setErrors({});
+    }
+    wasOpen.current = open;
+  }, [open, buttonData]); // Track both open state and buttonData for initial load
 
   const validateInputs = useCallback((): boolean => {
     const newErrors: { text?: string; url?: string } = {};

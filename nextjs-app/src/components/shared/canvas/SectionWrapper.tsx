@@ -24,7 +24,7 @@ export function SectionWrapper({
   id,
   index,
   totalSections,
-  isSelected,
+  isSelected: _isSelected, // Renamed to indicate unused (no longer showing selection border)
   children,
   onSelect,
   onMoveUp,
@@ -68,7 +68,7 @@ export function SectionWrapper({
       transition={{ duration: 0.3 }}
       className={cn(
         "relative group min-h-[100px] cursor-pointer", // Add cursor-pointer
-        isSelected && "ring-2 ring-primary ring-offset-2", // Visual feedback when selected
+        // Removed selection ring - hover controls provide enough feedback
         className
       )}
       onClick={handleClick}
