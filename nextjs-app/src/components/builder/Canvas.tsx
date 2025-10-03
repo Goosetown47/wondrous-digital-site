@@ -1,11 +1,12 @@
 'use client';
 
 import { ComponentRegistry } from '@/lib/register-components';
-import { useBuilderStore, type Section } from '@/stores/builderStore';
+import { useBuilderStore, type Section, type ProjectSection } from '@/stores/builderStore';
 import { MultiSectionCanvas, type CanvasSection } from '@/components/shared/canvas/MultiSectionCanvas';
 import { IframePreview } from '@/components/shared/preview/IframePreview';
 import { TemplateLibraryModal } from './TemplateLibraryModal';
 import { SectionSettingsModal, type SectionSettings } from '@/components/shared/canvas/SectionSettingsModal';
+import { GlobalSectionBadge } from '@/components/shared/canvas/GlobalSectionBadge';
 import { useCallback, useState, useEffect } from 'react';
 import type { Theme, LibraryItem } from '@/types/builder';
 import { useAutoSave } from '@/hooks/useAutoSave';
@@ -30,8 +31,8 @@ export function Canvas({ theme }: CanvasProps) {
     updateSection,
     reorderSections,
     projectId,
+    projectSections,
     loadProjectSections,
-    addProjectSection,
   } = useBuilderStore();
 
   const { saveNow } = useAutoSave();
@@ -44,26 +45,27 @@ export function Canvas({ theme }: CanvasProps) {
   const [settingsSectionId, setSettingsSectionId] = useState<string | null>(null);
   const [isConverting, setIsConverting] = useState(false);
 
-  // Fetch project sections on mount
-  useEffect(() => {
+  // Fetch project sections function (reusable)
+  const fetchProjectSections = useCallback(async () => {
     if (!projectId) return;
 
-    const fetchProjectSections = async () => {
-      try {
-        const response = await fetch(`/api/projects/${projectId}/sections`);
-        if (response.ok) {
-          const projectSections = await response.json();
-          loadProjectSections(projectSections);
-        } else {
-          console.error('Failed to fetch project sections:', response.status);
-        }
-      } catch (error) {
-        console.error('Error fetching project sections:', error);
+    try {
+      const response = await fetch(`/api/projects/${projectId}/sections`);
+      if (response.ok) {
+        const projectSections = await response.json();
+        loadProjectSections(projectSections);
+      } else {
+        console.error('Failed to fetch project sections:', response.status);
       }
-    };
-
-    fetchProjectSections();
+    } catch (error) {
+      console.error('Error fetching project sections:', error);
+    }
   }, [projectId, loadProjectSections]);
+
+  // Fetch project sections on mount
+  useEffect(() => {
+    fetchProjectSections();
+  }, [fetchProjectSections]);
 
   const handleHoverZoneClick = useCallback((position: number) => {
     setInsertPosition(position);
@@ -122,11 +124,11 @@ export function Canvas({ theme }: CanvasProps) {
         if (response.ok) {
           const { globalSection } = await response.json();
 
-          // Add to project sections in store
-          addProjectSection(globalSection);
-
-          // Remove from page sections in store
+          // Remove from page sections (it's now in project_sections table)
           removeSection(settingsSectionId);
+
+          // Refetch project sections to show the new global section
+          await fetchProjectSections();
 
           console.log('✅ Section successfully converted to global:', globalSection);
           alert('Section is now global and will appear on all pages!');
@@ -143,7 +145,7 @@ export function Canvas({ theme }: CanvasProps) {
       }
     }
     // Note: Converting from global back to page-specific not yet implemented
-  }, [settingsSectionId, projectId, sections, addProjectSection, removeSection, saveNow, isConverting]);
+  }, [settingsSectionId, projectId, sections, removeSection, saveNow, isConverting, fetchProjectSections]);
 
   const handleTemplateSelect = useCallback(async (template: LibraryItem) => {
     try {
@@ -279,10 +281,46 @@ export function Canvas({ theme }: CanvasProps) {
     );
   }, [projectId, updateSection]);
 
+  // Organize global sections by placement
+  const globalHeaders = projectSections.filter(s => s.section_placement === 'global_header');
+  const globalFooters = projectSections.filter(s => s.section_placement === 'global_footer');
+
+  // Render a global section with badge
+  const renderGlobalSection = (section: ProjectSection) => {
+    const componentName = section.component_name || 'HeroTwoColumn';
+    const registryEntry = ComponentRegistry.get(componentName);
+
+    if (!registryEntry) return null;
+
+    const Component = registryEntry.component;
+    const content = section.content || {};
+    const filteredContent = Object.entries(content).reduce((acc, [key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, unknown>);
+
+    return (
+      <div key={section.id} className="relative">
+        <GlobalSectionBadge placement={section.section_placement} />
+        <Component
+          {...filteredContent}
+          editable={true}
+          projectId={projectId}
+        />
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="w-full h-full">
         <IframePreview className="w-full" theme={theme}>
+          {/* Global Headers */}
+          {globalHeaders.map(renderGlobalSection)}
+
+          {/* Page Sections */}
           <MultiSectionCanvas
             sections={sections as CanvasSection[]}
             selectedSectionId={selectedSectionId}
@@ -299,6 +337,9 @@ export function Canvas({ theme }: CanvasProps) {
             onHoverZoneClick={handleHoverZoneClick}
             onSectionSettings={handleSectionSettings}
           />
+
+          {/* Global Footers */}
+          {globalFooters.map(renderGlobalSection)}
         </IframePreview>
       </div>
 

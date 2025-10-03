@@ -3,7 +3,7 @@ import { ComponentRegistry } from '@/lib/register-components';
 import { ThemeProvider } from '@/components/builder/ThemeProvider';
 import type { Page, Project } from '@/types/database';
 import type { Theme } from '@/types/builder';
-import type { Section } from '@/stores/builderStore';
+import type { Section, ProjectSection } from '@/stores/builderStore';
 import { notFound } from 'next/navigation';
 
 interface PageProps {
@@ -70,6 +70,21 @@ async function getPageData(projectId: string, path: string): Promise<Page | null
   return data as Page;
 }
 
+async function getProjectSections(projectId: string): Promise<ProjectSection[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('project_sections')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('display_order', { ascending: true });
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data as ProjectSection[];
+}
+
 export default async function SitePage({ params }: PageProps) {
   const { projectId, slug } = await params;
   const path = slug ? `/${slug.join('/')}` : '/';
@@ -92,10 +107,60 @@ export default async function SitePage({ params }: PageProps) {
     theme = await getThemeData(project.theme_id);
   }
 
+  // Fetch global sections for this project
+  const projectSections = await getProjectSections(projectId);
+
+  // Organize global sections by placement
+  const globalHeaders = projectSections.filter(s => s.section_placement === 'global_header');
+  const globalFooters = projectSections.filter(s => s.section_placement === 'global_footer');
+  const aboveContent = projectSections.filter(s => s.section_placement === 'above_content');
+  const belowContent = projectSections.filter(s => s.section_placement === 'below_content');
+
   // Use published sections for live sites, fallback to draft sections if no published content exists
-  const sectionsToRender = page.published_sections && page.published_sections.length > 0 
-    ? page.published_sections 
+  const sectionsToRender = page.published_sections && page.published_sections.length > 0
+    ? page.published_sections
     : page.sections;
+
+  // Helper function to render a section (works for both page and project sections)
+  const renderSection = (section: Section | ProjectSection, key: string) => {
+    const componentName = section.component_name || 'HeroTwoColumn';
+    const registryEntry = ComponentRegistry.get(componentName);
+
+    if (!registryEntry) {
+      return (
+        <div key={key} className="py-12 px-4 bg-gray-100 border-2 border-dashed border-gray-300">
+          <div className="max-w-4xl mx-auto text-center">
+            <h3 className="text-lg font-semibold text-gray-700">Component Not Found</h3>
+            <p className="text-gray-500 mt-2">
+              Component "{componentName}" is not registered in the system.
+            </p>
+            <p className="text-sm text-gray-400 mt-4">
+              Please ensure the component is properly registered in ComponentRegistry.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    const Component = registryEntry.component;
+    const content = section.content || {};
+
+    const filteredContent = Object.entries(content).reduce((acc, [key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, unknown>);
+
+    return (
+      <Component
+        key={key}
+        {...filteredContent}
+        editable={false}
+        projectId={projectId}
+      />
+    );
+  };
 
   return (
     <ThemeProvider 
@@ -108,51 +173,20 @@ export default async function SitePage({ params }: PageProps) {
           className="w-full @container"
           style={{ containerType: 'inline-size' }}
         >
-          {sectionsToRender.map((section: Section) => {
-            // Get the component from the unified ComponentRegistry
-            const componentName = section.component_name || 'HeroTwoColumn';
-            const registryEntry = ComponentRegistry.get(componentName);
+          {/* Global Headers */}
+          {globalHeaders.map((section) => renderSection(section, `header-${section.id}`))}
 
-            if (!registryEntry) {
-              // Show error message for missing components
-              return (
-                <div key={section.id} className="py-12 px-4 bg-gray-100 border-2 border-dashed border-gray-300">
-                  <div className="max-w-4xl mx-auto text-center">
-                    <h3 className="text-lg font-semibold text-gray-700">Component Not Found</h3>
-                    <p className="text-gray-500 mt-2">
-                      Component "{componentName}" is not registered in the system.
-                    </p>
-                    <p className="text-sm text-gray-400 mt-4">
-                      Please ensure the component is properly registered in ComponentRegistry.
-                    </p>
-                  </div>
-                </div>
-              );
-            }
+          {/* Above Content Global Sections */}
+          {aboveContent.map((section) => renderSection(section, `above-${section.id}`))}
 
-            const Component = registryEntry.component;
-            const content = section.content || {};
+          {/* Page-Specific Sections */}
+          {sectionsToRender.map((section: Section) => renderSection(section, section.id))}
 
-            // Filter out empty/null/undefined values to let component defaults work
-            const filteredContent = Object.entries(content).reduce((acc, [key, value]) => {
-              if (value !== '' && value !== null && value !== undefined) {
-                acc[key] = value;
-              }
-              return acc;
-            }, {} as Record<string, unknown>);
+          {/* Below Content Global Sections */}
+          {belowContent.map((section) => renderSection(section, `below-${section.id}`))}
 
-            // NEW PATTERN - matches Preview/Builder/LAB
-            // Pass editable=false and spread content props
-            // Note: Don't pass onUpdate in Server Components (causes Next.js error)
-            return (
-              <Component
-                key={section.id}
-                {...filteredContent}
-                editable={false}
-                projectId={projectId}
-              />
-            );
-          })}
+          {/* Global Footers */}
+          {globalFooters.map((section) => renderSection(section, `footer-${section.id}`))}
         </div>
       </main>
     </ThemeProvider>
