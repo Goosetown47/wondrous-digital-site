@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase/server';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -65,8 +65,12 @@ export async function GET(
       }
     }
 
+    // Authorization passed - use service client to bypass RLS
+    // (Same RLS circular dependency issue as make-global route)
+    const serviceClient = createSupabaseServiceClient();
+
     // Fetch all global sections for this project
-    const { data: sections, error } = await supabase
+    const { data: sections, error } = await serviceClient
       .from('project_sections')
       .select('*')
       .eq('project_id', projectId)

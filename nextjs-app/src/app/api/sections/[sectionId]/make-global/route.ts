@@ -185,10 +185,13 @@ export async function POST(
     // Remove the section from the page's sections array
     const updatedSections = targetPage.sections.filter((s: PageSection) => s.id !== sectionId);
 
-    // Update the page with the new sections array
+    // Update the page - remove from BOTH sections and published_sections
     const { error: updateError } = await serviceClient
       .from('pages')
-      .update({ sections: updatedSections })
+      .update({
+        sections: updatedSections,
+        published_sections: updatedSections, // Also update published to prevent duplicates
+      })
       .eq('id', targetPage.id);
 
     if (updateError) {
