@@ -24,11 +24,12 @@ import { Menu, X } from 'lucide-react';
 import { EditableText } from '@/components/shared/content-editor/EditableText';
 import { EditableImage } from '@/components/shared/content-editor/EditableImage';
 import { EditableButton } from '@/components/shared/content-editor/EditableButton';
-import type { ButtonData } from '@/components/shared/content-editor';
+// ButtonData import removed - not used in this file
 import { EditableArray } from '@/components/shared/structural-editor';
 import { NavItem } from '@/components/navigation/nav-types';
 import { NavItemEditor, NavItemDisplay } from '@/components/navigation/editors';
 import type { EditableFieldConfig } from '@/lib/component-registry';
+import { useButtonUpdate } from '@/hooks/useButtonUpdate';
 
 interface Nav1Props {
   // Brand
@@ -52,6 +53,7 @@ interface Nav1Props {
   // Required for editing
   editable?: boolean;
   onUpdate?: (fieldPath: string, value: unknown) => void;
+  onBatchUpdate?: (updates: Record<string, unknown>) => void;
 
   // Project context
   projectId?: string;
@@ -72,9 +74,14 @@ export default function Nav1({
   ctaButtonSize = 'sm',
   editable = false,
   onUpdate,
+  onBatchUpdate,
   projectId,
 }: Nav1Props) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Standardized button update handlers - prevents race conditions
+  const handleSignInUpdate = useButtonUpdate(onUpdate, onBatchUpdate, 'signIn');
+  const handleCtaUpdate = useButtonUpdate(onUpdate, onBatchUpdate, 'ctaButton');
 
   return (
     <nav className="w-full bg-background">
@@ -122,7 +129,7 @@ export default function Nav1({
                 compact={true}
               />
             ) : navItems.length > 0 ? (
-              navItems.map((item) => <NavItemDisplay key={item.id} item={item} />)
+              navItems.map((item) => <NavItemDisplay key={item.id} item={item} projectId={projectId} />)
             ) : null}
           </div>
 
@@ -135,12 +142,7 @@ export default function Nav1({
                 variant: signInVariant,
                 size: signInSize,
               }}
-              onUpdate={(data: ButtonData) => {
-                onUpdate?.('signInText', data.text);
-                onUpdate?.('signInHref', data.url);
-                if (data.variant) onUpdate?.('signInVariant', data.variant);
-                if (data.size) onUpdate?.('signInSize', data.size);
-              }}
+              onUpdate={handleSignInUpdate}
               editable={editable}
             >
               <Button variant={signInVariant} size={signInSize} asChild>
@@ -157,12 +159,7 @@ export default function Nav1({
                 variant: ctaButtonVariant,
                 size: ctaButtonSize,
               }}
-              onUpdate={(data: ButtonData) => {
-                onUpdate?.('ctaButtonText', data.text);
-                onUpdate?.('ctaButtonHref', data.url);
-                if (data.variant) onUpdate?.('ctaButtonVariant', data.variant);
-                if (data.size) onUpdate?.('ctaButtonSize', data.size);
-              }}
+              onUpdate={handleCtaUpdate}
               editable={editable}
             >
               <Button variant={ctaButtonVariant} size={ctaButtonSize} asChild>
@@ -193,9 +190,11 @@ export default function Nav1({
               <div className="space-y-2">
                 {navItems.map((item) => {
                   const href =
-                    item.linkType === 'page' && item.pageId
-                      ? `/page/${item.pageId}`
-                      : item.externalUrl || '#';
+                    item.linkType === 'page' && item.pagePath && projectId
+                      ? `/sites/${projectId}${item.pagePath}`
+                      : item.linkType === 'external' && item.externalUrl
+                      ? item.externalUrl
+                      : '#';
 
                   return (
                     <div key={item.id} className="space-y-2">
@@ -204,8 +203,8 @@ export default function Nav1({
                         href={href}
                         className="block py-2 text-sm font-medium text-foreground hover:text-primary"
                         onClick={() => setMobileMenuOpen(false)}
-                        target={item.linkType === 'external' ? '_blank' : undefined}
-                        rel={item.linkType === 'external' ? 'noopener noreferrer' : undefined}
+                        target={item.openInNewTab ? '_blank' : undefined}
+                        rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
                       >
                         {item.label}
                       </Link>
@@ -215,9 +214,11 @@ export default function Nav1({
                         <div className="pl-4 space-y-2">
                           {item.dropdownItems.map((dropdownItem) => {
                             const dropdownHref =
-                              dropdownItem.linkType === 'page' && dropdownItem.pageId
-                                ? `/page/${dropdownItem.pageId}`
-                                : dropdownItem.externalUrl || '#';
+                              dropdownItem.linkType === 'page' && dropdownItem.pagePath && projectId
+                                ? `/sites/${projectId}${dropdownItem.pagePath}`
+                                : dropdownItem.linkType === 'external' && dropdownItem.externalUrl
+                                ? dropdownItem.externalUrl
+                                : '#';
 
                             return (
                               <Link
@@ -225,14 +226,8 @@ export default function Nav1({
                                 href={dropdownHref}
                                 className="block py-2"
                                 onClick={() => setMobileMenuOpen(false)}
-                                target={
-                                  dropdownItem.linkType === 'external' ? '_blank' : undefined
-                                }
-                                rel={
-                                  dropdownItem.linkType === 'external'
-                                    ? 'noopener noreferrer'
-                                    : undefined
-                                }
+                                target={dropdownItem.openInNewTab ? '_blank' : undefined}
+                                rel={dropdownItem.openInNewTab ? 'noopener noreferrer' : undefined}
                               >
                                 <div className="font-medium text-sm text-foreground">
                                   {dropdownItem.label}
@@ -274,6 +269,7 @@ export default function Nav1({
 }
 
 // Export configuration for CORE registry
+// eslint-disable-next-line react-refresh/only-export-components
 export const nav1Config = {
   editableFields: [
     { path: 'logoSrc', type: 'image', label: 'Logo Image', required: false },

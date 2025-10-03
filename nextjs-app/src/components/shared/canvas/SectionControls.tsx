@@ -5,7 +5,8 @@ import {
   ChevronUp,
   ChevronDown,
   Trash2,
-  GripVertical
+  GripVertical,
+  Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -26,8 +27,7 @@ export function SectionControls({
   onMoveUp,
   onMoveDown,
   onDelete,
-
-  onSettings: _onSettings, // Reserved for future use
+  onSettings,
   isVisible
 }: SectionControlsProps) {
   return (
@@ -75,8 +75,7 @@ export function SectionControls({
             <ChevronDown className="h-4 w-4" />
           </Button>
 
-          {/* Settings - Hidden until we have actual settings to configure */}
-          {/* TODO: Re-enable when section-specific settings are implemented
+          {/* Settings */}
           {onSettings && (
             <Button
               size="icon"
@@ -91,7 +90,6 @@ export function SectionControls({
               <Settings className="h-4 w-4" />
             </Button>
           )}
-          */}
 
           {/* Delete */}
           <Button

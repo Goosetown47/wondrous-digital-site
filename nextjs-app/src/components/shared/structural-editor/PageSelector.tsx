@@ -31,8 +31,8 @@ export interface PageSelectorProps {
   projectId: string;
   /** Selected page ID */
   value: string | null;
-  /** Change handler */
-  onChange: (pageId: string | null) => void;
+  /** Change handler - receives pageId and pagePath */
+  onChange: (pageId: string | null, pagePath?: string | null) => void;
   /** Optional label text */
   label?: string;
   /** Optional placeholder text */
@@ -95,7 +95,13 @@ export function PageSelector({
       ) : !pages || pages.length === 0 ? (
         <div className="text-sm text-muted-foreground">No pages found in this project</div>
       ) : (
-        <Select value={value || ''} onValueChange={(val) => onChange(val || null)}>
+        <Select
+          value={value || ''}
+          onValueChange={(val) => {
+            const selectedPage = pages?.find((p) => p.id === val);
+            onChange(val || null, selectedPage?.path || null);
+          }}
+        >
           <SelectTrigger className="w-full">
             <SelectValue placeholder={placeholder}>
               {selectedPage ? (

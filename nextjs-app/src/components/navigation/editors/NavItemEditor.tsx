@@ -108,7 +108,7 @@ export function NavItemEditor({
           <PageSelector
             projectId={projectId}
             value={formData.pageId || null}
-            onChange={(pageId) => setFormData({ ...formData, pageId })}
+            onChange={(pageId, pagePath) => setFormData({ ...formData, pageId, pagePath })}
             label="Select Page"
             placeholder="Choose a page..."
             className={errors.pageId ? 'border-destructive' : ''}
@@ -145,6 +145,18 @@ export function NavItemEditor({
           )}
         </div>
       )}
+
+      {/* Open in New Tab */}
+      <div className="flex items-center space-x-2 pt-2">
+        <Checkbox
+          id="open-new-tab"
+          checked={formData.openInNewTab || false}
+          onCheckedChange={(checked) => setFormData({ ...formData, openInNewTab: checked as boolean })}
+        />
+        <Label htmlFor="open-new-tab" className="font-normal cursor-pointer">
+          Open link in new tab
+        </Label>
+      </div>
 
       {/* Has Dropdown */}
       <div className="flex items-center space-x-2 pt-2">

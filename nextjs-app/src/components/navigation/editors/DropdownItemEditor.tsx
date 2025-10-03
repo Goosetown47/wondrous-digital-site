@@ -13,6 +13,7 @@ import { generateId } from '@/lib/structural-editor/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { LinkTypeToggle } from '@/components/shared/structural-editor/LinkTypeToggle';
 import { PageSelector } from '@/components/shared/structural-editor/PageSelector';
@@ -105,7 +106,7 @@ export function DropdownItemEditor({
           <PageSelector
             projectId={projectId}
             value={formData.pageId || null}
-            onChange={(pageId) => setFormData({ ...formData, pageId })}
+            onChange={(pageId, pagePath) => setFormData({ ...formData, pageId, pagePath })}
             label="Select Page"
             placeholder="Choose a page..."
             className={errors.pageId ? 'border-destructive' : ''}
@@ -129,6 +130,18 @@ export function DropdownItemEditor({
           )}
         </div>
       )}
+
+      {/* Open in New Tab */}
+      <div className="flex items-center space-x-2 pt-2">
+        <Checkbox
+          id="dropdown-open-new-tab"
+          checked={formData.openInNewTab || false}
+          onCheckedChange={(checked) => setFormData({ ...formData, openInNewTab: checked as boolean })}
+        />
+        <Label htmlFor="dropdown-open-new-tab" className="font-normal cursor-pointer">
+          Open link in new tab
+        </Label>
+      </div>
 
       {/* Actions */}
       <div className="flex justify-end gap-2 pt-4 border-t border-border">

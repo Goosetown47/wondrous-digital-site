@@ -16,8 +16,12 @@ export interface NavItem extends EditableItem {
   linkType: 'page' | 'external';
   /** Page ID (if linkType is 'page') */
   pageId?: string | null;
+  /** Page path/slug (if linkType is 'page') - e.g., '/', '/about', '/contact' */
+  pagePath?: string | null;
   /** External URL (if linkType is 'external') */
   externalUrl?: string;
+  /** Open link in new tab/window */
+  openInNewTab?: boolean;
   /** Whether this item has a dropdown menu */
   hasDropdown: boolean;
   /** Dropdown items (if hasDropdown is true) */
@@ -36,8 +40,12 @@ export interface DropdownItem extends EditableItem {
   linkType: 'page' | 'external';
   /** Page ID (if linkType is 'page') */
   pageId?: string | null;
+  /** Page path/slug (if linkType is 'page') - e.g., '/', '/about', '/contact' */
+  pagePath?: string | null;
   /** External URL (if linkType is 'external') */
   externalUrl?: string;
+  /** Open link in new tab/window */
+  openInNewTab?: boolean;
 }
 
 /**
@@ -49,7 +57,9 @@ export function createEmptyNavItem(id: string): NavItem {
     label: '',
     linkType: 'page',
     pageId: null,
+    pagePath: null,
     externalUrl: '',
+    openInNewTab: false,
     hasDropdown: false,
     dropdownItems: [],
   };
@@ -65,6 +75,8 @@ export function createEmptyDropdownItem(id: string): DropdownItem {
     description: '',
     linkType: 'page',
     pageId: null,
+    pagePath: null,
     externalUrl: '',
+    openInNewTab: false,
   };
 }

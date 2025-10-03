@@ -1,6 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-import { getComponent } from '@/lib/component-registry';
-import { GenericSection } from '@/components/sections/index';
+import { ComponentRegistry } from '@/lib/register-components';
 import { ThemeProvider } from '@/components/builder/ThemeProvider';
 import type { Page, Project } from '@/types/database';
 import type { Theme } from '@/types/builder';
@@ -105,19 +104,53 @@ export default async function SitePage({ params }: PageProps) {
       className="min-h-screen"
     >
       <main className="min-h-screen">
-        <div 
+        <div
           className="w-full @container"
           style={{ containerType: 'inline-size' }}
         >
           {sectionsToRender.map((section: Section) => {
-            // Get the appropriate component based on component_name
-            const componentEntry = getComponent(section.component_name || '');
-            const SectionComponent = componentEntry?.component || GenericSection;
+            // Get the component from the unified ComponentRegistry
+            const componentName = section.component_name || 'HeroTwoColumn';
+            const registryEntry = ComponentRegistry.get(componentName);
+
+            if (!registryEntry) {
+              // Show error message for missing components
+              return (
+                <div key={section.id} className="py-12 px-4 bg-gray-100 border-2 border-dashed border-gray-300">
+                  <div className="max-w-4xl mx-auto text-center">
+                    <h3 className="text-lg font-semibold text-gray-700">Component Not Found</h3>
+                    <p className="text-gray-500 mt-2">
+                      Component "{componentName}" is not registered in the system.
+                    </p>
+                    <p className="text-sm text-gray-400 mt-4">
+                      Please ensure the component is properly registered in ComponentRegistry.
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+
+            const Component = registryEntry.component;
+            const content = section.content || {};
+
+            // Filter out empty/null/undefined values to let component defaults work
+            const filteredContent = Object.entries(content).reduce((acc, [key, value]) => {
+              if (value !== '' && value !== null && value !== undefined) {
+                // eslint-disable-next-line security/detect-object-injection
+                acc[key] = value;
+              }
+              return acc;
+            }, {} as Record<string, unknown>);
+
+            // NEW PATTERN - matches Preview/Builder/LAB
+            // Pass editable=false and spread content props
+            // Note: Don't pass onUpdate in Server Components (causes Next.js error)
             return (
-              <SectionComponent
+              <Component
                 key={section.id}
-                content={section.content || {}}
-                isEditing={false}
+                {...filteredContent}
+                editable={false}
+                projectId={projectId}
               />
             );
           })}

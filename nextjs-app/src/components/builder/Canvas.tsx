@@ -5,8 +5,10 @@ import { useBuilderStore, type Section } from '@/stores/builderStore';
 import { MultiSectionCanvas, type CanvasSection } from '@/components/shared/canvas/MultiSectionCanvas';
 import { IframePreview } from '@/components/shared/preview/IframePreview';
 import { TemplateLibraryModal } from './TemplateLibraryModal';
-import { useCallback, useState } from 'react';
+import { SectionSettingsModal, type SectionSettings } from '@/components/shared/canvas/SectionSettingsModal';
+import { useCallback, useState, useEffect } from 'react';
 import type { Theme, LibraryItem } from '@/types/builder';
+import { useAutoSave } from '@/hooks/useAutoSave';
 
 // Extend window type for drag data
 declare global {
@@ -27,11 +29,41 @@ export function Canvas({ theme }: CanvasProps) {
     removeSection,
     updateSection,
     reorderSections,
-    projectId
+    projectId,
+    loadProjectSections,
+    addProjectSection,
   } = useBuilderStore();
+
+  const { saveNow } = useAutoSave();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [insertPosition, setInsertPosition] = useState(0);
+
+  // Section settings modal state
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [settingsSectionId, setSettingsSectionId] = useState<string | null>(null);
+  const [isConverting, setIsConverting] = useState(false);
+
+  // Fetch project sections on mount
+  useEffect(() => {
+    if (!projectId) return;
+
+    const fetchProjectSections = async () => {
+      try {
+        const response = await fetch(`/api/projects/${projectId}/sections`);
+        if (response.ok) {
+          const projectSections = await response.json();
+          loadProjectSections(projectSections);
+        } else {
+          console.error('Failed to fetch project sections:', response.status);
+        }
+      } catch (error) {
+        console.error('Error fetching project sections:', error);
+      }
+    };
+
+    fetchProjectSections();
+  }, [projectId, loadProjectSections]);
 
   const handleHoverZoneClick = useCallback((position: number) => {
     setInsertPosition(position);
@@ -51,6 +83,67 @@ export function Canvas({ theme }: CanvasProps) {
 
     reorderSections(reorderedSections);
   }, [sections, reorderSections]);
+
+  // Handle section settings button click
+  const handleSectionSettings = useCallback((sectionId: string) => {
+    setSettingsSectionId(sectionId);
+    setSettingsModalOpen(true);
+  }, []);
+
+  // Handle saving section settings
+  const handleSaveSettings = useCallback(async (settings: SectionSettings) => {
+    if (!settingsSectionId || !projectId || isConverting) return;
+
+    const section = sections.find((s) => s.id === settingsSectionId);
+    if (!section) return;
+
+    if (settings.scope === 'global' && settings.placement) {
+      setIsConverting(true);
+
+      try {
+        // STEP 1: Save the section to database first (if not already saved)
+        console.log('💾 Saving section to database before converting...');
+        await saveNow();
+
+        // Wait a moment for the save to complete and get the real database ID
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // STEP 2: Convert page section to global section
+        console.log('🌐 Converting section to global...');
+        const response = await fetch(`/api/sections/${settingsSectionId}/make-global`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            section_placement: settings.placement,
+            display_order: settings.displayOrder || 0,
+          }),
+        });
+
+        if (response.ok) {
+          const { globalSection } = await response.json();
+
+          // Add to project sections in store
+          addProjectSection(globalSection);
+
+          // Remove from page sections in store
+          removeSection(settingsSectionId);
+
+          console.log('✅ Section successfully converted to global:', globalSection);
+          alert('Section is now global and will appear on all pages!');
+        } else {
+          const error = await response.json();
+          console.error('Failed to convert section to global:', error);
+          alert(`Failed to convert section: ${error.error || 'Unknown error'}`);
+        }
+      } catch (error) {
+        console.error('Error converting section to global:', error);
+        alert('An error occurred while converting the section');
+      } finally {
+        setIsConverting(false);
+      }
+    }
+    // Note: Converting from global back to page-specific not yet implemented
+  }, [settingsSectionId, projectId, sections, addProjectSection, removeSection, saveNow, isConverting]);
 
   const handleTemplateSelect = useCallback(async (template: LibraryItem) => {
     try {
@@ -147,21 +240,41 @@ export function Canvas({ theme }: CanvasProps) {
       updateSection(section.id, { content: updatedContent });
     };
 
+    // Batch field update handler - updates multiple fields atomically
+    // Prevents race conditions when updating related fields (e.g., button properties)
+    const handleBatchFieldUpdate = (updates: Record<string, unknown>) => {
+      console.log('💾 [BuilderCanvas] Batch update:', {
+        sectionId: section.id,
+        updates,
+      });
+
+      // Update all fields at once in content
+      const updatedContent = {
+        ...content,
+        ...updates,
+      };
+
+      // Single update section call = single auto-save
+      updateSection(section.id, { content: updatedContent });
+    };
+
     // Filter out empty/null/undefined values to let component defaults work
     const filteredContent = Object.entries(content).reduce((acc, [key, value]) => {
       if (value !== '' && value !== null && value !== undefined) {
+        // eslint-disable-next-line security/detect-object-injection
         acc[key] = value;
       }
       return acc;
     }, {} as Record<string, unknown>);
 
-    // Pass editable flag and update handler to component (NEW PATTERN - matches LabCanvas)
+    // Pass editable flag and update handlers to component (NEW PATTERN - matches LabCanvas)
     // Components with inline EditableText/Image/Button wrappers will use these
     return (
       <Component
         {...filteredContent}
         editable={true}
         onUpdate={handleFieldUpdate}
+        onBatchUpdate={handleBatchFieldUpdate}
         projectId={projectId}
       />
     );
@@ -185,6 +298,7 @@ export function Canvas({ theme }: CanvasProps) {
             enableDragReorder={true}
             useHoverZones={true}
             onHoverZoneClick={handleHoverZoneClick}
+            onSectionSettings={handleSectionSettings}
           />
         </IframePreview>
       </div>
@@ -193,6 +307,26 @@ export function Canvas({ theme }: CanvasProps) {
         open={modalOpen}
         onOpenChange={setModalOpen}
         onSelect={handleTemplateSelect}
+      />
+
+      <SectionSettingsModal
+        isOpen={settingsModalOpen}
+        onClose={() => {
+          setSettingsModalOpen(false);
+          setSettingsSectionId(null);
+        }}
+        onSave={handleSaveSettings}
+        currentSettings={{
+          scope: 'page', // Always page-specific when opening settings
+          placement: undefined,
+          displayOrder: undefined,
+        }}
+        sectionId={settingsSectionId || ''}
+        sectionName={
+          settingsSectionId
+            ? sections.find((s) => s.id === settingsSectionId)?.component_name
+            : undefined
+        }
       />
     </>
   );

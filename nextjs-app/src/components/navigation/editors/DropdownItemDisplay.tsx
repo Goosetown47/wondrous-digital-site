@@ -10,18 +10,24 @@ import Link from 'next/link';
 import { ItemDisplayProps } from '@/lib/structural-editor/types';
 import { DropdownItem } from '../nav-types';
 
-export function DropdownItemDisplay({ item }: ItemDisplayProps<DropdownItem>) {
+interface DropdownItemDisplayProps extends ItemDisplayProps<DropdownItem> {
+  projectId?: string;
+}
+
+export function DropdownItemDisplay({ item, projectId }: DropdownItemDisplayProps) {
   const href =
-    item.linkType === 'page' && item.pageId
-      ? `/page/${item.pageId}` // TODO: Replace with actual page path lookup
-      : item.externalUrl || '#';
+    item.linkType === 'page' && item.pagePath && projectId
+      ? `/sites/${projectId}${item.pagePath}`
+      : item.linkType === 'external' && item.externalUrl
+      ? item.externalUrl
+      : '#';
 
   return (
     <Link
       href={href}
       className="block px-3 py-2 rounded-md hover:bg-muted transition-colors"
-      target={item.linkType === 'external' ? '_blank' : undefined}
-      rel={item.linkType === 'external' ? 'noopener noreferrer' : undefined}
+      target={item.openInNewTab ? '_blank' : undefined}
+      rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
     >
       <div className="font-medium text-sm text-foreground">{item.label}</div>
       {item.description && (

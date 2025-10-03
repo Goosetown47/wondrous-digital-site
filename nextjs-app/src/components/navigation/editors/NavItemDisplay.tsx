@@ -13,13 +13,19 @@ import { NavItem } from '../nav-types';
 import { ChevronDown } from 'lucide-react';
 import { DropdownItemDisplay } from './DropdownItemDisplay';
 
-export function NavItemDisplay({ item }: ItemDisplayProps<NavItem>) {
+interface NavItemDisplayProps extends ItemDisplayProps<NavItem> {
+  projectId?: string;
+}
+
+export function NavItemDisplay({ item, projectId }: NavItemDisplayProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const href =
-    item.linkType === 'page' && item.pageId
-      ? `/page/${item.pageId}` // TODO: Replace with actual page path lookup
-      : item.externalUrl || '#';
+    item.linkType === 'page' && item.pagePath && projectId
+      ? `/sites/${projectId}${item.pagePath}`
+      : item.linkType === 'external' && item.externalUrl
+      ? item.externalUrl
+      : '#';
 
   const hasDropdownItems = item.hasDropdown && item.dropdownItems && item.dropdownItems.length > 0;
 
@@ -29,8 +35,8 @@ export function NavItemDisplay({ item }: ItemDisplayProps<NavItem>) {
       <Link
         href={href}
         className="text-sm text-foreground hover:text-primary hover:bg-muted rounded-md px-3 py-2 transition-colors inline-block"
-        target={item.linkType === 'external' ? '_blank' : undefined}
-        rel={item.linkType === 'external' ? 'noopener noreferrer' : undefined}
+        target={item.openInNewTab ? '_blank' : undefined}
+        rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
       >
         {item.label}
       </Link>
@@ -56,7 +62,7 @@ export function NavItemDisplay({ item }: ItemDisplayProps<NavItem>) {
         <div className="absolute left-0 top-full pt-2 z-50 min-w-[240px]">
           <div className="bg-background rounded-lg shadow-lg border border-border p-2">
             {item.dropdownItems?.map((dropdownItem) => (
-              <DropdownItemDisplay key={dropdownItem.id} item={dropdownItem} />
+              <DropdownItemDisplay key={dropdownItem.id} item={dropdownItem} projectId={projectId} />
             ))}
           </div>
         </div>
