@@ -26,6 +26,8 @@ export interface NavItem extends EditableItem {
   hasDropdown: boolean;
   /** Dropdown items (if hasDropdown is true) */
   dropdownItems?: DropdownItem[];
+  /** Whether the main nav item is clickable when it has a dropdown (default: false) */
+  mainItemClickable?: boolean;
 }
 
 /**
@@ -62,6 +64,7 @@ export function createEmptyNavItem(id: string): NavItem {
     openInNewTab: false,
     hasDropdown: false,
     dropdownItems: [],
+    mainItemClickable: false,
   };
 }
 

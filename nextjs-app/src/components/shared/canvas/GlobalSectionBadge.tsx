@@ -34,18 +34,17 @@ export function GlobalSectionBadge({ placement, className }: GlobalSectionBadgeP
   return (
     <div
       className={cn(
-        'absolute top-2 right-2 z-20',
-        'flex items-center gap-1.5 px-2.5 py-1',
+        'absolute top-2 left-2 z-[60]', // Left side, above section controls (z-50)
+        'flex items-center justify-center p-1.5',
         'rounded-md border',
-        'text-xs font-semibold tracking-wide',
         'shadow-sm',
         'pointer-events-none', // Don't interfere with clicks
         PLACEMENT_COLORS[placement],
         className
       )}
+      title={PLACEMENT_LABELS[placement]} // Tooltip shows full label
     >
-      <Globe className="h-3 w-3" />
-      <span>{PLACEMENT_LABELS[placement]}</span>
+      <Globe className="h-3.5 w-3.5" />
     </div>
   );
 }

@@ -44,19 +44,34 @@ export function NavItemDisplay({ item, projectId }: NavItemDisplayProps) {
   }
 
   // Link with dropdown
+  // If mainItemClickable is true, make the nav item itself a clickable link
+  const NavTrigger = item.mainItemClickable ? (
+    <Link
+      href={href}
+      className="flex items-center gap-1 text-sm text-foreground hover:text-primary hover:bg-muted rounded-md px-3 py-2 transition-colors"
+      target={item.openInNewTab ? '_blank' : undefined}
+      rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
+    >
+      {item.label}
+      <ChevronDown className="h-4 w-4" />
+    </Link>
+  ) : (
+    <button
+      className="flex items-center gap-1 text-sm text-foreground hover:text-primary hover:bg-muted rounded-md px-3 py-2 transition-colors"
+      type="button"
+    >
+      {item.label}
+      <ChevronDown className="h-4 w-4" />
+    </button>
+  );
+
   return (
     <div
       className="relative"
       onMouseEnter={() => setDropdownOpen(true)}
       onMouseLeave={() => setDropdownOpen(false)}
     >
-      <button
-        className="flex items-center gap-1 text-sm text-foreground hover:text-primary hover:bg-muted rounded-md px-3 py-2 transition-colors"
-        type="button"
-      >
-        {item.label}
-        <ChevronDown className="h-4 w-4" />
-      </button>
+      {NavTrigger}
 
       {dropdownOpen && (
         <div className="absolute left-0 top-full pt-2 z-50 min-w-[240px]">

@@ -170,6 +170,20 @@ export function NavItemEditor({
         </Label>
       </div>
 
+      {/* Main Item Clickable (only show when dropdown is enabled) */}
+      {formData.hasDropdown && (
+        <div className="flex items-center space-x-2 pt-2 pl-6">
+          <Checkbox
+            id="main-item-clickable"
+            checked={formData.mainItemClickable || false}
+            onCheckedChange={(checked) => setFormData({ ...formData, mainItemClickable: checked as boolean })}
+          />
+          <Label htmlFor="main-item-clickable" className="font-normal cursor-pointer text-sm text-muted-foreground">
+            Make main nav item clickable (navigates on click, hover still shows dropdown)
+          </Label>
+        </div>
+      )}
+
       {/* Dropdown Items Editor */}
       {formData.hasDropdown && (
         <div className="border border-border rounded-lg p-4 bg-muted/20">

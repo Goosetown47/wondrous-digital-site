@@ -316,7 +316,7 @@ export function Canvas({ theme }: CanvasProps) {
   return (
     <>
       <div className="w-full h-full">
-        <IframePreview className="w-full" theme={theme}>
+        <IframePreview className="w-full pt-12" theme={theme}>
           {/* Global Headers */}
           {globalHeaders.map(renderGlobalSection)}
 
