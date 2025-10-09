@@ -94,13 +94,14 @@ export default function Nav1({
             onClick={(e) => editable && e.preventDefault()}
           >
             {editable ? (
-              <EditableImage
-                src={logoSrc}
-                alt={logoAlt}
-                onUpdate={(val) => onUpdate?.('logoSrc', val)}
-                editable={editable}
-                className="w-8 h-8"
-              />
+              <div className="relative w-8 h-8 flex-shrink-0">
+                <EditableImage
+                  src={logoSrc}
+                  alt={logoAlt}
+                  onUpdate={(val) => onUpdate?.('logoSrc', val)}
+                  editable={editable}
+                />
+              </div>
             ) : (
               <Image src={logoSrc} alt={logoAlt} width={32} height={32} className="w-8 h-8" />
             )}
