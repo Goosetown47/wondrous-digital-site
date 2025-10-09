@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase/server';
 
 interface RouteContext {
   params: Promise<{ id: string; sectionId: string }>;
@@ -77,8 +77,12 @@ export async function PATCH(
       }
     }
 
+    // Authorization passed - use service role client for DB operations
+    // This bypasses RLS to avoid circular dependency issues
+    const serviceClient = createSupabaseServiceClient();
+
     // Verify section belongs to this project
-    const { data: existingSection, error: fetchError } = await supabase
+    const { data: existingSection, error: fetchError } = await serviceClient
       .from('project_sections')
       .select('id')
       .eq('id', sectionId)
@@ -114,7 +118,7 @@ export async function PATCH(
     if (body.library_version !== undefined) updates.library_version = body.library_version;
 
     // Update the section
-    const { data: section, error } = await supabase
+    const { data: section, error } = await serviceClient
       .from('project_sections')
       .update(updates)
       .eq('id', sectionId)
