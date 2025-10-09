@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { GlobalSectionControls } from './GlobalSectionControls';
 import { cn } from '@/lib/utils';
 import type { ProjectSection } from '@/stores/builderStore';
@@ -30,14 +30,37 @@ export function GlobalSectionWrapper({
       initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       className={cn(
-        "relative group min-h-[60px]",
+        "relative group",
         className
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Background layer that ensures full wrapper is hoverable */}
-      <div className="absolute inset-0 bg-transparent" aria-hidden="true" />
+      {/* Hover Lines - Top and Bottom Dashed Borders */}
+      <AnimatePresence>
+        {isHovered && (
+          <>
+            {/* Top line */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="absolute top-0 left-0 right-0 border-t-2 border-dashed border-gray-400 pointer-events-none"
+              style={{ zIndex: 1 }}
+            />
+            {/* Bottom line */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="absolute bottom-0 left-0 right-0 border-t-2 border-dashed border-gray-400 pointer-events-none"
+              style={{ zIndex: 1 }}
+            />
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Global Section Controls - only show on hover */}
       {(onDelete || onSettings) && (

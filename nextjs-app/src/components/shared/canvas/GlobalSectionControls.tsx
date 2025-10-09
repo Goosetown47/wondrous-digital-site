@@ -37,19 +37,22 @@ export function GlobalSectionControls({
   return (
     <AnimatePresence>
       {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -10 }}
-          transition={{ duration: 0.2 }}
-          className="absolute -left-12 top-1/2 -translate-y-1/2 z-50 pointer-events-auto flex flex-col items-center gap-0 bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg overflow-hidden"
-        >
+        <div className="absolute -left-1 top-1/2 -translate-y-1/2 z-50">
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.2 }}
+            className="pointer-events-auto flex flex-col items-center gap-0 bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg overflow-hidden"
+          >
           {/* Globe Icon - Top of stack */}
           <div
             className={cn(
               "px-2 py-2 w-full flex items-center justify-center border-b",
+              // eslint-disable-next-line security/detect-object-injection
               PLACEMENT_COLORS[placement]
             )}
+            // eslint-disable-next-line security/detect-object-injection
             title={PLACEMENT_LABELS[placement]}
           >
             <Globe className="h-4 w-4" />
@@ -84,7 +87,8 @@ export function GlobalSectionControls({
           >
             <Trash2 className="h-4 w-4" />
           </Button>
-        </motion.div>
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );
