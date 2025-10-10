@@ -2,11 +2,12 @@
  * AddButton Component
  *
  * Generic "+ Add" button for adding items to arrays
+ * Uses AppButton to ensure consistent app UI styling regardless of theme
  */
 
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { AppButton } from '@/components/ui/app-button';
 import { Plus } from 'lucide-react';
 
 export interface AddButtonProps {
@@ -20,7 +21,7 @@ export interface AddButtonProps {
 
 export function AddButton({ onClick, text = 'Add Item', className }: AddButtonProps) {
   return (
-    <Button
+    <AppButton
       variant="outline"
       size="sm"
       onClick={onClick}
@@ -29,6 +30,6 @@ export function AddButton({ onClick, text = 'Add Item', className }: AddButtonPr
     >
       <Plus className="w-4 h-4 mr-2" />
       {text}
-    </Button>
+    </AppButton>
   );
 }

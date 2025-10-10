@@ -187,7 +187,7 @@ export function ImageManagerModal({
             <div
               {...getRootProps()}
               className={cn(
-                'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all',
+                'border-2 border-dashed rounded-module-lg p-8 text-center cursor-pointer transition-all',
                 isDragActive || dragActive
                   ? 'border-module-primary bg-module-primary/5'
                   : 'border-gray-300 hover:border-gray-400'
@@ -199,9 +199,9 @@ export function ImageManagerModal({
                 <div className="space-y-4">
                   <Loader2 className="h-12 w-12 mx-auto animate-spin text-module-primary" />
                   <p className="text-sm text-muted-foreground">Uploading...</p>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 rounded-module-full h-2">
                     <div
-                      className="bg-module-primary h-2 rounded-full transition-all duration-300"
+                      className="bg-module-primary h-2 rounded-module-full transition-all duration-300"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
@@ -224,7 +224,7 @@ export function ImageManagerModal({
                     src={previewUrl}
                     alt="Preview"
                     fill
-                    className="object-cover rounded-lg"
+                    className="object-cover rounded-module-lg"
                   />
                 </div>
               )}
@@ -250,7 +250,7 @@ export function ImageManagerModal({
                 {/* Live Preview */}
                 <div>
                   <Label className="mb-2 block">Preview</Label>
-                  <div className="relative w-full h-64 bg-muted rounded-lg overflow-hidden border border-border">
+                  <div className="relative w-full h-64 bg-muted rounded-module-lg overflow-hidden border border-border">
                     <Image
                       src={currentImage}
                       alt="Preview with settings"
@@ -364,7 +364,7 @@ export function ImageManagerModal({
           <TabsContent value="current" className="mt-4">
             {currentImage && (
               <div className="space-y-4">
-                <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
+                <div className="relative w-full h-64 bg-gray-100 rounded-module-lg overflow-hidden">
                   <Image
                     src={currentImage}
                     alt="Current image"
@@ -396,7 +396,7 @@ export function ImageManagerModal({
                 {recentImages.map((image, index) => (
                   <div
                     key={index}
-                    className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-module-primary transition-all"
+                    className="relative aspect-square bg-gray-100 rounded-module-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-module-primary transition-all"
                     onClick={() => {
                       onUpdate(image);
                       onOpenChange(false);

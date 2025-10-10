@@ -2,11 +2,12 @@
  * ItemControls Component
  *
  * Edit/Delete controls for array items
+ * Uses AppButton to ensure consistent app UI styling regardless of theme
  */
 
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { AppButton } from '@/components/ui/app-button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,7 +49,7 @@ export function ItemControls({
   return (
     <div className={`flex items-center gap-1 ${className || ''}`}>
       {/* Edit Button */}
-      <Button
+      <AppButton
         variant="ghost"
         size="sm"
         onClick={onEdit}
@@ -57,13 +58,13 @@ export function ItemControls({
         title="Edit item"
       >
         <Edit className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-      </Button>
+      </AppButton>
 
       {/* Delete Button with Confirmation */}
       {confirmDelete ? (
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogTrigger asChild>
-            <Button
+            <AppButton
               variant="ghost"
               size="sm"
               className="h-8 w-8 p-0"
@@ -71,7 +72,7 @@ export function ItemControls({
               title="Delete item"
             >
               <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-            </Button>
+            </AppButton>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -89,7 +90,7 @@ export function ItemControls({
           </AlertDialogContent>
         </AlertDialog>
       ) : (
-        <Button
+        <AppButton
           variant="ghost"
           size="sm"
           onClick={onDelete}
@@ -98,7 +99,7 @@ export function ItemControls({
           title="Delete item"
         >
           <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-        </Button>
+        </AppButton>
       )}
     </div>
   );

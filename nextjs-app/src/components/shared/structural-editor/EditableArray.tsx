@@ -67,7 +67,7 @@ export function EditableArray<T extends EditableItem>({
     <>
       {/* Empty State */}
       {items.length === 0 && editable && (
-        <div className="text-center py-8 text-muted-foreground text-sm border border-dashed border-border rounded-lg col-span-full">
+        <div className="text-center py-8 text-muted-foreground text-sm border border-dashed border-border rounded-module-lg col-span-full">
           {emptyMessage}
         </div>
       )}
@@ -87,7 +87,7 @@ export function EditableArray<T extends EditableItem>({
 
               {/* Hover Controls - only show for hovered item */}
               {hoveredItemId === itemData.id && (
-                <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-50 bg-background border border-border rounded-md shadow-md p-1">
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-50 bg-background border border-border rounded-module-md shadow-md p-1">
                   <ItemControls
                     onEdit={() => openForEdit(itemData)}
                     onDelete={() => handleDelete(itemData.id)}
@@ -112,7 +112,7 @@ export function EditableArray<T extends EditableItem>({
           {/* Icon-only button for flex/inline layouts, full button for grid */}
           <button
             onClick={handleOpenCreate}
-            className="flex items-center justify-center h-8 w-8 rounded-full border-2 border-dashed border-module-primary/50 hover:border-module-primary hover:bg-module-primary/10 transition-colors shrink-0"
+            className="flex items-center justify-center h-8 w-8 rounded-module-full border-2 border-dashed border-module-primary/50 hover:border-module-primary hover:bg-module-primary/10 transition-colors shrink-0"
             type="button"
             title={addButtonText}
           >

@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { AppButton } from '@/components/ui/app-button';
 import {
   ChevronUp,
   ChevronDown,
@@ -39,7 +39,7 @@ export function SectionControls({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
             transition={{ duration: 0.2 }}
-            className="flex flex-col items-center gap-1 bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg p-1"
+            className="flex flex-col items-center gap-1 bg-background/95 backdrop-blur-sm border rounded-module-lg shadow-lg p-1"
           >
           {/* Drag Handle */}
           <div className="px-1 py-1 cursor-move text-muted-foreground hover:text-foreground">
@@ -47,7 +47,7 @@ export function SectionControls({
           </div>
 
           {/* Move Up */}
-          <Button
+          <AppButton
             size="icon"
             variant="ghost"
             className="h-7 w-7"
@@ -59,10 +59,10 @@ export function SectionControls({
             aria-label="Move section up"
           >
             <ChevronUp className="h-4 w-4" />
-          </Button>
+          </AppButton>
 
           {/* Move Down */}
-          <Button
+          <AppButton
             size="icon"
             variant="ghost"
             className="h-7 w-7"
@@ -74,11 +74,11 @@ export function SectionControls({
             aria-label="Move section down"
           >
             <ChevronDown className="h-4 w-4" />
-          </Button>
+          </AppButton>
 
           {/* Settings */}
           {onSettings && (
-            <Button
+            <AppButton
               size="icon"
               variant="ghost"
               className="h-7 w-7"
@@ -89,11 +89,11 @@ export function SectionControls({
               aria-label="Section settings"
             >
               <Settings className="h-4 w-4" />
-            </Button>
+            </AppButton>
           )}
 
           {/* Delete */}
-          <Button
+          <AppButton
             size="icon"
             variant="ghost"
             className="h-7 w-7 text-destructive hover:text-destructive"
@@ -104,7 +104,7 @@ export function SectionControls({
             aria-label="Delete section"
           >
             <Trash2 className="h-4 w-4" />
-          </Button>
+          </AppButton>
           </motion.div>
         </div>
       )}

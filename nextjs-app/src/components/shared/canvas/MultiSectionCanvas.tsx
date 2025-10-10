@@ -6,6 +6,7 @@ import { SectionWrapper } from './SectionWrapper';
 import { AddSectionButton } from './AddSectionButton';
 import { HoverZone } from '@/components/builder/HoverZone';
 import { Layers } from 'lucide-react';
+import { AppButton } from '@/components/ui/app-button';
 
 export interface CanvasSection {
   id: string;
@@ -102,12 +103,12 @@ export function MultiSectionCanvas({
             {emptyStateDescription}
           </p>
           {onAddSection && (
-            <button
+            <AppButton
               onClick={() => onAddSection()}
-              className="inline-flex items-center px-4 py-2 bg-module-primary text-white rounded-md hover:bg-module-primary/90 transition-colors"
+              className="bg-module-primary text-white hover:bg-module-primary/90"
             >
               Add First Section
-            </button>
+            </AppButton>
           )}
         </div>
       </div>

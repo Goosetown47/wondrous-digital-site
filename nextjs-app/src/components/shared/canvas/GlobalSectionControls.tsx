@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { AppButton } from '@/components/ui/app-button';
 import { Trash2, Settings, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ProjectSection } from '@/stores/builderStore';
@@ -43,16 +43,14 @@ export function GlobalSectionControls({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
             transition={{ duration: 0.2 }}
-            className="pointer-events-auto flex flex-col items-center gap-0 bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg overflow-hidden"
+            className="pointer-events-auto flex flex-col items-center gap-0 bg-background/95 backdrop-blur-sm border rounded-module-lg shadow-lg overflow-hidden"
           >
           {/* Globe Icon - Top of stack */}
           <div
             className={cn(
               "px-2 py-2 w-full flex items-center justify-center border-b",
-              // eslint-disable-next-line security/detect-object-injection
               PLACEMENT_COLORS[placement]
             )}
-            // eslint-disable-next-line security/detect-object-injection
             title={PLACEMENT_LABELS[placement]}
           >
             <Globe className="h-4 w-4" />
@@ -60,7 +58,7 @@ export function GlobalSectionControls({
 
           {/* Settings */}
           {onSettings && (
-            <Button
+            <AppButton
               size="icon"
               variant="ghost"
               className="h-9 w-9 rounded-none"
@@ -71,11 +69,11 @@ export function GlobalSectionControls({
               aria-label="Section settings"
             >
               <Settings className="h-4 w-4" />
-            </Button>
+            </AppButton>
           )}
 
           {/* Delete */}
-          <Button
+          <AppButton
             size="icon"
             variant="ghost"
             className="h-9 w-9 text-destructive hover:text-destructive rounded-none"
@@ -86,7 +84,7 @@ export function GlobalSectionControls({
             aria-label="Delete section"
           >
             <Trash2 className="h-4 w-4" />
-          </Button>
+          </AppButton>
           </motion.div>
         </div>
       )}

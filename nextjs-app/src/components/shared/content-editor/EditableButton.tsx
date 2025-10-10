@@ -51,7 +51,7 @@ export function EditableButton({
 
         {/* Hover indicator */}
         {isHovered && (
-          <div className="absolute -top-8 left-0 z-50 flex items-center gap-1 px-2 py-1 bg-module-primary text-white rounded-md text-xs whitespace-nowrap pointer-events-none">
+          <div className="absolute -top-8 left-0 z-50 flex items-center gap-1 px-2 py-1 bg-module-primary text-white rounded-module-md text-xs whitespace-nowrap pointer-events-none">
             <Edit2 className="h-3 w-3" />
             <span>Click to edit button</span>
           </div>

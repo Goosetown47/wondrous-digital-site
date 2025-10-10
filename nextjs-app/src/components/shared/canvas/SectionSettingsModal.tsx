@@ -11,7 +11,7 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { AppButton } from '@/components/ui/app-button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -112,7 +112,7 @@ export function SectionSettingsModal({
                   });
                 }}
               >
-                <div className="flex items-start space-x-3 border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                <div className="flex items-start space-x-3 border rounded-module-lg p-4 hover:bg-muted/50 transition-colors">
                   <RadioGroupItem value="page" id="scope-page" className="mt-1" />
                   <div className="flex-1">
                     <Label htmlFor="scope-page" className="font-medium cursor-pointer">
@@ -124,7 +124,7 @@ export function SectionSettingsModal({
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-3 border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                <div className="flex items-start space-x-3 border rounded-module-lg p-4 hover:bg-muted/50 transition-colors">
                   <RadioGroupItem value="global" id="scope-global" className="mt-1" />
                   <div className="flex-1">
                     <Label htmlFor="scope-global" className="font-medium cursor-pointer">
@@ -208,10 +208,10 @@ export function SectionSettingsModal({
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button variant="outline" onClick={handleCancel}>
+          <AppButton variant="outline" onClick={handleCancel}>
             Cancel
-          </Button>
-          <Button onClick={handleSave}>Save Settings</Button>
+          </AppButton>
+          <AppButton onClick={handleSave}>Save Settings</AppButton>
         </div>
       </DialogContent>
     </Dialog>

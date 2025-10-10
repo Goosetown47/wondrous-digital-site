@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   AccordionItem,
   AccordionTrigger,
@@ -66,7 +67,23 @@ export function ServiceItemDisplay({
   onEdit,
   onDelete,
 }: ServiceItemDisplayProps) {
-  const IconComponent = item.icon ? iconMap[item.icon] || Settings : Settings;
+  // Validate icon and warn if invalid
+  const IconComponent = (() => {
+    if (!item.icon) return Settings;
+
+    const icon = iconMap[item.icon];
+    if (!icon) {
+      console.warn(
+        `[ServiceItemDisplay] Invalid icon name "${item.icon}" for service "${item.title}". ` +
+        `Available icons: ${Object.keys(iconMap).join(', ')}. Falling back to Settings icon.`
+      );
+      return Settings;
+    }
+
+    return icon;
+  })();
+
+  const [isHovered, setIsHovered] = useState(false);
 
   // Render as simple card when not in Accordion (for EditableArray)
   if (!inAccordion) {
@@ -91,13 +108,26 @@ export function ServiceItemDisplay({
 
   // Full accordion item for production
   return (
-    <AccordionItem value={item.id} className="border border-border rounded-lg overflow-hidden relative group">
-      {/* Hover Controls (only when showControls is true) */}
-      {showControls && onEdit && onDelete && (
-        <div className="absolute -top-2 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-background border border-border rounded-md shadow-md p-1">
+    <div
+      className="relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Hover Controls (only when showControls is true AND item is hovered) */}
+      {showControls && onEdit && onDelete && isHovered && (
+        <div
+          className="absolute -top-10 left-1/2 -translate-x-1/2 z-50 bg-background border border-border rounded-module-md shadow-md p-1"
+          role="toolbar"
+          aria-label={`Actions for ${item.title}`}
+        >
           <ItemControls onEdit={onEdit} onDelete={onDelete} />
         </div>
       )}
+
+      <AccordionItem
+        value={item.id}
+        className="border border-border rounded-lg overflow-hidden"
+      >
 
       <AccordionTrigger className="hover:no-underline py-6 px-6 bg-background">
         <div className="flex items-start gap-4 text-left w-full">
@@ -136,7 +166,7 @@ export function ServiceItemDisplay({
                   <ul className="space-y-2">
                     {item.servicesInclude.map((service, index) => (
                       <li
-                        key={index}
+                        key={`${item.id}-service-${index}-${service.slice(0, 20)}`}
                         className="text-sm text-muted-foreground flex items-start gap-2"
                       >
                         <span className="text-foreground">•</span>
@@ -156,7 +186,7 @@ export function ServiceItemDisplay({
                   <ul className="space-y-2">
                     {item.deliverables.map((deliverable, index) => (
                       <li
-                        key={index}
+                        key={`${item.id}-deliverable-${index}-${deliverable.slice(0, 20)}`}
                         className="text-sm text-muted-foreground flex items-start gap-2"
                       >
                         <span className="text-foreground">•</span>
@@ -171,5 +201,6 @@ export function ServiceItemDisplay({
         </div>
       </AccordionContent>
     </AccordionItem>
+    </div>
   );
 }

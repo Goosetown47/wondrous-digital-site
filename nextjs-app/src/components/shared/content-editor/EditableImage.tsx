@@ -125,7 +125,7 @@ export function EditableImage({
         {/* Hover overlay with upload icon */}
         {isHovered && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center pointer-events-none animate-in fade-in duration-200">
-            <div className="bg-white/90 backdrop-blur-sm rounded-full p-3">
+            <div className="bg-white/90 backdrop-blur-sm rounded-module-full p-3">
               <Upload className="h-6 w-6 text-gray-700" />
             </div>
           </div>
