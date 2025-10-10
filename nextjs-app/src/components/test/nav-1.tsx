@@ -118,7 +118,6 @@ export default function Nav1({
                 editable={editable}
                 addButtonText="Add Nav Item"
                 projectId={projectId}
-                compact={true}
               />
             ) : navItems.length > 0 ? (
               navItems.map((item) => <NavItemDisplay key={item.id} item={item} projectId={projectId} />)

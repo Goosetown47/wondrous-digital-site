@@ -1,101 +1,52 @@
-import ServicesAccordion from '@/components/test/services-accordion';
-import { ServiceItem } from '@/components/services/service-types';
+import Features1 from '@/components/test/features-1';
+import { FeatureItem } from '@/components/features/feature-types';
 
-// Sample data to demonstrate the accordion
-const sampleServices: ServiceItem[] = [
+// Sample features data for testing
+const sampleFeatures: FeatureItem[] = [
   {
     id: '1',
-    icon: 'settings',
-    title: 'Product Strategy',
-    subtitle: 'Strategic planning and market positioning',
-    description:
-      'From market research to user personas, we help you build products that matter. Our strategic approach ensures your product meets real user needs.',
-    servicesInclude: [
-      'Market Research',
-      'User Personas',
-      'Competitive Analysis',
-      'Product Roadmaps',
-    ],
-    servicesIncludeLabel: 'Services Include:',
-    deliverables: [
-      'Strategy Document',
-      'User Persona Profiles',
-      'Market Analysis Report',
-    ],
-    deliverablesLabel: 'Deliverables:',
+    icon: 'zap',
+    title: 'Lightning Fast',
+    description: 'Experience blazing fast performance with our optimized infrastructure and cutting-edge technology.',
   },
   {
     id: '2',
-    icon: 'palette',
-    title: 'Design',
-    subtitle: 'User-centered design solutions',
-    description:
-      'Beautiful, intuitive designs that users love. We create interfaces that are both aesthetically pleasing and highly functional.',
-    servicesInclude: [
-      'UI/UX Design',
-      'Prototyping',
-      'Design Systems',
-      'User Testing',
-    ],
-    servicesIncludeLabel: 'Services Include:',
-    deliverables: [
-      'Design Mockups',
-      'Interactive Prototypes',
-      'Style Guide',
-    ],
-    deliverablesLabel: 'Deliverables:',
+    icon: 'shield',
+    title: 'Secure & Safe',
+    description: 'Your data is protected with enterprise-grade security and encryption at every level.',
   },
   {
     id: '3',
-    icon: 'code',
-    title: 'Web Development',
-    subtitle: 'Modern, scalable applications',
-    description:
-      'Build fast, secure, and scalable web applications using cutting-edge technologies and best practices.',
-    servicesInclude: [
-      'Frontend Development',
-      'Backend Development',
-      'API Integration',
-      'Performance Optimization',
-    ],
-    servicesIncludeLabel: 'Services Include:',
-    deliverables: [
-      'Production-Ready Code',
-      'Technical Documentation',
-      'Deployment Setup',
-    ],
-    deliverablesLabel: 'Deliverables:',
+    icon: 'users',
+    title: 'Team Collaboration',
+    description: 'Work together seamlessly with powerful collaboration tools built for modern teams.',
   },
   {
     id: '4',
-    icon: 'target',
-    title: 'Marketing',
-    subtitle: 'Growth and optimization strategies',
-    description:
-      'Data-driven marketing strategies to grow your business and reach your target audience effectively.',
-    servicesInclude: [
-      'SEO Optimization',
-      'Content Strategy',
-      'Social Media Marketing',
-      'Analytics & Reporting',
-    ],
-    servicesIncludeLabel: 'Services Include:',
-    deliverables: [
-      'Marketing Plan',
-      'Content Calendar',
-      'Performance Reports',
-    ],
-    deliverablesLabel: 'Deliverables:',
+    icon: 'globe',
+    title: 'Global Reach',
+    description: 'Deploy worldwide with our global CDN and multi-region infrastructure.',
+  },
+  {
+    id: '5',
+    icon: 'trendingUp',
+    title: 'Analytics & Insights',
+    description: 'Make data-driven decisions with comprehensive analytics and real-time reporting.',
+  },
+  {
+    id: '6',
+    icon: 'settings',
+    title: 'Customizable',
+    description: 'Tailor every aspect to your needs with extensive customization options.',
   },
 ];
 
 export default function TestComponentPage() {
   return (
     <div className="min-h-screen bg-background">
-      <ServicesAccordion
-        heading="Services"
-        subtitle="Click to learn more about each service we offer."
-        services={sampleServices}
+      <Features1
+        heading="Our Features"
+        features={sampleFeatures}
         editable={false}
       />
     </div>

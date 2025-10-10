@@ -21,7 +21,7 @@ export function AddSectionButton({ onClick, isVisible = true }: AddSectionButton
     >
       {/* Horizontal line with button in center */}
       <div className="absolute inset-0 flex items-center">
-        <div className="w-full border-t border-dashed border-muted-foreground/30 group-hover:border-primary/50 transition-colors" />
+        <div className="w-full border-t border-dashed border-muted-foreground/30 group-hover:border-module-primary/50 transition-colors" />
       </div>
 
       <Button

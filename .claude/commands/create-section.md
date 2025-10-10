@@ -70,6 +70,8 @@
      - Smooth transitions on interactive elements
   3. **Config export** with exact field matching
 
+  The component must be viewable at "http://localhost:3000/test-component" for the user to review before we add it to CORE.
+
   ### Step 5: Quality Check
 
   Before completing, verify against the checklist:
@@ -79,8 +81,15 @@
 
   ### Step 6: Testing Instructions
 
+  Show the component to the user:
+  1. Tell the user where to find it via localhost URL in the test folder.
+  2. Make sure the design matches expectations and the given inspiration image before moving forward.
+
   Provide me with:
-  1. Steps to import component via /core/add
+  1. Steps to import section via /core/add
+      a. Open the code in the text folder, place it in the code field
+      b. Name it, configure settings
+      c. Click "Create Section"
   2. How to test in LAB
   3. What to check in light/dark mode
   4. Responsive breakpoints to verify

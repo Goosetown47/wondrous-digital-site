@@ -16,7 +16,10 @@ interface EditableImageProps {
   height?: number;
   className?: string;
   aspectRatio?: string;
+  objectFit?: 'cover' | 'contain' | 'fill' | 'scale-down' | 'none';
+  objectPosition?: string;
   onUpdate: (newImageUrl: string | null) => void;
+  onUpdateSettings?: (settings: { imageUrl: string | null; objectFit?: string; objectPosition?: string; alt?: string }) => void;
   editable?: boolean;
 }
 
@@ -27,7 +30,10 @@ export function EditableImage({
   height = 300,
   className,
   aspectRatio,
+  objectFit = 'cover',
+  objectPosition = 'center',
   onUpdate,
+  onUpdateSettings,
   editable = true,
 }: EditableImageProps) {
   const [showModal, setShowModal] = useState(false);
@@ -68,19 +74,26 @@ export function EditableImage({
             currentImage={src}
             context={context}
             onUpdate={handleImageUpdate}
+            initialObjectFit={objectFit}
+            initialObjectPosition={objectPosition}
+            onUpdateSettings={onUpdateSettings}
           />
         )}
       </>
     );
   }
 
-  // If not editable, just render the image with original attributes
+  // If not editable, just render the image absolutely positioned to fill container
   if (!editable) {
     return (
       <img
         src={src}
         alt={alt}
-        className={className}
+        className="absolute inset-0 w-full h-full"
+        style={{
+          objectFit: objectFit,
+          objectPosition: objectPosition,
+        }}
       />
     );
   }
@@ -89,9 +102,7 @@ export function EditableImage({
     <>
       <div
         className={cn(
-          'relative group',
-          // Preserve width from img className if it exists
-          className?.includes('w-full') && 'w-full',
+          'relative group w-full h-full',
           // Ensure block display to avoid inline-block default
           'block'
         )}
@@ -100,11 +111,15 @@ export function EditableImage({
         onClick={() => setShowModal(true)}
         style={{ cursor: 'pointer' }}
       >
-        {/* Use regular img tag to preserve all responsive classes */}
+        {/* Use absolutely positioned img to fill container like Next.js Image with fill prop */}
         <img
           src={src}
           alt={alt}
-          className={className}
+          className="absolute inset-0 w-full h-full"
+          style={{
+            objectFit: objectFit,
+            objectPosition: objectPosition,
+          }}
         />
 
         {/* Hover overlay with upload icon */}
@@ -124,6 +139,9 @@ export function EditableImage({
           currentImage={src}
           context={context}
           onUpdate={handleImageUpdate}
+          initialObjectFit={objectFit}
+          initialObjectPosition={objectPosition}
+          onUpdateSettings={onUpdateSettings}
         />
       )}
     </>

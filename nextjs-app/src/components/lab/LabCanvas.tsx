@@ -108,6 +108,23 @@ export function LabCanvas({ className = '', theme }: LabCanvasProps) {
       updateSection(section.id, { content: updatedContent });
     };
 
+    // Batch update handler for atomic multi-field updates
+    // Prevents race conditions when updating multiple related fields (e.g., button text, URL, variant, size)
+    const handleBatchUpdate = (updates: Record<string, unknown>) => {
+      console.log('📦 [LabCanvas] Batch update:', {
+        sectionId: section.id,
+        updates,
+      });
+
+      // Update all fields atomically
+      const updatedContent = {
+        ...section.content,
+        ...updates,
+      };
+
+      updateSection(section.id, { content: updatedContent });
+    };
+
     // Filter out empty/null/undefined values to let component defaults work
     const filteredContent = Object.entries(section.content).reduce((acc, [key, value]) => {
       if (value !== '' && value !== null && value !== undefined) {
@@ -116,7 +133,7 @@ export function LabCanvas({ className = '', theme }: LabCanvasProps) {
       return acc;
     }, {} as Record<string, unknown>);
 
-    // Pass editable flag and update handler to component
+    // Pass editable flag and update handlers to component
     // Components with inline EditableText/Image/Button wrappers will use these
     // Note: projectId is null in LAB context (template building), will be set in actual projects
     return (
@@ -124,6 +141,7 @@ export function LabCanvas({ className = '', theme }: LabCanvasProps) {
         {...filteredContent}
         editable={true}
         onUpdate={handleFieldUpdate}
+        onBatchUpdate={handleBatchUpdate}
         projectId={null}
       />
     );

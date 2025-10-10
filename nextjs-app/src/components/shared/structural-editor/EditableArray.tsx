@@ -7,7 +7,7 @@
 
 'use client';
 
-import { ComponentType } from 'react';
+import { ComponentType, useState } from 'react';
 import {
   EditableItem,
   ItemEditorProps,
@@ -15,7 +15,6 @@ import {
 } from '@/lib/structural-editor/types';
 import { useArrayEditor, useItemConfig } from '@/lib/structural-editor/hooks';
 import { ItemConfigModal } from './ItemConfigModal';
-import { AddButton } from './AddButton';
 import { ItemControls } from './ItemControls';
 
 export interface EditableArrayProps<T extends EditableItem> {
@@ -35,8 +34,6 @@ export interface EditableArrayProps<T extends EditableItem> {
   addButtonText?: string;
   /** Optional project ID for context */
   projectId?: string;
-  /** Compact mode for horizontal layouts (shows icon-only button, no empty message) */
-  compact?: boolean;
 }
 
 export function EditableArray<T extends EditableItem>({
@@ -48,10 +45,10 @@ export function EditableArray<T extends EditableItem>({
   emptyMessage = 'No items yet. Click + to add your first item.',
   addButtonText = 'Add Item',
   projectId,
-  compact = false,
 }: EditableArrayProps<T>) {
   const { handleAdd, handleEdit, handleDelete } = useArrayEditor(items, onUpdate);
   const { isOpen, item, operation, openForCreate, openForEdit, close } = useItemConfig<T>();
+  const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
 
   const handleOpenCreate = () => {
     openForCreate();
@@ -67,77 +64,61 @@ export function EditableArray<T extends EditableItem>({
   };
 
   return (
-    <div className={compact ? 'flex items-center gap-2' : 'space-y-4'}>
-      {/* Empty State - hidden in compact mode */}
-      {items.length === 0 && !compact && (
-        <div className="text-center py-8 text-muted-foreground text-sm border border-dashed border-border rounded-lg">
+    <>
+      {/* Empty State */}
+      {items.length === 0 && editable && (
+        <div className="text-center py-8 text-muted-foreground text-sm border border-dashed border-border rounded-lg col-span-full">
           {emptyMessage}
         </div>
       )}
 
-      {/* Items List */}
+      {/* Items with hover controls */}
       {editable ? (
-        /* Edit Mode: Show items with controls */
-        <div className={compact ? 'flex items-center gap-2' : 'space-y-2'}>
+        /* Edit Mode: Show items with hover controls */
+        <>
           {items.map((itemData) => (
             <div
               key={itemData.id}
-              className={
-                compact
-                  ? 'relative' // Compact mode: use relative positioning for hover controls
-                  : 'flex items-start justify-between gap-4 p-4 bg-muted/30 border border-border rounded-lg hover:bg-muted/50 transition-colors'
-              }
+              className="relative"
+              onMouseEnter={() => setHoveredItemId(itemData.id)}
+              onMouseLeave={() => setHoveredItemId(null)}
             >
-              <div className={compact ? 'peer' : 'flex-1 min-w-0'}>
-                <ItemDisplay item={itemData} />
-              </div>
+              <ItemDisplay item={itemData} />
 
-              {/* Controls: Above on hover in compact mode, inline otherwise */}
-              {compact ? (
-                <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 peer-hover:opacity-100 hover:opacity-100 transition-opacity z-50 bg-background border border-border rounded-md shadow-md p-1">
+              {/* Hover Controls - only show for hovered item */}
+              {hoveredItemId === itemData.id && (
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 z-50 bg-background border border-border rounded-md shadow-md p-1">
                   <ItemControls
                     onEdit={() => openForEdit(itemData)}
                     onDelete={() => handleDelete(itemData.id)}
-                    className="flex-shrink-0"
                   />
                 </div>
-              ) : (
-                <ItemControls
-                  onEdit={() => openForEdit(itemData)}
-                  onDelete={() => handleDelete(itemData.id)}
-                  className="flex-shrink-0"
-                />
               )}
             </div>
           ))}
-        </div>
+        </>
       ) : (
         /* Display Mode: Just show items */
-        <div className={compact ? 'flex items-center gap-4' : 'space-y-2'}>
+        <>
           {items.map((itemData) => (
-            <div key={itemData.id}>
-              <ItemDisplay item={itemData} />
-            </div>
+            <ItemDisplay key={itemData.id} item={itemData} />
           ))}
-        </div>
+        </>
       )}
 
       {/* Add Button (only in edit mode) */}
       {editable && (
-        <div className={compact ? '' : 'flex justify-start'}>
-          {compact ? (
-            <button
-              onClick={handleOpenCreate}
-              className="flex items-center justify-center h-8 w-8 rounded-full border-2 border-dashed border-primary/50 hover:border-primary hover:bg-primary/10 transition-colors"
-              type="button"
-              title={addButtonText}
-            >
-              <span className="text-primary text-lg font-bold leading-none -mt-0.5">+</span>
-            </button>
-          ) : (
-            <AddButton onClick={handleOpenCreate} text={addButtonText} />
-          )}
-        </div>
+        <>
+          {/* Icon-only button for flex/inline layouts, full button for grid */}
+          <button
+            onClick={handleOpenCreate}
+            className="flex items-center justify-center h-8 w-8 rounded-full border-2 border-dashed border-module-primary/50 hover:border-module-primary hover:bg-module-primary/10 transition-colors shrink-0"
+            type="button"
+            title={addButtonText}
+          >
+            <span className="text-module-primary text-lg font-bold leading-none -mt-0.5">+</span>
+          </button>
+        </>
       )}
 
       {/* Config Modal */}
@@ -157,6 +138,6 @@ export function EditableArray<T extends EditableItem>({
           />
         </ItemConfigModal>
       )}
-    </div>
+    </>
   );
 }
