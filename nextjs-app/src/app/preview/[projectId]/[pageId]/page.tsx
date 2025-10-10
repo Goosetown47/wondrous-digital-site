@@ -145,11 +145,24 @@ export default function PreviewPage() {
               }
 
               const Component = registryEntry.component;
+              const content = section.content || {};
+
+              // Filter out empty/null/undefined values to let component defaults work
+              const filteredContent = Object.entries(content).reduce((acc, [key, value]) => {
+                if (value !== '' && value !== null && value !== undefined) {
+                  acc[key] = value;
+                }
+                return acc;
+              }, {} as Record<string, unknown>);
+
+              // Pass editable=false and spread content props (NEW PATTERN - matches Builder/Lab)
               return (
                 <Component
                   key={section.id}
-                  content={section.content || {}}
-                  isEditing={false}
+                  {...filteredContent}
+                  editable={false}
+                  onUpdate={() => {}} // No-op in preview mode
+                  projectId={projectId}
                 />
               );
             })

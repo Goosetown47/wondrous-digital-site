@@ -1,11 +1,12 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { AppButton } from '@/components/ui/app-button';
 import {
   ChevronUp,
   ChevronDown,
   Trash2,
-  GripVertical
+  GripVertical,
+  Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -26,27 +27,27 @@ export function SectionControls({
   onMoveUp,
   onMoveDown,
   onDelete,
-
-  onSettings: _onSettings, // Reserved for future use
+  onSettings,
   isVisible
 }: SectionControlsProps) {
   return (
     <AnimatePresence>
       {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -10 }}
-          transition={{ duration: 0.2 }}
-          className="absolute -left-12 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-1 bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg p-1"
-        >
+        <div className="absolute -left-1 top-1/2 -translate-y-1/2 z-30">
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col items-center gap-1 bg-background/95 backdrop-blur-sm border rounded-module-lg shadow-lg p-1"
+          >
           {/* Drag Handle */}
           <div className="px-1 py-1 cursor-move text-muted-foreground hover:text-foreground">
             <GripVertical className="h-4 w-4" />
           </div>
 
           {/* Move Up */}
-          <Button
+          <AppButton
             size="icon"
             variant="ghost"
             className="h-7 w-7"
@@ -58,10 +59,10 @@ export function SectionControls({
             aria-label="Move section up"
           >
             <ChevronUp className="h-4 w-4" />
-          </Button>
+          </AppButton>
 
           {/* Move Down */}
-          <Button
+          <AppButton
             size="icon"
             variant="ghost"
             className="h-7 w-7"
@@ -73,12 +74,11 @@ export function SectionControls({
             aria-label="Move section down"
           >
             <ChevronDown className="h-4 w-4" />
-          </Button>
+          </AppButton>
 
-          {/* Settings - Hidden until we have actual settings to configure */}
-          {/* TODO: Re-enable when section-specific settings are implemented
+          {/* Settings */}
           {onSettings && (
-            <Button
+            <AppButton
               size="icon"
               variant="ghost"
               className="h-7 w-7"
@@ -89,12 +89,11 @@ export function SectionControls({
               aria-label="Section settings"
             >
               <Settings className="h-4 w-4" />
-            </Button>
+            </AppButton>
           )}
-          */}
 
           {/* Delete */}
-          <Button
+          <AppButton
             size="icon"
             variant="ghost"
             className="h-7 w-7 text-destructive hover:text-destructive"
@@ -105,8 +104,9 @@ export function SectionControls({
             aria-label="Delete section"
           >
             <Trash2 className="h-4 w-4" />
-          </Button>
-        </motion.div>
+          </AppButton>
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );

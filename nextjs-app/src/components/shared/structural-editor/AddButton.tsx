@@ -1,0 +1,35 @@
+/**
+ * AddButton Component
+ *
+ * Generic "+ Add" button for adding items to arrays
+ * Uses AppButton to ensure consistent app UI styling regardless of theme
+ */
+
+'use client';
+
+import { AppButton } from '@/components/ui/app-button';
+import { Plus } from 'lucide-react';
+
+export interface AddButtonProps {
+  /** Click handler */
+  onClick: () => void;
+  /** Button text (default: "Add Item") */
+  text?: string;
+  /** Optional className for styling */
+  className?: string;
+}
+
+export function AddButton({ onClick, text = 'Add Item', className }: AddButtonProps) {
+  return (
+    <AppButton
+      variant="outline"
+      size="sm"
+      onClick={onClick}
+      className={className}
+      type="button"
+    >
+      <Plus className="w-4 h-4 mr-2" />
+      {text}
+    </AppButton>
+  );
+}

@@ -97,97 +97,92 @@ export class LocalComponentWriter {
   }
 
   /**
-   * Generate component file content with wrapper
+   * Generate component file content
    *
-   * NEW APPROACH (2025-09-30): Saves original component code as-is.
-   * No transformation applied. Editing capabilities are injected at runtime
-   * by EditableSectionWrapper based on the editableFields config.
+   * NEW APPROACH (2025-10-02): Paste source code as-is - no transformation
+   * Custom components include their own config export, no need to generate
    */
   private generateComponentFile(component: CoreComponent): string {
-    const componentName = component.code_name;
-    const configName = componentName!.toLowerCase() + 'Config';
-    // Escape special characters in component name for comments
-    const safeName = component.name.replace(/&/g, 'and').replace(/</g, '').replace(/>/g, '');
+    // Escape special characters for comments
+    const safeName = component.name
+      .replace(/&/g, 'and')
+      .replace(/</g, '')
+      .replace(/>/g, '');
 
-    // Detect the actual component name from the submitted code
-    let actualComponentName = componentName; // default fallback
-
-    // Try multiple patterns to find component definitions
-    const patterns = [
-      /(?:const|let|var)\s+(\w+)\s*=\s*\(\)/,  // const ComponentName = ()
-      /(?:const|let|var)\s+(\w+)\s*=\s*function/,  // const ComponentName = function
-      /function\s+(\w+)\s*\(/,  // function ComponentName(
-      /export\s+(?:default\s+)?function\s+(\w+)/,  // export function ComponentName
-      /export\s+\{\s*(\w+)\s*\}/,  // export { ComponentName }
-      /class\s+(\w+)\s+extends/,  // class ComponentName extends
-    ];
-
-    for (const pattern of patterns) {
-      const match = component.code.match(pattern);
-      if (match && match[1]) {
-        actualComponentName = match[1];
-        break;
-      }
-    }
+    // Check if source already has 'use client' directive
+    const hasUseClient = component.code.trim().startsWith("'use client'") ||
+                         component.code.trim().startsWith('"use client"');
 
     return `// Component: ${safeName}
 // Created: ${new Date().toISOString()}
 // Edit in Core UI: /core
 //
-// NOTE: This component is stored AS-IS (no transformation).
-// Editing capabilities are injected at runtime by EditableSectionWrapper
-// based on the editableFields config exported below.
+// This is a custom component with manual config.
+// Config is defined in the source code below.
 
-'use client';
-
-import type { EditableFieldConfig } from '@/lib/component-registry';
-
-// Original component code (untransformed)
-${component.code}
-
-// Export for use in LAB/BUILDER
-// For normalized components (with Props interface), export directly for tree walking
-// For non-normalized, use wrapper pattern for compatibility
-${component.code.includes(`${actualComponentName}Props`) ?
-  `// Direct export (normalized component with props interface)
-export const ${componentName} = ${actualComponentName};` :
-  `// Base component (renamed for wrapping)
-const ${componentName}Base = ${actualComponentName};
-
-// Wrapper export for LAB/BUILDER
-export function ${componentName}(props: Record<string, unknown>) {
-  return <${componentName}Base {...props} />;
-}`}
-
-// Export configuration for registry
-export const ${configName} = {
-  editableFields: ${JSON.stringify(component.editable_fields || [], null, 2)} as EditableFieldConfig[],
-  defaultContent: ${JSON.stringify(component.default_content || {}, null, 2)}
-};
+${hasUseClient ? '' : "'use client';\n\n"}${component.code}
 `;
   }
 
   /**
    * Generate registry file with all component imports and registrations
+   *
+   * NEW APPROACH (2025-10-02): Extract config and component names from source
+   * No hardcoded naming conventions - use actual export names from files
    */
   private generateRegistryFile(components: CoreComponent[]): string {
     const timestamp = new Date().toISOString();
+
     const imports = components
       .filter(c => c.code_name)
       .map(c => {
         const fileName = c.code_name!.toLowerCase();
-        const configName = fileName + 'Config';
         const componentType = this.getComponentType(c);
-        return `import { ${c.code_name}, ${configName} } from '@/components/core/${componentType}/${fileName}';`;
+
+        // Extract config name from source code
+        const configMatch = c.code.match(/export const (\w+Config) = \{/);
+        if (!configMatch) {
+          console.warn(`⚠️  No config export found for ${c.code_name}, using fallback name`);
+        }
+        const configName = configMatch ? configMatch[1] : `${fileName}Config`;
+
+        // Extract component export name (default export)
+        // Handles: export default function ComponentName
+        const defaultFnMatch = c.code.match(/export default function (\w+)/);
+        // Handles: export default ComponentName
+        const defaultMatch = c.code.match(/export default (\w+)/);
+
+        let componentExport = c.code_name; // fallback
+        if (defaultFnMatch) {
+          componentExport = defaultFnMatch[1];
+        } else if (defaultMatch) {
+          componentExport = defaultMatch[1];
+        }
+
+        return `import ${componentExport}, { ${configName} } from '@/components/core/${componentType}/${fileName}';`;
       })
       .join('\n');
 
     const registrations = components
       .filter(c => c.code_name)
       .map(c => {
-        const configName = c.code_name!.toLowerCase() + 'Config';
+        // Extract config name from source
+        const configMatch = c.code.match(/export const (\w+Config) = \{/);
+        const configName = configMatch ? configMatch[1] : `${c.code_name!.toLowerCase()}Config`;
+
+        // Extract component export name to use as variable
+        const defaultFnMatch = c.code.match(/export default function (\w+)/);
+        const defaultMatch = c.code.match(/export default (\w+)/);
+
+        let componentVar = c.code_name; // fallback
+        if (defaultFnMatch) {
+          componentVar = defaultFnMatch[1];
+        } else if (defaultMatch) {
+          componentVar = defaultMatch[1];
+        }
+
         return `  ComponentRegistry.register('${c.code_name}', {
-    component: ${c.code_name},
+    component: ${componentVar},
     type: '${c.type}',
     defaultContent: ${configName}.defaultContent,
     editableFields: ${configName}.editableFields,

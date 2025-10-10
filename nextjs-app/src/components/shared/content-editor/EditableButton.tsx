@@ -44,14 +44,14 @@ export function EditableButton({
         {/* Render the button */}
         <div className={cn(
           'cursor-pointer transition-all',
-          'hover:outline hover:outline-2 hover:outline-offset-2 hover:outline-primary/50'
+          'hover:outline hover:outline-2 hover:outline-offset-2 hover:outline-module-primary/50'
         )}>
           {children}
         </div>
 
         {/* Hover indicator */}
         {isHovered && (
-          <div className="absolute -top-8 left-0 z-50 flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-md text-xs whitespace-nowrap pointer-events-none">
+          <div className="absolute -top-8 left-0 z-50 flex items-center gap-1 px-2 py-1 bg-module-primary text-white rounded-module-md text-xs whitespace-nowrap pointer-events-none">
             <Edit2 className="h-3 w-3" />
             <span>Click to edit button</span>
           </div>

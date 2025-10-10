@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, ReactNode, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SectionControls } from './SectionControls';
 import { cn } from '@/lib/utils';
 
@@ -24,7 +24,7 @@ export function SectionWrapper({
   id,
   index,
   totalSections,
-  isSelected,
+  isSelected: _isSelected,  // Reserved for future selection highlighting
   children,
   onSelect,
   onMoveUp,
@@ -67,8 +67,7 @@ export function SectionWrapper({
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "relative group min-h-[100px] cursor-pointer", // Add cursor-pointer
-        isSelected && "ring-2 ring-primary ring-offset-2", // Visual feedback when selected
+        "relative group cursor-pointer",
         className
       )}
       onClick={handleClick}
@@ -76,12 +75,39 @@ export function SectionWrapper({
       onMouseLeave={() => setIsHovered(false)}
       {...dragHandleProps}
     >
-      {/* Background layer that ensures full wrapper is hoverable */}
-      <div className="absolute inset-0 bg-transparent" aria-hidden="true" />
+      {/* Hover Lines - Top and Bottom Dashed Borders */}
+      <AnimatePresence>
+        {isHovered && (
+          <>
+            {/* Top line */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="absolute top-0 left-0 right-0 border-t-2 border-dashed border-gray-400 pointer-events-none"
+              style={{ zIndex: 1 }}
+            />
+            {/* Bottom line */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="absolute bottom-0 left-0 right-0 border-t-2 border-dashed border-gray-400 pointer-events-none"
+              style={{ zIndex: 1 }}
+            />
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Section Controls - higher z-index to be above everything */}
       {(onMoveUp || onMoveDown || onDelete || onSettings) && (
-        <div className="section-controls">
+        <div
+          className="section-controls"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
           <SectionControls
             sectionId={id}
             canMoveUp={canMoveUp}

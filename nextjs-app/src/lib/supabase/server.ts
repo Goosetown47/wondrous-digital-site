@@ -1,4 +1,5 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { env } from '@/env.mjs';
 import { getBuildSafeCookieStore } from '@/lib/cookies/build-safe';
 
@@ -27,6 +28,29 @@ export async function createSupabaseServerClient() {
             // Silently fail in build context
           }
         },
+      },
+    }
+  );
+}
+
+/**
+ * Create Supabase client with service role key (bypasses RLS)
+ *
+ * ⚠️ WARNING: This client bypasses Row Level Security!
+ * Only use after proper authorization checks with user client.
+ *
+ * Common pattern:
+ * 1. Use createSupabaseServerClient() for auth/authorization
+ * 2. Use createSupabaseServiceClient() for admin operations
+ */
+export function createSupabaseServiceClient() {
+  return createClient(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
       },
     }
   );

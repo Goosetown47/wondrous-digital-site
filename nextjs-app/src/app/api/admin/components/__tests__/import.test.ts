@@ -155,6 +155,9 @@ describe('POST /api/admin/components/import', () => {
 
     (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
+    // Mock registry URL validation
+    (smartImport.validateRegistryUrl as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
+
     // Mock smart import processing
     const mockProcessResult = {
       name: 'button',
@@ -232,6 +235,7 @@ describe('POST /api/admin/components/import', () => {
     });
 
     (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (smartImport.validateRegistryUrl as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
 
     const mockProcessResult = {
       name: 'complex-component',
@@ -293,6 +297,7 @@ describe('POST /api/admin/components/import', () => {
     });
 
     (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (smartImport.validateRegistryUrl as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
 
     const mockProcessResult = {
       name: 'animated-component',
@@ -351,6 +356,7 @@ describe('POST /api/admin/components/import', () => {
     });
 
     (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (smartImport.validateRegistryUrl as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
 
     (smartImport.processComponentImport as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
       new Error('Failed to fetch component from registry')
@@ -383,6 +389,7 @@ describe('POST /api/admin/components/import', () => {
     });
 
     (isAdminServer as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (smartImport.validateRegistryUrl as unknown as ReturnType<typeof vi.fn>).mockReturnValue(true);
 
     const mockProcessResult = {
       name: 'button',
