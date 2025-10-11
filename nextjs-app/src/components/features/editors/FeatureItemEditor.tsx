@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { ItemEditorProps } from '@/lib/structural-editor/types';
 import { FeatureItem, FEATURE_ICONS } from '../feature-types';
+import { generateId } from '@/lib/structural-editor/utils';
 
 // Icon mapping for dropdown display
 const iconComponents: Record<string, LucideIcon> = {
@@ -65,7 +66,7 @@ export function FeatureItemEditor({
 }: ItemEditorProps<FeatureItem>) {
   const [formData, setFormData] = useState<FeatureItem>(
     item || {
-      id: '',
+      id: generateId(),
       icon: 'zap',
       title: '',
       description: '',

@@ -19,6 +19,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { EditableText } from '@/components/shared/content-editor/EditableText';
@@ -78,6 +79,16 @@ export default function Nav1({
   projectId,
 }: Nav1Props) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const isPreview = pathname?.startsWith('/preview/');
+  const isPlatform = pathname?.startsWith('/sites/');
+
+  // Context-aware home link (logo click)
+  const homeHref = isPreview
+    ? `/preview/${projectId}/path/`
+    : isPlatform
+    ? `/sites/${projectId}/`
+    : '/';
 
   // Standardized button update handlers - prevents race conditions
   const handleSignInUpdate = useButtonUpdate(onUpdate, onBatchUpdate, 'signIn');
@@ -89,7 +100,7 @@ export default function Nav1({
         <div className="flex items-center justify-between h-16">
           {/* Logo Section */}
           <Link
-            href="/"
+            href={homeHref}
             className="flex items-center gap-2 flex-shrink-0"
             onClick={(e) => editable && e.preventDefault()}
           >
@@ -129,7 +140,7 @@ export default function Nav1({
                 projectId={projectId}
               />
             ) : navItems.length > 0 ? (
-              navItems.map((item) => <NavItemDisplay key={item.id} item={item} projectId={projectId} />)
+              navItems.map((item, index) => <NavItemDisplay key={item.id || `nav-${index}`} item={item} projectId={projectId} />)
             ) : null}
           </div>
 
@@ -188,16 +199,20 @@ export default function Nav1({
             {/* Mobile Navigation Items */}
             {navItems.length > 0 && (
               <div className="space-y-2">
-                {navItems.map((item) => {
+                {navItems.map((item, index) => {
                   const href =
-                    item.linkType === 'page' && item.pagePath && projectId
-                      ? `/sites/${projectId}${item.pagePath}`
+                    item.linkType === 'page' && item.pagePath
+                      ? isPreview
+                        ? `/preview/${projectId}/path${item.pagePath}`
+                        : isPlatform
+                        ? `/sites/${projectId}${item.pagePath}`
+                        : item.pagePath
                       : item.linkType === 'external' && item.externalUrl
                       ? item.externalUrl
                       : '#';
 
                   return (
-                    <div key={item.id} className="space-y-2">
+                    <div key={item.id || `mobile-nav-${index}`} className="space-y-2">
                       {/* Main Nav Item */}
                       <Link
                         href={href}
@@ -212,17 +227,21 @@ export default function Nav1({
                       {/* Dropdown Items (if any) */}
                       {item.hasDropdown && item.dropdownItems && item.dropdownItems.length > 0 && (
                         <div className="pl-4 space-y-2">
-                          {item.dropdownItems.map((dropdownItem) => {
+                          {item.dropdownItems.map((dropdownItem, dropIndex) => {
                             const dropdownHref =
-                              dropdownItem.linkType === 'page' && dropdownItem.pagePath && projectId
-                                ? `/sites/${projectId}${dropdownItem.pagePath}`
+                              dropdownItem.linkType === 'page' && dropdownItem.pagePath
+                                ? isPreview
+                                  ? `/preview/${projectId}/path${dropdownItem.pagePath}`
+                                  : isPlatform
+                                  ? `/sites/${projectId}${dropdownItem.pagePath}`
+                                  : dropdownItem.pagePath
                                 : dropdownItem.linkType === 'external' && dropdownItem.externalUrl
                                 ? dropdownItem.externalUrl
                                 : '#';
 
                             return (
                               <Link
-                                key={dropdownItem.id}
+                                key={dropdownItem.id || `dropdown-${index}-${dropIndex}`}
                                 href={dropdownHref}
                                 className="block py-2"
                                 onClick={() => setMobileMenuOpen(false)}

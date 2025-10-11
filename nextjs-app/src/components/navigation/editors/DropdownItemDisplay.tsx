@@ -7,6 +7,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ItemDisplayProps } from '@/lib/structural-editor/types';
 import { DropdownItem } from '../nav-types';
 
@@ -15,9 +16,17 @@ interface DropdownItemDisplayProps extends ItemDisplayProps<DropdownItem> {
 }
 
 export function DropdownItemDisplay({ item, projectId }: DropdownItemDisplayProps) {
+  const pathname = usePathname();
+  const isPreview = pathname?.startsWith('/preview/');
+  const isPlatform = pathname?.startsWith('/sites/');
+
   const href =
-    item.linkType === 'page' && item.pagePath && projectId
-      ? `/sites/${projectId}${item.pagePath}`
+    item.linkType === 'page' && item.pagePath
+      ? isPreview
+        ? `/preview/${projectId}/path${item.pagePath}`
+        : isPlatform
+        ? `/sites/${projectId}${item.pagePath}`
+        : item.pagePath
       : item.linkType === 'external' && item.externalUrl
       ? item.externalUrl
       : '#';
