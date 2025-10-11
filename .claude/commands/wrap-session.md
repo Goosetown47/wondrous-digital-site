@@ -50,6 +50,9 @@ If none, skip. Don't create just to create.
 - [ ] Push to remote branch
 - [ ] Stash any exploratory code for later
 
+DO NOT 
+- Commit documentation or screenshots to github
+
 **Quality Final Check:**
 - [ ] Ensure no debug console.logs left in code
 - [ ] Verify no hardcoded test values

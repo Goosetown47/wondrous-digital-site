@@ -106,7 +106,7 @@ export default function BuilderPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex-1 flex flex-col">
       {/* Full-width Canvas Navbar */}
       <CanvasNavbar
         projectId={projectId}
@@ -123,9 +123,9 @@ export default function BuilderPage() {
       />
 
       {/* Main content area - full width canvas */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1">
         {/* Canvas area - full width */}
-        <div className="flex-1 overflow-auto min-h-0">
+        <div className="flex-1 min-h-0 flex flex-col">
           <ResizablePreview
             presetWidth={getDeviceWidth()}
             minWidth={320}

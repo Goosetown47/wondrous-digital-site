@@ -80,6 +80,7 @@ export function TextEditorModal({
         heading: {
           levels: [1, 2, 3],
         },
+        link: false, // Disable built-in Link to avoid duplicate with custom Link extension
       }),
       Link.configure({
         openOnClick: false,
@@ -96,7 +97,7 @@ export function TextEditorModal({
       attributes: {
         class: cn(
           'prose prose-sm max-w-none focus:outline-none',
-          'min-h-[200px] p-3 rounded-md border',
+          'min-h-[200px] p-3 rounded-module-md border',
           // Ensure lists display properly in editor
           'prose-ul:list-disc prose-ul:pl-6',
           'prose-ol:list-decimal prose-ol:pl-6',
@@ -379,12 +380,12 @@ export function TextEditorModal({
               {editor ? (
                 <>
                   {renderToolbar()}
-                  <div className="max-h-[400px] overflow-y-auto rounded-md border">
+                  <div className="max-h-[400px] overflow-y-auto rounded-module-md border">
                     <EditorContent editor={editor} />
                   </div>
                 </>
               ) : (
-                <div className="min-h-[200px] p-3 rounded-md border flex items-center justify-center text-muted-foreground">
+                <div className="min-h-[200px] p-3 rounded-module-md border flex items-center justify-center text-muted-foreground">
                   Loading editor...
                 </div>
               )}

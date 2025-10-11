@@ -1,6 +1,45 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Canvas } from '../Canvas';
+
+// Mock Supabase client
+vi.mock('@/lib/supabase/client', () => ({
+  createClient: vi.fn(() => ({
+    auth: {
+      getUser: vi.fn(),
+      getSession: vi.fn(),
+    },
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+    })),
+    storage: {
+      from: vi.fn(() => ({
+        upload: vi.fn(),
+        getPublicUrl: vi.fn(),
+      })),
+    },
+  })),
+}));
+
+// Mock register-components to prevent module-level execution
+vi.mock('@/lib/register-components', () => ({
+  registerAllComponents: vi.fn(),
+  ComponentRegistry: {
+    getInstance: vi.fn(() => ({
+      register: vi.fn(),
+      get: vi.fn(),
+      getAll: vi.fn(() => ({})),
+      has: vi.fn(() => false),
+      clear: vi.fn(),
+    })),
+  },
+}));
 
 // Mock the IframePreview component
 vi.mock('@/components/shared/preview/IframePreview', () => ({
@@ -43,9 +82,22 @@ vi.mock('@/stores/builderStore', () => ({
   })),
 }));
 
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
+
 describe('Builder Canvas Iframe Integration', () => {
   it('should render canvas wrapped in IframePreview', () => {
-    render(<Canvas />);
+    render(<Canvas />, { wrapper: createWrapper() });
 
     // Check that IframePreview is rendered
     const iframePreview = screen.getByTestId('iframe-preview');
@@ -58,7 +110,7 @@ describe('Builder Canvas Iframe Integration', () => {
   });
 
   it('should not have container query classes', () => {
-    const { container } = render(<Canvas />);
+    const { container } = render(<Canvas />, { wrapper: createWrapper() });
 
     // Check that no element has @container class
     const allElements = container.querySelectorAll('*');
@@ -75,7 +127,7 @@ describe('Builder Canvas Iframe Integration', () => {
   });
 
   it('should pass correct props to IframePreview', () => {
-    render(<Canvas />);
+    render(<Canvas />, { wrapper: createWrapper() });
 
     // Check that IframePreview has proper className
     const iframePreview = screen.getByTestId('iframe-preview');
@@ -83,7 +135,7 @@ describe('Builder Canvas Iframe Integration', () => {
   });
 
   it('should maintain canvas functionality within iframe', () => {
-    render(<Canvas />);
+    render(<Canvas />, { wrapper: createWrapper() });
 
     // Check that canvas still shows empty state message (from actual component)
     const canvas = screen.getByTestId('multi-section-canvas');

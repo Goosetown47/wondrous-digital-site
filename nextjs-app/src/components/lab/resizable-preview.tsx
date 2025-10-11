@@ -118,19 +118,19 @@ export function ResizablePreview({
 
 
   return (
-    // Canvas div - full viewport size with gray background
-    <div className="h-[calc(100vh-120px)] w-full bg-muted/30 overflow-hidden flex">
+    // Canvas div - inherits height from parent container
+    <div className="flex-1 w-full bg-muted/30 flex flex-col">
       {/* Resizing Container - this is what we resize */}
       <div
         ref={containerRef}
         className={cn(
-          "relative h-full transition-all container-type-inline-size",
+          "relative flex-1 flex flex-col transition-all container-type-inline-size",
           isResizing && "transition-none",
           isDarkMode && "dark",
           className
         )}
-        style={{ 
-          width: isResizing 
+        style={{
+          width: isResizing
             ? `${dragWidth}px`
             : width !== null
               ? `${width}px`
@@ -139,7 +139,7 @@ export function ResizablePreview({
       >
         {/* Inner Container - Apply theme class here to isolate it */}
         <div className={cn(
-          "h-full w-full overflow-hidden",
+          "flex-1 flex flex-col w-full overflow-hidden",
           "isolate" // Ensures theme doesn't leak to parent
         )}>
           {children}

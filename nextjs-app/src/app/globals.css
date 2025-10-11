@@ -47,12 +47,15 @@
     --module-secondary: #9CA3AF;
     --module-accent: #EFEFEF;
     --module-background: #F9FAFB;
-    
+
     /* RGB versions for opacity support */
     --module-primary-rgb: 107, 114, 128;
     --module-secondary-rgb: 156, 163, 175;
     --module-accent-rgb: 239, 239, 239;
     --module-background-rgb: 249, 250, 251;
+
+    /* Module border-radius - FIXED for app/editor UI */
+    --module-radius: 0.5rem;
   }
 
   .dark {
@@ -141,7 +144,28 @@
   .bg-module-primary-10 {
     background-color: rgba(var(--module-primary-rgb), 0.1);
   }
-  
+
+  /* Module border-radius classes - FIXED for app/editor UI */
+  .rounded-module-sm {
+    border-radius: calc(var(--module-radius) - 4px);
+  }
+
+  .rounded-module-md {
+    border-radius: calc(var(--module-radius) - 2px);
+  }
+
+  .rounded-module-lg {
+    border-radius: var(--module-radius);
+  }
+
+  .rounded-module-xl {
+    border-radius: calc(var(--module-radius) + 4px);
+  }
+
+  .rounded-module-full {
+    border-radius: 9999px;
+  }
+
   /* Hue slider gradient */
   .hue-slider [data-slider-track] {
     background: linear-gradient(

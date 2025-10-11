@@ -14,32 +14,49 @@ export interface Section {
   library_version?: number; // Version of the library item when added
 }
 
+export interface ProjectSection {
+  id: string;
+  project_id: string;
+  component_name: string;
+  content: Record<string, unknown>;
+  section_placement: 'global_header' | 'global_footer' | 'above_content' | 'below_content';
+  display_order: number;
+  is_published: boolean;
+  library_item_id?: string;
+  library_version?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 export interface BuilderState {
-  // Current working sections (draft)
+  // Current working sections (draft) - page-specific
   sections: Section[];
-  
-  // Published sections (what's live on the site)
+
+  // Published sections (what's live on the site) - page-specific
   publishedSections: Section[];
-  
+
+  // Global project sections (appear on all pages)
+  projectSections: ProjectSection[];
+
   // UI State
   selectedSectionId: string | null;
   isDragging: boolean;
   isEditing: boolean;
-  
+
   // Save State
   isDirty: boolean; // Has unsaved draft changes
   lastSavedAt: Date | null;
   saveStatus: SaveStatus;
   saveError: string | null;
-  
+
   // Page Metadata
   pageId: string | null;
   projectId: string | null;
   pageTitle: string;
-  
-  // Actions
+
+  // Actions - Page Sections
   addSection: (section: Section) => void;
   removeSection: (id: string) => void;
   updateSection: (id: string, updates: Partial<Section>) => void;
@@ -48,18 +65,24 @@ export interface BuilderState {
   setIsDragging: (isDragging: boolean) => void;
   setIsEditing: (isEditing: boolean) => void;
   clearAll: () => void;
-  
-  // New Save Actions
+
+  // Save Actions
   markDirty: () => void;
   markClean: () => void;
   setSaveStatus: (status: SaveStatus, error?: string) => void;
   setLastSavedAt: (date: Date) => void;
-  
+
   // Page Actions
   loadPage: (pageId: string, projectId: string, sections: Section[], publishedSections: Section[], title: string) => void;
   publishDraft: () => void;
   hasUnpublishedChanges: () => boolean;
   loadPublishedSections: (publishedSections: Section[]) => void;
+
+  // Project Section Actions
+  loadProjectSections: (projectSections: ProjectSection[]) => void;
+  addProjectSection: (section: ProjectSection) => void;
+  updateProjectSection: (id: string, updates: Partial<ProjectSection>) => void;
+  removeProjectSection: (id: string) => void;
 }
 
 export const useBuilderStore = create<BuilderState>()(
@@ -69,6 +92,7 @@ export const useBuilderStore = create<BuilderState>()(
         // Initial state
         sections: [],
         publishedSections: [],
+        projectSections: [],
         selectedSectionId: null,
         isDragging: false,
         isEditing: false,
@@ -203,6 +227,29 @@ export const useBuilderStore = create<BuilderState>()(
         loadPublishedSections: (publishedSections: Section[]) =>
           set(() => ({
             publishedSections,
+          })),
+
+        // Project Section Actions
+        loadProjectSections: (projectSections: ProjectSection[]) =>
+          set(() => ({
+            projectSections,
+          })),
+
+        addProjectSection: (section: ProjectSection) =>
+          set((state) => ({
+            projectSections: [...state.projectSections, section],
+          })),
+
+        updateProjectSection: (id: string, updates: Partial<ProjectSection>) =>
+          set((state) => ({
+            projectSections: state.projectSections.map((s) =>
+              s.id === id ? { ...s, ...updates } : s
+            ),
+          })),
+
+        removeProjectSection: (id: string) =>
+          set((state) => ({
+            projectSections: state.projectSections.filter((s) => s.id !== id),
           })),
       }),
       {

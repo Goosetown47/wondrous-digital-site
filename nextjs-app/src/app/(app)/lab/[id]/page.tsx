@@ -338,7 +338,7 @@ export default function EditDraftPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex-1 flex flex-col">
       {/* Header */}
       <header className="border-b bg-background" role="banner">
         {/* Top Header Row */}
@@ -909,9 +909,9 @@ export default function EditDraftPage() {
             </Sheet>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden" data-testid="lab-canvas">
+      <div className="flex-1 min-h-0 flex flex-col" data-testid="lab-canvas">
         {/* Preview Area */}
-        <div className="h-full bg-muted/30 overflow-auto">
+        <div className="flex-1 min-h-0 bg-muted/30 flex flex-col">
           {activeTab === 'preview' ? (
             <ResizablePreview
               presetWidth={getDeviceWidth()}

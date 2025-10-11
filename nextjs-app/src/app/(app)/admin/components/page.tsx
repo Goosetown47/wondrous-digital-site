@@ -270,9 +270,11 @@ export default function DependenciesPage() {
     const dependencyUsage = new Map<string, number>();
 
     data.components.forEach(component => {
-      component.dependencies.forEach(dep => {
-        dependencyUsage.set(dep, (dependencyUsage.get(dep) || 0) + 1);
-      });
+      if (component.dependencies && Array.isArray(component.dependencies)) {
+        component.dependencies.forEach(dep => {
+          dependencyUsage.set(dep, (dependencyUsage.get(dep) || 0) + 1);
+        });
+      }
     });
 
     // Show ALL installed dependencies from package.json
@@ -873,7 +875,7 @@ npx shadcn add https://ui.aceternity.com/registry/container-text-flip.json`}
                   <TableCell>
                     {item.type === 'component' ? (
                       <Badge variant="outline" className="text-xs">
-                        {item.dependencies.length} deps
+                        {item.dependencies?.length || 0} deps
                       </Badge>
                     ) : (
                       <Badge variant="outline" className="text-xs">

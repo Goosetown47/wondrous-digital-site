@@ -12,7 +12,8 @@ import { useTheme } from '@/hooks/useThemes';
 import { ThemeProvider } from '@/components/builder/ThemeProvider';
 import { useBuilderStore } from '@/stores/builderStore';
 import { useEffect, useState } from 'react';
-import type { Section } from '@/stores/builderStore';
+import type { Section, ProjectSection } from '@/stores/builderStore';
+import { useProjectSections } from '@/hooks/useProjectSections';
 
 export default function PreviewPage() {
   const params = useParams();
@@ -22,6 +23,7 @@ export default function PreviewPage() {
   const { data: page, isLoading } = usePageById(pageId);
   const { data: domains } = useDomains(projectId);
   const { data: theme } = useTheme(project?.theme_id);
+  const { data: projectSections = [] } = useProjectSections(projectId);
   
   // Get sections from builder store - this will be the live preview data
   const builderSections = useBuilderStore((state) => state.sections);
@@ -47,6 +49,48 @@ export default function PreviewPage() {
   
   // Get the primary domain or first available domain
   const primaryDomain = domains?.find(d => d.is_primary) || domains?.[0];
+
+  // Organize global sections by placement
+  const globalHeaders = projectSections.filter(s => s.section_placement === 'global_header');
+  const globalFooters = projectSections.filter(s => s.section_placement === 'global_footer');
+  const aboveContent = projectSections.filter(s => s.section_placement === 'above_content');
+  const belowContent = projectSections.filter(s => s.section_placement === 'below_content');
+
+  // Helper function to render a section (works for both page and project sections)
+  const renderSection = (section: Section | ProjectSection, key: string) => {
+    const componentName = section.component_name || 'HeroTwoColumn';
+    const registryEntry = ComponentRegistry.get(componentName);
+
+    if (!registryEntry) {
+      return (
+        <div key={key} className="py-12 px-4 bg-gray-100 border-2 border-dashed border-gray-300">
+          <div className="max-w-4xl mx-auto text-center">
+            <p className="text-gray-500">Component "{componentName}" not found</p>
+          </div>
+        </div>
+      );
+    }
+
+    const Component = registryEntry.component;
+    const content = section.content || {};
+
+    const filteredContent = Object.entries(content).reduce((acc, [key, value]) => {
+      if (value !== '' && value !== null && value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, unknown>);
+
+    return (
+      <Component
+        key={key}
+        {...filteredContent}
+        editable={false}
+        onUpdate={() => {}}
+        projectId={projectId}
+      />
+    );
+  };
 
   if (isLoading) {
     return (
@@ -110,10 +154,17 @@ export default function PreviewPage() {
 
       {/* Render sections with theme */}
       <ThemeProvider theme={theme} className="min-h-screen">
-        <div 
+        <div
           className="w-full @container"
           style={{ containerType: 'inline-size' }}
         >
+          {/* Global Headers */}
+          {globalHeaders.map((section, index) => renderSection(section, `header-${section.id || index}`))}
+
+          {/* Above Content Global Sections */}
+          {aboveContent.map((section, index) => renderSection(section, `above-${section.id || index}`))}
+
+          {/* Page-Specific Sections */}
           {previewSections.length === 0 ? (
             <div className="flex items-center justify-center h-96">
               <div className="text-center">
@@ -126,34 +177,14 @@ export default function PreviewPage() {
               </div>
             </div>
           ) : (
-            previewSections.map((section: Section) => {
-              // Get the component from the unified ComponentRegistry
-              const componentName = section.component_name || 'HeroTwoColumn';
-              const registryEntry = ComponentRegistry.get(componentName);
-
-              if (!registryEntry) {
-                // Show error message for missing components
-                return (
-                  <div key={section.id} className="py-12 px-4 bg-gray-100 border-2 border-dashed border-gray-300">
-                    <div className="max-w-4xl mx-auto text-center">
-                      <p className="text-gray-500">
-                        Component "{componentName}" not found
-                      </p>
-                    </div>
-                  </div>
-                );
-              }
-
-              const Component = registryEntry.component;
-              return (
-                <Component
-                  key={section.id}
-                  content={section.content || {}}
-                  isEditing={false}
-                />
-              );
-            })
+            previewSections.map((section: Section, index) => renderSection(section, section.id || `section-${index}`))
           )}
+
+          {/* Below Content Global Sections */}
+          {belowContent.map((section, index) => renderSection(section, `below-${section.id || index}`))}
+
+          {/* Global Footers */}
+          {globalFooters.map((section, index) => renderSection(section, `footer-${section.id || index}`))}
         </div>
       </ThemeProvider>
     </div>
