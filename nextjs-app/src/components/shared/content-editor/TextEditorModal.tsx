@@ -80,6 +80,7 @@ export function TextEditorModal({
         heading: {
           levels: [1, 2, 3],
         },
+        link: false, // Disable built-in Link to avoid duplicate with custom Link extension
       }),
       Link.configure({
         openOnClick: false,

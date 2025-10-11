@@ -56,7 +56,9 @@ export function ItemConfigModal<T>({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
+          <DialogDescription className={description ? "" : "sr-only"}>
+            {description || "Configure item settings"}
+          </DialogDescription>
         </DialogHeader>
 
         {/* Custom editor component */}

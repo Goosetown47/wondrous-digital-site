@@ -159,10 +159,10 @@ export default function PreviewPage() {
           style={{ containerType: 'inline-size' }}
         >
           {/* Global Headers */}
-          {globalHeaders.map((section) => renderSection(section, `header-${section.id}`))}
+          {globalHeaders.map((section, index) => renderSection(section, `header-${section.id || index}`))}
 
           {/* Above Content Global Sections */}
-          {aboveContent.map((section) => renderSection(section, `above-${section.id}`))}
+          {aboveContent.map((section, index) => renderSection(section, `above-${section.id || index}`))}
 
           {/* Page-Specific Sections */}
           {previewSections.length === 0 ? (
@@ -177,14 +177,14 @@ export default function PreviewPage() {
               </div>
             </div>
           ) : (
-            previewSections.map((section: Section) => renderSection(section, section.id))
+            previewSections.map((section: Section, index) => renderSection(section, section.id || `section-${index}`))
           )}
 
           {/* Below Content Global Sections */}
-          {belowContent.map((section) => renderSection(section, `below-${section.id}`))}
+          {belowContent.map((section, index) => renderSection(section, `below-${section.id || index}`))}
 
           {/* Global Footers */}
-          {globalFooters.map((section) => renderSection(section, `footer-${section.id}`))}
+          {globalFooters.map((section, index) => renderSection(section, `footer-${section.id || index}`))}
         </div>
       </ThemeProvider>
     </div>

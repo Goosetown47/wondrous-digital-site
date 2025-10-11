@@ -13,7 +13,6 @@ import { ServiceItem } from '@/components/services/service-types';
 import { ServiceItemEditor, ServiceItemDisplay } from '@/components/services/editors';
 import { useArrayEditor, useItemConfig } from '@/lib/structural-editor/hooks';
 import { ItemConfigModal } from '@/components/shared/structural-editor/ItemConfigModal';
-import { AddButton } from '@/components/shared/structural-editor/AddButton';
 import type { EditableFieldConfig } from '@/lib/component-registry';
 
 interface ServicesAccordionProps {
@@ -111,9 +110,15 @@ export default function ServicesAccordion({
 
           {/* Add Button (Edit Mode Only) */}
           {editable && (
-            <div className="flex justify-start">
-              <AddButton onClick={openForCreate} text="Add Item" />
-            </div>
+            <button
+              onClick={openForCreate}
+              className="flex items-center justify-center h-8 w-8 rounded-module-full border-2 border-dashed border-module-primary/50 hover:border-module-primary hover:bg-module-primary/10 transition-colors shrink-0"
+              type="button"
+              title="Add Service"
+              aria-label="Add Service"
+            >
+              <span className="text-module-primary text-lg font-bold leading-none -mt-0.5">+</span>
+            </button>
           )}
         </div>
       </div>

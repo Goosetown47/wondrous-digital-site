@@ -75,13 +75,18 @@ export async function getProjectById(projectId: string) {
   // Fetch creator info separately if created_by exists
   let creator = null;
   if (data && data.created_by) {
-    const { data: profileData } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from('user_profiles')
       .select('display_name, avatar_url')
       .eq('user_id', data.created_by)
       .single();
-    
-    creator = profileData;
+
+    // Handle "no rows returned" gracefully (PGRST116)
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.warn('Failed to fetch creator profile:', profileError);
+    }
+
+    creator = profileData || null;
   }
 
   if (error) throw error;

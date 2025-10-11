@@ -125,7 +125,7 @@ export default function BuilderPage() {
       {/* Main content area - full width canvas */}
       <div className="flex flex-1 overflow-hidden">
         {/* Canvas area - full width */}
-        <div className="flex-1 overflow-auto min-h-0">
+        <div className="flex-1 min-h-0">
           <ResizablePreview
             presetWidth={getDeviceWidth()}
             minWidth={320}

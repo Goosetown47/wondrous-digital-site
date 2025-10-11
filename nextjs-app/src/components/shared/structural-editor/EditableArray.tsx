@@ -76,9 +76,9 @@ export function EditableArray<T extends EditableItem>({
       {editable ? (
         /* Edit Mode: Show items with hover controls */
         <>
-          {items.map((itemData) => (
+          {items.map((itemData, index) => (
             <div
-              key={itemData.id}
+              key={itemData.id || `item-${index}`}
               className="relative"
               onMouseEnter={() => setHoveredItemId(itemData.id)}
               onMouseLeave={() => setHoveredItemId(null)}
@@ -100,8 +100,8 @@ export function EditableArray<T extends EditableItem>({
       ) : (
         /* Display Mode: Just show items */
         <>
-          {items.map((itemData) => (
-            <ItemDisplay key={itemData.id} item={itemData} />
+          {items.map((itemData, index) => (
+            <ItemDisplay key={itemData.id || `item-${index}`} item={itemData} />
           ))}
         </>
       )}

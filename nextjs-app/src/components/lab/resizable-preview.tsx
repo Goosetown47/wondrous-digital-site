@@ -118,8 +118,8 @@ export function ResizablePreview({
 
 
   return (
-    // Canvas div - full viewport size with gray background
-    <div className="h-[calc(100vh-120px)] w-full bg-muted/30 overflow-hidden flex">
+    // Canvas div - inherits height from parent container
+    <div className="h-full w-full bg-muted/30 overflow-hidden flex">
       {/* Resizing Container - this is what we resize */}
       <div
         ref={containerRef}

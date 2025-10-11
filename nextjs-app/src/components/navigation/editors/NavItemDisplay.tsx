@@ -8,6 +8,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ItemDisplayProps } from '@/lib/structural-editor/types';
 import { NavItem } from '../nav-types';
 import { ChevronDown } from 'lucide-react';
@@ -19,10 +20,17 @@ interface NavItemDisplayProps extends ItemDisplayProps<NavItem> {
 
 export function NavItemDisplay({ item, projectId }: NavItemDisplayProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const pathname = usePathname();
+  const isPreview = pathname?.startsWith('/preview/');
+  const isPlatform = pathname?.startsWith('/sites/');
 
   const href =
-    item.linkType === 'page' && item.pagePath && projectId
-      ? `/sites/${projectId}${item.pagePath}`
+    item.linkType === 'page' && item.pagePath
+      ? isPreview
+        ? `/preview/${projectId}/path${item.pagePath}`
+        : isPlatform
+        ? `/sites/${projectId}${item.pagePath}`
+        : item.pagePath
       : item.linkType === 'external' && item.externalUrl
       ? item.externalUrl
       : '#';
