@@ -23,9 +23,10 @@ export async function GET(
   const { projectId, slug } = await params;
 
   // Reconstruct the page path from slug array
+  // If slug is empty or undefined, path should be '/' (home page)
   // If slug is ['about-us'], path should be '/about-us'
   // If slug is ['services', 'consulting'], path should be '/services/consulting'
-  const pagePath = '/' + (slug?.join('/') || '');
+  const pagePath = slug && slug.length > 0 ? '/' + slug.join('/') : '/';
 
   const supabase = await createSupabaseServerClient();
 
