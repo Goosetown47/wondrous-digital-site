@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { PrimarySidebar } from '@/components/navigation/primary-sidebar-new';
 import { SecondarySidebar } from '@/components/navigation/secondary-sidebar-new';
 import { MobileMenu } from '@/components/navigation/mobile-menu';
@@ -11,6 +12,9 @@ import { PanelLeftClose, PanelRightClose } from 'lucide-react';
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const { data: isAdmin } = useIsAdmin();
+  const pathname = usePathname();
+  const isCanvasPage = pathname?.startsWith('/lab/') || pathname?.startsWith('/builder/');
+
   // Start with false on both server and client to avoid hydration mismatch
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -52,7 +56,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         {/* Main Content Area - flush with edges when collapsed, 25px rounded corners when expanded */}
         <main className={`flex-1 bg-white overflow-hidden relative transition-all duration-300 ${
           isCollapsed ? 'lg:rounded-l-none' : 'lg:rounded-l-[25px]'
-        }`}>
+        } ${isCanvasPage ? 'flex flex-col' : ''}`}>
         {/* Collapse Toggle Button - Top left of content area - Hidden on mobile */}
         <button
           onClick={toggleCollapsed}
@@ -64,12 +68,20 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             <PanelLeftClose className="w-5 h-5 text-gray-600" />
           )}
         </button>
-        
-        <div className="h-full overflow-y-auto">
-          <div className="p-14">
+
+        {/* Canvas pages: Keep padding, remove scroll wrapper */}
+        {isCanvasPage ? (
+          <div className="flex-1 p-14 flex flex-col">
             {children}
           </div>
-        </div>
+        ) : (
+          /* Regular pages: Keep current behavior (scroll + padding) */
+          <div className="h-full overflow-y-auto">
+            <div className="p-14">
+              {children}
+            </div>
+          </div>
+        )}
       </main>
       </div>
     </>

@@ -9,6 +9,7 @@ import type { CoreComponent } from '@/types/builder';
 import { getCodeName } from '@/lib/services/naming-service';
 import { IframePreview } from '@/components/shared/preview/IframePreview';
 import type { Theme } from '@/types/builder';
+import { cn } from '@/lib/utils';
 
 interface LabCanvasProps {
   className?: string;
@@ -170,7 +171,7 @@ export function LabCanvas({ className = '', theme }: LabCanvasProps) {
 
   return (
     <>
-      <div data-lab-canvas className={className}>
+      <div data-lab-canvas className={cn("flex-1 flex flex-col", className)}>
         <IframePreview className="w-full" theme={theme}>
           <MultiSectionCanvas
             sections={sections as CanvasSection[]}

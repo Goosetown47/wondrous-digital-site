@@ -152,9 +152,9 @@ export function IframePreview({ children, className = '', isDarkMode = false, th
           className={className}
           style={{
             width: '100%',
-            height: 'calc(100vh - 120px)', // Explicit height matching the ResizablePreview container
             border: 'none',
-            display: 'block'
+            display: 'block',
+            flex: '1 1 0%'
           }}
           title="Preview"
         />
@@ -170,9 +170,9 @@ export function IframePreview({ children, className = '', isDarkMode = false, th
       className={className}
       style={{
         width: '100%',
-        height: 'calc(100vh - 120px)', // Explicit height matching the ResizablePreview container
         border: 'none',
-        display: 'block'
+        display: 'block',
+        flex: '1 1 0%'
       }}
       title="Preview"
     />

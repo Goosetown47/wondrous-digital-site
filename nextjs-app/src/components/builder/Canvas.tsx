@@ -576,7 +576,7 @@ export function Canvas({ theme }: CanvasProps) {
 
   return (
     <>
-      <div className="w-full h-full">
+      <div className="w-full flex-1 flex flex-col">
         <IframePreview className="w-full" theme={theme}>
           {/* Wrapper for top spacing and consistent padding */}
           <div className="pt-12">
