@@ -20,6 +20,8 @@ import { ThemePreview } from '@/components/theme-builder/theme-preview';
 import { ThemePreviewProvider } from '@/components/theme-builder/theme-preview-provider';
 import { ColorPicker } from '@/components/theme-builder/color-picker';
 import { ColorGroupSection } from '@/components/theme-builder/color-group-section';
+import { SectionStyleEditor } from '@/components/theme-builder/SectionStyleEditor';
+import { TypographyStyleEditor } from '@/components/theme-builder/TypographyStyleEditor';
 import type { ThemeVariables } from '@/types/builder';
 
 export default function EditThemePage() {
@@ -154,9 +156,9 @@ export default function EditThemePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       {/* Unified Header */}
-      <header className="border-b bg-background">
+      <header className="border-b bg-background flex-shrink-0">
         <div className="flex items-center justify-between px-4 py-3">
           {/* Left section */}
           <div className="flex items-center gap-4">
@@ -229,16 +231,19 @@ export default function EditThemePage() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-h-0">
         {/* Left Panel - Editor */}
-        <div className="w-1/2 border-r flex flex-col">
+        <div className="w-1/2 border-r flex flex-col min-h-0">
 
         {/* Editor Content */}
-        <div className="flex-1 overflow-y-auto">
-          <Tabs defaultValue="colors" className="h-full">
-            <TabsList className="w-full justify-start rounded-none border-b h-auto p-0">
+        <div className="flex-1 flex flex-col min-h-0">
+          <Tabs defaultValue="colors" className="flex-1 flex flex-col min-h-0">
+            <TabsList className="w-full justify-start rounded-none border-b h-auto p-0 flex-shrink-0">
               <TabsTrigger value="colors" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
                 Colors
+              </TabsTrigger>
+              <TabsTrigger value="section-styles" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+                Section Styles
               </TabsTrigger>
               <TabsTrigger value="typography" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
                 Typography
@@ -250,8 +255,8 @@ export default function EditThemePage() {
                 Effects
               </TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="colors" className="p-6 space-y-4">
+
+            <TabsContent value="colors" className="p-6 pb-24 space-y-4 overflow-y-auto flex-1">
             {/* Primary Colors */}
             <ColorGroupSection 
               title="Primary Colors" 
@@ -411,22 +416,117 @@ export default function EditThemePage() {
               />
             </ColorGroupSection>
             </TabsContent>
-            
-            <TabsContent value="typography" className="p-6">
-              <div className="text-center py-12 text-muted-foreground">
-                <p>Typography settings coming soon</p>
-                <p className="text-sm mt-2">Font families, sizes, and weights will be configured here</p>
+
+            <TabsContent value="section-styles" className="p-6 pb-24 space-y-6 overflow-y-auto flex-1">
+              <div className="space-y-2 mb-6">
+                <h3 className="text-lg font-semibold">Section Style System</h3>
+                <p className="text-sm text-muted-foreground">
+                  Create 2-4 pre-matched color palettes for sections. Each style includes guaranteed contrast ratios.
+                </p>
               </div>
+
+              <SectionStyleEditor
+                styleNumber={1}
+                name={themeVariables.section1Name}
+                description={themeVariables.section1Description}
+                bg={themeVariables.section1Bg}
+                fg={themeVariables.section1Fg}
+                card={themeVariables.section1Card}
+                cardFg={themeVariables.section1CardFg}
+                onChange={(updates) => {
+                  setThemeVariables({
+                    ...themeVariables,
+                    ...(updates.name !== undefined && { section1Name: updates.name }),
+                    ...(updates.description !== undefined && { section1Description: updates.description }),
+                    ...(updates.bg !== undefined && { section1Bg: updates.bg }),
+                    ...(updates.fg !== undefined && { section1Fg: updates.fg }),
+                    ...(updates.card !== undefined && { section1Card: updates.card }),
+                    ...(updates.cardFg !== undefined && { section1CardFg: updates.cardFg }),
+                  });
+                }}
+              />
+
+              <SectionStyleEditor
+                styleNumber={2}
+                name={themeVariables.section2Name}
+                description={themeVariables.section2Description}
+                bg={themeVariables.section2Bg}
+                fg={themeVariables.section2Fg}
+                card={themeVariables.section2Card}
+                cardFg={themeVariables.section2CardFg}
+                onChange={(updates) => {
+                  setThemeVariables({
+                    ...themeVariables,
+                    ...(updates.name !== undefined && { section2Name: updates.name }),
+                    ...(updates.description !== undefined && { section2Description: updates.description }),
+                    ...(updates.bg !== undefined && { section2Bg: updates.bg }),
+                    ...(updates.fg !== undefined && { section2Fg: updates.fg }),
+                    ...(updates.card !== undefined && { section2Card: updates.card }),
+                    ...(updates.cardFg !== undefined && { section2CardFg: updates.cardFg }),
+                  });
+                }}
+              />
+
+              <SectionStyleEditor
+                styleNumber={3}
+                name={themeVariables.section3Name}
+                description={themeVariables.section3Description}
+                bg={themeVariables.section3Bg}
+                fg={themeVariables.section3Fg}
+                card={themeVariables.section3Card}
+                cardFg={themeVariables.section3CardFg}
+                onChange={(updates) => {
+                  setThemeVariables({
+                    ...themeVariables,
+                    ...(updates.name !== undefined && { section3Name: updates.name }),
+                    ...(updates.description !== undefined && { section3Description: updates.description }),
+                    ...(updates.bg !== undefined && { section3Bg: updates.bg }),
+                    ...(updates.fg !== undefined && { section3Fg: updates.fg }),
+                    ...(updates.card !== undefined && { section3Card: updates.card }),
+                    ...(updates.cardFg !== undefined && { section3CardFg: updates.cardFg }),
+                  });
+                }}
+              />
+
+              <SectionStyleEditor
+                styleNumber={4}
+                name={themeVariables.section4Name}
+                description={themeVariables.section4Description}
+                bg={themeVariables.section4Bg}
+                fg={themeVariables.section4Fg}
+                card={themeVariables.section4Card}
+                cardFg={themeVariables.section4CardFg}
+                onChange={(updates) => {
+                  setThemeVariables({
+                    ...themeVariables,
+                    ...(updates.name !== undefined && { section4Name: updates.name }),
+                    ...(updates.description !== undefined && { section4Description: updates.description }),
+                    ...(updates.bg !== undefined && { section4Bg: updates.bg }),
+                    ...(updates.fg !== undefined && { section4Fg: updates.fg }),
+                    ...(updates.card !== undefined && { section4Card: updates.card }),
+                    ...(updates.cardFg !== undefined && { section4CardFg: updates.cardFg }),
+                  });
+                }}
+              />
             </TabsContent>
-            
-            <TabsContent value="sizing" className="p-6">
+
+            <TabsContent value="typography" className="p-6 pb-24 space-y-6 overflow-y-auto flex-1">
+              <TypographyStyleEditor
+                baseFontHeading={themeVariables.fontHeading}
+                baseFontBody={themeVariables.fontBody}
+                values={themeVariables}
+                onChange={handleColorChange}
+              />
+            </TabsContent>
+
+            <TabsContent value="sizing" className="p-6 pb-24 overflow-y-auto flex-1">
               <div className="text-center py-12 text-muted-foreground">
                 <p>Sizing settings coming soon</p>
                 <p className="text-sm mt-2">Line height, spacing, padding, and margins will be configured here</p>
               </div>
             </TabsContent>
-            
-            <TabsContent value="effects" className="p-6 space-y-4">
+
+            <TabsContent value="effects" className="p-6 pb-24 space-y-4 overflow-y-auto flex-1">
               {/* Border Radius */}
               <Card>
                 <CardHeader>

@@ -45,7 +45,7 @@ export function ThemePreview({ variables, showHeader = true }: ThemePreviewProps
       {showHeader && (
         <div className="border-b p-4 bg-background">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Preview</h3>
+            <h3>Preview</h3>
             <div className="flex items-center gap-2">
               <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(getCSSVariables())}>
                 <Copy className="mr-2 h-4 w-4" />
@@ -65,10 +65,10 @@ export function ThemePreview({ variables, showHeader = true }: ThemePreviewProps
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Hero Section */}
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold tracking-tight">
+            <h1>
               Welcome to Your Theme Preview
             </h1>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-muted-foreground">
               See how your theme looks with real components
             </p>
             <div className="flex gap-4 justify-center">
@@ -116,10 +116,10 @@ export function ThemePreview({ variables, showHeader = true }: ThemePreviewProps
                     <Check className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium">Feature One</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p>Feature One</p>
+                    <small className="text-muted-foreground">
                       Description of the first feature
-                    </p>
+                    </small>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -127,10 +127,10 @@ export function ThemePreview({ variables, showHeader = true }: ThemePreviewProps
                     <Check className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium">Feature Two</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p>Feature Two</p>
+                    <small className="text-muted-foreground">
                       Description of the second feature
-                    </p>
+                    </small>
                   </div>
                 </div>
               </CardContent>
@@ -161,8 +161,8 @@ export function ThemePreview({ variables, showHeader = true }: ThemePreviewProps
                           <AvatarFallback>JD</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">John Doe</p>
-                          <p className="text-sm text-muted-foreground">john@example.com</p>
+                          <p>John Doe</p>
+                          <small className="text-muted-foreground">john@example.com</small>
                         </div>
                       </div>
                       <Badge>Pro</Badge>
@@ -206,7 +206,7 @@ export function ThemePreview({ variables, showHeader = true }: ThemePreviewProps
 
           {/* Badge Examples */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Badges</h3>
+            <h3>Badges</h3>
             <div className="flex gap-2 flex-wrap">
               <Badge>Default</Badge>
               <Badge variant="secondary">Secondary</Badge>
@@ -214,6 +214,50 @@ export function ThemePreview({ variables, showHeader = true }: ThemePreviewProps
               <Badge variant="destructive">Destructive</Badge>
             </div>
           </div>
+
+          {/* Typography Hierarchy */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Typography Hierarchy</CardTitle>
+              <CardDescription>
+                Preview all heading levels and text sizes
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h1>Heading 1 - Main Page Title</h1>
+                <p className="text-muted-foreground">48px, bold, tight tracking</p>
+              </div>
+              <div>
+                <h2>Heading 2 - Section Title</h2>
+                <p className="text-muted-foreground">36px, semi-bold</p>
+              </div>
+              <div>
+                <h3>Heading 3 - Subsection Title</h3>
+                <p className="text-muted-foreground">30px, semi-bold</p>
+              </div>
+              <div>
+                <h4>Heading 4 - Card Title</h4>
+                <p className="text-muted-foreground">24px, semi-bold</p>
+              </div>
+              <div>
+                <h5>Heading 5 - Small Heading</h5>
+                <p className="text-muted-foreground">20px, medium</p>
+              </div>
+              <div>
+                <h6>Heading 6 - Tiny Heading</h6>
+                <p className="text-muted-foreground">16px, medium</p>
+              </div>
+              <div>
+                <p>Body Text - This is regular paragraph text used throughout the interface for content and descriptions. It should be comfortable to read at length.</p>
+                <p className="text-muted-foreground">16px, regular weight</p>
+              </div>
+              <div>
+                <small className="block">Small Text - Used for captions, labels, and supplementary information. This text is slightly smaller but still readable.</small>
+                <p className="text-muted-foreground">14px, regular weight</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

@@ -134,10 +134,50 @@ export interface ThemeVariables {
   border?: string;
   input?: string;
   ring?: string;
-  
+
+  // Website-level colors (v0.1.8)
+  websiteBackground?: string;  // Global page background
+
+  // Section Style System (v0.1.8) - Pre-matched color palettes
+  // Each theme can have 2-4 section styles with guaranteed contrast
+
+  // Section Style 1
+  section1Bg?: string;           // Section background color
+  section1Fg?: string;           // Section text color (guaranteed contrast)
+  section1Card?: string;         // Card background (guaranteed contrast with section)
+  section1CardFg?: string;       // Card text color (guaranteed contrast with card)
+  section1Name?: string;         // User-friendly name (e.g., "Light & Clean")
+  section1Description?: string;  // Short description for UI
+
+  // Section Style 2
+  section2Bg?: string;
+  section2Fg?: string;
+  section2Card?: string;
+  section2CardFg?: string;
+  section2Name?: string;
+  section2Description?: string;
+
+  // Section Style 3
+  section3Bg?: string;
+  section3Fg?: string;
+  section3Card?: string;
+  section3CardFg?: string;
+  section3Name?: string;
+  section3Description?: string;
+
+  // Section Style 4
+  section4Bg?: string;
+  section4Fg?: string;
+  section4Card?: string;
+  section4CardFg?: string;
+  section4Name?: string;
+  section4Description?: string;
+
   // Typography
   fontFamily?: string;
   fontFamilyHeading?: string;
+  fontHeading?: string;          // Google Font name for headings (v0.1.8)
+  fontBody?: string;             // Google Font name for body text (v0.1.8)
   fontSize?: {
     xs?: string;
     sm?: string;
@@ -148,12 +188,65 @@ export interface ThemeVariables {
     '3xl'?: string;
     '4xl'?: string;
   };
-  
+
+  // Granular Typography System (v0.1.8)
+  // Individual heading controls with inheritance from base fonts
+  // H1
+  h1Font?: string;           // Overrides fontHeading if set
+  h1Size?: string;           // Default: "3rem"
+  h1LineHeight?: string;     // Default: "1.2"
+  h1Weight?: string;         // Default: "700"
+  h1LetterSpacing?: string;  // Default: "-0.02em"
+
+  // H2
+  h2Font?: string;
+  h2Size?: string;           // Default: "2.25rem"
+  h2LineHeight?: string;     // Default: "1.3"
+  h2Weight?: string;         // Default: "600"
+  h2LetterSpacing?: string;  // Default: "-0.01em"
+
+  // H3
+  h3Font?: string;
+  h3Size?: string;           // Default: "1.875rem"
+  h3LineHeight?: string;     // Default: "1.4"
+  h3Weight?: string;         // Default: "600"
+  h3LetterSpacing?: string;  // Default: "0"
+
+  // H4
+  h4Font?: string;
+  h4Size?: string;           // Default: "1.5rem"
+  h4LineHeight?: string;     // Default: "1.4"
+  h4Weight?: string;         // Default: "600"
+  h4LetterSpacing?: string;
+
+  // H5
+  h5Font?: string;
+  h5Size?: string;           // Default: "1.25rem"
+  h5LineHeight?: string;     // Default: "1.5"
+  h5Weight?: string;         // Default: "500"
+  h5LetterSpacing?: string;
+
+  // H6
+  h6Font?: string;
+  h6Size?: string;           // Default: "1rem"
+  h6LineHeight?: string;     // Default: "1.5"
+  h6Weight?: string;         // Default: "500"
+  h6LetterSpacing?: string;
+
+  // Body text controls
+  bodySize?: string;         // Default: "1rem"
+  bodyLineHeight?: string;   // Default: "1.6"
+  bodyWeight?: string;       // Default: "400"
+
+  // Small text controls
+  smallSize?: string;        // Default: "0.875rem"
+  smallLineHeight?: string;  // Default: "1.5"
+
   // Spacing & Sizing
   radius?: string;
   buttonHeight?: string;
   inputHeight?: string;
-  
+
   // Effects
   shadow?: {
     sm?: string;
@@ -162,7 +255,7 @@ export interface ThemeVariables {
     lg?: string;
     xl?: string;
   };
-  
+
   // Custom properties
   [key: string]: string | Record<string, string> | undefined;
 }
@@ -212,6 +305,9 @@ export interface SectionContent {
     container?: boolean;
     spacing?: string;
     className?: string;
+  };
+  design?: {
+    sectionStyle?: 1 | 2 | 3 | 4;  // Which section style to use (v0.1.8)
   };
 }
 

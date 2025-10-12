@@ -79,6 +79,25 @@ vi.mock('@/stores/builderStore', () => ({
     removeSection: vi.fn(),
     updateSection: vi.fn(),
     reorderSections: vi.fn(),
+    projectId: 'test-project-id',
+    pageId: 'test-page-id',
+    projectSections: [], // Added: Canvas needs this
+    loadProjectSections: vi.fn(), // Added: Canvas needs this
+  })),
+}));
+
+// Mock useAutoSave hook
+vi.mock('@/hooks/useAutoSave', () => ({
+  useAutoSave: vi.fn(() => ({
+    saveNow: vi.fn(),
+    isSaving: false,
+  })),
+}));
+
+// Mock useToast hook
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: vi.fn(() => ({
+    toast: vi.fn(),
   })),
 }));
 

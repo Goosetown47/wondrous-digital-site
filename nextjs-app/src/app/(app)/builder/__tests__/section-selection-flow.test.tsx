@@ -4,6 +4,30 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import BuilderPage from '../[projectId]/[pageId]/page';
 import { useBuilderStore } from '@/stores/builderStore';
 
+// Mock Supabase client
+vi.mock('@/lib/supabase/client', () => ({
+  createClient: vi.fn(() => ({
+    auth: {
+      getUser: vi.fn(),
+      getSession: vi.fn(),
+    },
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+    })),
+    storage: {
+      from: vi.fn(() => ({
+        upload: vi.fn(),
+        getPublicUrl: vi.fn(),
+      })),
+    },
+  })),
+}));
+
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
   useParams: () => ({ projectId: 'project1', pageId: 'page1' }),
@@ -42,6 +66,15 @@ vi.mock('@/hooks/usePages', () => ({
     isLoading: false,
     error: null,
   }),
+  useProjectPages: () => ({
+    data: [],
+    isLoading: false,
+    error: null,
+  }),
+  usePublishPage: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
 }));
 
 vi.mock('@/hooks/useThemes', () => ({
@@ -53,7 +86,30 @@ vi.mock('@/hooks/useThemes', () => ({
 vi.mock('@/hooks/useAutoSave', () => ({
   useAutoSave: () => ({
     saveNow: vi.fn(),
+    isSaving: false,
   }),
+}));
+
+// Mock use-toast hook
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({
+    toast: vi.fn(),
+  }),
+}));
+
+// Mock component registry
+vi.mock('@/lib/register-components', () => ({
+  registerAllComponents: vi.fn(),
+  ComponentRegistry: {
+    getInstance: vi.fn(() => ({
+      register: vi.fn(),
+      get: vi.fn(),
+      getAll: vi.fn(() => ({})),
+      has: vi.fn(() => false),
+      clear: vi.fn(),
+    })),
+    get: vi.fn(() => null),
+  },
 }));
 
 vi.mock('@/hooks/useLibrary', () => ({
@@ -88,12 +144,16 @@ vi.mock('@/stores/builderStore', () => ({
     saveStatus: 'saved',
     lastSavedAt: new Date(),
     pageId: 'page1',
+    projectId: 'project1',
     selectedSectionId: null,
     setSelectedSection: vi.fn(),
     removeSection: vi.fn(),
     updateSection: vi.fn(),
     reorderSections: vi.fn(),
     addSection: vi.fn(),
+    projectSections: [],
+    loadProjectSections: vi.fn(),
+    hasUnpublishedChanges: vi.fn(() => false),
   })),
 }));
 

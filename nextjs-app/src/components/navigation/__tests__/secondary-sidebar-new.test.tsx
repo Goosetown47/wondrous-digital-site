@@ -8,6 +8,20 @@ import { useAuth } from '@/providers/auth-provider';
 import { useIsAdmin, useIsAccountOwner } from '@/hooks/useRole';
 import { useAccountProjects } from '@/hooks/useProjects';
 
+// Mock Next.js navigation
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  })),
+  usePathname: vi.fn(() => '/dashboard'),
+  useSearchParams: vi.fn(() => new URLSearchParams()),
+}));
+
 // Mock dependencies
 vi.mock('@/stores/module-theme-store', () => ({
   useModuleThemeStore: vi.fn(),
