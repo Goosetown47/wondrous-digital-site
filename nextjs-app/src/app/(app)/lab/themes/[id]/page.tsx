@@ -394,6 +394,8 @@ export default function EditThemePage() {
                 fg={themeVariables.section1Fg}
                 card={themeVariables.section1Card}
                 cardFg={themeVariables.section1CardFg}
+                cardBorder={themeVariables.section1CardBorder}
+                cardBorderWidth={themeVariables.section1CardBorderWidth}
                 onChange={(updates) => {
                   setThemeVariables({
                     ...themeVariables,
@@ -403,6 +405,8 @@ export default function EditThemePage() {
                     ...(updates.fg !== undefined && { section1Fg: updates.fg }),
                     ...(updates.card !== undefined && { section1Card: updates.card }),
                     ...(updates.cardFg !== undefined && { section1CardFg: updates.cardFg }),
+                    ...(updates.cardBorder !== undefined && { section1CardBorder: updates.cardBorder }),
+                    ...(updates.cardBorderWidth !== undefined && { section1CardBorderWidth: updates.cardBorderWidth }),
                   });
                 }}
               />
@@ -415,6 +419,8 @@ export default function EditThemePage() {
                 fg={themeVariables.section2Fg}
                 card={themeVariables.section2Card}
                 cardFg={themeVariables.section2CardFg}
+                cardBorder={themeVariables.section2CardBorder}
+                cardBorderWidth={themeVariables.section2CardBorderWidth}
                 onChange={(updates) => {
                   setThemeVariables({
                     ...themeVariables,
@@ -424,6 +430,8 @@ export default function EditThemePage() {
                     ...(updates.fg !== undefined && { section2Fg: updates.fg }),
                     ...(updates.card !== undefined && { section2Card: updates.card }),
                     ...(updates.cardFg !== undefined && { section2CardFg: updates.cardFg }),
+                    ...(updates.cardBorder !== undefined && { section2CardBorder: updates.cardBorder }),
+                    ...(updates.cardBorderWidth !== undefined && { section2CardBorderWidth: updates.cardBorderWidth }),
                   });
                 }}
               />
@@ -436,6 +444,8 @@ export default function EditThemePage() {
                 fg={themeVariables.section3Fg}
                 card={themeVariables.section3Card}
                 cardFg={themeVariables.section3CardFg}
+                cardBorder={themeVariables.section3CardBorder}
+                cardBorderWidth={themeVariables.section3CardBorderWidth}
                 onChange={(updates) => {
                   setThemeVariables({
                     ...themeVariables,
@@ -445,6 +455,8 @@ export default function EditThemePage() {
                     ...(updates.fg !== undefined && { section3Fg: updates.fg }),
                     ...(updates.card !== undefined && { section3Card: updates.card }),
                     ...(updates.cardFg !== undefined && { section3CardFg: updates.cardFg }),
+                    ...(updates.cardBorder !== undefined && { section3CardBorder: updates.cardBorder }),
+                    ...(updates.cardBorderWidth !== undefined && { section3CardBorderWidth: updates.cardBorderWidth }),
                   });
                 }}
               />
@@ -457,6 +469,8 @@ export default function EditThemePage() {
                 fg={themeVariables.section4Fg}
                 card={themeVariables.section4Card}
                 cardFg={themeVariables.section4CardFg}
+                cardBorder={themeVariables.section4CardBorder}
+                cardBorderWidth={themeVariables.section4CardBorderWidth}
                 onChange={(updates) => {
                   setThemeVariables({
                     ...themeVariables,
@@ -466,6 +480,8 @@ export default function EditThemePage() {
                     ...(updates.fg !== undefined && { section4Fg: updates.fg }),
                     ...(updates.card !== undefined && { section4Card: updates.card }),
                     ...(updates.cardFg !== undefined && { section4CardFg: updates.cardFg }),
+                    ...(updates.cardBorder !== undefined && { section4CardBorder: updates.cardBorder }),
+                    ...(updates.cardBorderWidth !== undefined && { section4CardBorderWidth: updates.cardBorderWidth }),
                   });
                 }}
               />

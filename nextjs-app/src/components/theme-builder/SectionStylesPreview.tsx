@@ -12,6 +12,8 @@ interface SectionStylesPreviewProps {
     fg?: string;
     card?: string;
     cardFg?: string;
+    cardBorder?: string;
+    cardBorderWidth?: string;
   }>;
 }
 
@@ -74,11 +76,13 @@ export function SectionStylesPreview({ styles }: SectionStylesPreviewProps) {
 
                       {/* Card on Section Background */}
                       <div
-                        className="p-4 rounded-lg border space-y-2"
+                        className="p-4 rounded-lg space-y-2"
                         style={{
                           backgroundColor: style.card ? `hsl(${style.card})` : undefined,
                           color: style.cardFg ? `hsl(${style.cardFg})` : undefined,
-                          borderColor: style.cardFg ? `hsl(${style.cardFg} / 0.2)` : undefined,
+                          border: style.cardBorder && style.cardBorderWidth
+                            ? `${style.cardBorderWidth}px solid hsl(${style.cardBorder})`
+                            : style.cardFg ? `1px solid hsl(${style.cardFg} / 0.2)` : '1px solid currentColor',
                         }}
                       >
                         <h5 className="font-medium text-sm">Card Component</h5>

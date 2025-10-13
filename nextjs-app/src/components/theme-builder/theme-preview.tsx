@@ -94,6 +94,8 @@ export function ThemePreview({
       fg: variables.section1Fg,
       card: variables.section1Card,
       cardFg: variables.section1CardFg,
+      cardBorder: variables.section1CardBorder,
+      cardBorderWidth: variables.section1CardBorderWidth,
     },
     {
       number: 2 as const,
@@ -103,6 +105,8 @@ export function ThemePreview({
       fg: variables.section2Fg,
       card: variables.section2Card,
       cardFg: variables.section2CardFg,
+      cardBorder: variables.section2CardBorder,
+      cardBorderWidth: variables.section2CardBorderWidth,
     },
     {
       number: 3 as const,
@@ -112,6 +116,8 @@ export function ThemePreview({
       fg: variables.section3Fg,
       card: variables.section3Card,
       cardFg: variables.section3CardFg,
+      cardBorder: variables.section3CardBorder,
+      cardBorderWidth: variables.section3CardBorderWidth,
     },
     {
       number: 4 as const,
@@ -121,6 +127,8 @@ export function ThemePreview({
       fg: variables.section4Fg,
       card: variables.section4Card,
       cardFg: variables.section4CardFg,
+      cardBorder: variables.section4CardBorder,
+      cardBorderWidth: variables.section4CardBorderWidth,
     },
   ];
 

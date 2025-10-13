@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import { ColorPicker } from './color-picker';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -19,6 +20,8 @@ interface SectionStyleProps {
   fg?: string;
   card?: string;
   cardFg?: string;
+  cardBorder?: string;
+  cardBorderWidth?: string;
   onChange: (updates: {
     name?: string;
     description?: string;
@@ -26,6 +29,8 @@ interface SectionStyleProps {
     fg?: string;
     card?: string;
     cardFg?: string;
+    cardBorder?: string;
+    cardBorderWidth?: string;
   }) => void;
 }
 
@@ -37,6 +42,8 @@ export function SectionStyleEditor({
   fg = '0 0% 0%',
   card = '0 0% 96%',
   cardFg = '0 0% 0%',
+  cardBorder = '0 0% 89%',
+  cardBorderWidth = '1',
   onChange,
 }: SectionStyleProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -163,6 +170,27 @@ export function SectionStyleEditor({
             onChange={(value) => onChange({ cardFg: value })}
           />
 
+          <ColorPicker
+            label="Card Border Color"
+            value={cardBorder}
+            onChange={(value) => onChange({ cardBorder: value })}
+          />
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor={`card-border-width-${styleNumber}`}>Card Border Width</Label>
+              <span className="text-sm text-muted-foreground">{cardBorderWidth}px</span>
+            </div>
+            <Slider
+              id={`card-border-width-${styleNumber}`}
+              value={[parseFloat(cardBorderWidth)]}
+              onValueChange={([value]) => onChange({ cardBorderWidth: value.toString() })}
+              min={0}
+              max={4}
+              step={0.5}
+            />
+          </div>
+
           {/* Contrast Validations */}
           <div className="space-y-2">
             <div className="flex items-center justify-between p-3 rounded-md bg-muted/50">
@@ -210,7 +238,14 @@ export function SectionStyleEditor({
           <h3 className="text-lg font-semibold mb-3">Section Preview</h3>
           <p className="text-sm mb-4">This is how text will appear on the section background.</p>
 
-          <div className="p-4 rounded-md" style={{ backgroundColor: `hsl(${card})`, color: `hsl(${cardFg})` }}>
+          <div
+            className="p-4 rounded-md"
+            style={{
+              backgroundColor: `hsl(${card})`,
+              color: `hsl(${cardFg})`,
+              border: `${cardBorderWidth}px solid hsl(${cardBorder})`
+            }}
+          >
             <h4 className="font-medium mb-2">Card Preview</h4>
             <p className="text-sm">This is how text will appear on cards within this section.</p>
           </div>

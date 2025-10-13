@@ -146,6 +146,8 @@ export interface ThemeVariables {
   section1Fg?: string;           // Section text color (guaranteed contrast)
   section1Card?: string;         // Card background (guaranteed contrast with section)
   section1CardFg?: string;       // Card text color (guaranteed contrast with card)
+  section1CardBorder?: string;   // Card border color (HSL)
+  section1CardBorderWidth?: string; // Card border width (e.g., "1px")
   section1Name?: string;         // User-friendly name (e.g., "Light & Clean")
   section1Description?: string;  // Short description for UI
 
@@ -154,6 +156,8 @@ export interface ThemeVariables {
   section2Fg?: string;
   section2Card?: string;
   section2CardFg?: string;
+  section2CardBorder?: string;
+  section2CardBorderWidth?: string;
   section2Name?: string;
   section2Description?: string;
 
@@ -162,6 +166,8 @@ export interface ThemeVariables {
   section3Fg?: string;
   section3Card?: string;
   section3CardFg?: string;
+  section3CardBorder?: string;
+  section3CardBorderWidth?: string;
   section3Name?: string;
   section3Description?: string;
 
@@ -170,6 +176,8 @@ export interface ThemeVariables {
   section4Fg?: string;
   section4Card?: string;
   section4CardFg?: string;
+  section4CardBorder?: string;
+  section4CardBorderWidth?: string;
   section4Name?: string;
   section4Description?: string;
 
@@ -237,10 +245,12 @@ export interface ThemeVariables {
   bodySize?: string;         // Default: "1rem"
   bodyLineHeight?: string;   // Default: "1.6"
   bodyWeight?: string;       // Default: "400"
+  bodyLetterSpacing?: string; // Default: "0"
 
   // Small text controls
   smallSize?: string;        // Default: "0.875rem"
   smallLineHeight?: string;  // Default: "1.5"
+  smallLetterSpacing?: string; // Default: "0"
 
   // Spacing & Sizing
   radius?: string;

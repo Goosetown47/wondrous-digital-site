@@ -103,44 +103,44 @@
   .bg-module-primary {
     background-color: var(--module-primary);
   }
-  
+
   .bg-module-secondary {
     background-color: var(--module-secondary);
   }
-  
+
   .bg-module-accent {
     background-color: var(--module-accent);
   }
-  
+
   .bg-module-background {
     background-color: var(--module-background);
   }
-  
+
   .text-module-primary {
     color: var(--module-primary);
   }
-  
+
   .text-module-secondary {
     color: var(--module-secondary);
   }
-  
+
   .text-module-accent {
     color: var(--module-accent);
   }
-  
+
   .border-module-primary {
     border-color: var(--module-primary);
   }
-  
+
   .border-module-secondary {
     border-color: var(--module-secondary);
   }
-  
+
   /* Module theme with opacity */
   .bg-module-primary-50 {
     background-color: rgba(var(--module-primary-rgb), 0.5);
   }
-  
+
   .bg-module-primary-10 {
     background-color: rgba(var(--module-primary-rgb), 0.1);
   }
@@ -164,6 +164,30 @@
 
   .rounded-module-full {
     border-radius: 9999px;
+  }
+
+  /* Section Style 1 - Cards with borders */
+  .section-style-1 .card,
+  .section-style-1 [data-card] {
+    border: var(--section-1-card-border-width, 1px) solid hsl(var(--section-1-card-border, 0 0% 89%));
+  }
+
+  /* Section Style 2 - Cards with borders */
+  .section-style-2 .card,
+  .section-style-2 [data-card] {
+    border: var(--section-2-card-border-width, 1px) solid hsl(var(--section-2-card-border, 0 0% 89%));
+  }
+
+  /* Section Style 3 - Cards with borders */
+  .section-style-3 .card,
+  .section-style-3 [data-card] {
+    border: var(--section-3-card-border-width, 1px) solid hsl(var(--section-3-card-border, 0 0% 89%));
+  }
+
+  /* Section Style 4 - Cards with borders */
+  .section-style-4 .card,
+  .section-style-4 [data-card] {
+    border: var(--section-4-card-border-width, 1px) solid hsl(var(--section-4-card-border, 0 0% 89%));
   }
 
   /* Hue slider gradient */
@@ -300,10 +324,12 @@
     font-size: var(--body-size, 1rem);
     line-height: var(--body-line-height, 1.6);
     font-weight: var(--body-weight, 400);
+    letter-spacing: var(--body-letter-spacing, 0);
   }
 
   small, .text-sm {
     font-size: var(--small-size, 0.875rem);
     line-height: var(--small-line-height, 1.5);
+    letter-spacing: var(--small-letter-spacing, 0);
   }
 }
