@@ -22,6 +22,7 @@ import { ColorPicker } from '@/components/theme-builder/color-picker';
 import { ColorGroupSection } from '@/components/theme-builder/color-group-section';
 import { SectionStyleEditor } from '@/components/theme-builder/SectionStyleEditor';
 import { TypographyStyleEditor } from '@/components/theme-builder/TypographyStyleEditor';
+import { SizingEffectsEditor } from '@/components/theme-builder/SizingEffectsEditor';
 import type { ThemeVariables } from '@/types/builder';
 
 export default function EditThemePage() {
@@ -496,11 +497,11 @@ export default function EditThemePage() {
               />
             </TabsContent>
 
-            <TabsContent value="sizing" className="p-6 pb-24 overflow-y-auto flex-1">
-              <div className="text-center py-12 text-muted-foreground">
-                <p>Sizing settings coming soon</p>
-                <p className="text-sm mt-2">Line height, spacing, padding, and margins will be configured here</p>
-              </div>
+            <TabsContent value="sizing" className="p-6 pb-24 space-y-6 overflow-y-auto flex-1">
+              <SizingEffectsEditor
+                values={themeVariables}
+                onChange={handleColorChange}
+              />
             </TabsContent>
 
             <TabsContent value="effects" className="p-6 pb-24 space-y-4 overflow-y-auto flex-1">
