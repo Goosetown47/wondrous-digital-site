@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface SectionStylesPreviewProps {
   styles: Array<{
@@ -68,21 +69,21 @@ export function SectionStylesPreview({ styles }: SectionStylesPreviewProps) {
                     >
                       <div>
                         <h4 className="font-semibold mb-2">Section Background</h4>
-                        <p className="text-sm opacity-90">
+                        <p className="text-sm opacity-90 mb-3">
                           This text appears directly on the section background.
                           Good contrast is essential for readability.
                         </p>
+                        <Button size="sm" data-button-shadow>Action Button</Button>
                       </div>
 
                       {/* Card on Section Background */}
                       <div
+                        data-card-shadow
                         className="p-4 rounded-lg space-y-2"
                         style={{
                           backgroundColor: style.card ? `hsl(${style.card})` : undefined,
                           color: style.cardFg ? `hsl(${style.cardFg})` : undefined,
-                          border: style.cardBorder && style.cardBorderWidth
-                            ? `${style.cardBorderWidth}px solid hsl(${style.cardBorder})`
-                            : style.cardFg ? `1px solid hsl(${style.cardFg} / 0.2)` : '1px solid currentColor',
+                          border: `${style.cardBorderWidth || '1'}px solid hsl(${style.cardBorder || '0 0% 89%'})`,
                         }}
                       >
                         <h5 className="font-medium text-sm">Card Component</h5>

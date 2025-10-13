@@ -186,7 +186,10 @@ export function ThemePreview({
         {mode === 'section-styles' && <SectionStylesPreview styles={sectionStyles} />}
 
         {mode === 'components' && (
-          <div className="max-w-4xl mx-auto space-y-8">
+          <div
+            className="max-w-4xl mx-auto flex flex-col"
+            style={{ gap: 'var(--element-spacing, 2rem)' }}
+          >
             {/* Hero Section */}
             <div className="text-center space-y-4">
               <h1>
@@ -196,16 +199,29 @@ export function ThemePreview({
                 See how your theme looks with real components
               </p>
               <div className="flex gap-4 justify-center">
-                <Button>Primary Button</Button>
-                <Button variant="secondary">Secondary Button</Button>
-                <Button variant="outline">Outline Button</Button>
-                <Button variant="destructive">Destructive</Button>
+                <Button
+                  data-button-shadow
+                  style={{
+                    borderRadius: 'var(--button-radius, var(--radius, 0.5rem))',
+                  }}
+                >
+                  Primary Button
+                </Button>
+                <Button variant="secondary" data-button-shadow>Secondary Button</Button>
+                <Button variant="outline" data-button-shadow>Outline Button</Button>
+                <Button variant="destructive" data-button-shadow>Destructive</Button>
               </div>
             </div>
 
           {/* Cards Grid */}
           <div className="grid gap-6 md:grid-cols-2">
-            <Card>
+            <Card
+              data-card-shadow
+              style={{
+                padding: 'var(--card-padding, 1rem)',
+                borderRadius: 'var(--card-radius, var(--radius, 0.5rem))',
+              }}
+            >
               <CardHeader>
                 <CardTitle>Card Title</CardTitle>
                 <CardDescription>
@@ -215,19 +231,43 @@ export function ThemePreview({
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="Enter your email" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    data-input-shadow
+                    style={{
+                      borderRadius: 'var(--input-radius, var(--radius, 0.5rem))',
+                      borderWidth: 'var(--input-border-width, var(--global-border-width, 1px))',
+                    }}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" placeholder="Enter your password" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    data-input-shadow
+                    style={{
+                      borderRadius: 'var(--input-radius, var(--radius, 0.5rem))',
+                      borderWidth: 'var(--input-border-width, var(--global-border-width, 1px))',
+                    }}
+                  />
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full">Submit</Button>
+                <Button className="w-full" data-button-shadow>Submit</Button>
               </CardFooter>
             </Card>
 
-            <Card>
+            <Card
+              data-card-shadow
+              style={{
+                padding: 'var(--card-padding, 1rem)',
+                borderRadius: 'var(--card-radius, var(--radius, 0.5rem))',
+              }}
+            >
               <CardHeader>
                 <CardTitle>Features</CardTitle>
                 <CardDescription>
@@ -269,7 +309,7 @@ export function ThemePreview({
               <TabsTrigger value="reports">Reports</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="space-y-4">
-              <Card>
+              <Card data-card-shadow>
                 <CardHeader>
                   <CardTitle>Overview</CardTitle>
                   <CardDescription>
@@ -296,7 +336,7 @@ export function ThemePreview({
               </Card>
             </TabsContent>
             <TabsContent value="analytics">
-              <Card>
+              <Card data-card-shadow>
                 <CardHeader>
                   <CardTitle>Analytics</CardTitle>
                   <CardDescription>View your analytics data</CardDescription>
@@ -307,7 +347,7 @@ export function ThemePreview({
               </Card>
             </TabsContent>
             <TabsContent value="reports">
-              <Card>
+              <Card data-card-shadow>
                 <CardHeader>
                   <CardTitle>Reports</CardTitle>
                   <CardDescription>Generate and view reports</CardDescription>
@@ -342,7 +382,7 @@ export function ThemePreview({
           <Separator />
 
           {/* Form Controls */}
-          <Card>
+          <Card data-card-shadow>
             <CardHeader>
               <CardTitle>Form Controls</CardTitle>
               <CardDescription>
@@ -420,13 +460,18 @@ export function ThemePreview({
                   <Label>Slider</Label>
                   <span className="text-sm text-muted-foreground">50%</span>
                 </div>
-                <Slider defaultValue={[50]} max={100} step={1} />
+                <Slider
+                  defaultValue={[50]}
+                  max={100}
+                  step={1}
+                  className="[&_[role=slider]]:bg-accent [&_[role=slider]]:border-accent"
+                />
               </div>
             </CardContent>
           </Card>
 
           {/* Accordion */}
-          <Card>
+          <Card data-card-shadow>
             <CardHeader>
               <CardTitle>Accordion</CardTitle>
               <CardDescription>
@@ -458,7 +503,7 @@ export function ThemePreview({
           </Card>
 
           {/* Progress Bar */}
-          <Card>
+          <Card data-card-shadow>
             <CardHeader>
               <CardTitle>Progress Indicators</CardTitle>
               <CardDescription>
@@ -471,20 +516,20 @@ export function ThemePreview({
                   <span>Uploading...</span>
                   <span className="text-muted-foreground">60%</span>
                 </div>
-                <Progress value={60} />
+                <Progress value={60} className="bg-accent [&>div]:bg-primary" />
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Processing</span>
                   <span className="text-muted-foreground">33%</span>
                 </div>
-                <Progress value={33} />
+                <Progress value={33} className="bg-accent [&>div]:bg-primary" />
               </div>
             </CardContent>
           </Card>
 
           {/* Table */}
-          <Card>
+          <Card data-card-shadow>
             <CardHeader>
               <CardTitle>Data Table</CardTitle>
               <CardDescription>
@@ -509,7 +554,7 @@ export function ThemePreview({
                     </TableCell>
                     <TableCell>Admin</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm">Edit</Button>
+                      <Button variant="ghost" size="sm" data-button-shadow>Edit</Button>
                     </TableCell>
                   </TableRow>
                   <TableRow>
@@ -519,7 +564,7 @@ export function ThemePreview({
                     </TableCell>
                     <TableCell>Editor</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm">Edit</Button>
+                      <Button variant="ghost" size="sm" data-button-shadow>Edit</Button>
                     </TableCell>
                   </TableRow>
                   <TableRow>
@@ -529,7 +574,7 @@ export function ThemePreview({
                     </TableCell>
                     <TableCell>Viewer</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm">Edit</Button>
+                      <Button variant="ghost" size="sm" data-button-shadow>Edit</Button>
                     </TableCell>
                   </TableRow>
                 </TableBody>

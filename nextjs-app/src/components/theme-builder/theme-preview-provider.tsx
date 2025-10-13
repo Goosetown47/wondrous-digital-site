@@ -89,6 +89,15 @@ export function ThemePreviewProvider({
 
     // Compute and apply shadow CSS from granular components (v0.1.9)
     const computeShadow = (prefix: string): string => {
+      // Check if shadows are enabled (default to true for cards, false for buttons/inputs)
+      const defaultEnabled = prefix === 'card';
+      const enabled = typeof themeVars[`${prefix}ShadowEnabled`] === 'boolean'
+        ? themeVars[`${prefix}ShadowEnabled`]
+        : defaultEnabled;
+
+      // If disabled, return 'none'
+      if (!enabled) return 'none';
+
       const color = (themeVars[`${prefix}ShadowColor`] as string) || '0 0% 0%';
       const opacity = (themeVars[`${prefix}ShadowOpacity`] as string) || '20';
       const x = (themeVars[`${prefix}ShadowX`] as string) || '0';

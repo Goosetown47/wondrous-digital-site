@@ -264,6 +264,7 @@ export interface ThemeVariables {
 
   // Global Shadow System (v0.1.9 - Granular Controls)
   // Card shadows
+  cardShadowEnabled?: boolean;   // Enable/disable card shadows
   cardShadowColor?: string;      // HSL color (e.g., "0 0% 0%")
   cardShadowOpacity?: string;    // 0-100 percentage
   cardShadowX?: string;          // Horizontal offset in px (-100 to 100)
@@ -271,6 +272,7 @@ export interface ThemeVariables {
   cardShadowBlur?: string;       // Blur radius in px (0-100)
 
   // Button shadows
+  buttonShadowEnabled?: boolean; // Enable/disable button shadows
   buttonShadowColor?: string;    // HSL color (e.g., "0 0% 0%")
   buttonShadowOpacity?: string;  // 0-100 percentage
   buttonShadowX?: string;        // Horizontal offset in px (-100 to 100)
@@ -278,6 +280,7 @@ export interface ThemeVariables {
   buttonShadowBlur?: string;     // Blur radius in px (0-100)
 
   // Input shadows
+  inputShadowEnabled?: boolean;  // Enable/disable input shadows
   inputShadowColor?: string;     // HSL color (e.g., "0 0% 0%")
   inputShadowOpacity?: string;   // 0-100 percentage
   inputShadowX?: string;         // Horizontal offset in px (-100 to 100)

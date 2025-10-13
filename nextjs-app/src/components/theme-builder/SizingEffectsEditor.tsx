@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,7 +14,7 @@ import { ColorPicker } from './color-picker';
 
 interface SizingEffectsEditorProps {
   values: Record<string, unknown>;
-  onChange: (key: string, value: string) => void;
+  onChange: (key: string, value: string | boolean) => void;
 }
 
 export function SizingEffectsEditor({ values, onChange }: SizingEffectsEditorProps) {
@@ -32,6 +33,12 @@ export function SizingEffectsEditor({ values, onChange }: SizingEffectsEditorPro
   const getValue = (key: string, defaultValue = ''): string => {
     const value = values[key];
     return typeof value === 'string' ? value : defaultValue;
+  };
+
+  // Helper to get boolean value
+  const getBooleanValue = (key: string, defaultValue = true): boolean => {
+    const value = values[key];
+    return typeof value === 'boolean' ? value : defaultValue;
   };
 
   return (
@@ -148,10 +155,24 @@ export function SizingEffectsEditor({ values, onChange }: SizingEffectsEditorPro
             <CardContent className="space-y-8 pt-0">
               {/* Card Shadow Controls */}
               <div className="space-y-4 pb-4 border-b">
-                <h4 className="font-medium text-sm">Card Shadow</h4>
-                <p className="text-xs text-muted-foreground">
-                  Shadow applied to all cards throughout the site
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-sm">Card Shadow</h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Shadow applied to all cards throughout the site
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="card-shadow-enabled" className="text-xs text-muted-foreground">
+                      {getBooleanValue('cardShadowEnabled', true) ? 'Enabled' : 'Disabled'}
+                    </Label>
+                    <Switch
+                      id="card-shadow-enabled"
+                      checked={getBooleanValue('cardShadowEnabled', true)}
+                      onCheckedChange={(checked) => onChange('cardShadowEnabled', checked)}
+                    />
+                  </div>
+                </div>
 
                 <ColorPicker
                   label="Shadow Color"
@@ -211,10 +232,24 @@ export function SizingEffectsEditor({ values, onChange }: SizingEffectsEditorPro
 
               {/* Button Shadow Controls */}
               <div className="space-y-4 pb-4 border-b">
-                <h4 className="font-medium text-sm">Button Shadow</h4>
-                <p className="text-xs text-muted-foreground">
-                  Shadow applied to all buttons throughout the site
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-sm">Button Shadow</h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Shadow applied to all buttons throughout the site
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="button-shadow-enabled" className="text-xs text-muted-foreground">
+                      {getBooleanValue('buttonShadowEnabled', false) ? 'Enabled' : 'Disabled'}
+                    </Label>
+                    <Switch
+                      id="button-shadow-enabled"
+                      checked={getBooleanValue('buttonShadowEnabled', false)}
+                      onCheckedChange={(checked) => onChange('buttonShadowEnabled', checked)}
+                    />
+                  </div>
+                </div>
 
                 <ColorPicker
                   label="Shadow Color"
@@ -274,10 +309,24 @@ export function SizingEffectsEditor({ values, onChange }: SizingEffectsEditorPro
 
               {/* Input Shadow Controls */}
               <div className="space-y-4">
-                <h4 className="font-medium text-sm">Input Shadow</h4>
-                <p className="text-xs text-muted-foreground">
-                  Shadow applied to all input fields throughout the site
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-sm">Input Shadow</h4>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Shadow applied to all input fields throughout the site
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="input-shadow-enabled" className="text-xs text-muted-foreground">
+                      {getBooleanValue('inputShadowEnabled', false) ? 'Enabled' : 'Disabled'}
+                    </Label>
+                    <Switch
+                      id="input-shadow-enabled"
+                      checked={getBooleanValue('inputShadowEnabled', false)}
+                      onCheckedChange={(checked) => onChange('inputShadowEnabled', checked)}
+                    />
+                  </div>
+                </div>
 
                 <ColorPicker
                   label="Shadow Color"
