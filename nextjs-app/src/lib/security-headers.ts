@@ -33,9 +33,9 @@ export function applySecurityHeaders(response: NextResponse): NextResponse {
       [
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://vercel.live",
-        "style-src 'self' 'unsafe-inline'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "img-src 'self' data: https: blob:",
-        "font-src 'self' data:",
+        "font-src 'self' data: https://fonts.gstatic.com",
         "worker-src 'self' blob:",
         // eslint-disable-next-line-- This is a CSP domain pattern, not a secret
         "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.vercel.com",
@@ -57,9 +57,9 @@ export function applySecurityHeaders(response: NextResponse): NextResponse {
       [
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com",
-        "style-src 'self' 'unsafe-inline'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "img-src 'self' data: https: blob:",
-        "font-src 'self' data:",
+        "font-src 'self' data: https://fonts.gstatic.com",
         "worker-src 'self' blob:",
         // eslint-disable-next-line-- Domain pattern, not a secret
         "connect-src 'self' http://localhost:* ws://localhost:* https://*.supabase.co wss://*.supabase.co",

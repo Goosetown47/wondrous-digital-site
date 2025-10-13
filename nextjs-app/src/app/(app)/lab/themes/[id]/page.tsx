@@ -20,6 +20,8 @@ import { ThemePreview } from '@/components/theme-builder/theme-preview';
 import { ThemePreviewProvider } from '@/components/theme-builder/theme-preview-provider';
 import { ColorPicker } from '@/components/theme-builder/color-picker';
 import { ColorGroupSection } from '@/components/theme-builder/color-group-section';
+import { SectionStyleEditor } from '@/components/theme-builder/SectionStyleEditor';
+import { TypographyStyleEditor } from '@/components/theme-builder/TypographyStyleEditor';
 import type { ThemeVariables } from '@/types/builder';
 
 export default function EditThemePage() {
@@ -31,6 +33,7 @@ export default function EditThemePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [themeVariables, setThemeVariables] = useState<ThemeVariables>({});
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'components' | 'section-styles' | 'typography'>('components');
 
   const { data: draft, isLoading: isDraftLoading } = useQuery({
     queryKey: ['lab-draft', themeId],
@@ -154,9 +157,9 @@ export default function EditThemePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       {/* Unified Header */}
-      <header className="border-b bg-background">
+      <header className="border-b bg-background flex-shrink-0">
         <div className="flex items-center justify-between px-4 py-3">
           {/* Left section */}
           <div className="flex items-center gap-4">
@@ -229,16 +232,19 @@ export default function EditThemePage() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex min-h-0">
         {/* Left Panel - Editor */}
-        <div className="w-1/2 border-r flex flex-col">
+        <div className="w-1/2 border-r flex flex-col min-h-0">
 
         {/* Editor Content */}
-        <div className="flex-1 overflow-y-auto">
-          <Tabs defaultValue="colors" className="h-full">
-            <TabsList className="w-full justify-start rounded-none border-b h-auto p-0">
+        <div className="flex-1 flex flex-col min-h-0">
+          <Tabs defaultValue="colors" className="flex-1 flex flex-col min-h-0">
+            <TabsList className="w-full justify-start rounded-none border-b h-auto p-0 flex-shrink-0">
               <TabsTrigger value="colors" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
                 Colors
+              </TabsTrigger>
+              <TabsTrigger value="section-styles" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
+                Section Styles
               </TabsTrigger>
               <TabsTrigger value="typography" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary">
                 Typography
@@ -250,183 +256,238 @@ export default function EditThemePage() {
                 Effects
               </TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="colors" className="p-6 space-y-4">
-            {/* Primary Colors */}
-            <ColorGroupSection 
-              title="Primary Colors" 
-              description="Core colors used throughout your application"
+
+            <TabsContent value="colors" className="p-6 pb-24 space-y-4 overflow-y-auto flex-1">
+            {/* Action Colors */}
+            <ColorGroupSection
+              title="Action Colors"
+              description="Colors for buttons, links, and primary interactive elements"
               defaultOpen={true}
             >
               <ColorPicker
-                label="Primary"
+                label="Primary Action (Buttons, Links)"
                 value={typeof themeVariables.primary === 'string' ? themeVariables.primary : '222.2 47.4% 11.2%'}
                 onChange={(value) => handleColorChange('primary', value)}
               />
               <ColorPicker
-                label="Primary Foreground"
+                label="Primary Action Text"
                 value={typeof themeVariables.primaryForeground === 'string' ? themeVariables.primaryForeground : '210 40% 98%'}
                 onChange={(value) => handleColorChange('primaryForeground', value)}
               />
-            </ColorGroupSection>
-
-            {/* Secondary Colors */}
-            <ColorGroupSection 
-              title="Secondary Colors" 
-              description="Secondary color palette"
-              defaultOpen={true}
-            >
               <ColorPicker
-                label="Secondary"
+                label="Secondary Buttons"
                 value={typeof themeVariables.secondary === 'string' ? themeVariables.secondary : '210 40% 96.1%'}
                 onChange={(value) => handleColorChange('secondary', value)}
               />
               <ColorPicker
-                label="Secondary Foreground"
+                label="Secondary Button Text"
                 value={typeof themeVariables.secondaryForeground === 'string' ? themeVariables.secondaryForeground : '222.2 47.4% 11.2%'}
                 onChange={(value) => handleColorChange('secondaryForeground', value)}
               />
-            </ColorGroupSection>
-
-            {/* Accent Colors */}
-            <ColorGroupSection 
-              title="Accent Colors" 
-              description="Accent and highlight colors"
-              defaultOpen={false}
-            >
               <ColorPicker
-                label="Accent"
+                label="Accent (Hover, Focus)"
                 value={typeof themeVariables.accent === 'string' ? themeVariables.accent : '210 40% 96.1%'}
                 onChange={(value) => handleColorChange('accent', value)}
               />
               <ColorPicker
-                label="Accent Foreground"
+                label="Accent Text"
                 value={typeof themeVariables.accentForeground === 'string' ? themeVariables.accentForeground : '222.2 47.4% 11.2%'}
                 onChange={(value) => handleColorChange('accentForeground', value)}
               />
             </ColorGroupSection>
 
-            {/* Base Colors */}
-            <ColorGroupSection 
-              title="Base Colors" 
-              description="Background and foreground colors"
-              defaultOpen={false}
+            {/* Foundation Colors */}
+            <ColorGroupSection
+              title="Foundation Colors"
+              description="Page background, text, and card colors"
+              defaultOpen={true}
             >
               <ColorPicker
-                label="Background"
+                label="Page Background"
                 value={themeVariables.background || '0 0% 100%'}
                 onChange={(value) => handleColorChange('background', value)}
               />
               <ColorPicker
-                label="Foreground"
+                label="Page Text"
                 value={themeVariables.foreground || '222.2 84% 4.9%'}
                 onChange={(value) => handleColorChange('foreground', value)}
               />
-            </ColorGroupSection>
-
-            {/* Card Colors */}
-            <ColorGroupSection 
-              title="Card Colors" 
-              description="Card component colors"
-              defaultOpen={false}
-            >
               <ColorPicker
-                label="Card"
+                label="Card Background"
                 value={themeVariables.card || '0 0% 100%'}
                 onChange={(value) => handleColorChange('card', value)}
               />
               <ColorPicker
-                label="Card Foreground"
+                label="Card Text"
                 value={themeVariables.cardForeground || '222.2 84% 4.9%'}
                 onChange={(value) => handleColorChange('cardForeground', value)}
               />
-            </ColorGroupSection>
-
-            {/* Popover Colors */}
-            <ColorGroupSection 
-              title="Popover Colors" 
-              description="Popover and dropdown colors"
-              defaultOpen={false}
-            >
               <ColorPicker
-                label="Popover"
+                label="Dropdown Background"
                 value={themeVariables.popover || '0 0% 100%'}
                 onChange={(value) => handleColorChange('popover', value)}
               />
               <ColorPicker
-                label="Popover Foreground"
+                label="Dropdown Text"
                 value={themeVariables.popoverForeground || '222.2 84% 4.9%'}
                 onChange={(value) => handleColorChange('popoverForeground', value)}
               />
             </ColorGroupSection>
 
-            {/* State Colors */}
-            <ColorGroupSection 
-              title="State Colors" 
-              description="Colors for different UI states"
+            {/* Utility Colors */}
+            <ColorGroupSection
+              title="Utility Colors"
+              description="Subtle backgrounds, de-emphasized text, destructive actions, borders, and focus indicators"
               defaultOpen={false}
             >
               <ColorPicker
-                label="Muted"
+                label="Subtle Background (Sidebars, Table Rows)"
                 value={themeVariables.muted || '210 40% 96.1%'}
                 onChange={(value) => handleColorChange('muted', value)}
               />
               <ColorPicker
-                label="Muted Foreground"
+                label="De-emphasized Text (Captions, Help)"
                 value={themeVariables.mutedForeground || '215.4 16.3% 46.9%'}
                 onChange={(value) => handleColorChange('mutedForeground', value)}
               />
               <ColorPicker
-                label="Destructive"
+                label="Destructive (Delete, Error Buttons)"
                 value={typeof themeVariables.destructive === 'string' ? themeVariables.destructive : '0 84.2% 60.2%'}
                 onChange={(value) => handleColorChange('destructive', value)}
               />
               <ColorPicker
-                label="Destructive Foreground"
+                label="Destructive Button Text"
                 value={typeof themeVariables.destructiveForeground === 'string' ? themeVariables.destructiveForeground : '210 40% 98%'}
                 onChange={(value) => handleColorChange('destructiveForeground', value)}
               />
-            </ColorGroupSection>
-
-            {/* UI Colors */}
-            <ColorGroupSection 
-              title="UI Colors" 
-              description="Border, input, and focus colors"
-              defaultOpen={false}
-            >
               <ColorPicker
-                label="Border"
+                label="Borders (Cards, Inputs, Dividers)"
                 value={themeVariables.border || '214.3 31.8% 91.4%'}
                 onChange={(value) => handleColorChange('border', value)}
               />
               <ColorPicker
-                label="Input"
+                label="Input Field Borders"
                 value={themeVariables.input || '214.3 31.8% 91.4%'}
                 onChange={(value) => handleColorChange('input', value)}
               />
               <ColorPicker
-                label="Ring"
+                label="Focus Ring (Accessibility)"
                 value={themeVariables.ring || '222.2 84% 4.9%'}
                 onChange={(value) => handleColorChange('ring', value)}
               />
             </ColorGroupSection>
             </TabsContent>
-            
-            <TabsContent value="typography" className="p-6">
-              <div className="text-center py-12 text-muted-foreground">
-                <p>Typography settings coming soon</p>
-                <p className="text-sm mt-2">Font families, sizes, and weights will be configured here</p>
+
+            <TabsContent value="section-styles" className="p-6 pb-24 space-y-6 overflow-y-auto flex-1">
+              <div className="space-y-2 mb-6">
+                <h3 className="text-lg font-semibold">Section Style System</h3>
+                <p className="text-sm text-muted-foreground">
+                  Create 2-4 pre-matched color palettes for sections. Each style includes guaranteed contrast ratios.
+                </p>
               </div>
+
+              <SectionStyleEditor
+                styleNumber={1}
+                name={themeVariables.section1Name}
+                description={themeVariables.section1Description}
+                bg={themeVariables.section1Bg}
+                fg={themeVariables.section1Fg}
+                card={themeVariables.section1Card}
+                cardFg={themeVariables.section1CardFg}
+                onChange={(updates) => {
+                  setThemeVariables({
+                    ...themeVariables,
+                    ...(updates.name !== undefined && { section1Name: updates.name }),
+                    ...(updates.description !== undefined && { section1Description: updates.description }),
+                    ...(updates.bg !== undefined && { section1Bg: updates.bg }),
+                    ...(updates.fg !== undefined && { section1Fg: updates.fg }),
+                    ...(updates.card !== undefined && { section1Card: updates.card }),
+                    ...(updates.cardFg !== undefined && { section1CardFg: updates.cardFg }),
+                  });
+                }}
+              />
+
+              <SectionStyleEditor
+                styleNumber={2}
+                name={themeVariables.section2Name}
+                description={themeVariables.section2Description}
+                bg={themeVariables.section2Bg}
+                fg={themeVariables.section2Fg}
+                card={themeVariables.section2Card}
+                cardFg={themeVariables.section2CardFg}
+                onChange={(updates) => {
+                  setThemeVariables({
+                    ...themeVariables,
+                    ...(updates.name !== undefined && { section2Name: updates.name }),
+                    ...(updates.description !== undefined && { section2Description: updates.description }),
+                    ...(updates.bg !== undefined && { section2Bg: updates.bg }),
+                    ...(updates.fg !== undefined && { section2Fg: updates.fg }),
+                    ...(updates.card !== undefined && { section2Card: updates.card }),
+                    ...(updates.cardFg !== undefined && { section2CardFg: updates.cardFg }),
+                  });
+                }}
+              />
+
+              <SectionStyleEditor
+                styleNumber={3}
+                name={themeVariables.section3Name}
+                description={themeVariables.section3Description}
+                bg={themeVariables.section3Bg}
+                fg={themeVariables.section3Fg}
+                card={themeVariables.section3Card}
+                cardFg={themeVariables.section3CardFg}
+                onChange={(updates) => {
+                  setThemeVariables({
+                    ...themeVariables,
+                    ...(updates.name !== undefined && { section3Name: updates.name }),
+                    ...(updates.description !== undefined && { section3Description: updates.description }),
+                    ...(updates.bg !== undefined && { section3Bg: updates.bg }),
+                    ...(updates.fg !== undefined && { section3Fg: updates.fg }),
+                    ...(updates.card !== undefined && { section3Card: updates.card }),
+                    ...(updates.cardFg !== undefined && { section3CardFg: updates.cardFg }),
+                  });
+                }}
+              />
+
+              <SectionStyleEditor
+                styleNumber={4}
+                name={themeVariables.section4Name}
+                description={themeVariables.section4Description}
+                bg={themeVariables.section4Bg}
+                fg={themeVariables.section4Fg}
+                card={themeVariables.section4Card}
+                cardFg={themeVariables.section4CardFg}
+                onChange={(updates) => {
+                  setThemeVariables({
+                    ...themeVariables,
+                    ...(updates.name !== undefined && { section4Name: updates.name }),
+                    ...(updates.description !== undefined && { section4Description: updates.description }),
+                    ...(updates.bg !== undefined && { section4Bg: updates.bg }),
+                    ...(updates.fg !== undefined && { section4Fg: updates.fg }),
+                    ...(updates.card !== undefined && { section4Card: updates.card }),
+                    ...(updates.cardFg !== undefined && { section4CardFg: updates.cardFg }),
+                  });
+                }}
+              />
             </TabsContent>
-            
-            <TabsContent value="sizing" className="p-6">
+
+            <TabsContent value="typography" className="p-6 pb-24 space-y-6 overflow-y-auto flex-1">
+              <TypographyStyleEditor
+                baseFontHeading={themeVariables.fontHeading}
+                baseFontBody={themeVariables.fontBody}
+                values={themeVariables}
+                onChange={handleColorChange}
+              />
+            </TabsContent>
+
+            <TabsContent value="sizing" className="p-6 pb-24 overflow-y-auto flex-1">
               <div className="text-center py-12 text-muted-foreground">
                 <p>Sizing settings coming soon</p>
                 <p className="text-sm mt-2">Line height, spacing, padding, and margins will be configured here</p>
               </div>
             </TabsContent>
-            
-            <TabsContent value="effects" className="p-6 space-y-4">
+
+            <TabsContent value="effects" className="p-6 pb-24 space-y-4 overflow-y-auto flex-1">
               {/* Border Radius */}
               <Card>
                 <CardHeader>
@@ -461,12 +522,17 @@ export default function EditThemePage() {
 
         {/* Right Panel - Preview */}
         <div className="w-1/2 bg-muted/30 overflow-hidden">
-          <ThemePreviewProvider 
-            variables={themeVariables} 
+          <ThemePreviewProvider
+            variables={themeVariables}
             isDarkMode={isDarkMode}
             className="h-full"
           >
-            <ThemePreview variables={themeVariables} showHeader={false} />
+            <ThemePreview
+              variables={themeVariables}
+              showHeader={false}
+              mode={previewMode}
+              onModeChange={setPreviewMode}
+            />
           </ThemePreviewProvider>
         </div>
       </div>
