@@ -190,6 +190,80 @@
     border: var(--section-4-card-border-width, 1px) solid hsl(var(--section-4-card-border, 0 0% 89%));
   }
 
+  /* Spacing System (v0.1.9) */
+  .section-padding-tight {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  .section-padding-normal {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+
+  .section-padding-relaxed {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+
+  .card-padding-tight {
+    padding: 0.75rem;
+  }
+
+  .card-padding-normal {
+    padding: 1rem;
+  }
+
+  .card-padding-relaxed {
+    padding: 1.5rem;
+  }
+
+  /* Element spacing utility */
+  .element-spacing {
+    gap: var(--element-spacing, 1rem);
+  }
+
+  /* Global Shadow System (v0.1.9) */
+  /* Apply shadows globally to cards - !important needed to override Tailwind's shadow-sm */
+  [data-card-shadow] {
+    box-shadow: var(--card-shadow, 0 1px 2px 0 rgb(0 0 0 / 0.05)) !important;
+  }
+
+  /* Apply shadows globally to buttons */
+  button[data-button-shadow],
+  [data-button-shadow] {
+    box-shadow: var(--button-shadow, none) !important;
+  }
+
+  /* Apply shadows globally to inputs */
+  input[data-input-shadow],
+  textarea[data-input-shadow],
+  [data-input-shadow] {
+    box-shadow: var(--input-shadow, none) !important;
+  }
+
+  /* Radius Overrides (v0.1.9) */
+  .card-radius-override {
+    border-radius: var(--card-radius, var(--radius, 0.5rem));
+  }
+
+  .button-radius-override {
+    border-radius: var(--button-radius, var(--radius, 0.5rem));
+  }
+
+  .input-radius-override {
+    border-radius: var(--input-radius, var(--radius, 0.5rem));
+  }
+
+  /* Border Width System (v0.1.9) */
+  .global-border-width {
+    border-width: var(--global-border-width, 1px);
+  }
+
+  .input-border-width {
+    border-width: var(--input-border-width, var(--global-border-width, 1px));
+  }
+
   /* Hue slider gradient */
   .hue-slider [data-slider-track] {
     background: linear-gradient(
