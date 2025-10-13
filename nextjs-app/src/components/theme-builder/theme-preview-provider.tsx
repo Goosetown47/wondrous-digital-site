@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { generateDarkModeColors } from '@/lib/theme-utils';
+import { loadGoogleFonts } from '@/lib/google-fonts';
 
 interface ThemePreviewProviderProps {
   variables: Record<string, unknown>;
@@ -35,11 +36,32 @@ export function ThemePreviewProvider({
       themeVars = variables.colors as Record<string, unknown>;
     }
     
-    // Apply all theme variables
+    // Font-related keys that need quotes in CSS
+    const fontKeys = new Set([
+      'fontHeading', 'fontBody',
+      'h1Font', 'h2Font', 'h3Font', 'h4Font', 'h5Font', 'h6Font'
+    ]);
+
+    // Apply all theme variables with smart unit appending
     Object.entries(themeVars).forEach(([key, value]) => {
       if (typeof value === 'string') {
         const cssKey = toKebabCase(key);
-        container.style.setProperty(`--${cssKey}`, value);
+        let finalValue = value;
+
+        // Smart font quoting - only quote if font name contains spaces
+        if (fontKeys.has(key) && value.includes(' ')) {
+          finalValue = `"${value}"`;
+        }
+        // Add units to typography values
+        else if (key.endsWith('Size') && !value.includes('rem') && !value.includes('px')) {
+          finalValue = `${value}rem`;
+        }
+        else if (key.endsWith('LetterSpacing') && !value.includes('em') && !value.includes('px')) {
+          finalValue = `${value}em`;
+        }
+        // LineHeight and Weight are unitless in CSS - no change needed
+
+        container.style.setProperty(`--${cssKey}`, finalValue);
       }
     });
     
@@ -84,6 +106,41 @@ export function ThemePreviewProvider({
       }
     };
   }, [variables, isDarkMode]);
+
+  // Load Google Fonts for typography
+  useEffect(() => {
+    // Handle direct theme variables (from theme builder)
+    // or nested structure (from other uses)
+    let themeVars: Record<string, unknown> = variables;
+    if (variables.colors && typeof variables.colors === 'object') {
+      themeVars = variables.colors as Record<string, unknown>;
+    }
+
+    // Extract all font names from theme variables
+    const fontKeys = [
+      'fontHeading',
+      'fontBody',
+      'h1Font',
+      'h2Font',
+      'h3Font',
+      'h4Font',
+      'h5Font',
+      'h6Font',
+    ];
+
+    const fonts = new Set<string>();
+    fontKeys.forEach(key => {
+      const fontValue = themeVars[key];
+      if (typeof fontValue === 'string' && fontValue.trim()) {
+        fonts.add(fontValue);
+      }
+    });
+
+    // Load all unique fonts
+    if (fonts.size > 0) {
+      loadGoogleFonts(Array.from(fonts));
+    }
+  }, [variables]);
 
   return (
     <div 
