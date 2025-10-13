@@ -257,6 +257,42 @@ export interface ThemeVariables {
   buttonHeight?: string;
   inputHeight?: string;
 
+  // Spacing System (v0.1.9)
+  sectionPadding?: 'tight' | 'normal' | 'relaxed'; // Section top/bottom padding
+  cardPadding?: 'tight' | 'normal' | 'relaxed';    // Card internal padding
+  elementSpacing?: string;                          // Gap between elements (rem)
+
+  // Global Shadow System (v0.1.9 - Granular Controls)
+  // Card shadows
+  cardShadowColor?: string;      // HSL color (e.g., "0 0% 0%")
+  cardShadowOpacity?: string;    // 0-100 percentage
+  cardShadowX?: string;          // Horizontal offset in px (-100 to 100)
+  cardShadowY?: string;          // Vertical offset in px (-100 to 100)
+  cardShadowBlur?: string;       // Blur radius in px (0-100)
+
+  // Button shadows
+  buttonShadowColor?: string;    // HSL color (e.g., "0 0% 0%")
+  buttonShadowOpacity?: string;  // 0-100 percentage
+  buttonShadowX?: string;        // Horizontal offset in px (-100 to 100)
+  buttonShadowY?: string;        // Vertical offset in px (-100 to 100)
+  buttonShadowBlur?: string;     // Blur radius in px (0-100)
+
+  // Input shadows
+  inputShadowColor?: string;     // HSL color (e.g., "0 0% 0%")
+  inputShadowOpacity?: string;   // 0-100 percentage
+  inputShadowX?: string;         // Horizontal offset in px (-100 to 100)
+  inputShadowY?: string;         // Vertical offset in px (-100 to 100)
+  inputShadowBlur?: string;      // Blur radius in px (0-100)
+
+  // Radius Overrides (v0.1.9)
+  cardRadius?: string;   // Override global radius for cards
+  buttonRadius?: string; // Override global radius for buttons
+  inputRadius?: string;  // Override global radius for inputs
+
+  // Border Width System (v0.1.9)
+  globalBorderWidth?: string; // Default border width for all elements (px)
+  inputBorderWidth?: string;  // Override border width for inputs (px)
+
   // Effects
   shadow?: {
     sm?: string;
@@ -267,7 +303,7 @@ export interface ThemeVariables {
   };
 
   // Custom properties
-  [key: string]: string | Record<string, string> | undefined;
+  [key: string]: string | Record<string, string> | string[] | undefined;
 }
 
 // Library item types

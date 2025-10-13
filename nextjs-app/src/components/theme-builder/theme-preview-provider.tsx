@@ -42,14 +42,28 @@ export function ThemePreviewProvider({
       'h1Font', 'h2Font', 'h3Font', 'h4Font', 'h5Font', 'h6Font'
     ]);
 
+    // Spacing preset conversions (v0.1.9)
+    const spacingPresets: Record<string, Record<string, string>> = {
+      sectionPadding: { tight: '2rem', normal: '4rem', relaxed: '6rem' },
+      cardPadding: { tight: '0.75rem', normal: '1rem', relaxed: '1.5rem' },
+    };
+
     // Apply all theme variables with smart unit appending
     Object.entries(themeVars).forEach(([key, value]) => {
       if (typeof value === 'string') {
         const cssKey = toKebabCase(key);
         let finalValue = value;
 
+        // Convert spacing presets (v0.1.9)
+        if (key in spacingPresets && value in spacingPresets[key]) {
+          finalValue = spacingPresets[key][value];
+        }
+        // Skip shadow component properties - handled separately below
+        else if (key.includes('Shadow')) {
+          return; // Don't set individual shadow components as CSS variables
+        }
         // Smart font quoting - only quote if font name contains spaces
-        if (fontKeys.has(key) && value.includes(' ')) {
+        else if (fontKeys.has(key) && value.includes(' ')) {
           finalValue = `"${value}"`;
         }
         // Add units to typography values
@@ -59,12 +73,38 @@ export function ThemePreviewProvider({
         else if (key.endsWith('LetterSpacing') && !value.includes('em') && !value.includes('px')) {
           finalValue = `${value}em`;
         }
+        // Add units to border width values
+        else if (key.includes('BorderWidth') && !value.includes('px')) {
+          finalValue = `${value}px`;
+        }
+        // Add rem units to radius overrides and element spacing
+        else if ((key.includes('Radius') || key === 'elementSpacing') && !value.includes('rem') && !value.includes('px') && value !== '') {
+          finalValue = `${value}rem`;
+        }
         // LineHeight and Weight are unitless in CSS - no change needed
 
         container.style.setProperty(`--${cssKey}`, finalValue);
       }
     });
-    
+
+    // Compute and apply shadow CSS from granular components (v0.1.9)
+    const computeShadow = (prefix: string): string => {
+      const color = (themeVars[`${prefix}ShadowColor`] as string) || '0 0% 0%';
+      const opacity = (themeVars[`${prefix}ShadowOpacity`] as string) || '20';
+      const x = (themeVars[`${prefix}ShadowX`] as string) || '0';
+      const y = (themeVars[`${prefix}ShadowY`] as string) || '2';
+      const blur = (themeVars[`${prefix}ShadowBlur`] as string) || '4';
+
+      // If all offsets and blur are 0, return 'none'
+      if (x === '0' && y === '0' && blur === '0') return 'none';
+
+      return `${x}px ${y}px ${blur}px hsl(${color} / ${opacity}%)`;
+    };
+
+    container.style.setProperty('--card-shadow', computeShadow('card'));
+    container.style.setProperty('--button-shadow', computeShadow('button'));
+    container.style.setProperty('--input-shadow', computeShadow('input'));
+
     // Handle dark mode
     if (isDarkMode && themeVars) {
       // Convert themeVars to Record<string, string> for generateDarkModeColors
@@ -104,6 +144,10 @@ export function ThemePreviewProvider({
       if (radius && typeof radius === 'string') {
         container.style.removeProperty('--radius');
       }
+      // Remove shadow CSS variables
+      container.style.removeProperty('--card-shadow');
+      container.style.removeProperty('--button-shadow');
+      container.style.removeProperty('--input-shadow');
     };
   }, [variables, isDarkMode]);
 
