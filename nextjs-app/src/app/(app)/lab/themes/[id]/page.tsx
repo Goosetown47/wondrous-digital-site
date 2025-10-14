@@ -108,7 +108,7 @@ export default function EditThemePage() {
     }
   };
 
-  const handleColorChange = (colorKey: string, value: string) => {
+  const handleColorChange = (colorKey: string, value: string | boolean) => {
     setThemeVariables({
       ...themeVariables,
       [colorKey]: value,

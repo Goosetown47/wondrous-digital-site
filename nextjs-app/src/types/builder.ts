@@ -306,7 +306,7 @@ export interface ThemeVariables {
   };
 
   // Custom properties
-  [key: string]: string | Record<string, string> | string[] | undefined;
+  [key: string]: string | Record<string, string> | string[] | boolean | undefined;
 }
 
 // Library item types

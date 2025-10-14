@@ -48,7 +48,7 @@ interface TypographyStyleEditorProps {
 
   // Values for each level
   values: {
-    [key: string]: string | Record<string, string> | undefined;
+    [key: string]: string | Record<string, string> | string[] | boolean | undefined;
   };
 
   onChange: (key: string, value: string) => void;

@@ -31,24 +31,32 @@ interface ThemeVariables {
   section1Fg?: string;
   section1Card?: string;
   section1CardFg?: string;
+  section1CardBorder?: string;
+  section1CardBorderWidth?: string;
   section2Name?: string;
   section2Description?: string;
   section2Bg?: string;
   section2Fg?: string;
   section2Card?: string;
   section2CardFg?: string;
+  section2CardBorder?: string;
+  section2CardBorderWidth?: string;
   section3Name?: string;
   section3Description?: string;
   section3Bg?: string;
   section3Fg?: string;
   section3Card?: string;
   section3CardFg?: string;
+  section3CardBorder?: string;
+  section3CardBorderWidth?: string;
   section4Name?: string;
   section4Description?: string;
   section4Bg?: string;
   section4Fg?: string;
   section4Card?: string;
   section4CardFg?: string;
+  section4CardBorder?: string;
+  section4CardBorderWidth?: string;
 }
 
 type PreviewMode = 'components' | 'section-styles' | 'typography';
